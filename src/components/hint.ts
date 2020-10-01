@@ -3,6 +3,7 @@ import * as windows from '../windows/window-manager'
 import Overlay from '../components/overlay'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
+import api from '../core/instance-api'
 
 interface ShowParams {
   row: number
@@ -186,3 +187,19 @@ const view = ($: S) =>
   )
 
 export const ui = app<S, A>({ name: 'hint', state, actions, view })
+
+// See runtime/lua/uivonim.lua
+api.onAction('signature-help', (method, result, row, col) => {
+  const signature = result.signatures[result.activeSignature]
+  let showParams: ShowParams = {
+    row,
+    col,
+    label: signature.label,
+    currentParam: signature.parameters[result.activeParameter],
+    totalSignatures: result.signatures.length,
+    selectedSignature: result.signatures.activeSignature
+  }
+  ui.show(showParams)
+})
+
+api.onAction('signature-help-close', () => ui.hide())
