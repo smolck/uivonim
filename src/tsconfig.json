@@ -1,0 +1,15 @@
+{
+  "exclude": ["node_modules", "test", "xdg_config"],
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "target": "esnext",
+    "module": "commonjs",
+    "outDir": "../build",
+    "strict": true,
+    "lib": ["esnext", "dom"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "sourceMap": true,
+    "plugins": [{ "transform": "../tools/transform-no-dev.js" }]
+  }
+}

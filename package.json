@@ -1,0 +1,87 @@
+{
+  "name": "uivonim",
+  "author": "smolck",
+  "license": "AGPL-3.0-only",
+  "version": "0.23.7",
+  "description": "Neovim GUI with 100x more memory usage",
+  "main": "build/bootstrap/main.js",
+  "scripts": {
+    "start": "node tools/start.js",
+    "start:release": "electron build/bootstrap/main.js",
+    "build": "node tools/build.js",
+    "package": "node tools/package.js",
+    "test": "mocha test/unit",
+    "test:e2e": "mocha test/e2e -t 0",
+    "test:e2e:snapshot": "npm run test:e2e -- --snapshot",
+    "test:integration": "mocha test/integration -t 10000",
+    "test:watch": "npm run test -- -w",
+    "test:integration:watch": "npm run test:integration -- -w",
+    "gen:api": "node tools/gen-api.js",
+    "gen:font-sizes": "electron tools/font-sizer/index.js",
+    "unused-exports": "ts-unused-exports tsconfig.json $(find src -name *.ts)",
+    "setup-mirrors": "node tools/setup-mirrors.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/veonim/veonim.git"
+  },
+  "repository-mirrors": [
+    "git@github.com:veonim/veonim.git",
+    "https://veonim@gitlab.com/veonim/veonim.git",
+    "https://veonim@bitbucket.org/veonim/veonim.git"
+  ],
+  "bugs": {
+    "url": "https://github.com/veonim/veonim/issues"
+  },
+  "homepage": "https://github.com/veonim/veonim#readme",
+  "bundled-extension-dependencies": {
+    "typescript": "3.3.1"
+  },
+  "dependencies": {
+    "@types/marked": "^1.1.0",
+    "diff-match-patch": "^1.0.5",
+    "fuzzaldrin-plus": "^0.6.0",
+    "hyperapp": "1.2.9",
+    "hyperapp-feather": "0.4.0",
+    "hyperapp-seti": "^0.3.0",
+    "marked": "^1.2.0"
+  },
+  "devDependencies": {
+    "@deomitrus/hyperapp-redux-devtools": "1.2.0",
+    "@medv/finder": "^2.0.0",
+    "@types/diff-match-patch": "1.0.32",
+    "@types/fuzzaldrin-plus": "^0.6.1",
+    "@types/node": "^14.11.2",
+    "@types/webgl2": "0.0.5",
+    "all-other-unzip-libs-suck": "0.0.3",
+    "electron": "^10.1.3",
+    "electron-builder": "^22.8.1",
+    "electron-devtools-installer": "^3.1.1",
+    "fs-extra": "^9.0.1",
+    "mocha": "^8.1.3",
+    "prettier": "2.1.2",
+    "proxyquire": "^2.1.3",
+    "spectron": "^12.0.0",
+    "ts-unused-exports": "^6.2.4",
+    "ttypescript": "^1.5.12",
+    "typescript": "^4.0.3"
+  },
+  "binaryDependencies": [
+    {
+      "org": "mholt",
+      "repo": "archiver",
+      "tag": "v3.1.1",
+      "mac": "arc_mac_amd64",
+      "win": "arc_windows_amd64.exe",
+      "linux": "arc_linux_amd64"
+    },
+    {
+      "org": "burntsushi",
+      "repo": "ripgrep",
+      "tag": "0.10.0",
+      "mac": "ripgrep-${tag}-x86_64-apple-darwin.tar.gz",
+      "win": "ripgrep-${tag}-x86_64-pc-windows-msvc.zip",
+      "linux": "ripgrep-${tag}-x86_64-unknown-linux-musl.tar.gz"
+    }
+  ]
+}

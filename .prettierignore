@@ -1,0 +1,5 @@
+build
+dist
+extension_dependencies
+node_modules
+xdg_config

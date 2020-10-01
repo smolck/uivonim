@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Veonim - Process Explorer</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #222;
+        color: #ddd;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-flow: column;
+        font-family: sans-serif;
+      }
+
+      th {
+        color: #888;
+        padding: 5px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #333;
+      }
+
+      tbody > tr:hover {
+        background-color: rgba(255, 255, 255, 0.07);
+      }
+
+      td {
+        padding: 5px;
+      }
+
+      table {
+        padding-left: 10px;
+        padding-right: 10px;
+        width: 100%;
+      }
+
+      button {
+        outline: none;
+        border: 1px solid #666;
+        border-radius: 2px;
+        background: none;
+        color: #666;
+        z-index: 999;
+      }
+
+      button:hover {
+        border-color: #ddd;
+        color: #ddd;
+      }
+
+      hr {
+        color: #666;
+      }
+
+      #process-history {
+        padding-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, 20%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="process-list"></div>
+    <div style="padding: 10px; border-top: 1px solid #333; margin-top: 15px">
+      <button id="copy-history" style="font-size: 16px">
+        Copy history JSON to clipboard
+      </button>
+      <div id="process-history"></div>
+    </div>
+    <script type="text/javascript">
+      require('../bootstrap/process-explorer')
+    </script>
+  </body>
+</html>

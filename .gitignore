@@ -1,0 +1,8 @@
+/xdg_config
+/extension_dependencies
+/node_modules
+/binaries
+/build
+/dist
+.vscode
+.DS_Store
