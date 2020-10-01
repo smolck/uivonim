@@ -5,11 +5,11 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: 'npm' # See documentation for possible values
+    directory: '/' # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: 'daily'
     commit-message:
-      prefix: "npm deps"
-      prefix-development: "npm devdeps"
-      include: "scope"
+      prefix: 'npm deps'
+      prefix-development: 'npm devdeps'
+      include: 'scope'

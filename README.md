@@ -51,5 +51,5 @@ Binaries available in `dist`.
 
 An absolutely massive thank you to [@breja](https://github.com/breja) for all
 of the work you did on the original Veonim project; without your work
-(including the amazing achievement of making Electron snappy!) and vision 
+(including the amazing achievement of making Electron snappy!) and vision
 for the original project, Uivonim would not exist. Thank you!

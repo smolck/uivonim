@@ -22,7 +22,8 @@ const sendResults = ({ filter = true } = {}) => {
 
 const getFilesWithRipgrep = (cwd: string) => {
   const timer = setInterval(sendResults, INTERVAL)
-  const rg = spawnBinary('rg',
+  const rg = spawnBinary(
+    'rg',
     ['--files', '--hidden', '--glob', '!node_modules', '--glob', '!.git'],
     { cwd }
   )

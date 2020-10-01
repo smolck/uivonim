@@ -30,50 +30,49 @@ export interface CompletionOption {
 
 // TODO(smolck): Should this be here or somewhere else?
 export class CompletionItem {
+  label: string
+  kind: CompletionItemKind | undefined
+  // @ts-ignore
+  detail: string
+  // @ts-ignore
+  documentation: string | MarkdownString
+  // @ts-ignore
+  sortText: string
+  // @ts-ignore
+  filterText: string
+  // @ts-ignore
+  preselect: boolean
+  // @ts-ignore
+  insertText: string | SnippetString
+  keepWhitespace?: boolean
+  // @ts-ignore
+  range: Range
+  // @ts-ignore
+  commitCharacters: string[]
+  // @ts-ignore
+  textEdit: TextEdit
+  // @ts-ignore
+  additionalTextEdits: TextEdit[]
+  // @ts-ignore
 
-	label: string;
-	kind: CompletionItemKind | undefined;
-  // @ts-ignore
-	detail: string;
-  // @ts-ignore
-	documentation: string | MarkdownString;
-  // @ts-ignore
-	sortText: string;
-  // @ts-ignore
-	filterText: string;
-  // @ts-ignore
-	preselect: boolean;
-  // @ts-ignore
-	insertText: string | SnippetString;
-	keepWhitespace?: boolean;
-  // @ts-ignore
-	range: Range;
-  // @ts-ignore
-	commitCharacters: string[];
-  // @ts-ignore
-	textEdit: TextEdit;
-  // @ts-ignore
-	additionalTextEdits: TextEdit[];
-  // @ts-ignore
+  constructor(label: string, kind?: CompletionItemKind) {
+    this.label = label
+    this.kind = kind
+  }
 
-	constructor(label: string, kind?: CompletionItemKind) {
-		this.label = label;
-		this.kind = kind;
-	}
-
-	toJSON(): any {
-		return {
-			label: this.label,
-			kind: this.kind && CompletionItemKind[this.kind],
-			detail: this.detail,
-			documentation: this.documentation,
-			sortText: this.sortText,
-			filterText: this.filterText,
-			preselect: this.preselect,
-			insertText: this.insertText,
-			textEdit: this.textEdit
-		};
-	}
+  toJSON(): any {
+    return {
+      label: this.label,
+      kind: this.kind && CompletionItemKind[this.kind],
+      detail: this.detail,
+      documentation: this.documentation,
+      sortText: this.sortText,
+      filterText: this.filterText,
+      preselect: this.preselect,
+      insertText: this.insertText,
+      textEdit: this.textEdit,
+    }
+  }
 }
 
 export enum CompletionItemKind {
@@ -156,9 +155,7 @@ const getCompletionIcon = (kind: CompletionItemKind) =>
   icons.get(kind) || h(Icon.Code)
 
 // TODO: move to common place. used in other places like signature-hint
-const parseDocs = async (
-  docs?: string
-): Promise<string | undefined> => {
+const parseDocs = async (docs?: string): Promise<string | undefined> => {
   if (!docs) return
   return stringToMarkdown(docs)
 }
@@ -186,14 +183,7 @@ const actions = {
 
   showDocs: (documentation: any) => ({ documentation }),
 
-  show: ({
-    anchorAbove,
-    visibleOptions,
-    options,
-    x,
-    y,
-    ix = -1,
-  }: any) => {
+  show: ({ anchorAbove, visibleOptions, options, x, y, ix = -1 }: any) => {
     return {
       visibleOptions,
       anchorAbove,

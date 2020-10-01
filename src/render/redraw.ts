@@ -259,10 +259,17 @@ const win_float_pos = (e: any) => {
 
       const anchorGridInfo = anchorGrid.getWindowInfo()
 
-      const clampedWidth = Math.max(0, Math.min(gridInfo.width, anchorGridInfo.width))
-      const clampedHeight = Math.max(0, Math.min(gridInfo.height, anchorGridInfo.height))
+      const clampedWidth = Math.max(
+        0,
+        Math.min(gridInfo.width, anchorGridInfo.width)
+      )
+      const clampedHeight = Math.max(
+        0,
+        Math.min(gridInfo.height, anchorGridInfo.height)
+      )
 
-      if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height) continue
+      if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
+        continue
       else resizeGrid(gridId, clampedWidth, clampedHeight)
 
       continue
