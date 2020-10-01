@@ -10,6 +10,6 @@ updates:
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "npm dependencies"
-      prefix-development: "npm devDependencies"
+      prefix: "npm deps"
+      prefix-development: "npm devdeps"
       include: "scope"
