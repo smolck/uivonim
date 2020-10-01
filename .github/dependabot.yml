@@ -9,6 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
-    prefix: "npm dependencies"
-    prefix-development: "npm devDependencies"
-    include: "scope"
+    commit-message:
+      - prefix: "npm dependencies"
+        prefix-development: "npm devDependencies"
+        include: "scope"
