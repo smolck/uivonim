@@ -227,16 +227,21 @@ export const registerOneTimeUseShortcuts = (
   shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
 }
 
+let textarea = document.getElementById('hacky-textarea')
+
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
   if (!key) return
+  if (key === 'Dead' && textarea)
+    (textarea as HTMLTextAreaElement).value = 'things'
+
   const inputKeys = formatInput(mapMods(e), mapKey(e.key))
 
   if (sendInputToVim) return sendToVim(inputKeys)
   keyListener(inputKeys, inputType)
 }
 
-document.getElementById('hacky-textarea')?.addEventListener('keydown', (e) => {
+textarea?.addEventListener('keydown', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
@@ -263,7 +268,7 @@ document.getElementById('hacky-textarea')?.addEventListener('keydown', (e) => {
   sendKeys(e, InputType.Down)
 })
 
-document.getElementById('hacky-textarea')?.addEventListener('keyup', (e) => {
+textarea?.addEventListener('keyup', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
