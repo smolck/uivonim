@@ -263,7 +263,7 @@ document.getElementById('hacky-textarea')?.addEventListener('keydown', (e) => {
   sendKeys(e, InputType.Down)
 })
 
-window.addEventListener('keyup', (e) => {
+document.getElementById('hacky-textarea')?.addEventListener('keyup', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
