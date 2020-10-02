@@ -236,7 +236,7 @@ const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   keyListener(inputKeys, inputType)
 }
 
-window.addEventListener('keydown', (e) => {
+document.getElementById('hacky-textarea')?.addEventListener('keydown', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)

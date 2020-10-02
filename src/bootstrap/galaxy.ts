@@ -29,6 +29,12 @@ requestAnimationFrame(() => {
   })
 
   setTimeout(() => {
+    document.addEventListener('click', (e: MouseEvent) => {
+      console.log('click event')
+      e.preventDefault()
+      document.getElementById('hacky-textarea')?.focus()
+    })
+
     require('../services/remote')
     require('../services/app-info')
     requireDir(`${__dirname}/../components`)
