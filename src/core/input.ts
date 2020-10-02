@@ -6,6 +6,8 @@ import api from '../core/instance-api'
 import { remote } from 'electron'
 import { Script } from 'vm'
 
+var keymap = require('native-keymap')
+
 export enum InputType {
   Down = 'down',
   Up = 'up',
@@ -35,11 +37,13 @@ let isCapturing = true
 let holding = ''
 let xformed = false
 let lastDown = ''
+let deadKey = ''
 let windowHasFocus = true
 let lastEscapeTimestamp = 0
 let shouldClearEscapeOnNextAppFocus = false
 let keyListener: OnKeyFn = () => {}
 let sendInputToVim = true
+console.log(keymap.getKeyMap())
 
 const isStandardAscii = (key: string) =>
   key.charCodeAt(0) > 32 && key.charCodeAt(0) < 127
@@ -209,6 +213,27 @@ const sendToVim = (inputKeys: string) => {
 
   // a fix for terminal. only happens on cmd-tab. see below for more info
   if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
+      console.log(inputKeys)
+
+  if (deadKey != '') {
+      // TODO refactor and add all composition rules (depending on layout)
+      if (inputKeys === 'e') {
+          inputKeys = 'é'
+          deadKey = ''
+      }
+      else if (inputKeys === '<Space>') {
+          inputKeys = '´'
+          deadKey = ''
+      }
+      else if (inputKeys === '<Dead>') {
+          inputKeys = deadKey
+      }
+      else {
+          inputKeys = deadKey + inputKeys
+          deadKey = ''
+      }
+  }
+
   input(inputKeys)
 }
 
@@ -230,6 +255,17 @@ export const registerOneTimeUseShortcuts = (
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
   if (!key) return
+  if (key === 'Dead') {
+      const compositor = '´' // TODO obtain from e.code via keymap.GetKeyMap()
+      if (deadKey === '') {
+          deadKey = compositor
+          return
+      }
+      else {
+          deadKey = compositor
+      }
+  }
+
   const inputKeys = formatInput(mapMods(e), mapKey(e.key))
 
   if (sendInputToVim) return sendToVim(inputKeys)
