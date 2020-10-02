@@ -23,14 +23,18 @@ requestAnimationFrame(() => {
 
   // high priority components
   requestAnimationFrame(() => {
+    // Need to focus hacky textarea so input is registered right off the bat.
+    document.getElementById('hacky-textarea')?.focus()
+
     require('../components/statusline')
     require('../components/command-line')
     require('../components/vim-search')
   })
 
   setTimeout(() => {
+    // Focus on hacky textarea when clicking main window, since input events are
+    // received from that textarea.
     document.addEventListener('click', (e: MouseEvent) => {
-      console.log('click event')
       e.preventDefault()
       document.getElementById('hacky-textarea')?.focus()
     })
