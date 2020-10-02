@@ -32,8 +32,34 @@ function uivonim.signature_help(_, method, result)
   vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim'.signature_help_close, true)")
 end
 
+function uivonim.hover_close()
+  vim.fn.Uivonim('hover-close')
+end
+
+function uivonim.hover(_, method, result)
+  if not (result and result.contents) then
+    -- TODO(smolck): Maybe let the user know somehow by telling Uivonim about it?
+    return
+  end
+
+  -- TODO(smolck): Remove this and just handle on the Uivonim side (probably)
+  local markdown_lines = util.convert_input_to_markdown_lines(result.contents)
+  markdown_lines = util.trim_empty_lines(markdown_lines)
+  if vim.tbl_isempty(markdown_lines) then
+    return
+  end
+
+  vim.fn.Uivonim('hover', method, result)
+
+  -- Close autocmd
+  vim.api.nvim_command(
+    "autocmd CursorMoved,BufHidden,InsertCharPre <buffer> ++once lua pcall(require'uivonim'.hover_close, true)"
+  )
+end
+
 uivonim.lsp_callbacks = {
   ['textDocument/signatureHelp'] = uivonim.signature_help;
+  ['textDocument/hover'] = uivonim.hover;
 }
 
 return uivonim

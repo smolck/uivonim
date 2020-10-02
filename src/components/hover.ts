@@ -7,13 +7,18 @@ import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
+import api from '../core/instance-api'
+import { parse as stringToMarkdown } from 'marked'
+import { resetMarkdownHTMLStyle } from '../ui/styles'
 
 interface ShowParams {
   data: ColorData[][]
   doc?: string
 }
 
+// const docs = (data: string) => h('div', { style: docStyle, oncreate: (e: HTMLElement) => e.innerHTML = stringToMarkdown(data) })
 const docs = (data: string) => h('div', { style: docStyle }, [h('div', data)])
+// const docs = (data: string) => h('div', { style: docStyle }, data.split('\n').map((x) => h('div', stringToMarkdown(x))))
 
 const getPosition = (row: number, col: number) => ({
   ...windows.pixelPosition(row > 2 ? row : row + 1, col - 1),
@@ -98,5 +103,14 @@ const view = ($: S) =>
   )
 
 export const ui = app<S, A>({ name: 'hover', state, actions, view })
+
+api.onAction('hover', (_, result) => {
+  const doc = result.contents[0].value
+  ui.show({ data: [[]], doc })
+
+  console.log('hover', result)
+})
+
+api.onAction('hover-close', () => ui.hide())
 
 sub('redraw', debounce(ui.updatePosition, 50))
