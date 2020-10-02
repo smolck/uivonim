@@ -241,7 +241,8 @@ const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   keyListener(inputKeys, inputType)
 }
 
-textarea?.addEventListener('keydown', (e) => {
+
+const keydownHandler = (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
@@ -266,9 +267,9 @@ textarea?.addEventListener('keydown', (e) => {
   }
 
   sendKeys(e, InputType.Down)
-})
+}
 
-textarea?.addEventListener('keyup', (e) => {
+const keyupHandler = (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
@@ -290,7 +291,30 @@ textarea?.addEventListener('keyup', (e) => {
     xformed = false
     holding = ''
   }
+}
+
+// Need to handle key events from window for GUI elements like the external
+// cmdline, so if the hacky textarea isn't focused (which it won't be when
+// those elements are in use), handle the event from the window.
+window.addEventListener('keydown', (e) => {
+  if (textarea)
+    if (textarea === document.activeElement)
+      return
+
+  keydownHandler(e)
 })
+
+// Same as above, just for `keyup` event.
+window.addEventListener('keyup', (e) => {
+  if (textarea)
+    if (textarea === document.activeElement)
+      return
+
+  keyupHandler(e)
+})
+
+textarea?.addEventListener('keydown', keydownHandler)
+textarea?.addEventListener('keyup', keyupHandler)
 
 remote.getCurrentWindow().on('focus', () => {
   windowHasFocus = true
