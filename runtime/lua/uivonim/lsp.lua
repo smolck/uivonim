@@ -60,9 +60,17 @@ function M.hover(_, method, result)
   )
 end
 
+function M.references(_, method, result)
+  if not result then return end
+
+  local list = util.locations_to_items(result)
+  notify_uivonim('references', method, list)
+end
+
 M.callbacks = {
   ['textDocument/signatureHelp'] = M.signature_help;
   ['textDocument/hover'] = M.hover;
+  ['textDocument/references'] = M.references;
 }
 
 return M

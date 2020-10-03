@@ -3,13 +3,19 @@ import { PluginRight } from '../components/plugin-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { simplifyPath } from '../support/utils'
 import { showCursorline } from '../core/cursor'
-import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
+import Input from '../components/text-input'
+
 import * as Icon from 'hyperapp-feather'
-import { LocationResult } from '../neovim/get-line-contents'
 import api from '../core/instance-api'
 
-type ReferenceResult = [string, LocationResult[]]
+type Reference = {
+  lineNum: number
+  column: number
+  text: string
+}
+
+type References = [string, Reference[]]
 
 type TextTransformer = (text: string, last?: boolean) => string
 
@@ -20,8 +26,8 @@ const els = new Map<number, HTMLElement>()
 const state = {
   val: '',
   referencedSymbol: '',
-  references: [] as ReferenceResult[],
-  cache: [] as ReferenceResult[],
+  references: [] as References[],
+  cache: [] as References[],
   vis: false,
   ix: 0,
   subix: -1,
@@ -50,21 +56,15 @@ const scrollIntoView = (next: number) =>
     } else if (top < containerTop) elref.scrollTop += top - containerTop
   }, 1)
 
-const selectResult = (
-  references: ReferenceResult[],
-  ix: number,
-  subix: number
-) => {
+const selectResult = (references: References[], ix: number, subix: number) => {
   if (subix < 0) return
-  const [, items] = references[ix]
-  const {
-    path,
-    range: { start },
-  } = items[subix]
+  const [path, items] = references[ix]
+  const { lineNum, column } = items[subix]
+
   api.nvim.jumpTo({
     path,
-    line: start.line,
-    column: start.character,
+    line: lineNum,
+    column: column,
   })
   showCursorline()
 }
@@ -98,9 +98,10 @@ const resetState = { vis: false, references: [] }
 const actions = {
   hide: () => (vimFocus(), resetState),
 
-  show: ({ references, referencedSymbol }: any) => (
-    vimBlur(),
-    {
+  show: ({ references, referencedSymbol }: any) => {
+    vimBlur()
+
+    return {
       references,
       referencedSymbol,
       cache: references,
@@ -110,7 +111,7 @@ const actions = {
       subix: -1,
       loading: false,
     }
-  ),
+  },
 
   select: () => (s: S) => {
     vimFocus()
@@ -140,14 +141,14 @@ const actions = {
 
   next: () => (s: S) => {
     const next = s.subix + 1 < s.references[s.ix][1].length ? s.subix + 1 : 0
-    selectResult(s.references, s.ix, next)
+    selectResult(s.references, s.ix, s.subix)
     return { subix: next }
   },
 
   prev: () => (s: S) => {
     const prev =
       s.subix - 1 < 0 ? s.references[s.ix][1].length - 1 : s.subix - 1
-    selectResult(s.references, s.ix, prev)
+    selectResult(s.references, s.ix, s.subix)
     return { subix: prev }
   },
 
@@ -231,7 +232,7 @@ const view = ($: S, a: typeof actions) =>
                     {
                       active: pos === $.ix && itemPos === $.subix,
                     },
-                    highlightPattern(f.lineContents, $.referencedSymbol, {
+                    highlightPattern(f.text, $.referencedSymbol, {
                       normal: (text, last) =>
                         h(
                           'span',
@@ -267,3 +268,30 @@ const view = ($: S, a: typeof actions) =>
   ])
 
 export const ui = app({ name: 'references', state, actions, view })
+
+api.onAction('references', (_, items) => {
+  // TODO(smolck): Efficiency? This works but probably isn't the most
+  // performant. Ideally could remove the intermediate map.
+  //
+  // This code essentially takes a series of code reference objects from Lua,
+  // sorts them by filename (leveraging the map), and then turns that into
+  // an array for use above.
+  const itemsMap = items.reduce((map: Map<string, Reference[]>, x: any) => {
+    const ref = {
+      lineNum: x.lnum,
+      column: x.col,
+      text: x.text,
+    } as Reference
+
+    let maybeArr = map.get(x.filename)
+    if (maybeArr) maybeArr.push(ref)
+    else map.set(x.filename, [ref])
+
+    return map
+  }, new Map())
+
+  let stuffToShow = [] as References[]
+  itemsMap.forEach((value, key) => stuffToShow.push([key, value]))
+
+  ui.show({ references: stuffToShow })
+})
