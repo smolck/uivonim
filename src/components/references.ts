@@ -141,14 +141,14 @@ const actions = {
 
   next: () => (s: S) => {
     const next = s.subix + 1 < s.references[s.ix][1].length ? s.subix + 1 : 0
-    selectResult(s.references, s.ix, s.subix)
+    selectResult(s.references, s.ix, next)
     return { subix: next }
   },
 
   prev: () => (s: S) => {
     const prev =
       s.subix - 1 < 0 ? s.references[s.ix][1].length - 1 : s.subix - 1
-    selectResult(s.references, s.ix, s.subix)
+    selectResult(s.references, s.ix, prev)
     return { subix: prev }
   },
 
