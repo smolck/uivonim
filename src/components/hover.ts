@@ -6,10 +6,18 @@ import Overlay from '../components/overlay'
 import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
-import { cvar } from '../ui/css'
 import api from '../core/instance-api'
-import { parse as stringToMarkdown } from 'marked'
-import { resetMarkdownHTMLStyle } from '../ui/styles'
+import { parse as stringToMarkdown, setOptions } from 'marked'
+
+setOptions({
+  highlight: (code, lang, _) => {
+    const hljs = require("highlight.js/lib/core");
+    hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}`));
+
+    const highlightedCode = hljs.highlight(lang, code).value
+    return highlightedCode
+  }
+})
 
 interface ShowParams {
   hoverHeight: number
@@ -22,9 +30,19 @@ const docs = (data: string) =>
   h('div', {
     style: docStyle,
     oncreate: (e: HTMLElement) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`.replace(
+        '<pre>',
+        '<pre style="display:inline">'
+      )),
+
+    // TODO(smolck): Pretty hacky, but we want the <pre> tag to have display
+    // inline, so that there isn't a bunch of extra top padding, so we do a
+    // replace.
     onupdate: (e: HTMLElement, _) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`.replace(
+        '<pre>',
+        '<pre style="display:inline">'
+      )),
   })
 
 const getPosition = (row: number, col: number, heightOfHover: number) =>

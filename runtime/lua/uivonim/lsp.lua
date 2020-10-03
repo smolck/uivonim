@@ -30,7 +30,7 @@ function M.signature_help(_, method, result)
   notify_uivonim('signature-help', method, result, row, col)
 
   -- Close autocmd
-  vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim'.signature_help_close, true)")
+  vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim/lsp'.signature_help_close, true)")
 end
 
 function M.hover_close()
@@ -43,6 +43,8 @@ function M.hover(_, method, result)
     return
   end
 
+  dump(result.contents)
+
   -- TODO(smolck): Remove this and just handle on the Uivonim side (probably)
   local markdown_lines = util.convert_input_to_markdown_lines(result.contents)
   markdown_lines = util.trim_empty_lines(markdown_lines)
@@ -54,7 +56,7 @@ function M.hover(_, method, result)
 
   -- Close autocmd
   vim.api.nvim_command(
-    "autocmd CursorMoved,BufHidden,InsertCharPre <buffer> ++once lua pcall(require'uivonim'.hover_close, true)"
+    "autocmd CursorMoved,BufHidden,InsertCharPre <buffer> ++once lua pcall(require'uivonim/lsp'.hover_close, true)"
   )
 end
 
