@@ -36,7 +36,7 @@ Download the latest GitHub release, or build from source (see the "build" sectio
 Install the following things:
 
 - node/npm
-- latest Neovim
+- latest Neovim (i.e., nightly or built from master)
 
 Then run:
 
