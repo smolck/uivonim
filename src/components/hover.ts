@@ -12,23 +12,31 @@ import { parse as stringToMarkdown } from 'marked'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
 
 interface ShowParams {
+  hoverHeight: number
   data: ColorData[][]
   doc?: string
 }
 
-// const docs = (data: string) => h('div', { style: docStyle, oncreate: (e: HTMLElement) => e.innerHTML = stringToMarkdown(data) })
-const docs = (data: string) => h('div', { style: docStyle }, [h('div', data)])
-// const docs = (data: string) => h('div', { style: docStyle }, data.split('\n').map((x) => h('div', stringToMarkdown(x))))
+// TODO(smolck): Should sanitize this HTML probably because safety.
+const docs = (data: string) =>
+  h('div', {
+    style: docStyle,
+    oncreate: (e: HTMLElement) =>
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
+    onupdate: (e: HTMLElement, _) =>
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
+  })
 
-const getPosition = (row: number, col: number) => ({
-  ...windows.pixelPosition(row > 2 ? row : row + 1, col - 1),
-  anchorBottom: cursor.row > 2,
-})
+const getPosition = (row: number, col: number, heightOfHover: number) =>
+  heightOfHover > row
+    ? { ...windows.pixelPosition(row + 1, col), anchorBottom: false }
+    : { ...windows.pixelPosition(row, col), anchorBottom: true }
 
 const state = {
   value: [[]] as ColorData[][],
   visible: false,
   anchorBottom: true,
+  hoverHeight: 2,
   doc: '',
   x: 0,
   y: 0,
@@ -38,14 +46,15 @@ type S = typeof state
 
 const actions = {
   hide: () => ({ visible: false }),
-  show: ({ data, doc }: ShowParams) => ({
+  show: ({ data, doc, hoverHeight }: ShowParams) => ({
     doc,
+    hoverHeight,
     value: data,
     visible: true,
-    ...getPosition(cursor.row, cursor.col),
+    ...getPosition(cursor.row, cursor.col, hoverHeight),
   }),
   updatePosition: () => (s: S) =>
-    s.visible ? getPosition(cursor.row, cursor.col) : undefined,
+    s.visible ? getPosition(cursor.row, cursor.col, s.hoverHeight) : undefined,
 }
 
 type A = typeof actions
@@ -55,60 +64,22 @@ const view = ($: S) =>
     {
       x: $.x,
       y: $.y,
-      maxWidth: 600,
+      // TODO(smolck): Deal with width and stuff.
+      // maxWidth: 600,
       visible: $.visible,
       anchorAbove: $.anchorBottom,
     },
     [
-      ,
       $.doc && !$.anchorBottom && docs($.doc),
-
-      h(
-        'div',
-        {
-          style: {
-            background: cvar('background-30'),
-            padding: '8px',
-          },
-        },
-        $.value.map((m) =>
-          h(
-            'div',
-            {
-              style: {
-                display: 'flex',
-                flexFlow: 'row wrap',
-              },
-            },
-            m.map(({ color, text }) =>
-              h(
-                'span',
-                {
-                  style: {
-                    color: color || cvar('foreground'),
-                    whiteSpace: 'pre',
-                    fontFamily: 'var(--font)',
-                    fontSize: 'var(--font-size)px',
-                  },
-                },
-                text
-              )
-            )
-          )
-        )
-      ),
-
       $.doc && $.anchorBottom && docs($.doc),
     ]
   )
 
 export const ui = app<S, A>({ name: 'hover', state, actions, view })
 
-api.onAction('hover', (_, result) => {
-  const doc = result.contents[0].value
-  ui.show({ data: [[]], doc })
-
-  console.log('hover', result)
+api.onAction('hover', (_, markdownLines) => {
+  const doc = markdownLines.join('\n')
+  ui.show({ data: [[]], doc, hoverHeight: markdownLines.length })
 })
 
 api.onAction('hover-close', () => ui.hide())

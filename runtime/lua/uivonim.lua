@@ -49,7 +49,7 @@ function uivonim.hover(_, method, result)
     return
   end
 
-  vim.fn.Uivonim('hover', method, result)
+  vim.fn.Uivonim('hover', method, markdown_lines)
 
   -- Close autocmd
   vim.api.nvim_command(
