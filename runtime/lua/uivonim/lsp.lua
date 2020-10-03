@@ -1,5 +1,6 @@
 local M = {}
 local util = vim.lsp.util
+local notify_uivonim = require'uivonim'.notify_uivonim
 
 local function get_cursor_pos()
   local pos = vim.api.nvim_win_get_cursor(0)
@@ -8,7 +9,7 @@ local function get_cursor_pos()
 end
 
 function M.signature_help_close()
-  vim.fn.Uivonim('signature-help-close')
+  notify_uivonim('signature-help-close')
 end
 
 function M.signature_help(_, method, result)
@@ -26,14 +27,14 @@ function M.signature_help(_, method, result)
   end
 
   local row, col = get_cursor_pos()
-  vim.fn.Uivonim('signature-help', method, result, row, col)
+  notify_uivonim('signature-help', method, result, row, col)
 
   -- Close autocmd
   vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim'.signature_help_close, true)")
 end
 
 function M.hover_close()
-  vim.fn.Uivonim('hover-close')
+  notify_uivonim('hover-close')
 end
 
 function M.hover(_, method, result)
@@ -49,7 +50,7 @@ function M.hover(_, method, result)
     return
   end
 
-  vim.fn.Uivonim('hover', method, markdown_lines)
+  notify_uivonim('hover', method, markdown_lines)
 
   -- Close autocmd
   vim.api.nvim_command(
@@ -57,7 +58,7 @@ function M.hover(_, method, result)
   )
 end
 
-M.lsp_callbacks = {
+M.callbacks = {
   ['textDocument/signatureHelp'] = M.signature_help;
   ['textDocument/hover'] = M.hover;
 }
