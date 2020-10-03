@@ -65,23 +65,5 @@
     "ts-unused-exports": "^6.2.4",
     "ttypescript": "^1.5.12",
     "typescript": "^4.0.3"
-  },
-  "binaryDependencies": [
-    {
-      "org": "mholt",
-      "repo": "archiver",
-      "tag": "v3.1.1",
-      "mac": "arc_mac_amd64",
-      "win": "arc_windows_amd64.exe",
-      "linux": "arc_linux_amd64"
-    },
-    {
-      "org": "burntsushi",
-      "repo": "ripgrep",
-      "tag": "0.10.0",
-      "mac": "ripgrep-${tag}-x86_64-apple-darwin.tar.gz",
-      "win": "ripgrep-${tag}-x86_64-pc-windows-msvc.zip",
-      "linux": "ripgrep-${tag}-x86_64-unknown-linux-musl.tar.gz"
-    }
-  ]
+  }
 }
