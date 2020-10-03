@@ -1,4 +1,4 @@
-local uivonim = {}
+local M = {}
 local util = vim.lsp.util
 
 local function get_cursor_pos()
@@ -7,11 +7,11 @@ local function get_cursor_pos()
   return pos[1] - vim.fn.getwininfo(win_id)[1].topline, pos[2]
 end
 
-function uivonim.signature_help_close()
+function M.signature_help_close()
   vim.fn.Uivonim('signature-help-close')
 end
 
-function uivonim.signature_help(_, method, result)
+function M.signature_help(_, method, result)
   if not (result and result.signatures and result.signatures[1]) then
     print('No signature help available')
     return
@@ -32,11 +32,11 @@ function uivonim.signature_help(_, method, result)
   vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim'.signature_help_close, true)")
 end
 
-function uivonim.hover_close()
+function M.hover_close()
   vim.fn.Uivonim('hover-close')
 end
 
-function uivonim.hover(_, method, result)
+function M.hover(_, method, result)
   if not (result and result.contents) then
     -- TODO(smolck): Maybe let the user know somehow by telling Uivonim about it?
     return
@@ -57,9 +57,9 @@ function uivonim.hover(_, method, result)
   )
 end
 
-uivonim.lsp_callbacks = {
-  ['textDocument/signatureHelp'] = uivonim.signature_help;
-  ['textDocument/hover'] = uivonim.hover;
+M.lsp_callbacks = {
+  ['textDocument/signatureHelp'] = M.signature_help;
+  ['textDocument/hover'] = M.hover;
 }
 
-return uivonim
+return M
