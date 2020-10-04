@@ -20,6 +20,7 @@ export const startupCmds = CmdGroup`
   let g:uvn_complete_pos = 1
   let g:uvn_completions = []
   call UivonimRegisterAutocmds()
+  call UivonimCreateHighlights()
 `
 
 // TODO: should we rename some of these "internal" functions so they
@@ -76,6 +77,14 @@ const autocmdsText = Object.entries(autocmds)
     return `au UivonimAU ${cmd} * call rpcnotify(0, 'uivonim-autocmd', '${cmd}'${argtext})`
   })
   .join('\n')
+
+startup.defineFunc.UivonimCreateHighlights`
+  hi! link uvnLink Special
+  hi! link uvnPreProc PreProc
+  hi! link uvnFunction Function
+  hi! link uvnBuiltin Constant
+  hi! link uvnKeyword Keyword
+`
 
 // autocmds in a separate function because chaining autocmds with "|" is bad
 // it makes the next autocmd a continuation of the previous

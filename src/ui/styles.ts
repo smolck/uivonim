@@ -67,11 +67,11 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
       )
       .catch((error) => console.warn('Error: ', error))
 
-  getColorAndSetVar('Keyword', 'keyword')
-  getColorAndSetVar('Constant', 'builtin')
-  getColorAndSetVar('Function', 'function')
-  getColorAndSetVar('PreProc', 'preproc')
-  getColorAndSetVar('Special', 'linkcolor')
+  getColorAndSetVar('uvnKeyword', 'keyword')
+  getColorAndSetVar('uvnBuiltin', 'builtin')
+  getColorAndSetVar('uvnFunction', 'function')
+  getColorAndSetVar('uvnPreProc', 'preproc')
+  getColorAndSetVar('uvnLink', 'linkcolor')
 }
 
 sub('colors-changed', refreshColors)
