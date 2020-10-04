@@ -53,18 +53,18 @@
         color: var(--foreground);
       }
 
-      /* Without this, the hover appears to have extra padding on the top and
-         bottom. */
-      #hover *:not(div) {
-        display: inline;
-      }
-
       pre {
         font-family: var(--font);
         color: var(--foreground);
 
         /* Word-wrapping */
         white-space: pre-wrap;
+      }
+
+      /* Without this, there's extra margin on the top and bottom of the
+         hover (src/components/hover.ts) */
+      p, pre {
+        margin: 0;
       }
 
       body {
