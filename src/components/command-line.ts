@@ -105,7 +105,7 @@ const view = ($: S) =>
       Input({
         focus: true,
         value: $.value,
-        desc: 'command line',
+        desc: $.kind == CommandType.Ex ? 'command line' : 'prompt',
         position: $.position,
         icon: ($.value).startsWith('lua ') ? Icon.Moon : (modeSwitch.get($.kind) || Icon.Command),
       }),
