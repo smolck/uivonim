@@ -59,7 +59,6 @@ interface CommandLineCache {
 
 export enum CommandType {
   Ex,
-  Lua,
   Prompt,
   SearchForward,
   SearchBackward,

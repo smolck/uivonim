@@ -15,7 +15,6 @@ import { h, app } from '../ui/uikit'
 
 const modeSwitch = new Map([
   [CommandType.Ex, Icon.Command],
-  [CommandType.Lua, Icon.Moon],
   [CommandType.Prompt, Icon.ChevronsRight],
 ])
 
@@ -47,12 +46,6 @@ const actions = {
   updateCommand: ({ cmd, kind, position, prompt }: CommandUpdate) => (s: S) => {
     hideCursor()
     disableCursor()
-
-    if (cmd.startsWith('lua ')) {
-        kind = CommandType.Lua
-        cmd = cmd.substring(4)
-        s.value = 'lua command line'
-    }
 
     return {
       kind,
@@ -112,9 +105,9 @@ const view = ($: S) =>
       Input({
         focus: true,
         value: $.value,
-        desc: $.kind == CommandType.Lua ? 'lua command line' : 'command line',
+        desc: 'command line',
         position: $.position,
-        icon: modeSwitch.get($.kind) || Icon.Command,
+        icon: ($.value).startsWith('lua ') ? Icon.Moon : (modeSwitch.get($.kind) || Icon.Command),
       }),
 
       h(
