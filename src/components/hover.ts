@@ -32,19 +32,9 @@ const docs = (data: string) =>
   h('div', {
     style: docStyle,
     oncreate: (e: HTMLElement) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`.replace(
-        '<pre>',
-        '<pre style="display:inline">'
-      )),
-
-    // TODO(smolck): Pretty hacky, but we want the <pre> tag to have display
-    // inline, so that there isn't a bunch of extra top padding, so we do a
-    // replace.
-    onupdate: (e: HTMLElement, _) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`.replace(
-        '<pre>',
-        '<pre style="display:inline">'
-      )),
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
+    onupdate: (e: HTMLElement, _: any) =>
+      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
   })
 
 const getPosition = (row: number, col: number, heightOfHover: number) =>
@@ -102,7 +92,11 @@ api.onAction('hover', (_, markdownLines) => {
   const doc = markdownLines.join('\n')
 
   const maxWidth =
-    cell.width * markdownLines.reduce((acc, item) => item.length > acc ? item.length : acc, markdownLines[0].length)
+    cell.width *
+    markdownLines.reduce(
+      (acc, item) => (item.length > acc ? item.length : acc),
+      markdownLines[0].length
+    )
   ui.show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 

@@ -48,6 +48,12 @@
         color: var(--foreground);
       }
 
+      /* Without this, the hover appears to have extra padding on the top and
+         bottom. */
+      #hover > div > div > div > div > div > * {
+        display: inline;
+      }
+
       pre {
         font-family: var(--font);
         color: var(--foreground);
