@@ -48,8 +48,14 @@ const actions = {
     hideCursor()
     disableCursor()
 
+    if (cmd.startsWith('lua ')) {
+        kind = CommandType.Lua
+        cmd = cmd.substring(4)
+        s.value = 'lua command line'
+    }
+
     return {
-      kind: cmd.startsWith('lua') ? CommandType.Lua : CommandType.Ex,
+      kind,
       prompt,
       position,
       visible: true,
@@ -106,7 +112,7 @@ const view = ($: S) =>
       Input({
         focus: true,
         value: $.value,
-        desc: 'command line',
+        desc: $.kind == CommandType.Lua ? 'lua command line' : 'command line',
         position: $.position,
         icon: modeSwitch.get($.kind) || Icon.Command,
       }),
