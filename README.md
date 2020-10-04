@@ -18,7 +18,7 @@ without reliance on VSCode extensions.
 - Fast, building upon the work done by @breja, with things like WebGL GPU
   rendering and multithreading
 - Extensibility via a Lua API providing access to frontend GUI features such as
-  LSP hovers and a fuzzy finder UI
+  [LSP hover/signature help/symbols](https://github.com/smolck/uivonim/wiki/Builtin-LSP) and a fuzzy finder UI
 
 ## Getting Started
 
