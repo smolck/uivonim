@@ -37,7 +37,7 @@ local function signature_help_to_show_params(signature_help)
   show_params.totalSignatures = #signature_help.signatures
   show_params.selectedSignature = active_signature
   show_params.label = signature.label
-  show_params.documentation = signature.documentation.value or signature.documentation or ''
+  show_params.documentation = (signature.documentation and signature.documentation.value) or signature.documentation or ''
 
   if signature.parameters and #signature.parameters > 0 then
     local active_parameter = signature_help.activeParameter or 0
