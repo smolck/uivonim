@@ -4,12 +4,13 @@ import Overlay from '../components/overlay'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 import api from '../core/instance-api'
+import { parse as stringToMarkdown, setOptions } from 'marked'
 
 interface ShowParams {
   row: number
   col: number
   label: string
-  currentParam: string
+  activeParam: string | [number, number]
   documentation?: string
   paramDoc?: string
   totalSignatures: number
@@ -35,15 +36,24 @@ const docs = (data: string) =>
       display: 'block',
     },
     oncreate: (e: HTMLElement) =>
-      (e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${data}</div>`),
+      (e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${stringToMarkdown(data)}</div>`),
   })
 
-const sliceAndDiceLabel = (label: string, currentParam: string) => {
-  const paramStart = label.indexOf(currentParam)
-  const labelStart = label.slice(0, paramStart)
-  const activeParam = label.slice(paramStart, paramStart + currentParam.length)
-  const labelEnd = label.slice(paramStart + currentParam.length)
-  return { labelStart, labelEnd, activeParam }
+const sliceAndDiceLabel = (label: string, activeParam: string | [number, number]) => {
+  let x, labelStart, labelEnd
+
+  if (typeof activeParam === 'string') {
+    const paramStart = label.indexOf(activeParam)
+    labelStart = label.slice(0, paramStart)
+    x = label.slice(paramStart, paramStart + activeParam.length)
+    labelEnd = label.slice(paramStart + activeParam.length)
+  } else {
+    labelStart = label.slice(0, activeParam[0])
+    x = label.slice(activeParam[0], activeParam[1])
+    labelEnd = label.slice(activeParam[1])
+  }
+
+  return { labelStart, labelEnd, activeParam: x }
 }
 
 const fresh = ({
@@ -64,7 +74,7 @@ const state = {
   label: '',
   labelStart: '',
   labelEnd: '',
-  currentParam: '',
+  activeParam: '',
   documentation: '',
   paramDoc: '',
   anchorBottom: true,
@@ -83,7 +93,7 @@ const actions = {
     row,
     col,
     label,
-    currentParam,
+    activeParam: x,
     documentation,
     paramDoc,
     selectedSignature,
@@ -91,7 +101,7 @@ const actions = {
   }: ShowParams) => (s: S) => {
     const { labelStart, labelEnd, activeParam } = sliceAndDiceLabel(
       label,
-      currentParam
+      x
     )
     const same = s.label === label && s.row === row
     const stuff = same
@@ -105,7 +115,7 @@ const actions = {
       labelEnd,
       paramDoc,
       anchorBottom: row > 2,
-      currentParam: activeParam,
+      activeParam: activeParam,
       visible: true,
     }
   },
@@ -164,7 +174,7 @@ const view = ($: S) =>
               h('div', [
                 ,
                 h('span', { style: fadedStyle }, [h('span', $.labelStart)]),
-                h('span', { style: strongStyle }, [h('span', $.currentParam)]),
+                h('span', { style: strongStyle }, [h('span', $.activeParam)]),
                 h('span', { style: fadedStyle }, [h('span', $.labelEnd)]),
               ]),
 
@@ -189,16 +199,7 @@ const view = ($: S) =>
 const ui = app<S, A>({ name: 'hint', state, actions, view })
 
 // See runtime/lua/uivonim.lua
-api.onAction('signature-help', (_, result, row, col) => {
-  const signature = result.signatures[result.activeSignature]
-  let showParams: ShowParams = {
-    row,
-    col,
-    label: signature.label,
-    currentParam: signature.parameters[result.activeParameter],
-    totalSignatures: result.signatures.length,
-    selectedSignature: result.signatures.activeSignature,
-  }
+api.onAction('signature-help', (_, showParams) => {
   ui.show(showParams)
 })
 

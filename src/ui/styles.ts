@@ -71,6 +71,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   getColorAndSetVar('Constant', 'builtin')
   getColorAndSetVar('Function', 'function')
   getColorAndSetVar('PreProc', 'preproc')
+  getColorAndSetVar('Special', 'linkcolor')
 }
 
 sub('colors-changed', refreshColors)
