@@ -93,7 +93,7 @@ const view = ($: S) =>
     ]
   )
 
-export const ui = app<S, A>({ name: 'hover', state, actions, view })
+const ui = app<S, A>({ name: 'hover', state, actions, view })
 
 api.onAction('hover', (_, markdownLines) => {
   const doc = markdownLines.join('\n')

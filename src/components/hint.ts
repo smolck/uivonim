@@ -186,7 +186,7 @@ const view = ($: S) =>
     ]
   )
 
-export const ui = app<S, A>({ name: 'hint', state, actions, view })
+const ui = app<S, A>({ name: 'hint', state, actions, view })
 
 // See runtime/lua/uivonim.lua
 api.onAction('signature-help', (_, result, row, col) => {

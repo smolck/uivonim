@@ -43,8 +43,6 @@ function M.hover(_, method, result)
     return
   end
 
-  dump(result.contents)
-
   -- TODO(smolck): Remove this and just handle on the Uivonim side (probably)
   local markdown_lines = util.convert_input_to_markdown_lines(result.contents)
   markdown_lines = util.trim_empty_lines(markdown_lines)
@@ -67,10 +65,35 @@ function M.references(_, method, result)
   notify_uivonim('references', method, list)
 end
 
+function M.code_action(_, _, actions)
+  if actions == nil or vim.tbl_isempty(actions) then
+    print("No code actions available")
+    return
+  end
+
+  notify_uivonim('code-action', actions)
+end
+
+function M.handle_chosen_code_action(action_chosen)
+  local buf = require'vim.lsp.buf'
+
+  if action_chosen.edit or type(action_chosen.command) == "table" then
+    if action_chosen.edit then
+      util.apply_workspace_edit(action_chosen.edit)
+    end
+    if type(action_chosen.command) == "table" then
+      buf.execute_command(action_chosen.command)
+    end
+  else
+    buf.execute_command(action_chosen)
+  end
+end
+
 M.callbacks = {
   ['textDocument/signatureHelp'] = M.signature_help;
   ['textDocument/hover'] = M.hover;
   ['textDocument/references'] = M.references;
+  ['textDocument/codeAction'] = M.code_action;
 }
 
 return M
