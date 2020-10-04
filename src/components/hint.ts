@@ -197,7 +197,7 @@ api.onAction('signature-help', (_, result, row, col) => {
     label: signature.label,
     currentParam: signature.parameters[result.activeParameter],
     totalSignatures: result.signatures.length,
-    selectedSignature: result.signatures.activeSignature
+    selectedSignature: result.signatures.activeSignature,
   }
   ui.show(showParams)
 })

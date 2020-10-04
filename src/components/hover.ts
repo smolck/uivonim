@@ -11,12 +11,12 @@ import { parse as stringToMarkdown, setOptions } from 'marked'
 
 setOptions({
   highlight: (code, lang, _) => {
-    const hljs = require("highlight.js/lib/core");
-    hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}`));
+    const hljs = require('highlight.js/lib/core')
+    hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}`))
 
     const highlightedCode = hljs.highlight(lang, code).value
     return highlightedCode
-  }
+  },
 })
 
 interface ShowParams {
