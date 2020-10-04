@@ -49,6 +49,8 @@ const actions = {
     if (!s.actions.length) return resetState
     const action = s.actions[s.index]
     if (action)
+      // @ts-ignore <- without this get an error about luaeval not being a
+      // property
       api.nvim.call.luaeval(
         "require'uivonim/lsp'.handle_chosen_code_action(_A)",
         action
