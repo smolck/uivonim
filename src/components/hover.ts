@@ -93,10 +93,11 @@ api.onAction('hover', (_, markdownLines) => {
 
   const maxWidth =
     cell.width *
-    markdownLines.reduce(
+    (markdownLines.reduce(
       (acc, item) => (item.length > acc ? item.length : acc),
       markdownLines[0].length
-    )
+    ) +
+      2) // Add 2 to prevent wrapping unless necessary.
   ui.show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 
