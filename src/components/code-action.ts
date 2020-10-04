@@ -51,6 +51,9 @@ const actions = {
     if (action)
       // @ts-ignore <- without this get an error about luaeval not being a
       // property
+
+      // roundtrip through vimscript since TS dict looks like a vimscript dict
+      // TODO: see if action can be converted to a Lua table to allow direct call to lua
       api.nvim.call.luaeval(
         "require'uivonim/lsp'.handle_chosen_code_action(_A)",
         action
