@@ -6,8 +6,9 @@ import Overlay from '../components/overlay'
 import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
-import api from '../core/instance-api'
 import { parse as stringToMarkdown, setOptions } from 'marked'
+import api from '../core/instance-api'
+import { cell, size as workspaceSize } from '../core/workspace'
 
 setOptions({
   highlight: (code, lang, _) => {
@@ -21,6 +22,7 @@ setOptions({
 
 interface ShowParams {
   hoverHeight: number
+  maxWidth: number
   data: ColorData[][]
   doc?: string
 }
@@ -55,6 +57,7 @@ const state = {
   visible: false,
   anchorBottom: true,
   hoverHeight: 2,
+  maxWidth: 400, // TODO(smolck): Sane default? Is this even necessary?
   doc: '',
   x: 0,
   y: 0,
@@ -64,9 +67,10 @@ type S = typeof state
 
 const actions = {
   hide: () => ({ visible: false }),
-  show: ({ data, doc, hoverHeight }: ShowParams) => ({
+  show: ({ data, doc, hoverHeight, maxWidth }: ShowParams) => ({
     doc,
     hoverHeight,
+    maxWidth,
     value: data,
     visible: true,
     ...getPosition(cursor.row, cursor.col, hoverHeight),
@@ -82,8 +86,7 @@ const view = ($: S) =>
     {
       x: $.x,
       y: $.y,
-      // TODO(smolck): Deal with width and stuff.
-      // maxWidth: 600,
+      maxWidth: Math.max(0, Math.min($.maxWidth, workspaceSize.width)),
       visible: $.visible,
       anchorAbove: $.anchorBottom,
     },
@@ -97,7 +100,10 @@ const ui = app<S, A>({ name: 'hover', state, actions, view })
 
 api.onAction('hover', (_, markdownLines) => {
   const doc = markdownLines.join('\n')
-  ui.show({ data: [[]], doc, hoverHeight: markdownLines.length })
+
+  const maxWidth =
+    cell.width * markdownLines.reduce((acc, item) => item.length > acc ? item.length : acc, markdownLines[0].length)
+  ui.show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 
 api.onAction('hover-close', () => ui.hide())
