@@ -63,8 +63,8 @@ const selectResult = (references: References[], ix: number, subix: number) => {
 
   api.nvim.jumpTo({
     path,
-    line: lineNum,
-    column: column,
+    line: lineNum-1,
+    column: column-1,
   })
   showCursorline()
 }
