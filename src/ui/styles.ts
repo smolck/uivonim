@@ -8,7 +8,10 @@ import {
   cvar,
   hexToRGB,
 } from '../ui/css'
-import { colors as nvimColors } from '../render/highlight-attributes'
+import {
+  colors as nvimColors,
+  getColorByName,
+} from '../render/highlight-attributes'
 import { sub } from '../messaging/dispatch'
 import { css } from '../ui/uikit'
 
@@ -56,6 +59,19 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   setVar('foreground-80', contrast(fg, bg, 80))
   setVar('foreground-90', contrast(fg, bg, 90))
   setVar('foreground-100', contrast(fg, bg, 100))
+
+  const getColorAndSetVar = (colorName: string, varName: string) =>
+    getColorByName(colorName)
+      .then(({ foreground }) =>
+        foreground ? setVar(varName, foreground) : null
+      )
+      .catch((error) => console.warn('Error: ', error))
+
+  getColorAndSetVar('uvnKeyword', 'keyword')
+  getColorAndSetVar('uvnBuiltin', 'builtin')
+  getColorAndSetVar('uvnFunction', 'function')
+  getColorAndSetVar('uvnPreProc', 'preproc')
+  getColorAndSetVar('uvnLink', 'linkcolor')
 }
 
 sub('colors-changed', refreshColors)

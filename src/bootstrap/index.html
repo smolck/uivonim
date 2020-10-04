@@ -27,14 +27,44 @@
         font-size: 14px;
       }
 
+      .hljs-keyword {
+        color: var(--keyword);
+      }
+
+      .hljs-built_in {
+        color: var(--builtin);
+      }
+
+      .hljs-function {
+        color: var(--function);
+      }
+
+      .hljs-number {
+        color: var(--preproc);
+      }
+
+      a {
+        color: var(--linkcolor);
+        text-decoration: none;
+      }
+
       code {
         font-family: var(--font);
-        color: var(--foreground-30);
+        color: var(--foreground);
+      }
+
+      /* Without this, the hover appears to have extra padding on the top and
+         bottom. */
+      #hover *:not(div) {
+        display: inline;
       }
 
       pre {
         font-family: var(--font);
-        color: var(--foreground-30);
+        color: var(--foreground);
+
+        /* Word-wrapping */
+        white-space: pre-wrap;
       }
 
       body {

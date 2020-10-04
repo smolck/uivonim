@@ -38,15 +38,16 @@
     "typescript": "3.3.1"
   },
   "dependencies": {
-    "@types/marked": "^1.1.0",
     "diff-match-patch": "^1.0.5",
     "fuzzaldrin-plus": "^0.6.0",
+    "highlight.js": "^10.2.1",
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "^0.3.0",
     "marked": "^1.2.0"
   },
   "devDependencies": {
+    "@types/marked": "^1.1.0",
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "^2.0.0",
     "@types/diff-match-patch": "1.0.32",
