@@ -65,10 +65,10 @@ function M.references(_, method, result)
   notify_uivonim('references', method, list)
 end
 
-function M.document_symbols(_, method, result)
+function M.symbols(_, method, result)
   if not result then return end
 
-  -- TODO: use non-hierarchical UI element (i.e., strip filename)
+  -- TODO: use non-hierarchical UI element (i.e., strip filename) for documentSymbol
   notify_uivonim('references', method, util.symbols_to_items(result))
 end
 
@@ -101,6 +101,8 @@ M.callbacks = {
   ['textDocument/hover'] = M.hover;
   ['textDocument/references'] = M.references;
   ['textDocument/codeAction'] = M.code_action;
+  ['textDocument/documentSymbol'] = M.symbols;
+  ['workspace/Symbol'] = M.symbols;
 }
 
 return M
