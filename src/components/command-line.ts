@@ -15,6 +15,7 @@ import { h, app } from '../ui/uikit'
 
 const modeSwitch = new Map([
   [CommandType.Ex, Icon.Command],
+  [CommandType.Lua, Icon.Moon],
   [CommandType.Prompt, Icon.ChevronsRight],
 ])
 
@@ -48,7 +49,7 @@ const actions = {
     disableCursor()
 
     return {
-      kind,
+      kind: cmd.startsWith('lua') ? CommandType.Lua : CommandType.Ex,
       prompt,
       position,
       visible: true,
