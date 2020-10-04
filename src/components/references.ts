@@ -123,7 +123,7 @@ const actions = {
   change: (val: string) => (s: S) => ({
     val,
     references: val
-      ? s.cache.filter((m) => m[0].toLowerCase().includes(val))
+      ? s.cache.map((m) => [m[0], m[1].filter((x) => x.text.toLowerCase().includes(val))])
       : s.cache,
   }),
 
