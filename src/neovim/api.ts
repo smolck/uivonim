@@ -261,15 +261,16 @@ const loadBuffer = async (file: string): Promise<boolean> => {
   return true
 }
 
-type JumpOpts = HyperspaceCoordinates & { openBufferFirst: boolean }
+type JumpOpts = HyperspaceCoordinates
 
 const jumpToPositionInFile = async ({
   line,
   path,
   column,
-  openBufferFirst,
 }: JumpOpts) => {
-  if (openBufferFirst && path) cmd(`e ${path}`)
+  // TODO(smolck): Should this be unconditionally done if there's a path?
+  if (path) cmd(`e ${path}`)
+
   // nvim_win_set_cursor params
   // line: 1-index based
   // column: 0-index based
@@ -277,10 +278,7 @@ const jumpToPositionInFile = async ({
 }
 
 const jumpTo = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path
-    ? path === state.file || path === state.absoluteFilepath
-    : true
-  jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
+  jumpToPositionInFile({ line, column, path })
 }
 
 const systemAction = (event: string, cb: GenericCallback) =>
