@@ -102,7 +102,7 @@ M.callbacks = {
   ['textDocument/references'] = M.references;
   ['textDocument/codeAction'] = M.code_action;
   ['textDocument/documentSymbol'] = M.symbols;
-  ['workspace/Symbol'] = M.symbols;
+  ['workspace/symbol'] = M.symbols;
 }
 
 return M
