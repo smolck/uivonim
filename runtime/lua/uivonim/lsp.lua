@@ -65,6 +65,13 @@ function M.references(_, method, result)
   notify_uivonim('references', method, list)
 end
 
+function M.document_symbols(_, method, result)
+  if not result then return end
+
+  -- TODO: use non-hierarchical UI element (i.e., strip filename)
+  notify_uivonim('references', method, util.symbols_to_items(result))
+end
+
 function M.code_action(_, _, actions)
   if actions == nil or vim.tbl_isempty(actions) then
     print("No code actions available")
