@@ -56,6 +56,25 @@ const scrollIntoView = (next: number) =>
     } else if (top < containerTop) elref.scrollTop += top - containerTop
   }, 1)
 
+const scrollSubitemsIntoView = (parentIx: number, next: number) =>
+  setTimeout(() => {
+    const {
+      top: containerTop,
+      bottom: containerBottom,
+    } = elref.getBoundingClientRect()
+    const e = els.get(parentIx)?.children[1].children[next]
+    if (!e) return
+
+    const { top, height } = e.getBoundingClientRect()
+
+    if (top + height > containerBottom) {
+      const offset = top - containerBottom
+
+      if (offset < containerTop) elref.scrollTop += top - containerTop
+      else elref.scrollTop += offset + height + containerTop + 50
+    } else if (top < containerTop) elref.scrollTop += top - containerTop
+  })
+
 const selectResult = (references: References[], ix: number, subix: number) => {
   if (subix < 0) return
   const [path, items] = references[ix]
@@ -142,6 +161,7 @@ const actions = {
   next: () => (s: S) => {
     const next = s.subix + 1 < s.references[s.ix][1].length ? s.subix + 1 : 0
     selectResult(s.references, s.ix, next)
+    scrollSubitemsIntoView(s.ix, next)
     return { subix: next }
   },
 
@@ -149,6 +169,7 @@ const actions = {
     const prev =
       s.subix - 1 < 0 ? s.references[s.ix][1].length - 1 : s.subix - 1
     selectResult(s.references, s.ix, prev)
+    scrollSubitemsIntoView(s.ix, prev)
     return { subix: prev }
   },
 
