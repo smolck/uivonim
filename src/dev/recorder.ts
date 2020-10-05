@@ -58,7 +58,7 @@ export const record = () => {
 export const replay = () => {
   const events = storage.getItem<RecordingEvent[]>('veonim-dev-recording')
   if (!events || !events.length)
-    return messages.vscode.show({
+    return messages.show({
       message: 'recording does not exist',
       kind: MessageKind.Error,
     })
