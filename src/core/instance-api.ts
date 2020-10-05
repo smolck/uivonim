@@ -5,7 +5,6 @@ import {
   instances,
 } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
-import { MessageStatusUpdate, MessageReturn } from '../protocols/veonim'
 import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
@@ -38,43 +37,6 @@ onCreateVim((info) => {
     // TODO: do we need this to always be updated or can we query these values?
     // this will trigger on every cursor move and take up time in the render cycle
     Object.assign(state, stateDiff)
-  })
-
-  // TODO: this is so shite we need a better way to send stuff across threads
-  let messageTracker: MessageReturn[] = []
-  instance.on.showVSCodeMessage(async (...a: any[]) => {
-    // TODO: this undefined return gonna be a big problem
-    if (!isActive()) return
-    const [internalId, ...args] = a
-    const msg = require('../components/messages').default.vscode.show(...args)
-    messageTracker.push({ ...msg, internalId })
-    msg.promise.then(
-      () =>
-        (messageTracker = messageTracker.filter(
-          (m) => m.internalId !== internalId
-        ))
-    )
-    const res = await msg.promise
-    return res
-  })
-
-  instance.on.updateVSCodeMessageProgress(
-    (id: string, update: MessageStatusUpdate) => {
-      const msg = messageTracker.find((m) => m.internalId === id)
-      if (!msg)
-        return console.error(
-          'cant find vscode message to update progress',
-          id,
-          update
-        )
-      msg.setProgress(update)
-    }
-  )
-
-  instance.on.removeVSCodeMessageProgress((id: string) => {
-    const msg = messageTracker.find((m) => m.internalId === id)
-    if (!msg) return console.error('cant find vscode message to remove', id)
-    msg.remove()
   })
 
   instance.on.showNeovimMessage(async (...a: any[]) => {
