@@ -12,11 +12,6 @@ import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 export { MessageKind } from '../protocols/veonim'
 
-enum MessageSource {
-  Neovim,
-  VSCode,
-}
-
 interface MessageAction {
   label: string
   shortcut: string
@@ -25,7 +20,6 @@ interface MessageAction {
 
 interface IMessage {
   id: string
-  source: MessageSource
   kind: MessageKind
   message: string
   actions: MessageAction[]
@@ -77,7 +71,7 @@ const actions = {
   appendMessage: (message: IMessage) => (s: S) => {
     const [firstMessage, ...nextMessages] = s.messages
     const firstNvimMessage =
-      firstMessage && firstMessage.source === MessageSource.Neovim
+      firstMessage
         ? firstMessage
         : null
     if (!firstNvimMessage) {
@@ -92,12 +86,11 @@ const actions = {
     messages: s.messages.filter((m) => m.id !== id),
   }),
   clearMessages: (
-    source: MessageSource,
     clearFn?: (message: IMessage) => boolean
   ) => (s: S) => ({
     messages: clearFn
-      ? s.messages.filter((m) => m.source !== source && clearFn(m))
-      : s.messages.filter((m) => m.source !== source),
+      ? s.messages.filter((m) => clearFn(m))
+      : [],
   }),
 }
 
@@ -372,7 +365,6 @@ const addDefaultDismissAction = (msg: IMessage | Message) =>
     : []
 
 const showMessage = (
-  source: MessageSource,
   message: Message
 ): MessageReturn => {
   const id = uuid()
@@ -402,7 +394,6 @@ const showMessage = (
   ui.showMessage({
     ...message,
     id,
-    source,
     actions,
     onAction: callback,
     progress: message.progress || 1,
@@ -417,25 +408,18 @@ const showMessage = (
 }
 
 export default {
-  neovim: {
-    show: (message: Message) => showMessage(MessageSource.Neovim, message),
-    append: (message: Message) => {
-      const id = uuid()
-      ui.appendMessage({
-        ...message,
-        id,
-        source: MessageSource.Neovim,
-        actions: [],
-        onAction: () => ui.removeMessage(id),
-        stealsFocus: message.stealsFocus || false,
-      })
-    },
-    clear: (matcher?: (message: IMessage) => boolean) => {
-      ui.clearMessages(MessageSource.Neovim, matcher)
-    },
+  show: (message: Message) => showMessage(message),
+  append: (message: Message) => {
+    const id = uuid()
+    ui.appendMessage({
+      ...message,
+      id,
+      actions: [],
+      onAction: () => ui.removeMessage(id),
+      stealsFocus: message.stealsFocus || false,
+    })
   },
-  vscode: {
-    show: (message: Message) => showMessage(MessageSource.VSCode, message),
-    clear: () => ui.clearMessages(MessageSource.VSCode),
+  clear: (matcher?: (message: IMessage) => boolean) => {
+    ui.clearMessages(matcher)
   },
 }

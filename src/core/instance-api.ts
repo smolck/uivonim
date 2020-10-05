@@ -41,7 +41,7 @@ onCreateVim((info) => {
 
   instance.on.showNeovimMessage(async (...a: any[]) => {
     if (!isActive()) return
-    const msg = require('../components/messages').default.vscode.show(...a)
+    const msg = require('../components/messages').default.show(...a)
     return msg.promise
   })
   instance.on.showStatusBarMessage((message: string) => {
