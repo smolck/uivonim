@@ -34,7 +34,7 @@ app.on('ready', async () => {
           accelerator: 'CmdOrCtrl+|',
           click: () => win.webContents.toggleDevTools(),
         },
-      ] as any, // electron is stupid,
+      ] as any,
     } as any,
   ]
 
@@ -59,7 +59,7 @@ app.on('ready', async () => {
         {
           role: 'quit' as any,
         },
-      ] as any, // electron is stupid
+      ] as any,
     } as any)
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate))
