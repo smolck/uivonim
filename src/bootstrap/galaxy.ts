@@ -32,6 +32,10 @@ requestAnimationFrame(() => {
   })
 
   setTimeout(() => {
+    requireDir(`${__dirname}/../components`)
+  }, 600)
+
+  setTimeout(() => {
     // Focus on hacky textarea when clicking main window, since input events are
     // received from that textarea.
     document.addEventListener('click', (e: MouseEvent) => {
@@ -41,7 +45,6 @@ requestAnimationFrame(() => {
 
     require('../services/remote')
     require('../services/app-info')
-    requireDir(`${__dirname}/../components`)
 
     if (process.env.VEONIM_DEV) {
       require('../dev/menu')
