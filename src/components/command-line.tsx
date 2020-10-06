@@ -71,57 +71,47 @@ const view = ($: S) =>
     {
       position: 'relative',
     },
-    [
-      ,
-      $.prompt &&
-        h(
-          'div',
-          {
-            style: {
-              position: 'absolute',
-              width: '100%',
-              background: 'var(--background-50)',
-              marginTop: '-40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-            },
-          },
-          [
-            ,
-            h(
-              'div',
-              {
-                style: {
-                  padding: '0 15px',
-                  fontSize: '1.1rem',
-                },
-              },
-              $.prompt
-            ),
-          ]
-        ),
 
+    [
+      $.prompt && (
+        <div
+          style={{
+            position: 'absolute',
+            width: '100%',
+            background: 'var(--background-50)',
+            marginTop: '-40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              padding: '0 15px',
+              fontSize: '1.1rem',
+            }}
+          ></div>
+          {$.prompt}
+        </div>
+      ),
       Input({
         focus: true,
         value: $.value,
-        desc: $.kind == CommandType.Ex ? 'command line' : 'prompt',
+        desc: $.kind === CommandType.Ex ? 'command line' : 'prompt',
         position: $.position,
-        icon: (($.value).startsWith('lua ') && $.kind == CommandType.Ex) ? Icon.Moon : (modeSwitch.get($.kind) || Icon.Command),
+        icon:
+          $.value.startsWith('lua ') && $.kind == CommandType.Ex
+            ? Icon.Moon
+            : modeSwitch.get($.kind) || Icon.Command,
       }),
 
-      h(
-        'div',
-        $.options.map((name, ix) =>
-          h(
-            RowNormal,
-            {
-              active: ix === $.ix,
-            },
-            [, h('div', name)]
-          )
-        )
-      ),
+      <div>
+        {$.options.map((name, ix) => (
+          <RowNormal active={ix === $.ix}>
+            <div>{name}</div>
+          </RowNormal>
+        ))}
+      </div>,
     ]
   )
 

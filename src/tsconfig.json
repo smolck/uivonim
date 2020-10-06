@@ -10,6 +10,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "plugins": [{ "transform": "../tools/transform-no-dev.js" }]
+    "plugins": [{ "transform": "../tools/transform-no-dev.js" }],
+    "jsx": "react",
+    "jsxFactory": "h"
   }
 }
