@@ -150,6 +150,10 @@ const view = (
               setFocus(e, focus)
               setPosition(e, position)
             },
+            // TODO: hack to get hack to get dead keys working working
+            onblur: (e: HTMLInputElement) => {
+              document.getElementById('hacky-textarea')?.focus()
+            },
             onupdate: (e: HTMLInputElement) => {
               setFocus(e, focus)
               setPosition(e, position)
