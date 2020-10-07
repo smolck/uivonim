@@ -4,7 +4,7 @@ import Overlay from '../components/overlay'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 import api from '../core/instance-api'
-import { parse as stringToMarkdown, setOptions } from 'marked'
+import { parse as stringToMarkdown } from 'marked'
 
 interface ShowParams {
   row: number

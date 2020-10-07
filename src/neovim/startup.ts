@@ -1,6 +1,5 @@
 import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
-import { configPath } from '../support/utils'
-import { resolve, join } from 'path'
+import { resolve } from 'path'
 
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
