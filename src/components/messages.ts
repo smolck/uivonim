@@ -70,10 +70,7 @@ const actions = {
   },
   appendMessage: (message: IMessage) => (s: S) => {
     const [firstMessage, ...nextMessages] = s.messages
-    const firstNvimMessage =
-      firstMessage
-        ? firstMessage
-        : null
+    const firstNvimMessage = firstMessage ? firstMessage : null
     if (!firstNvimMessage) {
       message.actions = addDefaultDismissAction(message)
       return { messages: [message, ...s.messages] }
@@ -85,12 +82,8 @@ const actions = {
   removeMessage: (id: string) => (s: S) => ({
     messages: s.messages.filter((m) => m.id !== id),
   }),
-  clearMessages: (
-    clearFn?: (message: IMessage) => boolean
-  ) => (s: S) => ({
-    messages: clearFn
-      ? s.messages.filter((m) => clearFn(m))
-      : [],
+  clearMessages: (clearFn?: (message: IMessage) => boolean) => (s: S) => ({
+    messages: clearFn ? s.messages.filter((m) => clearFn(m)) : [],
   }),
 }
 
@@ -364,9 +357,7 @@ const addDefaultDismissAction = (msg: IMessage | Message) =>
       ]
     : []
 
-const showMessage = (
-  message: Message
-): MessageReturn => {
+const showMessage = (message: Message): MessageReturn => {
   const id = uuid()
   const task = CreateTask<string>()
 

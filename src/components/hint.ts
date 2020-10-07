@@ -36,10 +36,15 @@ const docs = (data: string) =>
       display: 'block',
     },
     oncreate: (e: HTMLElement) =>
-      (e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${stringToMarkdown(data)}</div>`),
+      (e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${stringToMarkdown(
+        data
+      )}</div>`),
   })
 
-const sliceAndDiceLabel = (label: string, activeParam: string | [number, number]) => {
+const sliceAndDiceLabel = (
+  label: string,
+  activeParam: string | [number, number]
+) => {
   let x, labelStart, labelEnd
 
   if (typeof activeParam === 'string') {
@@ -99,10 +104,7 @@ const actions = {
     selectedSignature,
     totalSignatures,
   }: ShowParams) => (s: S) => {
-    const { labelStart, labelEnd, activeParam } = sliceAndDiceLabel(
-      label,
-      x
-    )
+    const { labelStart, labelEnd, activeParam } = sliceAndDiceLabel(label, x)
     const same = s.label === label && s.row === row
     const stuff = same
       ? {}

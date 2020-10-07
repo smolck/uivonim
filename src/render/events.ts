@@ -100,8 +100,7 @@ const messageNotifyKindMappings = new Map([
 const showStatusMessage = (message: string) => {
   // TODO: \n on all platforms?
   const newlineCount = (message.match(/\n/g) || []).length
-  if (newlineCount)
-    return messages.show({ message, kind: MessageKind.Info })
+  if (newlineCount) return messages.show({ message, kind: MessageKind.Info })
   dispatch.pub('message.status', message)
 }
 

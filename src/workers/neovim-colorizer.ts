@@ -201,6 +201,4 @@ on.colorize((text: string, filetype: string) => colorizeText(text, filetype))
 on.colorizePerChar((lines: string[], filetype: string) =>
   colorizeTextPerChar(lines, filetype)
 )
-on.colorizeMarkdownToHTML((markdown: string) =>
-  wrongDocumentation(markdown)
-)
+on.colorizeMarkdownToHTML((markdown: string) => wrongDocumentation(markdown))

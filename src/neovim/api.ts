@@ -263,11 +263,7 @@ const loadBuffer = async (file: string): Promise<boolean> => {
 
 type JumpOpts = HyperspaceCoordinates
 
-const jumpToPositionInFile = async ({
-  line,
-  path,
-  column,
-}: JumpOpts) => {
+const jumpToPositionInFile = async ({ line, path, column }: JumpOpts) => {
   // TODO(smolck): Should this be unconditionally done if there's a path?
   if (path) cmd(`e ${path}`)
 

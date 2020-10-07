@@ -107,7 +107,10 @@ const view = ($: S) =>
         value: $.value,
         desc: $.kind == CommandType.Ex ? 'command line' : 'prompt',
         position: $.position,
-        icon: (($.value).startsWith('lua ') && $.kind == CommandType.Ex) ? Icon.Moon : (modeSwitch.get($.kind) || Icon.Command),
+        icon:
+          $.value.startsWith('lua ') && $.kind == CommandType.Ex
+            ? Icon.Moon
+            : modeSwitch.get($.kind) || Icon.Command,
       }),
 
       h(

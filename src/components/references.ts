@@ -82,8 +82,8 @@ const selectResult = (references: References[], ix: number, subix: number) => {
 
   api.nvim.jumpTo({
     path,
-    line: lineNum-1,
-    column: column-1,
+    line: lineNum - 1,
+    column: column - 1,
   })
   showCursorline()
 }
@@ -142,7 +142,10 @@ const actions = {
   change: (val: string) => (s: S) => ({
     val,
     references: val
-      ? s.cache.map((m) => [m[0], m[1].filter((x) => x.text.toLowerCase().includes(val))])
+      ? s.cache.map((m) => [
+          m[0],
+          m[1].filter((x) => x.text.toLowerCase().includes(val)),
+        ])
       : s.cache,
   }),
 
