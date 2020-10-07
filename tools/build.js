@@ -41,31 +41,6 @@ const copy = {
   },
 }
 
-const typescriptThing =
-  'Object.defineProperty(exports, "__esModule", { value: true });'
-
-const fixTypescript = async () => {
-  const dirs = await getDirFiles(fromRoot('build'))
-  const filesReq = dirs.reduce((files, dir) => {
-    return [...files, getDirFiles(dir.path)]
-  }, [])
-
-  const dirfiles = await Promise.all(filesReq)
-  const files = dirfiles.reduce((files, fileGroup) => {
-    return [...files, ...fileGroup.map((f) => f.path)]
-  }, [])
-
-  const jsFiles = files.filter((f) => path.extname(f) === '.js')
-
-  const requests = jsFiles.map(async (f) => {
-    const filedata = await fs.readFile(f, 'utf8')
-    const fixed = filedata.replace(typescriptThing, '')
-    return fs.writeFile(f, fixed)
-  })
-
-  return Promise.all(requests)
-}
-
 const copyAll = () =>
   Promise.all([
     copy.index(),
@@ -80,8 +55,7 @@ require.main === module &&
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
     await run('ttsc -p src/tsconfig.json')
-    await fixTypescript()
     await copyAll()
   })
 
-module.exports = { paths, copy, copyAll, fixTypescript }
+module.exports = { paths, copy, copyAll }
