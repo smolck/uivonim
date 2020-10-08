@@ -44,7 +44,8 @@
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "^0.3.0",
-    "marked": "^1.2.0"
+    "marked": "^1.2.0",
+    "regl": "^2.0.1"
   },
   "devDependencies": {
     "@types/marked": "^1.1.0",
