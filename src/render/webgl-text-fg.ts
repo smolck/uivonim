@@ -2,85 +2,209 @@ import { getColorAtlas } from '../render/highlight-attributes'
 import generateFontAtlas from '../render/font-texture-atlas'
 import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
+import { Regl, Texture2D, Buffer } from 'regl'
 
-export default (webgl: WebGL) => {
+type ReglRenderProps = {
+  buffer: Buffer
+  quadVertex: number[]
+  instances: number
+
+  // Uniforms
+  cellSize: number[]
+  cellPadding: number[]
+  canvasResolution: [number, number]
+  fontAtlasTexture: Texture2D
+  fontAtlasResolution: [number, number]
+  colorAtlasResolution: [number, number]
+  colorAtlasTexture: Texture2D
+
+  // Viewport
+  vpX: number
+  vpY: number
+  vpWidth: number
+  vpHeight: number
+
+  // Scissor
+  sciX: number
+  sciY: number
+  sciWidth: number
+  sciHeight: number
+}
+
+export default (regl: Regl, canvas: HTMLCanvasElement) => {
+  // total size of all pointers. chunk size that goes to shader
+  const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
+
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
 
-  const w2 = webgl.webgl2Mode
-  const c = {
-    attr: w2 ? 'in' : 'attribute',
-    out: w2 ? 'out' : 'varying',
-    tex: w2 ? 'texture' : 'texture2D',
-    fin: w2 ? 'in' : 'varying',
-  }
+  const reglRender = regl({
+    vert:`
+      attribute vec2 quadVertex;
+      attribute vec2 cellPosition;
+      attribute float hlid;
+      attribute float charIndex;
+      uniform vec2 canvasResolution;
+      uniform vec2 fontAtlasResolution;
+      uniform vec2 colorAtlasResolution;
+      uniform vec2 cellSize;
+      uniform vec2 cellPadding;
+      uniform sampler2D colorAtlasTexture;
 
-  const program = webgl.setupProgram({
-    quadVertex: VarKind.Attribute,
-    charIndex: VarKind.Attribute,
-    cellPosition: VarKind.Attribute,
-    hlid: VarKind.Attribute,
-    canvasResolution: VarKind.Uniform,
-    fontAtlasResolution: VarKind.Uniform,
-    colorAtlasResolution: VarKind.Uniform,
-    fontAtlasTextureId: VarKind.Uniform,
-    colorAtlasTextureId: VarKind.Uniform,
-    cellSize: VarKind.Uniform,
-    cellPadding: VarKind.Uniform,
+      varying vec2 o_glyphPosition;
+      varying vec4 o_color;
+
+      void main() {
+        vec2 absolutePixelPosition = cellPosition * cellSize;
+        vec2 vertexPosition = absolutePixelPosition + quadVertex + cellPadding;
+        vec2 posFloat = vertexPosition / canvasResolution;
+        float posx = posFloat.x * 2.0 - 1.0;
+        float posy = posFloat.y * -2.0 + 1.0;
+        gl_Position = vec4(posx, posy, 0, 1);
+
+        vec2 glyphPixelPosition = vec2(charIndex, 0) * cellSize;
+        vec2 glyphVertex = glyphPixelPosition + quadVertex;
+        o_glyphPosition = glyphVertex / fontAtlasResolution;
+
+        vec2 colorPosition = vec2(hlid + 0.0001, 1.0001) / colorAtlasResolution;
+        o_color = texture2D(colorAtlasTexture, colorPosition);
+      }
+    `,
+        frag:`
+      precision mediump float;
+
+      varying vec2 o_glyphPosition;
+      varying vec4 o_color;
+      uniform sampler2D fontAtlasTexture;
+
+      void main() {
+       vec4 glyphColor = texture2D(fontAtlasTexture, o_glyphPosition);
+       gl_FragColor = glyphColor * o_color;
+      }
+    `,
+
+    scissor: {
+      enable: true,
+      box: {
+        // @ts-ignore
+        x: regl.prop('sciX'),
+        // @ts-ignore
+        y: regl.prop('sciY'),
+        // @ts-ignore
+        width: regl.prop('sciWidth'),
+        // @ts-ignore
+        height: regl.prop('sciHeight'),
+      }
+    },
+
+    viewport: {
+      // @ts-ignore
+      x: regl.prop('vpX'),
+      // @ts-ignore
+      y: regl.prop('vpY'),
+      // @ts-ignore
+      width: regl.prop('vpWidth'),
+      // @ts-ignore
+      height: regl.prop('vpHeight'),
+    },
+
+    attributes: {
+      quadVertex: (_ctx, props, _batchId) => ({
+        size: 2,
+        buffer: props.quadVertex
+      }),
+      cellPosition: (_ctx, props, _batchId) => ({
+        buffer: props.buffer,
+        size: 2,
+        offset: 0,
+        stride: wrenderStride,
+        // TODO(smolck): Need to enable "instancing" for this to be used?
+        divisor: 1,
+      }),
+      hlid: (_ctx, props, _batchId) => ({
+        buffer: props.buffer,
+        size: 1,
+        offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+        stride: wrenderStride,
+        divisor: 1,
+      }),
+      charIndex: (_ctx, props, _batchId) => ({
+        buffer: props.buffer,
+        size: 1,
+        offset: 3 * Float32Array.BYTES_PER_ELEMENT,
+        stride: wrenderStride,
+        divisor: 1,
+      })
+    },
+
+    uniforms: {
+      // Vertex shader:
+      //    canvasResolution
+      //    fontAtlasResolution
+      //    colorAtlasResolution
+      //    cellSize
+      //    cellPadding
+      //    colorAtlasTextureId
+
+      // @ts-ignore
+      cellSize: regl.prop('cellSize'),
+      // @ts-ignore
+      cellPadding: regl.prop('cellPadding'),
+      // @ts-ignore
+      canvasResolution: regl.prop('canvasResolution'),
+      // @ts-ignore
+      fontAtlasResolution: regl.prop('fontAtlasResolution'),
+      // @ts-ignore
+      colorAtlasResolution: regl.prop('colorAtlasResolution'),
+      // @ts-ignore
+      colorAtlasTexture: regl.prop('colorAtlasTexture'),
+
+      // @ts-ignore
+      fontAtlasTexture: regl.prop('fontAtlasTexture'),
+    },
+
+    primitive: 'triangles',
+    offset: 0,
+    count: 6,
+    instances: (_ctx, props, _batchId) => props.instances
   })
 
-  program.setVertexShader(
-    (v) => `
-    ${c.attr} vec2 ${v.quadVertex};
-    ${c.attr} vec2 ${v.cellPosition};
-    ${c.attr} float ${v.hlid};
-    ${c.attr} float ${v.charIndex};
-    uniform vec2 ${v.canvasResolution};
-    uniform vec2 ${v.fontAtlasResolution};
-    uniform vec2 ${v.colorAtlasResolution};
-    uniform vec2 ${v.cellSize};
-    uniform vec2 ${v.cellPadding};
-    uniform sampler2D ${v.colorAtlasTextureId};
+  // TODO(smolck): Is this a good default?
+  let canvasResolution = [viewport.width, viewport.height]
 
-    ${c.out} vec2 o_glyphPosition;
-    ${c.out} vec4 o_color;
+  let fontAtlasTexture: Texture2D | null
+  // [width, height]
+  let fontAtlasResolution: [number, number] | null
 
-    void main() {
-      vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex} + ${v.cellPadding};
-      vec2 posFloat = vertexPosition / ${v.canvasResolution};
-      float posx = posFloat.x * 2.0 - 1.0;
-      float posy = posFloat.y * -2.0 + 1.0;
-      gl_Position = vec4(posx, posy, 0, 1);
+  // TODO(smolck): Defaults?
+  let cellSize: number[] | null
+  let cellPadding: number[] | null
 
-      vec2 glyphPixelPosition = vec2(${v.charIndex}, 0) * ${v.cellSize};
-      vec2 glyphVertex = glyphPixelPosition + ${v.quadVertex};
-      o_glyphPosition = glyphVertex / ${v.fontAtlasResolution};
+  let quadBuffer = [
+      0,
+      0,
+      cell.width,
+      cell.height,
+      0,
+      cell.height,
+      cell.width,
+      0,
+      cell.width,
+      cell.height,
+      0,
+      0,
+  ]
 
-      vec2 colorPosition = vec2(${v.hlid} + 0.0001, 1.0001) / ${v.colorAtlasResolution};
-      o_color = ${c.tex}(${v.colorAtlasTextureId}, colorPosition);
-    }
-  `
-  )
-
-  program.setFragmentShader(
-    (v) => `
-    precision mediump float;
-
-    ${c.fin} vec2 o_glyphPosition;
-    ${c.fin} vec4 o_color;
-    uniform sampler2D ${v.fontAtlasTextureId};
-
-    ${w2 ? 'out vec4 outColor;' : ''}
-
-    void main() {
-      vec4 glyphColor = ${c.tex}(${v.fontAtlasTextureId}, o_glyphPosition);
-      ${w2 ? 'outColor' : 'gl_FragColor'} = glyphColor * o_color;
-    }
-  `
-  )
-
-  program.create()
-  program.use()
+  const createTexture = (data: HTMLCanvasElement, width: number, height: number) => regl.texture({
+    premultiplyAlpha: true,
+    min: 'nearest',
+    mag: 'nearest',
+    wrapS: 'clamp',
+    wrapT: 'clamp',
+    format: 'rgba',
+    type: 'uint8',
+    shape: [width, height, 4],
+    data,
+  })
 
   // wait for roboto-mono to be loaded before we generate the initial font atlas
   ;(document as any).fonts.ready.then(() => {
@@ -90,82 +214,26 @@ export default (webgl: WebGL) => {
       fontAtlas.height / window.devicePixelRatio
     )
 
-    webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
-    webgl.gl.uniform1i(program.vars.fontAtlasTextureId, 0)
-    webgl.gl.uniform2f(
-      program.vars.fontAtlasResolution,
-      fontAtlasWidth,
-      fontAtlasHeight
-    )
+    fontAtlasTexture = createTexture(fontAtlas, fontAtlasWidth, fontAtlasHeight)
+
+    fontAtlasResolution = [fontAtlasWidth, fontAtlasHeight]
   })
 
-  const colorAtlas = getColorAtlas()
-  webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE1)
-  webgl.gl.uniform1i(program.vars.colorAtlasTextureId, 1)
-  webgl.gl.uniform2f(
-    program.vars.colorAtlasResolution,
-    colorAtlas.width,
-    colorAtlas.height
-  )
-
-  // total size of all pointers. chunk size that goes to shader
-  const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
-
-  const wrenderBuffer = program.setupData([
-    {
-      pointer: program.vars.cellPosition,
-      type: webgl.gl.FLOAT,
-      size: 2,
-      offset: 0,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-    {
-      pointer: program.vars.hlid,
-      type: webgl.gl.FLOAT,
-      size: 1,
-      offset: 2 * Float32Array.BYTES_PER_ELEMENT,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-    {
-      pointer: program.vars.charIndex,
-      type: webgl.gl.FLOAT,
-      size: 1,
-      offset: 3 * Float32Array.BYTES_PER_ELEMENT,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-  ])
-
-  const quadBuffer = program.setupData({
-    pointer: program.vars.quadVertex,
-    type: webgl.gl.FLOAT,
-    size: 2,
-  })
-
-  quadBuffer.setData(
-    new Float32Array([
-      0,
-      0,
-      cell.width,
-      cell.height,
-      0,
-      cell.height,
-      cell.width,
-      0,
-      cell.width,
-      cell.height,
-      0,
-      0,
-    ])
-  )
-
-  webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
-  webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
+  const initialColorAtlas = getColorAtlas()
+  let colorAtlasTexture = createTexture(initialColorAtlas, initialColorAtlas.width, initialColorAtlas.height)
+  // [width, height]
+  let colorAtlasResolution = [initialColorAtlas.width, initialColorAtlas.height]
 
   const resize = (width: number, height: number) => {
-    webgl.resize(width, height)
+    const w = Math.round(width * window.devicePixelRatio)
+    const h = Math.round(height * window.devicePixelRatio)
+
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+    }
   }
 
   const readjustViewportMaybe = (
@@ -175,7 +243,7 @@ export default (webgl: WebGL) => {
     height: number
   ) => {
     const bottom = (y + height) * window.devicePixelRatio
-    const yy = Math.round(webgl.canvasElement.height - bottom)
+    const yy = Math.round(canvas.height - bottom)
     const xx = Math.round(x * window.devicePixelRatio)
     const ww = Math.round(width * window.devicePixelRatio)
     const hh = Math.round(height * window.devicePixelRatio)
@@ -189,9 +257,9 @@ export default (webgl: WebGL) => {
     if (same) return
 
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
-    webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
-    webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    webgl.gl.uniform2f(program.vars.canvasResolution, width, height)
+    canvasResolution = [width, height]
+    // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
+    // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
   }
 
   const render = (
@@ -202,20 +270,42 @@ export default (webgl: WebGL) => {
     height: number
   ) => {
     readjustViewportMaybe(x, y, width, height)
-    wrenderBuffer.setData(buffer)
-    webgl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    const sciX = viewport.x
+    const sciY = viewport.y
+    const sciWidth = viewport.width
+    const sciHeight = viewport.height
+
+    reglRender({
+      buffer: regl.buffer(buffer),
+      quadVertex: quadBuffer,
+      instances: buffer.length / 4,
+      vpX: sciX,
+      vpY: sciY,
+      vpHeight: sciHeight,
+      vpWidth: sciWidth,
+      canvasResolution,
+      fontAtlasResolution,
+      fontAtlasTexture,
+      colorAtlasResolution,
+      colorAtlasTexture,
+      cellSize,
+      cellPadding,
+      sciX,
+      sciY,
+      sciWidth,
+      sciHeight
+    } as ReglRenderProps)
   }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
-    webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
+    fontAtlasTexture = createTexture(fontAtlas, fontAtlas.width, fontAtlas.height)
     const width = Math.floor(fontAtlas.width / window.devicePixelRatio)
     const height = Math.floor(fontAtlas.height / window.devicePixelRatio)
-    webgl.gl.uniform2f(program.vars.fontAtlasResolution, width, height)
+    fontAtlasResolution = [width, height]
   }
 
   const updateCellSize = () => {
-    quadBuffer.setData(
-      new Float32Array([
+    quadBuffer = ([
         0,
         0,
         cell.width,
@@ -228,35 +318,34 @@ export default (webgl: WebGL) => {
         cell.height,
         0,
         0,
-      ])
-    )
+    ])
 
-    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
-    webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
+    cellSize = [cell.width, cell.height]
+    cellPadding = [0, cell.padding]
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
-    webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE1)
-    webgl.gl.uniform2f(
-      program.vars.colorAtlasResolution,
-      colorAtlas.width,
-      colorAtlas.height
-    )
+    colorAtlasTexture = createTexture(colorAtlas, colorAtlas.width, colorAtlas.height)
+    colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
   }
 
   const clear = (x: number, y: number, width: number, height: number) => {
     readjustViewportMaybe(x, y, width, height)
-    webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    // TODO(smolck): Equivalent of commented line below?
+    regl.clear({ depth: 1 })
+    // webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
   const clearAll = () => {
     readjustViewportMaybe(
       0,
       0,
-      webgl.canvasElement.clientWidth,
-      webgl.canvasElement.clientHeight
+      canvas.clientWidth,
+      canvas.clientHeight
     )
-    webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    // TODO(smolck): Equivalent of commented line below?
+    regl.clear({ depth: 1 })
+    // webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
   return {

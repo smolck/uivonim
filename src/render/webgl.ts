@@ -1,8 +1,9 @@
 import CreateWebGLBuffer from '../render/webgl-grid-buffer'
-import CreateWebGL from '../render/webgl-utils'
 import { cell } from '../core/workspace'
+import CreateWebGL from '../render/webgl-utils'
 import TextFG from '../render/webgl-text-fg'
 import TextBG from '../render/webgl-text-bg'
+import REGL = require('regl')
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
@@ -20,10 +21,18 @@ export interface WebGLView {
 }
 
 const nutella = () => {
-  const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
+  const fgCanvas = document.createElement('canvas')
+  // const bgCanvas = document.createElement('canvas')
+  let fgRegl = REGL({
+    canvas: fgCanvas,
+    extensions: ['ANGLE_instanced_arrays'],
+  })
+  // let bgRegl = REGL(bgCanvas)
+
+  // const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
 
-  const textFGRenderer = TextFG(foregroundGL)
+  const textFGRenderer = TextFG(fgRegl, fgCanvas)
   const textBGRenderer = TextBG(backgroundGL)
 
   const resizeCanvas = (width: number, height: number) => {
@@ -143,7 +152,7 @@ const nutella = () => {
     updateCellSize,
     updateFontAtlas,
     updateColorAtlas,
-    foregroundElement: foregroundGL.canvasElement,
+    foregroundElement: fgCanvas,
     backgroundElement: backgroundGL.canvasElement,
   }
 }

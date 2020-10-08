@@ -4,6 +4,8 @@ import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
 
 export default (webgl: WebGL) => {
+  let regl = require('regl')(webgl.gl)
+
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
 
   const w2 = webgl.webgl2Mode
