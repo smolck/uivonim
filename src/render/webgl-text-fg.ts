@@ -65,7 +65,11 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
         vec2 glyphVertex = glyphPixelPosition + quadVertex;
         o_glyphPosition = glyphVertex / fontAtlasResolution;
 
-        vec2 colorPosition = vec2(hlid + 0.0001, 1.0001) / colorAtlasResolution;
+        float texelSize = 2.0;
+        float color_x = hlid * texelSize + 1.0;
+        float color_y = 1.0 * texelSize + 1.0;
+        vec2 colorPosition = vec2(color_x, color_y) / colorAtlasResolution;
+
         o_color = texture2D(colorAtlasTexture, colorPosition);
       }
     `,
@@ -108,27 +112,31 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
     },
 
     attributes: {
-      quadVertex: (_ctx, props, _batchId) => ({
+      quadVertex: (_ctx, props) => ({
+        type: 'float',
         size: 2,
         buffer: props.quadVertex
       }),
-      cellPosition: (_ctx, props, _batchId) => ({
+      cellPosition: (_ctx, props) => ({
         buffer: props.buffer,
+        type: 'float',
         size: 2,
         offset: 0,
         stride: wrenderStride,
         // TODO(smolck): Need to enable "instancing" for this to be used?
         divisor: 1,
       }),
-      hlid: (_ctx, props, _batchId) => ({
+      hlid: (_ctx, props) => ({
         buffer: props.buffer,
+        type: 'float',
         size: 1,
         offset: 2 * Float32Array.BYTES_PER_ELEMENT,
         stride: wrenderStride,
         divisor: 1,
       }),
-      charIndex: (_ctx, props, _batchId) => ({
+      charIndex: (_ctx, props) => ({
         buffer: props.buffer,
+        type: 'float',
         size: 1,
         offset: 3 * Float32Array.BYTES_PER_ELEMENT,
         stride: wrenderStride,
@@ -256,9 +264,7 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
     if (same) return
 
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
-    canvasResolution = [width, height]
-    // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
-    // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
+    canvasResolution = [viewport.width, viewport.height]
   }
 
   const render = (
@@ -275,7 +281,10 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
     const sciHeight = viewport.height
 
     reglRender({
-      buffer: regl.buffer(buffer),
+      buffer: regl.buffer({
+        data: buffer,
+        usage: 'static',
+      }),
       quadVertex: quadBuffer,
       instances: buffer.length / 4,
       vpX: sciX,

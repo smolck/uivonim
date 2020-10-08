@@ -187,8 +187,9 @@ export const getHighlight = (id: number) =>
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
   const max = Math.max(...highlights.keys(instances.current))
-  canvas.width = max + 1
-  canvas.height = 3
+  const texelSize = 2
+  canvas.width = (max + 1) * texelSize
+  canvas.height = 3 * texelSize
 
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
@@ -198,19 +199,19 @@ export const generateColorLookupAtlas = () => {
       ? defaultColors.foreground
       : defaultColors.background
     ui.fillStyle = hlgrp.background || defbg
-    ui.fillRect(id, 0, 1, 1)
+    ui.fillRect(id * texelSize, 0, texelSize, texelSize)
 
     const deffg = hlgrp.reverse
       ? defaultColors.background
       : defaultColors.foreground
     ui.fillStyle = hlgrp.foreground || deffg
-    ui.fillRect(id, 1, 1, 1)
+    ui.fillRect(id * texelSize, 1 * texelSize, texelSize, texelSize)
 
     if (!hlgrp.underline) return
 
     const color = hlgrp.special || defaultColors.special
     ui.fillStyle = color
-    ui.fillRect(id, 2, 1, 1)
+    ui.fillRect(id * texelSize, 2 * texelSize, texelSize, texelSize)
   })
 
   return canvas
