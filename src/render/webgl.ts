@@ -25,7 +25,10 @@ const nutella = () => {
   // const bgCanvas = document.createElement('canvas')
   let fgRegl = REGL({
     canvas: fgCanvas,
-    extensions: ['ANGLE_instanced_arrays'],
+    extensions: [
+      'ANGLE_instanced_arrays',
+      'OES_vertex_array_object', // TODO(smolck): Is this necessary?
+    ],
   })
   // let bgRegl = REGL(bgCanvas)
 
