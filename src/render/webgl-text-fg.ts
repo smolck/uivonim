@@ -175,9 +175,8 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
   // [width, height]
   let fontAtlasResolution: [number, number] | null
 
-  // TODO(smolck): Defaults?
-  let cellSize: number[] = [0, 0]
-  let cellPadding: number[] = [0, 0]
+  let cellSize: number[] = [cell.width, cell.height]
+  let cellPadding: number[] = [0, cell.padding]
 
   let quadBuffer = [
       0,
