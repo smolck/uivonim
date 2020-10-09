@@ -339,9 +339,7 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
 
   const clear = (x: number, y: number, width: number, height: number) => {
     readjustViewportMaybe(x, y, width, height)
-    // TODO(smolck): Equivalent of commented line below?
-    regl.clear({ depth: 1 })
-    // webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    regl.clear({ depth: 1, color: [0, 0, 0, 0] })
   }
 
   const clearAll = () => {
@@ -351,9 +349,7 @@ export default (regl: Regl, canvas: HTMLCanvasElement) => {
       canvas.clientWidth,
       canvas.clientHeight
     )
-    // TODO(smolck): Equivalent of commented line below?
-    regl.clear({ depth: 1 })
-    // webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    regl.clear({ depth: 1, color: [0, 0, 0, 0] })
   }
 
   return {
