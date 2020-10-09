@@ -201,20 +201,17 @@ export const generateColorLookupAtlas = () => {
     ui.fillStyle = hlgrp.background || defbg
     ui.fillRect(id * texelSize, 0, texelSize, texelSize)
 
-
     const deffg = hlgrp.reverse
       ? defaultColors.background
       : defaultColors.foreground
     ui.fillStyle = hlgrp.foreground || deffg
     ui.fillRect(id * texelSize, 1 * texelSize, texelSize, texelSize)
 
-
     if (!hlgrp.underline) return
 
     const color = hlgrp.special || defaultColors.special
     ui.fillStyle = color
     ui.fillRect(id * texelSize, 2 * texelSize, texelSize, texelSize)
-
   })
 
   return canvas
