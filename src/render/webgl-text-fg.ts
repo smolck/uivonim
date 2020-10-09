@@ -56,7 +56,11 @@ export default (webgl: WebGL) => {
       vec2 glyphVertex = glyphPixelPosition + ${v.quadVertex};
       o_glyphPosition = glyphVertex / ${v.fontAtlasResolution};
 
-      vec2 colorPosition = vec2(${v.hlid} + 0.0001, 1.0001) / ${v.colorAtlasResolution};
+      float texelSize = 2.0;
+      float color_x = ${v.hlid} * texelSize + 1.0;
+      float color_y = 1.0 * texelSize + 1.0;
+      vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
+
       o_color = ${c.tex}(${v.colorAtlasTextureId}, colorPosition);
     }
   `
