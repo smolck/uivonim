@@ -54,8 +54,8 @@ require.main === module &&
   go(async () => {
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
-    await run('ttsc -p src/tsconfig.json')
     await copyAll()
+    await run('babel src -d build')
   })
 
 module.exports = { paths, copy, copyAll }
