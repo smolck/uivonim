@@ -23,10 +23,7 @@ go(async () => {
   await tsc.promise
 
   $`running babel stuff`
-  const babel = createTask()
-  run('babel build -d build')
-
-  await babel.promise
+  await run('babel build -d build')
 
   run('electron build/bootstrap/main.js', {
     shh: true,
