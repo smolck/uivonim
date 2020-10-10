@@ -3,23 +3,23 @@ import { colors } from '../ui/styles'
 import { h } from '../ui/uikit'
 
 const row = {
-  alignItems: 'center',
-  paddingTop: '4px',
-  paddingBottom: '4px',
-  paddingLeft: '12px',
-  paddingRight: '12px',
-  whiteSpace: 'nowrap',
+  'align-items': 'center',
+  'padding-top': '4px',
+  'padding-bottom': '4px',
+  'padding-left': '12px',
+  'padding-right': '12px',
+  'white-space': 'nowrap',
   overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  'text-overflow': 'ellipsis',
   display: 'flex',
   color: cvar('foreground-30'),
-  minHeight: '1.4rem',
-  fontSize: '1.1rem',
+  'min-height': '1.4rem',
+  'font-size': '1.1rem',
 }
 
 const activeRow = {
   ...row,
-  fontWeight: 'bold',
+  'font-weight': 'bold',
   color: cvar('foreground-b20'),
   background: cvar('background-10'),
 }
@@ -28,6 +28,7 @@ interface Options {
   key?: any
   active: boolean
   [key: string]: any
+  children: any
 }
 
 const removePropsIntendedForThisComponent = (stuff: Options) => {
@@ -35,19 +36,16 @@ const removePropsIntendedForThisComponent = (stuff: Options) => {
   return rest
 }
 
-export const RowNormal = (o: Options, children: any[]) =>
-  h(
-    'div',
-    {
-      ...removePropsIntendedForThisComponent(o),
-      style: {
-        ...row,
-        ...(o.active ? activeRow : undefined),
-        ...o.style,
-      },
-    },
-    children
-  )
+export const RowNormal = (props: Options) => (
+  <div {
+    ...removePropsIntendedForThisComponent(props)} style={{
+      ...row,
+      ...(props.active ? activeRow : undefined),
+      ...props.style
+    }}>
+    {props.children}
+  </div>
+)
 
 export const RowDesc = (o: Options, children: any[]) =>
   h(

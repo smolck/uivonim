@@ -1,18 +1,18 @@
 export const paddingVH = (vertical: number, horizontal: number) => ({
-  paddingLeft: `${vertical}px`,
-  paddingRight: `${vertical}px`,
-  paddingTop: `${horizontal}px`,
-  paddingBottom: `${horizontal}px`,
+  'padding-left': `${vertical}px`,
+  'padding-right': `${vertical}px`,
+  'padding-top': `${horizontal}px`,
+  'padding-bottom': `${horizontal}px`,
 })
 
 export const paddingH = (amount: number) => ({
-  paddingTop: `${amount}px`,
-  paddingBottom: `${amount}px`,
+  'padding-top': `${amount}px`,
+  'padding-bottom': `${amount}px`,
 })
 
 export const paddingV = (amount: number) => ({
-  paddingLeft: `${amount}px`,
-  paddingRight: `${amount}px`,
+  'padding-left': `${amount}px`,
+  'padding-right': `${amount}px`,
 })
 
 export const translate = (x: number | string, y: number | string) =>

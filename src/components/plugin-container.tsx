@@ -10,46 +10,62 @@ type PluginFnWithStyles = (
 type PluginFn = PluginFnNormal & PluginFnWithStyles
 
 const base = {
-  zIndex: 99,
+  'z-index': 99,
+  'justify-content': 'center',
   display: 'flex',
   width: '100%',
   height: '100%',
-  justifyContent: 'center',
 }
 
-const normal = { ...base, alignItems: 'flex-start' }
-const top = { ...base, alignItems: 'flex-start' }
-const bottom = { ...base, alignItems: 'flex-end' }
-const right = { ...base, alignItems: 'stretch', justifyContent: 'flex-end' }
+const normal = { ...base, 'align-items': 'flex-start' }
+const top = { ...base, 'align-items': 'flex-start' }
+const bottom = { ...base, 'align-items': 'flex-end' }
+const right = { ...base, 'align-items': 'stretch', 'justify-content': 'flex-end' }
 
 const dialog = {
   background: 'var(--background-30)',
-  marginTop: '15%',
-  flexFlow: 'column',
+  'margin-top': '15%',
+  'flex-flow': 'column',
 }
 
-export const Plugin = (visible: boolean, ...args: any[]) =>
-  h(
-    'div',
-    {
-      style: normal,
-    },
-    [
-      ,
-      h(
-        'div',
-        {
-          style: {
-            ...dialog,
-            width: '600px',
-            display: visible ? 'flex' : 'none',
-            ...args.find(is.object),
-          },
-        },
-        args.find(is.array)
-      ),
-    ]
-  )
+// export const Plugin = (visible: boolean, ...args: any[]) =>
+//   h(
+//     'div',
+//     {
+//       style: normal,
+//     },
+//     [
+//       ,
+//       h(
+//         'div',
+//         {
+//           style: {
+//             ...dialog,
+//             width: '600px',
+//             display: visible ? 'flex' : 'none',
+//             ...args.find(is.object),
+//           },
+//         },
+//         args.find(is.array)
+//       ),
+//     ]
+//   )
+
+type PluginProps = {
+  visible: boolean
+  extraStyle: any
+  children: any
+  id?: string
+}
+
+export const Plugin = ({ id, visible, extraStyle, children }: PluginProps) => (
+    <div id={id}
+      style={normal as CSSProperties}>
+      <div style={{ ...dialog, ...extraStyle, width: '600px', display: visible ? 'flex' : 'none'}}>
+        {children}
+      </div>
+    </div>
+)
 
 export const PluginTop: PluginFn = (visible: boolean, ...args: any[]) =>
   h(

@@ -108,17 +108,17 @@ const api = {
 // trying to do dynamic introspection (obj vs arr) messy with typings. (also a bit slower)
 const as = {
   buf: (p: Promise<ExtContainer>): Promise<Buffer> =>
-    p.then((e) => Buffer(e.id)),
+    p.then((e) => createBuffer(e.id)),
   bufl: (p: Promise<ExtContainer[]>): Promise<Buffer[]> =>
-    p.then((m) => m.map((e) => Buffer(e.id))),
+    p.then((m) => m.map((e) => createBuffer(e.id))),
   win: (p: Promise<ExtContainer>): Promise<Window> =>
-    p.then((e) => Window(e.id)),
+    p.then((e) => createWindow(e.id)),
   winl: (p: Promise<ExtContainer[]>): Promise<Window[]> =>
-    p.then((m) => m.map((e) => Window(e.id))),
+    p.then((m) => m.map((e) => createWindow(e.id))),
   tab: (p: Promise<ExtContainer>): Promise<Tabpage> =>
-    p.then((e) => Tabpage(e.id)),
+    p.then((e) => createTabpage(e.id)),
   tabl: (p: Promise<ExtContainer[]>): Promise<Tabpage[]> =>
-    p.then((m) => m.map((e) => Tabpage(e.id))),
+    p.then((m) => m.map((e) => createTabpage(e.id))),
 }
 
 const subscribe = (event: string, fn: (data: any) => void) => {
@@ -291,7 +291,7 @@ const buffers = {
   create: async ({ filetype = '', content = '' } = {}) => {
     const bufid = await call.bufnr('[No Name]', 420)
     cmd(`b ${bufid}`)
-    const buffer = Buffer(bufid)
+    const buffer = createBuffer(bufid)
     if (filetype) buffer.setOption(BufferOption.Filetype, filetype)
     if (content) buffer.append(0, content.split('\n'))
     return buffer
@@ -507,16 +507,16 @@ watchers.events.emit('bufLoad')
 autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
 autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
 autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
-autocmd.BufAdd((bufId) => watchers.events.emit('bufOpen', Buffer(bufId - 0)))
-autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', Buffer(bufId - 0)))
+autocmd.BufAdd((bufId) => watchers.events.emit('bufOpen', createBuffer(bufId - 0)))
+autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', createBuffer(bufId - 0)))
 autocmd.BufWritePre((bufId) =>
-  watchers.events.emit('bufWritePre', Buffer(bufId - 0))
+  watchers.events.emit('bufWritePre', createBuffer(bufId - 0))
 )
 autocmd.BufWritePost((bufId) =>
-  watchers.events.emit('bufWrite', Buffer(bufId - 0))
+  watchers.events.emit('bufWrite', createBuffer(bufId - 0))
 )
 autocmd.BufWipeout((bufId) =>
-  watchers.events.emit('bufClose', Buffer(bufId - 0))
+  watchers.events.emit('bufClose', createBuffer(bufId - 0))
 )
 autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
@@ -541,7 +541,7 @@ autocmd.TextChangedI((revision) => {
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
 
-autocmd.WinEnter((id: number) => (_currentCache.window = Window(id - 0)))
+autocmd.WinEnter((id: number) => (_currentCache.window = createWindow(id - 0)))
 as.win(req.core.getCurrentWin()).then((win) => (_currentCache.window = win))
 on.bufLoad((buffer) => (_currentCache.buffer = buffer))
 
@@ -599,15 +599,15 @@ const current = {
 }
 
 const fromId = {
-  buffer: (id: number): Buffer => Buffer(id),
-  window: (id: number): Window => Window(id),
-  tabpage: (id: number): Tabpage => Tabpage(id),
+  buffer: (id: number): Buffer => createBuffer(id),
+  window: (id: number): Window => createWindow(id),
+  tabpage: (id: number): Tabpage => createTabpage(id),
 }
 
 const HL_CLR = 'nvim_buf_clear_highlight'
 const HL_ADD = 'nvim_buf_add_highlight'
 
-const Buffer = (id: any) =>
+const createBuffer = (id: any) =>
   ({
     id,
     get number() {
@@ -742,7 +742,7 @@ const Buffer = (id: any) =>
     },
   } as Buffer)
 
-const Window = (id: any) =>
+const createWindow = (id: any) =>
   ({
     id,
     get number() {
@@ -779,7 +779,7 @@ const Window = (id: any) =>
     setOption: (name, val) => api.win.setOption(id, name, val),
   } as Window)
 
-const Tabpage = (id: any) =>
+const createTabpage = (id: any) =>
   ({
     id,
     get number() {
@@ -800,9 +800,9 @@ const Tabpage = (id: any) =>
   } as Tabpage)
 
 const dummy = {
-  win: Window(0),
-  buf: Buffer(0),
-  tab: Tabpage(0),
+  win: createWindow(0),
+  buf: createBuffer(0),
+  tab: createTabpage(0),
 }
 
 const exportAPI = {
