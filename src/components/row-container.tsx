@@ -37,12 +37,14 @@ const removePropsIntendedForThisComponent = (stuff: Options) => {
 }
 
 export const RowNormal = (props: Options) => (
-  <div {
-    ...removePropsIntendedForThisComponent(props)} style={{
+  <div
+    {...removePropsIntendedForThisComponent(props)}
+    style={{
       ...row,
       ...(props.active ? activeRow : undefined),
-      ...props.style
-    }}>
+      ...props.style,
+    }}
+  >
     {props.children}
   </div>
 )

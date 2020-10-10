@@ -507,8 +507,12 @@ watchers.events.emit('bufLoad')
 autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
 autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
 autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
-autocmd.BufAdd((bufId) => watchers.events.emit('bufOpen', createBuffer(bufId - 0)))
-autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', createBuffer(bufId - 0)))
+autocmd.BufAdd((bufId) =>
+  watchers.events.emit('bufOpen', createBuffer(bufId - 0))
+)
+autocmd.BufEnter((bufId) =>
+  watchers.events.emit('bufLoad', createBuffer(bufId - 0))
+)
 autocmd.BufWritePre((bufId) =>
   watchers.events.emit('bufWritePre', createBuffer(bufId - 0))
 )

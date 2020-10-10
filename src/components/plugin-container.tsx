@@ -20,7 +20,11 @@ const base = {
 const normal = { ...base, 'align-items': 'flex-start' }
 const top = { ...base, 'align-items': 'flex-start' }
 const bottom = { ...base, 'align-items': 'flex-end' }
-const right = { ...base, 'align-items': 'stretch', 'justify-content': 'flex-end' }
+const right = {
+  ...base,
+  'align-items': 'stretch',
+  'justify-content': 'flex-end',
+}
 
 const dialog = {
   background: 'var(--background-30)',
@@ -59,12 +63,18 @@ type PluginProps = {
 }
 
 export const Plugin = ({ id, visible, extraStyle, children }: PluginProps) => (
-    <div id={id}
-      style={normal as CSSProperties}>
-      <div style={{ ...dialog, ...extraStyle, width: '600px', display: visible ? 'flex' : 'none'}}>
-        {children}
-      </div>
+  <div id={id} style={normal as CSSProperties}>
+    <div
+      style={{
+        ...dialog,
+        ...extraStyle,
+        width: '600px',
+        display: visible ? 'flex' : 'none',
+      }}
+    >
+      {children}
     </div>
+  </div>
 )
 
 export const PluginTop: PluginFn = (visible: boolean, ...args: any[]) =>

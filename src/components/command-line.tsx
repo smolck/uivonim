@@ -30,9 +30,18 @@ let state = {
 
 type S = typeof state
 
-const CommandLine = ({ options, position, value, prompt, visible, kind, ix: stateIx }: S) => {
+const CommandLine = ({
+  options,
+  position,
+  value,
+  prompt,
+  visible,
+  kind,
+  ix: stateIx,
+}: S) => {
   const maybePrompt = prompt && (
-    <div style={{
+    <div
+      style={{
         position: 'absolute',
         width: '100%',
         background: 'var(--background-50)',
@@ -40,26 +49,37 @@ const CommandLine = ({ options, position, value, prompt, visible, kind, ix: stat
         height: '40px',
         display: 'flex',
         'align-items': 'center',
-      }}>
-      <div style={{ padding: '0 15px', 'font-size': '1.1rem', }}>
-        {prompt}
-      </div>
+      }}
+    >
+      <div style={{ padding: '0 15px', 'font-size': '1.1rem' }}>{prompt}</div>
     </div>
   )
 
   return (
     // @ts-ignore
-    <Plugin id={'command-line'} extraStyle={{ position: 'relative' }} visible={visible}>
+    <Plugin
+      id={'command-line'}
+      extraStyle={{ position: 'relative' }}
+      visible={visible}
+    >
       {maybePrompt}
       <Input
         focus={true}
         value={value}
         desc={kind === CommandType.Ex ? 'command line' : 'prompt'}
         position={position}
-        icon={value.startsWith('lua ') && kind === CommandType.Ex ? 'moon' : modeSwitch.get(kind) || 'command'}
+        icon={
+          value.startsWith('lua ') && kind === CommandType.Ex
+            ? 'moon'
+            : modeSwitch.get(kind) || 'command'
+        }
       />
       <div>
-        {options.map((name, ix) => (<RowNormal active={ix === stateIx}><div>{name}</div></RowNormal>))}
+        {options.map((name, ix) => (
+          <RowNormal active={ix === stateIx}>
+            <div>{name}</div>
+          </RowNormal>
+        ))}
       </div>
     </Plugin>
   )
@@ -72,24 +92,17 @@ const container = document.getElementById('plugins')
 sub('wildmenu.show', (opts: any[]) => {
   state.options = [...new Set(opts)]
 
-  render(
-    <CommandLine {...state}/>, container
-  )
+  render(<CommandLine {...state} />, container)
 })
 sub('wildmenu.select', (ix) => {
   state.ix = ix
 
-  render(
-    <CommandLine {...state}/>, container
-  )
+  render(<CommandLine {...state} />, container)
 })
 
 sub('wildmenu.hide', () => {
-  state.options = [...new Set([])],
-
-  render(
-    <CommandLine {...state}/>, container
-  )
+  ;(state.options = [...new Set([])]),
+    render(<CommandLine {...state} />, container)
 })
 
 sub('cmd.hide', () => {
@@ -98,9 +111,7 @@ sub('cmd.hide', () => {
 
   state.visible = false
 
-  render(
-    <CommandLine {...state}/>, container
-  )
+  render(<CommandLine {...state} />, container)
 })
 
 sub('cmd.update', ({ cmd, kind, position, prompt }: CommandUpdate) => {
@@ -114,7 +125,5 @@ sub('cmd.update', ({ cmd, kind, position, prompt }: CommandUpdate) => {
   state.options = cmd ? state.options : []
   state.value = is.string(cmd) && state.value !== cmd ? cmd : state.value
 
-  render(
-    <CommandLine {...state}/>, container
-  )
+  render(<CommandLine {...state} />, container)
 })

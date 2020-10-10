@@ -76,7 +76,6 @@ const keToStr = (e: KeyboardEvent) =>
 // the function.
 let lastDown = ''
 
-
 const onInput = (e: HTMLInputElement) => {
   setFocus(e, focus)
 }
@@ -98,7 +97,8 @@ const textInput = (
   }: TextInputProps,
   $: Props
 ) => (
-  <div style={{
+  <div
+    style={{
       background,
       ...paddingVH(12, small ? 5 : 10),
       display: 'flex',
@@ -106,20 +106,29 @@ const textInput = (
       'align-items': 'center',
       'max-height': small ? '1.8rem' : '2.1rem',
       'min-height': small ? '1.8rem' : '2.1rem',
-    }}>
-    <div style={{ display: 'flex', 'align-items': 'center', 'padding-right': '8px'}}>
+    }}
+  >
+    <div
+      style={{
+        display: 'flex',
+        'align-items': 'center',
+        'padding-right': '8px',
+      }}
+    >
       <i data-feather={icon} />
     </div>
-    <div style={{
+    <div
+      style={{
         flex: 1,
         display: 'flex',
         'align-items': 'center',
         'justify-content': 'space-between',
-      }}>
+      }}
+    >
       <input
         value={value}
-        style={{ color, 'font-size': small ? '1rem': '1.4rem' }}
-        type='text'
+        style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
+        type="text"
         placeholder={desc}
         // TODO(smolck): Use linkEvent() for things?
         //
@@ -129,64 +138,61 @@ const textInput = (
           setFocus(e.currentTarget, focus)
           setPosition(e.currentTarget, position)
         }}
-        onKeyUp={
-          (e: KeyboardEvent) => {
-               const prevKeyAndThisOne = lastDown + keToStr(e)
+        onKeyUp={(e: KeyboardEvent) => {
+          const prevKeyAndThisOne = lastDown + keToStr(e)
 
-               if (xfrmUp.has(prevKeyAndThisOne)) {
-                 const { key } = xfrmUp.get(prevKeyAndThisOne)!(e)
-                 if (key.toLowerCase() === '<esc>') {
-                   lastDown = ''
-                   ;(e.target as HTMLInputElement).blur()
-                   return $.hide()
-                 }
-               }
-             }
-        }
+          if (xfrmUp.has(prevKeyAndThisOne)) {
+            const { key } = xfrmUp.get(prevKeyAndThisOne)!(e)
+            if (key.toLowerCase() === '<esc>') {
+              lastDown = ''
+              ;(e.target as HTMLInputElement).blur()
+              return $.hide()
+            }
+          }
+        }}
         onKeyDown={(e: KeyboardEvent) => {
-               const { ctrlKey: ctrl, metaKey: meta, key } = e
-               const cm = ctrl || meta
+          const { ctrlKey: ctrl, metaKey: meta, key } = e
+          const cm = ctrl || meta
 
-               lastDown = keToStr(e)
+          lastDown = keToStr(e)
 
-               if (key === 'Tab') {
-                 e.preventDefault()
-                 return $.tab()
-               }
+          if (key === 'Tab') {
+            e.preventDefault()
+            return $.tab()
+          }
 
-               if (key === 'Escape') return $.hide()
-               if (key === 'Enter') return $.select(value)
-               if (key === 'Backspace') return $.change(value.slice(0, -1))
+          if (key === 'Escape') return $.hide()
+          if (key === 'Enter') return $.select(value)
+          if (key === 'Backspace') return $.change(value.slice(0, -1))
 
-               if (cm && key === 'w')
-                 return pathMode
-                   ? $.change(value.split('/').slice(0, -1).join('/'))
-                   : $.change(value.split(' ').slice(0, -1).join(' '))
+          if (cm && key === 'w')
+            return pathMode
+              ? $.change(value.split('/').slice(0, -1).join('/'))
+              : $.change(value.split(' ').slice(0, -1).join(' '))
 
-               if (cm && key === 'g') return $.ctrlG()
-               if (cm && key === 'h') return $.ctrlH()
-               if (cm && key === 'l') return $.ctrlL()
-               if (cm && key === 'c') return $.ctrlC()
-               if (cm && key === 'j') return $.next()
-               if (cm && key === 'k') return $.prev()
-               if (cm && key === 'n') return $.nextGroup()
-               if (cm && key === 'p') return $.prevGroup()
-               if (cm && key === 'd') return $.down()
-               if (cm && key === 'u') return $.up()
-               if (cm && key === 'i') return $.jumpNext()
-               if (cm && key === 'o') return $.jumpPrev()
-               if (cm && key === 'y') return $.yank()
-               if (cm && e.shiftKey && key === 'D') return $.bottom()
-               if (cm && e.shiftKey && key === 'U') return $.top()
+          if (cm && key === 'g') return $.ctrlG()
+          if (cm && key === 'h') return $.ctrlH()
+          if (cm && key === 'l') return $.ctrlL()
+          if (cm && key === 'c') return $.ctrlC()
+          if (cm && key === 'j') return $.next()
+          if (cm && key === 'k') return $.prev()
+          if (cm && key === 'n') return $.nextGroup()
+          if (cm && key === 'p') return $.prevGroup()
+          if (cm && key === 'd') return $.down()
+          if (cm && key === 'u') return $.up()
+          if (cm && key === 'i') return $.jumpNext()
+          if (cm && key === 'o') return $.jumpPrev()
+          if (cm && key === 'y') return $.yank()
+          if (cm && e.shiftKey && key === 'D') return $.bottom()
+          if (cm && e.shiftKey && key === 'U') return $.top()
 
-               const nextVal = value + (key.length > 1 ? '' : key)
-               if (nextVal !== value) $.change(nextVal)
-             }
-        }
+          const nextVal = value + (key.length > 1 ? '' : key)
+          if (nextVal !== value) $.change(nextVal)
+        }}
       />
     </div>
   </div>
-);
+)
 // TODO: loading && Loading({color: loadingColor, size: loadingSize})
 
 export default (props: TextInputProps) => textInput(props, nopMaybe(props))
