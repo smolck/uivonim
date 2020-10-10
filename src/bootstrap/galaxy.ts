@@ -5,6 +5,9 @@ import * as workspace from '../core/workspace'
 import { remote } from 'electron'
 import '../render/redraw'
 import '../core/screen-events'
+import { merge } from '../support/utils'
+import * as dispatch from '../messaging/dispatch'
+import { specs as titleSpecs } from '../core/title'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -77,3 +80,18 @@ win.on('enter-full-screen', () =>
 win.on('leave-full-screen', () =>
   window.removeEventListener('mousemove', mouseTrap)
 )
+
+const pluginsContainer = document.getElementById('plugins') as HTMLElement
+merge(pluginsContainer.style, {
+  position: 'absolute',
+  display: 'flex',
+  width: '100vw',
+  zIndex: 420,
+  // TODO: 24px for statusline. do it better
+  // TODO: and title. bruv do i even know css?
+  height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
+})
+
+dispatch.sub('window.change', () => {
+  pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
+})

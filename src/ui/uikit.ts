@@ -21,19 +21,6 @@ export const css = (builder: (classname: string) => string[]): string => {
 }
 
 const pluginsContainer = document.getElementById('plugins') as HTMLElement
-merge(pluginsContainer.style, {
-  position: 'absolute',
-  display: 'flex',
-  width: '100vw',
-  zIndex: 420, // vape naysh yall
-  // TODO: 24px for statusline. do it better
-  // TODO: and title. bruv do i even know css?
-  height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
-})
-
-dispatch.sub('window.change', () => {
-  pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
-})
 
 export const vimFocus = () => {
   setImmediate(() => viminput.focus())
