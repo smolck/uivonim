@@ -9,6 +9,7 @@
     "start": "node tools/start.js",
     "start:release": "electron build/bootstrap/main.js",
     "build": "node tools/build.js",
+    "check-types": "tsc -p src/tsconfig.json --noEmit",
     "package": "node tools/package.js",
     "test": "mocha test/unit",
     "test:e2e": "mocha test/e2e -t 0",
