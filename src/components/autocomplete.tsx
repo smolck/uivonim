@@ -122,9 +122,7 @@ let state = {
 type S = typeof state
 
 const icon = (name: string, color?: string) => {
-  return (
-    <Icon iconHtml={feather.icons[name].toSvg()} style={{ color }} />
-  )
+  return <Icon iconHtml={feather.icons[name].toSvg()} style={{ color }} />
 }
 
 const icons = new Map([
@@ -135,25 +133,25 @@ const icons = new Map([
   [CompletionItemKind.Constructor, icon('aperture', '#c9ff56')],
   [CompletionItemKind.Field, icon('feather', '#9866ff')],
   [CompletionItemKind.Variable, icon('database', '#ff70e4')],
-  [CompletionItemKind.Class, icon('compass', '#ffeb5b' )],
-  [CompletionItemKind.Interface, icon('map', '#ffa354' )],
-  [CompletionItemKind.Module, icon('grid', '#ff5f54' )],
-  [CompletionItemKind.Unit, icon('cpu', '#ffadc5' )],
-  [CompletionItemKind.Value, icon('bell', '#ffa4d0' )],
-  [CompletionItemKind.Enum, icon('award', '#84ff54' )],
-  [CompletionItemKind.Keyword, icon('navigation', '#ff0c53' )],
-  [CompletionItemKind.Snippet, icon('paperclip', '#0c2dff' )],
-  [CompletionItemKind.Color, icon('eye', '#54ffe5' )],
-  [CompletionItemKind.File, icon('file', '#a5c3ff' )],
-  [CompletionItemKind.Reference, icon('link', '#ffdca3' )],
+  [CompletionItemKind.Class, icon('compass', '#ffeb5b')],
+  [CompletionItemKind.Interface, icon('map', '#ffa354')],
+  [CompletionItemKind.Module, icon('grid', '#ff5f54')],
+  [CompletionItemKind.Unit, icon('cpu', '#ffadc5')],
+  [CompletionItemKind.Value, icon('bell', '#ffa4d0')],
+  [CompletionItemKind.Enum, icon('award', '#84ff54')],
+  [CompletionItemKind.Keyword, icon('navigation', '#ff0c53')],
+  [CompletionItemKind.Snippet, icon('paperclip', '#0c2dff')],
+  [CompletionItemKind.Color, icon('eye', '#54ffe5')],
+  [CompletionItemKind.File, icon('file', '#a5c3ff')],
+  [CompletionItemKind.Reference, icon('link', '#ffdca3')],
   // TODO: we need some colors pls
-  [CompletionItemKind.Folder, icon('folder', '#ccc' )],
-  [CompletionItemKind.EnumMember, icon('menu', '#ccc' )],
-  [CompletionItemKind.Constant, icon('save', '#ccc' )],
-  [CompletionItemKind.Struct, icon('layers', '#ccc' )],
-  [CompletionItemKind.Event, icon('video', '#ccc' )],
-  [CompletionItemKind.Operator, icon('anchor', '#ccc' )],
-  [CompletionItemKind.TypeParameter, icon('type', '#ccc' )],
+  [CompletionItemKind.Folder, icon('folder', '#ccc')],
+  [CompletionItemKind.EnumMember, icon('menu', '#ccc')],
+  [CompletionItemKind.Constant, icon('save', '#ccc')],
+  [CompletionItemKind.Struct, icon('layers', '#ccc')],
+  [CompletionItemKind.Event, icon('video', '#ccc')],
+  [CompletionItemKind.Operator, icon('anchor', '#ccc')],
+  [CompletionItemKind.TypeParameter, icon('type', '#ccc')],
 ])
 
 const getCompletionIcon = (kind: CompletionItemKind) =>
@@ -181,32 +179,51 @@ const docs = (data: string) => (
       color: cvar('foreground-20'),
       background: cvar('background-45'),
       'font-size': `${workspace.font.size - 2}px`,
-    }} />
+    }}
+  />
 )
 
-const Autocomplete = ({documentation, x, y, visible, visibleOptions, ix, anchorAbove, options}: S) => (
+const Autocomplete = ({
+  documentation,
+  x,
+  y,
+  visible,
+  visibleOptions,
+  ix,
+  anchorAbove,
+  options,
+}: S) => (
   <Overlay
     id={'autocomplete'}
     x={x}
     y={y}
     zIndex={200}
-    maxWidth={400} visible={visible} anchorAbove={anchorAbove}>
+    maxWidth={400}
+    visible={visible}
+    anchorAbove={anchorAbove}
+  >
     {documentation && anchorAbove && docs(documentation)}
-    <div style={{
-      'overflow-y': 'hidden',
-      background: cvar('background-30'),
-      'max-height': `${workspace.cell.height * visibleOptions}px`
-      }}>
-      {options.map(({text, kind}, id) => (
+    <div
+      style={{
+        'overflow-y': 'hidden',
+        background: cvar('background-30'),
+        'max-height': `${workspace.cell.height * visibleOptions}px`,
+      }}
+    >
+      {options.map(({ text, kind }, id) => (
         <RowComplete active={id === ix}>
-          <div style={{
-            display: 'flex',
-            // TODO: this doesn't scale with font size?
-            width: '24px',
-            'margin-right': '2px',
-            'align-items': 'center',
-            'justify-content': 'center',
-          }}>{getCompletionIcon(kind)}</div>
+          <div
+            style={{
+              display: 'flex',
+              // TODO: this doesn't scale with font size?
+              width: '24px',
+              'margin-right': '2px',
+              'align-items': 'center',
+              'justify-content': 'center',
+            }}
+          >
+            {getCompletionIcon(kind)}
+          </div>
           <div>{text}</div>
         </RowComplete>
       ))}
@@ -221,38 +238,35 @@ export const hide = () => {
   state.visible = false
   state.ix = 0
 
-  render(
-    <Autocomplete {...state} />,
-    container
-  )
+  render(<Autocomplete {...state} />, container)
 }
 
 export const select = (index: number) => {
-    const completionItem = (state.options[index] || {}).raw
-    state.ix = index
+  const completionItem = (state.options[index] || {}).raw
+  state.ix = index
 
-    // raw could be missing if not semantic completions
-    if (!completionItem) {
-      state.documentation = undefined
-      render(<Autocomplete {...state} />, container)
-      return
-    }
+  // raw could be missing if not semantic completions
+  if (!completionItem) {
+    state.documentation = undefined
+    render(<Autocomplete {...state} />, container)
+    return
+  }
 
-    const { detail, documentation } = completionItem
-    // TODO: what are we doing with detail and documentation?
-    // show both? or one or the other?
+  const { detail, documentation } = completionItem
+  // TODO: what are we doing with detail and documentation?
+  // show both? or one or the other?
 
-    if (documentation) {
-      // TODO(smolck): Not sure why, but I get "32" as the doc sometimes, and so
-      // I just convert this to a string to make sure that doesn't break stuff.
-      // :shrug:
-      state.documentation = parseDocs(documentation.toString())
-      render(<Autocomplete {...state} />, container)
-    } else {
-      // TODO(smolck): parseDocs(detail)?
-      state.documentation = detail
-      render(<Autocomplete {...state} />, container)
-    }
+  if (documentation) {
+    // TODO(smolck): Not sure why, but I get "32" as the doc sometimes, and so
+    // I just convert this to a string to make sure that doesn't break stuff.
+    // :shrug:
+    state.documentation = parseDocs(documentation.toString())
+    render(<Autocomplete {...state} />, container)
+  } else {
+    // TODO(smolck): parseDocs(detail)?
+    state.documentation = detail
+    render(<Autocomplete {...state} />, container)
+  }
 }
 export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
@@ -272,7 +286,7 @@ export const show = ({ row, col, options }: CompletionShow) => {
   // default
   state.ix = -1
 
-  render(<Autocomplete {...state}/>, container)
+  render(<Autocomplete {...state} />, container)
 }
 
 dispatch.sub('pmenu.select', (ix) => select(ix))

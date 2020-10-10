@@ -112,10 +112,13 @@ const textInput = (
         'padding-right': '8px',
       }}
     >
-      <Icon iconHtml={icon} style={{
-        style: !small ? { fontSize: '1.7rem' } : undefined,
-        color: cvar('foreground-70'),
-      }}/>
+      <Icon
+        iconHtml={icon}
+        style={{
+          style: !small ? { fontSize: '1.7rem' } : undefined,
+          color: cvar('foreground-70'),
+        }}
+      />
     </div>
     <div
       style={{

@@ -65,7 +65,7 @@ export const RowDesc = (o: Options, children: any[]) =>
   )
 
 export const RowComplete = (props: Options) => (
-  <div 
+  <div
     {...removePropsIntendedForThisComponent(props)}
     style={{
       ...(props.active ? activeRow : row),
