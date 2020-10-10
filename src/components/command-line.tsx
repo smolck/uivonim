@@ -9,13 +9,13 @@ import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import Input from '../components/text-input'
 import { sub } from '../messaging/dispatch'
-import * as Icon from 'hyperapp-feather'
 import { is } from '../support/utils'
 import { render } from 'inferno'
+const feather = require('feather-icons')
 
 const modeSwitch = new Map([
-  [CommandType.Ex, 'command'],
-  [CommandType.Prompt, 'chevrons-right'],
+  [CommandType.Ex, feather.icons.command.toSvg()],
+  [CommandType.Prompt, feather.icons['chevrons-right'].toSvg()],
 ])
 
 let state = {
@@ -70,7 +70,7 @@ const CommandLine = ({
         position={position}
         icon={
           value.startsWith('lua ') && kind === CommandType.Ex
-            ? 'moon'
+            ? feather.icons.moon.toSvg()
             : modeSwitch.get(kind) || 'command'
         }
       />

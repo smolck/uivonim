@@ -2,6 +2,7 @@ import Loading from '../components/loading'
 import { paddingVH, cvar } from '../ui/css'
 import { xfrmUp } from '../core/input'
 import { FormEvent } from 'inferno'
+import Icon from '../components/icon'
 
 interface Props {
   value: string
@@ -76,10 +77,6 @@ const keToStr = (e: KeyboardEvent) =>
 // the function.
 let lastDown = ''
 
-const onInput = (e: HTMLInputElement) => {
-  setFocus(e, focus)
-}
-
 const textInput = (
   {
     desc,
@@ -115,7 +112,10 @@ const textInput = (
         'padding-right': '8px',
       }}
     >
-      <i data-feather={icon} />
+      <Icon iconHtml={icon} style={{
+        style: !small ? { fontSize: '1.7rem' } : undefined,
+        color: cvar('foreground-70'),
+      }}/>
     </div>
     <div
       style={{

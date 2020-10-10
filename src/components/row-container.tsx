@@ -28,7 +28,7 @@ interface Options {
   key?: any
   active: boolean
   [key: string]: any
-  children: any
+  children?: any
 }
 
 const removePropsIntendedForThisComponent = (stuff: Options) => {
@@ -64,23 +64,22 @@ export const RowDesc = (o: Options, children: any[]) =>
     children
   )
 
-export const RowComplete = (o: Options, children: any[]) =>
-  h(
-    'div',
-    {
-      ...removePropsIntendedForThisComponent(o),
-      style: {
-        ...(o.active ? activeRow : row),
-        ...paddingVH(0, 0),
-        paddingRight: '8px',
-        lineHeight: cvar('line-height'),
-        fontFamily: 'var(--font)',
-        fontSize: 'var(--font-size)px',
-        ...o.style,
-      },
-    },
-    children
-  )
+export const RowComplete = (props: Options) => (
+  <div 
+    {...removePropsIntendedForThisComponent(props)}
+    style={{
+      ...(props.active ? activeRow : row),
+      ...paddingVH(0, 0),
+      'padding-right': '8px',
+      'line-height': cvar('line-height'),
+      'font-family': 'var(--font)',
+      'font-size': 'var(--font-size)px',
+      ...props.style,
+    }}
+  >
+    {props.children}
+  </div>
+)
 
 export const RowHeader = (o: Options, children: any[]) =>
   h(
