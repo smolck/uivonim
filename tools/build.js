@@ -55,7 +55,7 @@ require.main === module &&
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
     await copyAll()
-    await run('babel src -d build')
+    await run('babel --extensions \'.ts,.tsx\' src -d build')
   })
 
 module.exports = { paths, copy, copyAll }
