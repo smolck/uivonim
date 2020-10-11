@@ -138,6 +138,7 @@ const textInput = (
         value={value}
         style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
         type="text"
+        spellcheck="false"
         placeholder={desc}
         // TODO(smolck): Use linkEvent() for things?
         //
