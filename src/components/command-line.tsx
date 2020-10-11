@@ -48,7 +48,6 @@ const CommandLine = ({
         'margin-top': '-40px',
         height: '40px',
         display: 'flex',
-        spellcheck: 'false',
         'align-items': 'center',
       }}
     >
@@ -72,7 +71,7 @@ const CommandLine = ({
         icon={
           value.startsWith('lua ') && kind === CommandType.Ex
             ? feather.icons.moon.toSvg()
-            : modeSwitch.get(kind) || 'command'
+            : modeSwitch.get(kind) || feather.icons.command.toSvg()
         }
       />
       <div>
