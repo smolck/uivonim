@@ -122,7 +122,7 @@ let state = {
 type S = typeof state
 
 const icon = (name: string, color?: string) => {
-  return <Icon iconHtml={feather.icons[name].toSvg()} style={{ color }} />
+  return <Icon iconHtml={feather.icons[name].toSvg({ width: 12, height: 12 })} style={{ color }} />
 }
 
 const icons = new Map([
