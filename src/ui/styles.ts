@@ -102,17 +102,17 @@ export const colors = {
 
 export const badgeStyle = {
   ...paddingV(4),
-  borderRadius: '2px',
+  'border-radius': '2px',
   background: cvar('background-30'),
 }
 
 export const docStyle = {
   ...paddingVH(8, 6),
   overflow: 'visible',
-  whiteSpace: 'normal',
-  fontSize: '0.9rem',
   color: cvar('foreground-40'),
   background: cvar('background-45'),
+  'white-space': 'normal',
+  'font-size': '0.9rem',
 }
 
 export const resetMarkdownHTMLStyle = css((id) => [
