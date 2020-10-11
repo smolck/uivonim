@@ -1,13 +1,11 @@
-import { is } from '../support/utils'
-import { h } from '../ui/uikit'
-
-type PluginFnNormal = (visible: boolean, children: any[]) => any
-type PluginFnWithStyles = (
-  visible: boolean,
-  styles: object,
-  children: any[]
-) => any
-type PluginFn = PluginFnNormal & PluginFnWithStyles
+// TODO(smolck): Should this be used? Is it pointless now?
+// type PluginFnNormal = (visible: boolean, children: any[]) => any
+// type PluginFnWithStyles = (
+//   visible: boolean,
+//   styles: object,
+//   children: any[]
+// ) => any
+// type PluginFn = PluginFnNormal & PluginFnWithStyles
 
 const base = {
   'z-index': 99,
@@ -32,35 +30,14 @@ const dialog = {
   'flex-flow': 'column',
 }
 
-// export const Plugin = (visible: boolean, ...args: any[]) =>
-//   h(
-//     'div',
-//     {
-//       style: normal,
-//     },
-//     [
-//       ,
-//       h(
-//         'div',
-//         {
-//           style: {
-//             ...dialog,
-//             width: '600px',
-//             display: visible ? 'flex' : 'none',
-//             ...args.find(is.object),
-//           },
-//         },
-//         args.find(is.array)
-//       ),
-//     ]
-//   )
-
 type PluginProps = {
   visible: boolean
   extraStyle: any
-  children: any
+  children?: any
   id?: string
 }
+
+// TODO(smolck): Consolidate all of these.
 
 export const Plugin = ({ id, visible, extraStyle, children }: PluginProps) => (
   <div id={id} style={normal as CSSProperties}>
@@ -77,77 +54,67 @@ export const Plugin = ({ id, visible, extraStyle, children }: PluginProps) => (
   </div>
 )
 
-export const PluginTop: PluginFn = (visible: boolean, ...args: any[]) =>
-  h(
-    'div',
-    {
-      style: top,
-    },
-    [
-      ,
-      h(
-        'div',
-        {
-          style: {
-            ...dialog,
-            width: '400px',
-            display: visible ? 'flex' : 'none',
-            ...args.find(is.object),
-          },
-        },
-        args.find(is.array)
-      ),
-    ]
-  )
+export const PluginTop = ({
+  visible,
+  id,
+  extraStyle,
+  children,
+}: PluginProps) => (
+  <div id={id} style={top as CSSProperties}>
+    <div
+      style={{
+        ...dialog,
+        width: '400px',
+        display: visible ? 'flex' : 'none',
+        ...extraStyle,
+      }}
+    >
+      {children}
+    </div>
+  </div>
+)
 
-export const PluginBottom: PluginFn = (visible: boolean, ...args: any[]) =>
-  h(
-    'div',
-    {
-      style: bottom,
-    },
-    [
-      ,
-      h(
-        'div',
-        {
-          style: {
-            width: '100%',
-            height: '100%',
-            flexFlow: 'column',
-            background: 'var(--background-40)',
-            display: visible ? 'flex' : 'none',
-            ...args.find(is.object),
-          },
-        },
-        args.find(is.array)
-      ),
-    ]
-  )
+export const PluginBottom = ({
+  visible,
+  id,
+  extraStyle,
+  children,
+}: PluginProps) => (
+  <div id={id} style={bottom as CSSProperties}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'var(--background-40)',
+        display: visible ? 'flex' : 'none',
+        'flex-flow': 'column',
+        ...extraStyle,
+      }}
+    >
+      {children}
+    </div>
+  </div>
+)
 
-export const PluginRight = (visible: boolean, ...args: any[]) =>
-  h(
-    'div',
-    {
-      style: right,
-    },
-    [
-      ,
-      h(
-        'div',
-        {
-          style: {
-            ...dialog,
-            width: '500px',
-            height: '100%',
-            flexFlow: 'column',
-            marginTop: 0,
-            background: 'var(--background-40)',
-            display: visible ? 'flex' : 'none',
-            ...args.find(is.object),
-          },
-        },
-        args.find(is.array)
-      ),
-    ]
-  )
+export const PluginRight = ({
+  visible,
+  id,
+  extraStyle,
+  children,
+}: PluginProps) => (
+  <div id={id} style={right as CSSProperties}>
+    <div
+      style={{
+        ...dialog,
+        width: '500px',
+        height: '100%',
+        background: 'var(--background-40)',
+        display: visible ? 'flex' : 'none',
+        ...extraStyle,
+        'flex-flow': 'column',
+        'margin-top': 0,
+      }}
+    ></div>
+    {children}
+  </div>
+)
