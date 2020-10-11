@@ -683,7 +683,11 @@ const createBuffer = (id: any) =>
     setLines: (start, end, lines) =>
       api.buf.setLines(id, start, end, true, lines),
     delete: (start) => api.buf.setLines(id, start, start + 1, true, []),
-    appendRange: async (position: { line: any; character: any }, text: any, undojoin = false) => {
+    appendRange: async (
+      position: { line: any; character: any },
+      text: any,
+      undojoin = false
+    ) => {
       const { line, character: column } = position
       const lines = await req.buf.getLines(id, line, -2, false)
       const updatedLines = TextEditPatch.append({ lines, column, text })

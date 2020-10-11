@@ -79,9 +79,7 @@ let lastDown = ''
 
 // TODO(smolck): But why though? Has to be another way to get access to
 // `onComponentDidMount` with normal stuff like <input>
-const WhyInput = (props: any) => (
-  <input {...props} />
-)
+const WhyInput = (props: any) => <input {...props} />
 
 const textInput = (
   {
@@ -137,8 +135,8 @@ const textInput = (
       <WhyInput
         value={value}
         style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
-        type="text"
-        spellcheck="false"
+        type='text'
+        spellcheck='false'
         placeholder={desc}
         // TODO(smolck): Use linkEvent() for things?
         //

@@ -22,11 +22,11 @@ export default ($: Props) => (
     }}
   >
     <div
-      className="spacer"
+      className='spacer'
       style={{ height: $.anchorAbove ? `calc(100% - ${$.y}px)` : `${$.y}px` }}
     />
     <div style={{ display: 'flex', 'flex-flow': 'row nowrap' }}>
-      <div className="col" style={{ width: `${$.x}px` }} />
+      <div className='col' style={{ width: `${$.x}px` }} />
       <div
         style={{
           'flex-shrink': 0,
