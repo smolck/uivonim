@@ -1,6 +1,7 @@
 import { cvar, paddingVH, paddingH } from '../ui/css'
 import { colors } from '../ui/styles'
-import { h } from '../ui/uikit'
+
+// TODO(smolck): Consolidate all of these Row* components into one?
 
 const row = {
   'align-items': 'center',
@@ -24,19 +25,19 @@ const activeRow = {
   background: cvar('background-10'),
 }
 
-interface Options {
+interface RowProps {
   key?: any
   active: boolean
   [key: string]: any
   children?: any
 }
 
-const removePropsIntendedForThisComponent = (stuff: Options) => {
+const removePropsIntendedForThisComponent = (stuff: RowProps) => {
   const { active, ...rest } = stuff
   return rest
 }
 
-export const RowNormal = (props: Options) => (
+export const RowNormal = (props: RowProps) => (
   <div
     {...removePropsIntendedForThisComponent(props)}
     style={{
@@ -49,22 +50,21 @@ export const RowNormal = (props: Options) => (
   </div>
 )
 
-export const RowDesc = (o: Options, children: any[]) =>
-  h(
-    'div',
-    {
-      ...removePropsIntendedForThisComponent(o),
-      style: {
-        ...(o.active ? activeRow : row),
-        whiteSpace: 'normal',
-        overflow: 'normal',
-        ...o.style,
-      },
-    },
-    children
-  )
+export const RowDesc = (props: RowProps) => (
+  <div
+    {...removePropsIntendedForThisComponent(props)}
+    style={{
+      ...(props.active ? activeRow : row),
+      'white-space': 'normal',
+      overflow: 'normal',
+      ...props.style,
+    }}
+  >
+    {props.children}
+  </div>
+)
 
-export const RowComplete = (props: Options) => (
+export const RowComplete = (props: RowProps) => (
   <div
     {...removePropsIntendedForThisComponent(props)}
     style={{
@@ -81,42 +81,40 @@ export const RowComplete = (props: Options) => (
   </div>
 )
 
-export const RowHeader = (o: Options, children: any[]) =>
-  h(
-    'div',
-    {
-      ...removePropsIntendedForThisComponent(o),
-      style: {
-        ...(o.active ? activeRow : row),
-        ...paddingH(6),
-        alignItems: 'center',
-        color: colors.hint,
-        background: cvar('background-20'),
-        ...(o.active
-          ? {
-              color: '#fff',
-              fontWeight: 'normal',
-              background: cvar('background-b10'),
-            }
-          : 0),
-        ...o.style,
-      },
-    },
-    children
-  )
+export const RowHeader = (props: RowProps) => (
+  <div
+    {...removePropsIntendedForThisComponent(props)}
+    style={{
+      ...(props.active ? activeRow : row),
+      ...paddingH(6),
+      color: colors.hint,
+      background: cvar('background-20'),
+      ...(props.active
+        ? {
+            color: '#fff',
+            fontWeight: 'normal',
+            background: cvar('background-b10'),
+          }
+        : 0),
+      'align-items': 'center',
+      ...props.style,
+    }}
+  >
+    {props.children}
+  </div>
+)
 
-export const RowImportant = (opts = {} as any, children: any[]) =>
-  h(
-    'div',
-    {
-      ...removePropsIntendedForThisComponent(opts),
-      style: {
-        ...opts.style,
-        ...row,
-        ...paddingH(8),
-        color: cvar('important'),
-        background: cvar('background-50'),
-      },
-    },
-    children
-  )
+export const RowImportant = (props: RowProps = {} as any) => (
+  <div
+    {...removePropsIntendedForThisComponent(props)}
+    style={{
+      ...props.style,
+      ...row,
+      ...paddingH(8),
+      color: cvar('important'),
+      background: cvar('background-50'),
+    }}
+  >
+    {props.children}
+  </div>
+)
