@@ -32,7 +32,7 @@ const dialog = {
 
 type PluginProps = {
   visible: boolean
-  extraStyle: any
+  extraStyle?: any
   children?: any
   id?: string
 }
@@ -110,11 +110,12 @@ export const PluginRight = ({
         height: '100%',
         background: 'var(--background-40)',
         display: visible ? 'flex' : 'none',
-        ...extraStyle,
         'flex-flow': 'column',
         'margin-top': 0,
+        ...extraStyle,
       }}
-    ></div>
-    {children}
+    >
+      {children}
+    </div>
   </div>
 )

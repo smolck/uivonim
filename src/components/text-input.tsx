@@ -77,6 +77,12 @@ const keToStr = (e: KeyboardEvent) =>
 // the function.
 let lastDown = ''
 
+// TODO(smolck): But why though? Has to be another way to get access to
+// `onComponentDidMount` with normal stuff like <input>
+const WhyInput = (props: any) => (
+  <input {...props} />
+)
+
 const textInput = (
   {
     desc,
@@ -128,7 +134,7 @@ const textInput = (
         'justify-content': 'space-between',
       }}
     >
-      <input
+      <WhyInput
         value={value}
         style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
         type="text"
@@ -137,6 +143,14 @@ const textInput = (
         //
         // TODO: hack to get hack to get dead keys working working
         onBlur={() => document.getElementById('hacky-textarea')?.focus()}
+        onComponentDidMount={(e: HTMLInputElement) => {
+          setFocus(e, focus)
+          setPosition(e, position)
+        }}
+        // onComponentDidUpdate={(lastProps, newProps) => {
+        //   setFocus(e, focus)
+        //   setPosition(e, position)
+        // }}
         onInput={(e: FormEvent<HTMLInputElement>) => {
           setFocus(e.currentTarget, focus)
           setPosition(e.currentTarget, position)
