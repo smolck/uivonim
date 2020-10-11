@@ -48,6 +48,7 @@ const CommandLine = ({
         'margin-top': '-40px',
         height: '40px',
         display: 'flex',
+        spellcheck: 'false',
         'align-items': 'center',
       }}
     >
