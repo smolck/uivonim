@@ -217,6 +217,7 @@ const References = ($: S) => (
       hide={hide}
       next={next}
       prev={prev}
+      prevGroup={prevGroup}
       down={down}
       select={select}
       change={change}
