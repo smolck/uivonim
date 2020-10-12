@@ -7,7 +7,7 @@ import {
 import { CommandType, CommandUpdate } from '../../render/events'
 import * as windows from '../../windows/window-manager'
 import { WindowOverlay } from '../../windows/window'
-import Input from '../core/text-input'
+import Input from '../text-input'
 import { sub } from '../../messaging/dispatch'
 import { rgba, paddingV } from '../../ui/css'
 import * as Icon from 'hyperapp-feather'

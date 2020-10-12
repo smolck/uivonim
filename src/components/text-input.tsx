@@ -1,6 +1,6 @@
 import Loading from './loading'
-import { paddingVH, cvar } from '../../ui/css'
-import { xfrmUp } from '../../core/input'
+import { paddingVH, cvar } from '../ui/css'
+import { xfrmUp } from '../core/input'
 import { FormEvent } from 'inferno'
 import Icon from './icon'
 

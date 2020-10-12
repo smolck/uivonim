@@ -1,7 +1,7 @@
-import { Plugin } from '../components/core/plugin-container'
-import { app, vimBlur, vimFocus } from '../ui/uikit'
-import { CreateTask } from '../support/utils'
-import Input from '../components/core/text-input'
+import { Plugin } from '../plugin-container'
+import { app, vimBlur, vimFocus } from '../../ui/uikit'
+import { CreateTask } from '../../support/utils'
+import Input from '../text-input'
 import * as Icon from 'hyperapp-feather'
 
 const state = {

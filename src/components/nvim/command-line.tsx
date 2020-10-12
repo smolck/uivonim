@@ -5,9 +5,9 @@ import {
   showCursor,
 } from '../../core/cursor'
 import { CommandType, CommandUpdate } from '../../render/events'
-import { Plugin } from '../core/plugin-container'
-import { RowNormal } from '../core/row-container'
-import Input from '../core/text-input'
+import { Plugin } from '../plugin-container'
+import { RowNormal } from '../row-container'
+import Input from '../text-input'
 import { sub } from '../../messaging/dispatch'
 import { is } from '../../support/utils'
 import { render } from 'inferno'

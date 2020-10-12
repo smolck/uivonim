@@ -1,4 +1,4 @@
-import { divinationSearch } from '../components/divination'
+import { divinationSearch } from '../components/legacy/divination'
 import { app, h, vimBlur, vimFocus } from '../ui/uikit'
 import * as windows from '../windows/window-manager'
 import { WindowOverlay } from '../windows/window'

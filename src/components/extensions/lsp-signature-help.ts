@@ -1,6 +1,6 @@
 import { docStyle, resetMarkdownHTMLStyle } from '../../ui/styles'
 import * as windows from '../../windows/window-manager'
-import Overlay from '../core/overlay'
+import Overlay from '../overlay'
 import { h, app } from '../../ui/uikit'
 import { cvar } from '../../ui/css'
 import api from '../../core/instance-api'

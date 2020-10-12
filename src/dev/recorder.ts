@@ -1,5 +1,5 @@
 import * as storage from '../support/local-storage'
-import messages, { MessageKind } from '../components/messages'
+import messages, { MessageKind } from '../components/nvim/messages'
 import { is } from '../support/utils'
 import { makel } from '../ui/vanilla'
 const finder = require('@medv/finder').default

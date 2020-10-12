@@ -1,12 +1,12 @@
-import FiletypeIcon, { Terminal } from '../components/core/filetype-icon'
-import { Plugin } from '../components/core/plugin-container'
-import { RowNormal } from '../components/core/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { BufferInfo } from '../neovim/types'
-import Input from '../components/core/text-input'
+import FiletypeIcon, { Terminal } from '../filetype-icon'
+import { Plugin } from '../plugin-container'
+import { RowNormal } from '../row-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import { BufferInfo } from '../../neovim/types'
+import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
+import api from '../../core/instance-api'
 
 const state = {
   value: '',

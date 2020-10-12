@@ -1,12 +1,12 @@
-import { RowNormal, RowHeader } from '../components/core/row-container'
-import { PluginRight } from '../components/core/plugin-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { showCursorline } from '../core/cursor'
-import Input from '../components/core/text-input'
-import { badgeStyle } from '../ui/styles'
-import Worker from '../messaging/worker'
+import { RowNormal, RowHeader } from '../row-container'
+import { PluginRight } from '../plugin-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import { showCursorline } from '../../core/cursor'
+import Input from '../text-input'
+import { badgeStyle } from '../../ui/styles'
+import Worker from '../../messaging/worker'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
+import api from '../../core/instance-api'
 
 type TextTransformer = (text: string, last?: boolean) => string
 type Result = [string, SearchResult[]]

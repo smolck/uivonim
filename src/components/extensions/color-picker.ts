@@ -1,14 +1,14 @@
-import * as windows from '../windows/window-manager'
-import * as dispatch from '../messaging/dispatch'
-import ColorPicker from '../ui/color-picker'
-import Overlay from '../components/core/overlay'
-import { debounce } from '../support/utils'
+import * as windows from '../../windows/window-manager'
+import * as dispatch from '../../messaging/dispatch'
+import ColorPicker from '../../ui/color-picker'
+import Overlay from '../overlay'
+import { debounce } from '../../support/utils'
 import { stealInput } from '../core/input'
-import onLoseFocus from '../ui/lose-focus'
+import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
-import { cursor } from '../core/cursor'
-import api from '../core/instance-api'
-import { h, app } from '../ui/uikit'
+import { cursor } from '../../core/cursor'
+import api from '../../core/instance-api'
+import { h, app } from '../../ui/uikit'
 
 let liveMode = false
 let restoreInput = () => {}

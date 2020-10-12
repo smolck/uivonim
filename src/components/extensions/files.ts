@@ -1,13 +1,13 @@
-import { Plugin } from '../components/core/plugin-container'
-import { RowNormal } from '../components/core/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import FiletypeIcon from '../components/core/filetype-icon'
+import { Plugin } from '../plugin-container'
+import { RowNormal } from '../row-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import FiletypeIcon from '../filetype-icon'
 import { basename, dirname, join } from 'path'
-import Input from '../components/core/text-input'
-import Worker from '../messaging/worker'
+import Input from '../text-input'
+import Worker from '../../messaging/worker'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
-import { cvar } from '../ui/css'
+import api from '../../core/instance-api'
+import { cvar } from '../../ui/css'
 
 interface FileDir {
   dir: string

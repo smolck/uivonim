@@ -4,19 +4,19 @@ import {
   pathRelativeToCwd,
   getDirs,
   $HOME,
-} from '../support/utils'
-import { RowNormal, RowImportant } from '../components/core/row-container'
-import FiletypeIcon, { Folder } from '../components/core/filetype-icon'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { Plugin } from '../components/core/plugin-container'
+} from '../../support/utils'
+import { RowNormal, RowImportant } from '../row-container'
+import FiletypeIcon, { Folder } from '../filetype-icon'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import { Plugin } from '../plugin-container'
 import { join, sep, basename, dirname } from 'path'
-import Input from '../components/core/text-input'
-import { BufferType } from '../neovim/types'
+import Input from '../text-input'
+import { BufferType } from '../../neovim/types'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
-import { colors } from '../ui/styles'
-import { cvar } from '../ui/css'
+import api from '../../core/instance-api'
+import { colors } from '../../ui/styles'
+import { cvar } from '../../ui/css'
 
 interface FileDir {
   name: string

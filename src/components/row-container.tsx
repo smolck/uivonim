@@ -1,5 +1,5 @@
-import { cvar, paddingVH, paddingH } from '../../ui/css'
-import { colors } from '../../ui/styles'
+import { cvar, paddingVH, paddingH } from '../ui/css'
+import { colors } from '../ui/styles'
 
 // TODO(smolck): Consolidate all of these Row* components into one?
 
