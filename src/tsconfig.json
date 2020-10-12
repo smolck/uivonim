@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "test", "xdg_config"],
+  "exclude": ["node_modules", "test", "xdg_config", "components/legacy", "dev"],
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "esnext",

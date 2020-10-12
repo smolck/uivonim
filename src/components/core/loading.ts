@@ -1,6 +1,6 @@
-import * as workspace from '../core/workspace'
+import * as workspace from '../../core/workspace'
 import { Loader } from 'hyperapp-feather'
-import { h } from '../ui/uikit'
+import { h } from '../../ui/uikit'
 
 interface LoaderParams {
   size?: number

@@ -3,13 +3,13 @@ import {
   disableCursor,
   hideCursor,
   showCursor,
-} from '../core/cursor'
-import { CommandType, CommandUpdate } from '../render/events'
-import { Plugin } from '../components/plugin-container'
-import { RowNormal } from '../components/row-container'
-import Input from '../components/text-input'
-import { sub } from '../messaging/dispatch'
-import { is } from '../support/utils'
+} from '../../core/cursor'
+import { CommandType, CommandUpdate } from '../../render/events'
+import { Plugin } from '../core/plugin-container'
+import { RowNormal } from '../core/row-container'
+import Input from '../core/text-input'
+import { sub } from '../../messaging/dispatch'
+import { is } from '../../support/utils'
 import { render } from 'inferno'
 const feather = require('feather-icons')
 

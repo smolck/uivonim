@@ -1,8 +1,8 @@
 import * as FeatherIcon from 'hyperapp-feather'
-import { pascalCase } from '../support/utils'
+import { pascalCase } from '../../support/utils'
 import { basename, extname } from 'path'
 import * as Icons from 'hyperapp-seti'
-import { h } from '../ui/uikit'
+import { h } from '../../ui/uikit'
 
 const findIcon = (id: string) => id && Reflect.get(Icons, pascalCase(id))
 

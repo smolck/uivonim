@@ -1,13 +1,12 @@
-import { RowNormal, RowHeader } from '../components/row-container'
-import { PluginRight } from '../components/plugin-container'
-import { vimBlur, vimFocus } from '../ui/uikit'
-import { simplifyPath } from '../support/utils'
-import { showCursorline } from '../core/cursor'
-import { badgeStyle } from '../ui/styles'
-import { Component } from 'inferno'
+import { RowNormal, RowHeader } from '../core/row-container'
+import { PluginRight } from '../core/plugin-container'
+import { vimBlur, vimFocus } from '../../ui/uikit'
+import { simplifyPath } from '../../support/utils'
+import { showCursorline } from '../../core/cursor'
+import { badgeStyle } from '../../ui/styles'
 import { render } from 'inferno'
-import Input from '../components/text-input'
-import api from '../core/instance-api'
+import Input from '../core/text-input'
+import api from '../../core/instance-api'
 
 const container = document.getElementById('plugins')
 

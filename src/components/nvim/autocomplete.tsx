@@ -1,18 +1,16 @@
-import { RowNormal, RowComplete } from '../components/row-container'
-import { resetMarkdownHTMLStyle } from '../ui/styles'
-import * as windows from '../windows/window-manager'
-import * as dispatch from '../messaging/dispatch'
-import * as workspace from '../core/workspace'
-import { PopupMenu } from '../render/events'
-import { paddingVH, cvar } from '../ui/css'
-import Overlay from '../components/overlay'
-import { cursor } from '../core/cursor'
+import { RowNormal, RowComplete } from '../core/row-container'
+import { resetMarkdownHTMLStyle } from '../../ui/styles'
+import * as windows from '../../windows/window-manager'
+import * as dispatch from '../../messaging/dispatch'
+import * as workspace from '../../core/workspace'
+import { PopupMenu } from '../../render/events'
+import { paddingVH, cvar } from '../../ui/css'
+import Overlay from '../core/overlay'
+import { cursor } from '../../core/cursor'
 import { parse as stringToMarkdown } from 'marked'
 import { render } from 'inferno'
-import Icon from '../components/icon'
+import Icon from '../core/icon'
 const feather = require('feather-icons')
-
-console.log('required autocomplete')
 
 export interface CompletionShow {
   row: number

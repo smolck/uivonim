@@ -1,12 +1,12 @@
-import { RowNormal } from '../components/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import * as windows from '../windows/window-manager'
-import Input from '../components/text-input'
-import Overlay from '../components/overlay'
+import { RowNormal } from '../core/row-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import * as windows from '../../windows/window-manager'
+import Input from '../core/text-input'
+import Overlay from '../core/overlay'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
-import { cursor } from '../core/cursor'
+import api from '../../core/instance-api'
+import { cursor } from '../../core/cursor'
 
 type CodeAction = {
   title: string

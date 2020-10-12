@@ -1,11 +1,11 @@
-import { list, switchVim } from '../core/instance-manager'
-import { Plugin } from '../components/plugin-container'
-import { RowNormal } from '../components/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import Input from '../components/text-input'
+import { list, switchVim } from '../..//core/instance-manager'
+import { Plugin } from '../core/plugin-container'
+import { RowNormal } from '../core/row-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import Input from '../core/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
+import api from '../../core/instance-api'
 
 interface Instance {
   id: number

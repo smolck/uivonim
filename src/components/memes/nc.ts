@@ -1,6 +1,6 @@
-import { stealInput } from '../core/input'
-import api from '../core/instance-api'
-import { h, app } from '../ui/uikit'
+import { stealInput } from '../../core/input'
+import api from '../../core/instance-api'
+import { h, app } from '../../ui/uikit'
 
 const state = {
   visible: false,

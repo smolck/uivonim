@@ -3,14 +3,14 @@ import {
   Message,
   MessageReturn,
   MessageStatusUpdate,
-} from '../protocols/veonim'
-import { uuid, CreateTask, arrReplace } from '../support/utils'
-import { registerOneTimeUseShortcuts } from '../core/input'
+} from '../../protocols/veonim'
+import { uuid, CreateTask, arrReplace } from '../../support/utils'
+import { registerOneTimeUseShortcuts } from '../../core/input'
 import * as Icon from 'hyperapp-feather'
-import { colors } from '../ui/styles'
-import { h, app } from '../ui/uikit'
-import { cvar } from '../ui/css'
-export { MessageKind } from '../protocols/veonim'
+import { colors } from '../../ui/styles'
+import { h, app } from '../../ui/uikit'
+import { cvar } from '../../ui/css'
+export { MessageKind } from '../../protocols/veonim'
 
 interface MessageAction {
   label: string

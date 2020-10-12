@@ -1,10 +1,10 @@
-import { MessageKind, Message } from '../protocols/veonim'
-import { RowNormal } from '../components/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import Input from '../components/text-input'
+import { MessageKind, Message } from '../../protocols/veonim'
+import { RowNormal } from '../core/row-container'
+import { h, app, vimBlur, vimFocus } from '../../ui/uikit'
+import Input from '../core/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import { colors } from '../ui/styles'
+import { colors } from '../../ui/styles'
 
 const state = {
   query: '',

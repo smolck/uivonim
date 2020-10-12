@@ -3,17 +3,17 @@ import {
   showCursor,
   disableCursor,
   enableCursor,
-} from '../core/cursor'
-import { CommandType, CommandUpdate } from '../render/events'
-import * as windows from '../windows/window-manager'
-import { WindowOverlay } from '../windows/window'
-import Input from '../components/text-input'
-import { sub } from '../messaging/dispatch'
-import { rgba, paddingV } from '../ui/css'
+} from '../../core/cursor'
+import { CommandType, CommandUpdate } from '../../render/events'
+import * as windows from '../../windows/window-manager'
+import { WindowOverlay } from '../../windows/window'
+import Input from '../core/text-input'
+import { sub } from '../../messaging/dispatch'
+import { rgba, paddingV } from '../../ui/css'
 import * as Icon from 'hyperapp-feather'
-import { is } from '../support/utils'
-import { makel } from '../ui/vanilla'
-import { app, h } from '../ui/uikit'
+import { is } from '../../support/utils'
+import { makel } from '../../ui/vanilla'
+import { app, h } from '../../ui/uikit'
 
 const state = {
   visible: false,

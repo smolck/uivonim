@@ -35,7 +35,13 @@ requestAnimationFrame(() => {
   })
 
   setTimeout(() => {
+    // TODO(smolck): `requireDir` doesn't recursively search through directories
+    // for files, right?
+    requireDir(`${__dirname}/../components/nvim`)
+    requireDir(`${__dirname}/../components/lsp`)
     requireDir(`${__dirname}/../components`)
+    requireDir(`${__dirname}/../components/experimental`)
+    requireDir(`${__dirname}/../components/memes`)
   }, 600)
 
   setTimeout(() => {

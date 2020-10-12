@@ -1,8 +1,8 @@
-import Loading from '../components/loading'
-import { paddingVH, cvar } from '../ui/css'
-import { xfrmUp } from '../core/input'
+import Loading from './loading'
+import { paddingVH, cvar } from '../../ui/css'
+import { xfrmUp } from '../../core/input'
 import { FormEvent } from 'inferno'
-import Icon from '../components/icon'
+import Icon from './icon'
 
 interface Props {
   value: string
