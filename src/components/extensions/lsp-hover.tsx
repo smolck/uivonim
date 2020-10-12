@@ -5,8 +5,8 @@ import { debounce } from '../../support/utils'
 import Overlay from '../overlay'
 import { docStyle } from '../../ui/styles'
 import { cursor } from '../../core/cursor'
-import { h, app } from '../../ui/uikit'
 import { parse as stringToMarkdown, setOptions } from 'marked'
+import { render } from 'inferno'
 import api from '../../core/instance-api'
 import { cell, size as workspaceSize } from '../../core/workspace'
 
@@ -28,21 +28,19 @@ interface ShowParams {
 }
 
 // TODO(smolck): Should sanitize this HTML probably because safety.
-const docs = (data: string) =>
-  h('div', {
-    style: docStyle,
-    oncreate: (e: HTMLElement) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
-    onupdate: (e: HTMLElement, _: any) =>
-      (e.innerHTML = `<div>${stringToMarkdown(data)}</div>`),
-  })
+const docs = (data: string) => (
+  <div
+    style={docStyle as CSSProperties}
+    dangerouslySetInnerHTML={{ __html: `<div>${stringToMarkdown(data)}` }}
+  />
+)
 
 const getPosition = (row: number, col: number, heightOfHover: number) =>
   heightOfHover > row
     ? { ...windows.pixelPosition(row + 1, col), anchorBottom: false }
     : { ...windows.pixelPosition(row, col), anchorBottom: true }
 
-const state = {
+let state = {
   value: [[]] as ColorData[][],
   visible: false,
   anchorBottom: true,
@@ -55,38 +53,43 @@ const state = {
 
 type S = typeof state
 
-const actions = {
-  hide: () => ({ visible: false }),
-  show: ({ data, doc, hoverHeight, maxWidth }: ShowParams) => ({
-    doc,
+const Hover = ({ doc, visible, x, y, anchorBottom, maxWidth }: S) => (
+  <Overlay
+    id={'hover'}
+    visible={visible}
+    x={x}
+    y={y}
+    anchorAbove={anchorBottom}
+    maxWidth={Math.max(0, Math.min(maxWidth, workspaceSize.width))}
+  >
+    {doc && !anchorBottom && docs(doc)}
+    {doc && anchorBottom && docs(doc)}
+  </Overlay>
+)
+
+const container = document.getElementById('plugins')
+
+const hide = () => (
+  (state.visible = false), render(<Hover {...state} />, container)
+)
+const show = ({ data, doc, hoverHeight, maxWidth }: ShowParams) => {
+  if (doc) state.doc = doc
+  Object.assign(state, {
     hoverHeight,
     maxWidth,
     value: data,
     visible: true,
     ...getPosition(cursor.row, cursor.col, hoverHeight),
-  }),
-  updatePosition: () => (s: S) =>
-    s.visible ? getPosition(cursor.row, cursor.col, s.hoverHeight) : undefined,
+  })
+
+  render(<Hover {...state} />, container)
 }
+const updatePosition = () => {
+  if (state.visible)
+    Object.assign(state, getPosition(cursor.row, cursor.col, state.hoverHeight))
 
-type A = typeof actions
-
-const view = ($: S) =>
-  Overlay(
-    {
-      x: $.x,
-      y: $.y,
-      maxWidth: Math.max(0, Math.min($.maxWidth, workspaceSize.width)),
-      visible: $.visible,
-      anchorAbove: $.anchorBottom,
-    },
-    [
-      $.doc && !$.anchorBottom && docs($.doc),
-      $.doc && $.anchorBottom && docs($.doc),
-    ]
-  )
-
-const ui = app<S, A>({ name: 'hover', state, actions, view })
+  render(<Hover {...state} />, container)
+}
 
 api.onAction('hover', (_, markdownLines) => {
   const doc = markdownLines.join('\n')
@@ -98,9 +101,12 @@ api.onAction('hover', (_, markdownLines) => {
       markdownLines[0].length
     ) +
       2) // Add 2 to prevent wrapping unless necessary.
-  ui.show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
+
+  show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 
-api.onAction('hover-close', () => ui.hide())
+api.onAction('hover-close', hide)
 
-sub('redraw', debounce(ui.updatePosition, 50))
+sub('redraw', () => {
+  if (state.visible) debounce(updatePosition, 50)
+})

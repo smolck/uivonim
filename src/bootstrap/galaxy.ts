@@ -29,16 +29,16 @@ requestAnimationFrame(() => {
     // Need to focus hacky textarea so input is registered right off the bat.
     document.getElementById('hacky-textarea')?.focus()
 
-    require('../components/nvim/statusline')
-    require('../components/nvim/command-line')
-    require('../components/nvim/vim-search')
+    requireDir(`${__dirname}/../components/nvim`)
+    // require('../components/nvim/statusline')
+    // require('../components/nvim/command-line')
+    // require('../components/nvim/vim-search')
   })
 
   setTimeout(() => {
     // TODO(smolck): `requireDir` doesn't recursively search through directories
     // for files, right?
     requireDir(`${__dirname}/../components`)
-    requireDir(`${__dirname}/../components/nvim`)
     requireDir(`${__dirname}/../components/extensions`)
     requireDir(`${__dirname}/../components/memes`)
   }, 600)
