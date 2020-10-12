@@ -1,9 +1,9 @@
-import { renameCurrent, getCurrentName } from '../../core/instance-manager'
-import { Plugin } from '../core/plugin-container'
-import { app, vimBlur, vimFocus } from '../../ui/uikit'
-import Input from '../core/text-input'
+import { renameCurrent, getCurrentName } from '../../../core/instance-manager'
+import { Plugin } from '../../plugin-container'
+import { app, vimBlur, vimFocus } from '../../../ui/uikit'
+import Input from '../../text-input'
 import * as Icon from 'hyperapp-feather'
-import api from '../../core/instance-api'
+import api from '../../../core/instance-api'
 
 const state = {
   value: '',
