@@ -29,9 +29,9 @@ requestAnimationFrame(() => {
     // Need to focus hacky textarea so input is registered right off the bat.
     document.getElementById('hacky-textarea')?.focus()
 
-    require('../components/statusline')
-    require('../components/command-line')
-    require('../components/vim-search')
+    require('../components/nvim/statusline')
+    require('../components/nvim/command-line')
+    require('../components/experimental/vim-search')
   })
 
   setTimeout(() => {
@@ -56,8 +56,8 @@ requestAnimationFrame(() => {
     require('../services/app-info')
 
     if (process.env.VEONIM_DEV) {
-      require('../dev/menu')
-      require('../dev/recorder')
+      // require('../dev/menu')
+      // require('../dev/recorder')
     }
   }, 199)
 })

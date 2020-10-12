@@ -1,7 +1,7 @@
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import ColorPicker from '../ui/color-picker'
-import Overlay from '../components/overlay'
+import Overlay from '../components/core/overlay'
 import { debounce } from '../support/utils'
 import { stealInput } from '../core/input'
 import onLoseFocus from '../ui/lose-focus'

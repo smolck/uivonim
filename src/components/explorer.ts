@@ -5,12 +5,12 @@ import {
   getDirs,
   $HOME,
 } from '../support/utils'
-import { RowNormal, RowImportant } from '../components/row-container'
-import FiletypeIcon, { Folder } from '../components/filetype-icon'
+import { RowNormal, RowImportant } from '../components/core/row-container'
+import FiletypeIcon, { Folder } from '../components/core/filetype-icon'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { Plugin } from '../components/plugin-container'
+import { Plugin } from '../components/core/plugin-container'
 import { join, sep, basename, dirname } from 'path'
-import Input from '../components/text-input'
+import Input from '../components/core/text-input'
 import { BufferType } from '../neovim/types'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
