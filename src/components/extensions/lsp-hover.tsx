@@ -67,7 +67,9 @@ const Hover = ({ doc, visible, x, y, anchorBottom, maxWidth }: S) => (
   </Overlay>
 )
 
-const container = document.getElementById('plugins')
+const plugins = document.getElementById('plugins')
+const container = document.createElement('div')
+plugins?.appendChild(container)
 
 const hide = () => (
   (state.visible = false), render(<Hover {...state} />, container)

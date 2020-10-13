@@ -85,7 +85,11 @@ const CommandLine = ({
   )
 }
 
-const container = document.getElementById('plugins')
+// TODO(smolck): Is this slow? Necessary? Done in other files as well, since
+// otherwise Inferno overwrites the DOM and that causes issues.
+const plugins = document.getElementById('plugins')
+const container = document.createElement('div')
+plugins?.appendChild(container)
 
 // TODO: use export cns. this component is a high priority so it should be loaded early
 // because someone might open cmdline early

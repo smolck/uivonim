@@ -230,7 +230,9 @@ const Autocomplete = ({
   </Overlay>
 )
 
-const container = document.getElementById('plugins')
+const plugins = document.getElementById('plugins')
+const container = document.createElement('div')
+plugins?.appendChild(container)
 
 export const hide = () => {
   state.visible = false
