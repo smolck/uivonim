@@ -69,6 +69,7 @@ const Hover = ({ doc, visible, x, y, anchorBottom, maxWidth }: S) => (
 
 const plugins = document.getElementById('plugins')
 const container = document.createElement('div')
+container.id = 'hover-container'
 plugins?.appendChild(container)
 
 const hide = () => (

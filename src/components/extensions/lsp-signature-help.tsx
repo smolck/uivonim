@@ -165,6 +165,7 @@ const SignatureHelp = ({
 
 const plugins = document.getElementById('plugins')
 const container = document.createElement('div')
+container.id = 'signature-help-container'
 plugins?.appendChild(container)
 
 const hide = () => (

@@ -8,8 +8,6 @@ import { render } from 'inferno'
 import Input from '../text-input'
 import api from '../../core/instance-api'
 
-const container = document.getElementById('plugins')
-
 type Reference = {
   lineNum: number
   column: number
@@ -112,6 +110,11 @@ const highlightPattern = (
 }
 
 const resetState = { vis: false, references: [] }
+
+const plugins = document.getElementById('plugins')
+const container = document.createElement('div')
+container.id = 'references-container'
+plugins?.appendChild(container)
 
 const hide = () => {
   vimFocus()

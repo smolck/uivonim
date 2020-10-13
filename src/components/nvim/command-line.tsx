@@ -89,6 +89,7 @@ const CommandLine = ({
 // otherwise Inferno overwrites the DOM and that causes issues.
 const plugins = document.getElementById('plugins')
 const container = document.createElement('div')
+container.id = 'command-line-container'
 plugins?.appendChild(container)
 
 // TODO: use export cns. this component is a high priority so it should be loaded early

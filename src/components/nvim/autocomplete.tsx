@@ -232,6 +232,7 @@ const Autocomplete = ({
 
 const plugins = document.getElementById('plugins')
 const container = document.createElement('div')
+container.id = 'autocomplete-container'
 plugins?.appendChild(container)
 
 export const hide = () => {
