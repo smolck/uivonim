@@ -384,7 +384,7 @@ const Statusline = ({
   )
 }
 
-const setStateAndRender = (newState: any) => (
+const assignStateAndRender = (newState: any) => (
   Object.assign(state, newState), render(<Statusline {...state} />, container)
 )
 
@@ -416,41 +416,41 @@ const Tab = ({ id, label, active }: TabView) => (
   </div>
 )
 
-api.nvim.watchState.filetype((filetype) => setStateAndRender({ filetype }))
-api.nvim.watchState.line((line) => setStateAndRender({ line }))
-api.nvim.watchState.column((column) => setStateAndRender({ column }))
+api.nvim.watchState.filetype((filetype) => assignStateAndRender({ filetype }))
+api.nvim.watchState.line((line) => assignStateAndRender({ line }))
+api.nvim.watchState.column((column) => assignStateAndRender({ column }))
 api.nvim.watchState.cwd((cwd: string) => {
   const next = homedir() === cwd ? getCurrentName() : basename(cwd)
-  setStateAndRender({ cwd: next })
+  assignStateAndRender({ cwd: next })
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
   const mtabs: TabInfo[] = tabs.map((t) => ({ id: t.tab.id, name: t.name }))
   mtabs.length > 1
-    ? setStateAndRender({ active: curtab.id, tabs: mtabs })
-    : setStateAndRender({ active: -1, tabs: [] })
+    ? assignStateAndRender({ active: curtab.id, tabs: mtabs })
+    : assignStateAndRender({ active: -1, tabs: [] })
 })
 
-api.git.onBranch((branch) => setStateAndRender({ branch }))
+api.git.onBranch((branch) => assignStateAndRender({ branch }))
 api.git.onStatus((status) =>
-  setStateAndRender({
+  assignStateAndRender({
     additions: status.additions,
     deletions: status.deletions,
   })
 )
 // sub('ai.diagnostics.count', (count) => ui.setDiagnostics(count))
 // sub('ai.start', (opts) => ui.aiStart(opts))
-sub('message.status', (msg) => setStateAndRender({ message: msg }))
-sub('message.control', (msg) => setStateAndRender({ controlMessage: msg }))
-onSwitchVim(() => setStateAndRender({ active: -1, tabs: [] }))
+sub('message.status', (msg) => assignStateAndRender({ message: msg }))
+sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
+onSwitchVim(() => assignStateAndRender({ active: -1, tabs: [] }))
 
 api.nvim.watchState.colorscheme(async () => {
   const { background } = await getColorByName('StatusLine')
-  if (background) setStateAndRender({ baseColor: background })
+  if (background) assignStateAndRender({ baseColor: background })
 })
 
 setImmediate(async () => {
   processAnyBuffered('tabs')
   const { background } = await getColorByName('StatusLine')
-  if (background) setStateAndRender({ baseColor: background })
+  if (background) assignStateAndRender({ baseColor: background })
 })
