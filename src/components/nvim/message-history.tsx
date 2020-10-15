@@ -117,9 +117,8 @@ const assignStateAndRender = (newState: any) => (
   render(<MessageHistory {...state} />, container)
 )
 
-const show = (messages: Message[], inputCallbacks: any) => (
-  vimBlur(),
-  assignStateAndRender({ messages, cache: messages, vis: true, inputCallbacks })
+const show = (messages: Message[]) => (
+  vimBlur(), assignStateAndRender({ messages, cache: messages, vis: true })
 )
 
 const hide = () => (
@@ -146,18 +145,22 @@ const up = () => {
   elref.scrollTop -= Math.floor(height * SCROLL_AMOUNT)
 }
 
-const change = (query: string) => assignStateAndRender({
-  query,
-  ix: 0,
-  messages: query ? filter(state.messages, query, { key: 'message' }) : state.cache
-})
-
-export const showMessageHistory = (messages: Message[]) =>
-  show(messages, {
-    hide,
-    next,
-    prev,
-    down,
-    up,
-    change,
+const change = (query: string) =>
+  assignStateAndRender({
+    query,
+    ix: 0,
+    messages: query
+      ? filter(state.messages, query, { key: 'message' })
+      : state.cache,
   })
+
+state.inputCallbacks = {
+  hide,
+  next,
+  prev,
+  down,
+  up,
+  change,
+}
+
+export const showMessageHistory = (messages: Message[]) => show(messages)
