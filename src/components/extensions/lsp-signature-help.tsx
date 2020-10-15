@@ -169,7 +169,7 @@ container.id = 'signature-help-container'
 plugins?.appendChild(container)
 
 const hide = () => (
-  state = Object.assign(state, { visible: false, label: '', row: 0 }),
+  (state = Object.assign(state, { visible: false, label: '', row: 0 })),
   render(<SignatureHelp {...state} />, container)
 )
 
