@@ -7,8 +7,8 @@ import { stealInput } from '../../core/input'
 import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
 import { cursor } from '../../core/cursor'
+import { render } from 'inferno'
 import api from '../../core/instance-api'
-import { h, app } from '../../ui/uikit'
 
 let liveMode = false
 let restoreInput = () => {}
@@ -46,38 +46,72 @@ const possiblyUpdateColorScheme = debounce(() => {
   dispatch.pub('colorscheme.modified')
 }, 300)
 
-const state = {
+let state = {
   x: 0,
   y: 0,
   visible: false,
   anchorBottom: false,
+  hideFunc: () => {}, // TODO(smolck)
 }
 
-const actions = {
-  show: () => ({ visible: true, ...getPosition(cursor.row, cursor.col) }),
-  hide: () => ({ visible: false }),
-}
+const WhyDiv = (props: any) => <div {...props} />
 
-const view = ($: typeof state, a: typeof actions) =>
-  Overlay(
-    {
-      x: $.x,
-      y: $.y,
-      zIndex: 900,
-      visible: $.visible,
-      anchorAbove: $.anchorBottom,
-    },
-    [
-      ,
-      h('.show-cursor', {
-        onupdate: (e: HTMLElement) =>
-          onLoseFocus(e, () => (a.hide(), restoreInput())),
-        oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
-      }),
-    ]
-  )
+let elref: HTMLElement | undefined
+const ColorPickerView = ({
+  x,
+  y,
+  visible,
+  anchorBottom,
+  hideFunc,
+}: typeof state) => (
+  <Overlay x={x} y={y} visible={visible} anchorAbove={anchorBottom}>
+    <WhyDiv
+      class={'show-cursor'}
+      onComponentDidMount={(e: HTMLElement) => (
+        e.appendChild(colorPicker.element), elref = e
+      )}
+      onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
+        if (elref) {
+          onLoseFocus(elref, () => (hideFunc(), restoreInput()))
+        } // TODO(smolck): Else . . . sadness?
+      }}
+    />
+  </Overlay>
+)
 
-const ui = app({ name: 'color-picker', state, actions, view })
+const container = document.createElement('div')
+container.id = 'color-picker-container'
+document.getElementById('plugins')!.appendChild(container)
+
+const assignStateAndRender = (newState: any) => (
+  Object.assign(state, newState),
+  render(<ColorPickerView {...state} />, container)
+)
+
+const uiShow = () =>
+  assignStateAndRender({
+    visible: true,
+    ...getPosition(cursor.row, cursor.col),
+  })
+state.hideFunc = () => assignStateAndRender({ visible: false })
+
+// Overlay(
+//   {
+//     x: $.x,
+//     y: $.y,
+//     zIndex: 900,
+//     visible: $.visible,
+//     anchorAbove: $.anchorBottom,
+//   },
+//   [
+//     ,
+//     h('.show-cursor', {
+//       onupdate: (e: HTMLElement) =>
+//         onLoseFocus(e, () => (a.hide(), restoreInput())),
+//       oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
+//     }),
+//   ]
+// )
 
 const show = (color: string) => {
   // TODO: conditionally call setRGB or setHSL depending on input
@@ -86,12 +120,12 @@ const show = (color: string) => {
   colorPicker.setHex(color)
   // colorPicker.setRGB(r, g, b, a)
   // colorPicker.setHSL(h, s, l, a)
-  ui.show()
+  uiShow()
 
   restoreInput = stealInput((keys) => {
     if (keys !== '<Esc>') return
     restoreInput()
-    ui.hide()
+    state.hideFunc()
   })
 }
 

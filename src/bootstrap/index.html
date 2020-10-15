@@ -18,6 +18,14 @@
         width: 100%;
         height: 100%;
         position: absolute;
+        /* Don't want these divs to obstruct clicking components/extensions, so
+         make them not visible. */
+        visibility: hidden;
+      }
+
+      #plugins > div > div {
+        /* Do want the actual components to be visible and thus clickable. */
+        visibility: visible;
       }
 
       html {
