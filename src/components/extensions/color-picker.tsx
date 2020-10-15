@@ -95,24 +95,6 @@ const uiShow = () =>
   })
 state.hideFunc = () => assignStateAndRender({ visible: false })
 
-// Overlay(
-//   {
-//     x: $.x,
-//     y: $.y,
-//     zIndex: 900,
-//     visible: $.visible,
-//     anchorAbove: $.anchorBottom,
-//   },
-//   [
-//     ,
-//     h('.show-cursor', {
-//       onupdate: (e: HTMLElement) =>
-//         onLoseFocus(e, () => (a.hide(), restoreInput())),
-//       oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
-//     }),
-//   ]
-// )
-
 const show = (color: string) => {
   // TODO: conditionally call setRGB or setHSL depending on input
   // this will depend on functionality to parse/edit rgba+hsla
