@@ -212,8 +212,9 @@ const textInput = (
         }}
       />
     </div>
+
+    {loading && <Loading color={loadingColor} size={loadingSize} />}
   </div>
 )
-// TODO: loading && Loading({color: loadingColor, size: loadingSize})
 
 export default (props: TextInputProps) => textInput(props, nopMaybe(props))
