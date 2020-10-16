@@ -2,15 +2,6 @@ import { basename, extname } from 'path'
 // TODO(smolck): import * as Icons from 'hyperapp-seti'
 import Icon from './icon'
 
-const feather = require('feather-icons')
-const findIcon = (id: string) => {
-  return id &&
-    <Icon iconHtml={Reflect.get(
-    feather.icons,
-    id,
-    ).toSvg()} />
-}
-
 const customMappings = new Map<string, string>([
   ['readme.md', 'info'],
   ['gif', 'image'],
@@ -20,9 +11,10 @@ const customMappings = new Map<string, string>([
   ['svg', 'image'],
 ])
 
+const feather = require('feather-icons')
 const findIconCustom = (filename: string, extension: string) => {
   const mapping = customMappings.get(extension) || customMappings.get(filename)
-  return mapping && findIcon(mapping)
+  return mapping && <Icon iconHtml={feather.icons[mapping].toSvg()} />
 }
 
 const getIcon = (path = '') => {
@@ -31,10 +23,6 @@ const getIcon = (path = '') => {
 
   return (
     findIconCustom(filename, extension) ||
-    findIcon(extension) ||
-    findIcon(filename) ||
-    findIcon(path.toLowerCase()) ||
-    // TODO(smolck): Was Icons.Shell
     <Icon iconHtml={feather.icons['file-text'].toSvg()}/>
   )
 }
