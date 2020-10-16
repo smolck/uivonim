@@ -25,8 +25,6 @@ let state = {
 type S = typeof state
 let winOverlay: WindowOverlay
 
-type A = typeof actions
-
 const printCommandType = (kind: CommandType) => {
   if (kind === CommandType.SearchForward) return 'forward search'
   if (kind === CommandType.SearchBackward) return 'backward search'

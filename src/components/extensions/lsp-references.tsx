@@ -305,7 +305,7 @@ api.onAction('references', (_, items) => {
   }, new Map())
 
   let stuffToShow = [] as Refs[]
-  itemsMap.forEach((value, key) => stuffToShow.push([key, value]))
+  itemsMap.forEach((value: Reference[], key: string) => stuffToShow.push([key, value]))
 
   show({ references: stuffToShow })
 })

@@ -241,7 +241,7 @@ const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   keyListener(inputKeys, inputType)
 }
 
-const keydownHandler = (e) => {
+const keydownHandler = (e: KeyboardEvent) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
@@ -268,7 +268,7 @@ const keydownHandler = (e) => {
   sendKeys(e, InputType.Down)
 }
 
-const keyupHandler = (e) => {
+const keyupHandler = (e: KeyboardEvent) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
