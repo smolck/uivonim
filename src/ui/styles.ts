@@ -65,7 +65,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
       .then(({ foreground }) =>
         foreground ? setVar(varName, foreground) : null
       )
-      .catch((error) => console.warn('Error: ', error))
+      .catch((_err) => {}) // TODO(smolck): Maybe handle? Not really necessary probably . . .
 
   getColorAndSetVar('uvnKeyword', 'keyword')
   getColorAndSetVar('uvnBuiltin', 'builtin')
