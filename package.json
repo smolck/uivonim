@@ -50,12 +50,12 @@
     "marked": "^1.2.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.0",
-    "@babel/core": "^7.12.0",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/plugin-proposal-object-rest-spread": "^7.11.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.10.4",
-    "@babel/preset-typescript": "^7.12.0",
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.1",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.12.1",
+    "@babel/preset-typescript": "^7.12.1",
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "^2.0.0",
     "@types/diff-match-patch": "1.0.32",
