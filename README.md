@@ -15,6 +15,7 @@ without reliance on VSCode extensions.
 - All configuration done via vimrc with vimscript/Lua/remote plugins
 - Opt-in GUI features and eyecandy
 - Fully keyboard driven (no mouse support)
+- Full support for international keyboard layouts and dead keys
 - Fast, building upon the work done by @breja, with things like WebGL GPU
   rendering and multithreading
 - Extensibility via a Lua API providing access to frontend GUI features such as
