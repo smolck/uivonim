@@ -19,7 +19,7 @@
     "test:integration:watch": "npm run test:integration -- -w",
     "gen:api": "node tools/gen-api.js",
     "gen:font-sizes": "electron tools/font-sizer/index.js",
-    "unused-exports": "ts-unused-exports tsconfig.json $(find src -name *.ts)",
+    "unused-exports": "ts-unused-exports src/tsconfig.json",
     "setup-mirrors": "node tools/setup-mirrors.js"
   },
   "repository": {
