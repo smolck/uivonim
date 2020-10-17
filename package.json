@@ -34,7 +34,7 @@
     "diff-match-patch": "^1.0.5",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
-    "highlight.js": "^10.2.1",
+    "highlight.js": "^10.3.0",
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "^0.3.0",
