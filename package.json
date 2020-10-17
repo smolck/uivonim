@@ -3,7 +3,7 @@
   "author": "smolck",
   "license": "AGPL-3.0-only",
   "version": "0.25.0",
-  "description": "Neovim GUI with 100x more memory usage",
+  "description": "Extensible Neovim GUI forked from Veonim",
   "main": "build/bootstrap/main.js",
   "scripts": {
     "start": "node tools/start.js",
@@ -23,20 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/veonim/veonim.git"
+    "url": "git+https://github.com/smolck/uivonim.git"
   },
-  "repository-mirrors": [
-    "git@github.com:veonim/veonim.git",
-    "https://veonim@gitlab.com/veonim/veonim.git",
-    "https://veonim@bitbucket.org/veonim/veonim.git"
-  ],
   "bugs": {
-    "url": "https://github.com/veonim/veonim/issues"
+    "url": "https://github.com/smolck/uivonim/issues"
   },
-  "homepage": "https://github.com/veonim/veonim#readme",
-  "bundled-extension-dependencies": {
-    "typescript": "3.3.1"
-  },
+  "homepage": "https://github.com/smolck/uivonim#readme",
   "dependencies": {
     "diff-match-patch": "^1.0.5",
     "fuzzaldrin-plus": "^0.6.0",
