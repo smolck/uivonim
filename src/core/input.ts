@@ -227,7 +227,7 @@ export const registerOneTimeUseShortcuts = (
   shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
 }
 
-let textarea = document.getElementById('hacky-textarea')
+let textarea = document.getElementById('keycomp-textarea')
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
@@ -241,7 +241,7 @@ const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   keyListener(inputKeys, inputType)
 }
 
-const keydownHandler = (e) => {
+const keydownHandler = (e: KeyboardEvent) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
@@ -268,7 +268,7 @@ const keydownHandler = (e) => {
   sendKeys(e, InputType.Down)
 }
 
-const keyupHandler = (e) => {
+const keyupHandler = (e: KeyboardEvent) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
@@ -293,8 +293,8 @@ const keyupHandler = (e) => {
 }
 
 // Need to handle key events from window for GUI elements like the external
-// cmdline, so if the hacky textarea isn't focused (which it won't be when
-// those elements are in use), handle the event from the window.
+// cmdline, so if the key composition textarea isn't focused (which it won't
+// be when those elements are in use), handle the event from the window.
 window.addEventListener('keydown', (e) => {
   if (textarea) if (textarea === document.activeElement) return
 

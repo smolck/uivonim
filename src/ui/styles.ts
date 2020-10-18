@@ -65,7 +65,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
       .then(({ foreground }) =>
         foreground ? setVar(varName, foreground) : null
       )
-      .catch((error) => console.warn('Error: ', error))
+      .catch((_err) => {}) // TODO(smolck): Maybe handle? Not really necessary probably . . .
 
   getColorAndSetVar('uvnKeyword', 'keyword')
   getColorAndSetVar('uvnBuiltin', 'builtin')
@@ -102,17 +102,17 @@ export const colors = {
 
 export const badgeStyle = {
   ...paddingV(4),
-  borderRadius: '2px',
+  'border-radius': '2px',
   background: cvar('background-30'),
 }
 
 export const docStyle = {
   ...paddingVH(8, 6),
   overflow: 'visible',
-  whiteSpace: 'normal',
-  fontSize: '0.9rem',
   color: cvar('foreground-40'),
   background: cvar('background-45'),
+  'white-space': 'normal',
+  'font-size': '0.9rem',
 }
 
 export const resetMarkdownHTMLStyle = css((id) => [

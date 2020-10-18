@@ -1,7 +1,7 @@
 'use strict'
 
-const { $, go, run, fromRoot, createTask } = require('./runner')
-const { copy, copyAll } = require('./build')
+const { $, go, run, fromRoot } = require('./runner')
+const { copyAll } = require('./build')
 const fs = require('fs-extra')
 
 go(async () => {
@@ -9,18 +9,8 @@ go(async () => {
   await fs.emptyDir(fromRoot('build'))
   await copyAll()
 
-  const tsc = createTask()
-
-  run('tsc -p src/tsconfig.json --watch --preserveWatchOutput', {
-    outputMatch: 'watching for file changes',
-    onOutputMatch: async () => {
-      copy.index()
-      copy.processExplorer()
-      tsc.done()
-    },
-  })
-
-  await tsc.promise
+  $`running babel stuff`
+  await run("babel --extensions '.ts,.tsx' src -d build")
 
   run('electron build/bootstrap/main.js', {
     shh: true,

@@ -27,31 +27,31 @@ let cursorCharVisible = true
 Object.assign(cursorline.style, {
   background: 'rgba(var(--background-alpha), 0.2)',
   position: 'absolute',
-  mixBlendMode: 'screen',
+  'mix-blend-mode': 'screen',
   height: `${cell.height}px`,
-  zIndex: 60,
+  'z-index': 60,
 })
 
 Object.assign(debugline.style, {
   display: 'none',
   position: 'absolute',
-  mixBlendMode: 'screen',
+  'mix-blend-mode': 'screen',
   height: `${cell.height}px`,
-  zIndex: 60,
+  'z-index': 60,
 })
 
 Object.assign(cursorEl.style, {
-  zIndex: 70,
+  'z-index': 70,
   position: 'absolute',
   display: 'none',
-  justifyContent: 'center',
-  alignItems: 'center',
+  'justify-content': 'center',
+  'align-items': 'center',
 })
 
 Object.assign(cursorChar.style, {
   filter: 'invert(1) grayscale(1)',
-  fontFamily: 'var(--font)',
-  fontSize: 'calc(var(--font-size) * 1px)',
+  'font-family': 'var(--font)',
+  'font-size': 'calc(var(--font-size) * 1px)',
 })
 
 cursorEl.appendChild(cursorChar)

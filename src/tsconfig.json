@@ -1,11 +1,18 @@
 {
-  "exclude": ["node_modules", "test", "xdg_config"],
+  "exclude": [
+    "node_modules",
+    "test",
+    "xdg_config",
+    "components/extensions/legacy",
+    "dev"
+  ],
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "esnext",
     "module": "commonjs",
     "outDir": "../build",
     "strict": true,
+    "jsx": "preserve",
     "lib": ["esnext", "dom"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,

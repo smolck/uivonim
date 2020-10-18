@@ -1,4 +1,6 @@
 {
   "semi": false,
-  "singleQuote": true
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": true
 }

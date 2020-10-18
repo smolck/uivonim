@@ -49,7 +49,7 @@ const actions: InventoryAction[] = [
     name: 'Files',
     description: 'Find files in project',
     // TODO: should we do something like this instead?
-    // onAction: () => import('../components/files').then(m => m.show())
+    // onAction: () => import('../components/extensions/files').then(m => m.show())
     onAction: modc('files'),
   },
   {
