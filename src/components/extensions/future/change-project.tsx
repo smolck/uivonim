@@ -61,6 +61,7 @@ const ChangeProject = ({
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'change-project-input'}
       focus={true}
       value={value}
       icon={feather.icons['home'].toSvg()}

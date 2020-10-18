@@ -39,6 +39,7 @@ interface Props {
 }
 
 interface TextInputProps extends Partial<Props> {
+  id: string
   value: string
   icon: string
 }
@@ -95,6 +96,7 @@ const textInput = (
     focus = false,
     loading = false,
     pathMode = false,
+    id,
   }: TextInputProps,
   $: Props
 ) => (
@@ -133,6 +135,7 @@ const textInput = (
       }}
     >
       <WhyInput
+        id={id}
         value={value}
         style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
         type='text'
@@ -151,6 +154,11 @@ const textInput = (
         //     ? document.getElementById('hacky-textarea')?.focus()
         //     : undefined
         // }
+        onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
+          const e = document.getElementById(id)! as HTMLInputElement
+          setFocus(e, focus)
+          setPosition(e, position)
+        }}
         onComponentDidMount={(e: HTMLInputElement) => {
           setFocus(e, focus)
           setPosition(e, position)

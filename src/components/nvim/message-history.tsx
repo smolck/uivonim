@@ -69,6 +69,7 @@ const MessageHistory = ({
     }}
   >
     <Input
+      id={'message-history-input'}
       {...inputCallbacks}
       icon={feather.icons['filter'].toSvg({ width: 12, height: 12 })}
       value={query}

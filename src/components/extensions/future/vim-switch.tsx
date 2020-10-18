@@ -28,6 +28,7 @@ const VimSwitch = ({ visible, value, index, inputCallbacks, list }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'vim-switch-input'}
       value={value}
       focus={true}
       icon={feather.icons['grid'].toSvg()}

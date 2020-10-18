@@ -114,6 +114,7 @@ const Grep = ({
   <PluginRight visible={visible}>
     <Input
       {...mainSearchInputCallbacks}
+      id={'grep-main-search-input'}
       value={value}
       focus={focused === FocusedElement.Search}
       icon={feather.icons['search'].toSvg()}
@@ -122,6 +123,7 @@ const Grep = ({
     />
     <Input
       {...filterInputCallbacks}
+      id={'grep-filter-input'}
       value={filterVal}
       focus={focused === FocusedElement.Filter}
       icon={feather.icons['filter'].toSvg()}

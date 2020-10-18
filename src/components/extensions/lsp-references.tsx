@@ -216,6 +216,7 @@ const feather = require('feather-icons')
 const References = ($: S) => (
   <PluginRight id={'references'} visible={$.vis}>
     <Input
+      id={'lsp-references-input'}
       up={up}
       hide={hide}
       next={next}

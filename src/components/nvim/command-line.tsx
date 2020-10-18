@@ -64,6 +64,7 @@ const CommandLine = ({
     >
       {maybePrompt}
       <Input
+        id={'command-line-input'}
         focus={true}
         value={value}
         desc={kind === CommandType.Ex ? 'command line' : 'prompt'}

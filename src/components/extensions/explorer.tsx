@@ -78,6 +78,7 @@ const Explorer = ({
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'explorer-input'}
       value={value}
       focus={!pathMode}
       desc={'explorer'}
@@ -96,6 +97,7 @@ const Explorer = ({
     {pathMode && (
       <Input
         {...pathModeInputCallbacks}
+        id={'explorer-path-mode-input'}
         value={pathRelativeToHome(pathValue)}
         color={colors.important}
         icon={feather.icons['search'].toSvg({ width: 12, height: 12 })}

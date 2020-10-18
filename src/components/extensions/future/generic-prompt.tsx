@@ -21,6 +21,7 @@ const GenericPrompt = ({ visible, value, desc, inputCallbacks }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'generic-prompt-input'}
       focus={true}
       icon={feather.icons['help-circle'].toSvg()}
       value={value}

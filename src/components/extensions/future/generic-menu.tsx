@@ -1,10 +1,9 @@
-import { Plugin } from '../plugin-container'
-import { RowNormal } from '../row-container'
-import { vimBlur, vimFocus } from '../../ui/uikit'
-import { CreateTask } from '../../support/utils'
-import Input from '../text-input'
+import { Plugin } from '../../plugin-container'
+import { RowNormal } from '../../row-container'
+import { vimBlur, vimFocus } from '../../../ui/uikit'
+import { CreateTask } from '../../../support/utils'
+import Input from '../../text-input'
 import { filter } from 'fuzzaldrin-plus'
-import { Component } from 'hyperapp'
 import { render } from 'inferno'
 
 export interface MenuOption {
@@ -45,6 +44,7 @@ const GenericMenu = ({
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'generic-menu-input'}
       value={value}
       desc={description}
       icon={feather.icons['user'].toSvg()}

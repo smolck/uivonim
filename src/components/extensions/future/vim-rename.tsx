@@ -18,6 +18,7 @@ const VimRename = ({ visible, value, inputCallbacks }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'vim-rename-input'}
       focus={true}
       icon={feather.icons['edit'].toSvg()}
       value={value}

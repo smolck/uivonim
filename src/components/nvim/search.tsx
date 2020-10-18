@@ -48,6 +48,7 @@ const VimSearch = ({ visible, kind, value, position }: S) => (
     </div>
 
     <Input
+      id={'vim-search-input'}
       small={true}
       focus={visible}
       desc={'search query'}

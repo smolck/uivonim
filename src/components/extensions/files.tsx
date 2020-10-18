@@ -55,6 +55,7 @@ const Files = ({ visible, inputCallbacks, val, files, ix: index }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'files-input'}
       value={val}
       focus={true}
       icon={feather.icons['file-text'].toSvg()}

@@ -48,6 +48,7 @@ const CodeAction = ({ x, y, visible, value, actions, index }: S) => (
   >
     <div style={{ background: 'var(--background-40)' }}>
       <Input
+        id={'code-action-input'}
         hide={hide}
         next={next}
         prev={prev}

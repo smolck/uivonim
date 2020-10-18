@@ -18,6 +18,7 @@ const VimCreate = ({ visible, value, inputCallbacks }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'vim-create-input'}
       icon={feather.icons['folder-plus'].toSvg()}
       value={value}
       desc={'create new vim instance'}

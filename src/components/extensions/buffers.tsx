@@ -26,6 +26,7 @@ const Buffers = ({ visible, value, index, buffers, inputCallbacks }: S) => (
   <Plugin visible={visible}>
     <Input
       {...inputCallbacks}
+      id={'buffers-input'}
       focus={true}
       value={value}
       icon={feather.icons['list'].toSvg({ width: 12, height: 12 })}
