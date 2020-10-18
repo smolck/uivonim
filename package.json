@@ -34,7 +34,7 @@
     "diff-match-patch": "^1.0.5",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
-    "highlight.js": "^10.3.0",
+    "highlight.js": "^10.3.1",
     "inferno": "^7.4.5",
     "marked": "^1.2.0"
   },
@@ -45,7 +45,6 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
-    "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "^2.0.0",
     "@types/diff-match-patch": "1.0.32",
     "@types/fuzzaldrin-plus": "^0.6.1",
