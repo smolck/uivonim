@@ -140,7 +140,7 @@ const textInput = (
         placeholder={desc}
         // TODO(smolck): Use linkEvent() for things?
         //
-        // TODO: hack to get hack to get dead keys working working
+        // TODO: get hack to get hack to get dead keys working working working
         onComponentDidUpdate={(_: any, nextProps: any) =>
           nextProps.visible
             ? document.getElementById('keycomp-textarea')?.focus()

@@ -15,7 +15,7 @@ import api from '../core/instance-api'
 // TODO: investigate no texture on unit0. im guessing the texture atlas are not
 // ready on load?
 // TODO: do we still need roboto-sizes.json? we generate the font atlas before
-// we can wrender anything to webgl, so we can probably grab the size then
+// we can render anything to webgl, so we can probably grab the size then
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
