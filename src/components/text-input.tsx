@@ -49,9 +49,8 @@ const setPosition = (e?: HTMLInputElement, position?: number) => {
 }
 
 const setFocus = (e: HTMLInputElement, shouldFocus: boolean) => {
-  (shouldFocus && e.focus()) || e.blur()
-  // if (e && e !== document.activeElement && shouldFocus) e.focus()
-  // if (!shouldFocus) e && e.blur()
+  if (e && e !== document.activeElement && shouldFocus) e.focus()
+  if (!shouldFocus) e && e.blur()
 }
 
 const nopMaybe = (obj: object) =>
