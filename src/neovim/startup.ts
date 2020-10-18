@@ -42,7 +42,7 @@ const stateEvents = [
 
 const autocmds = {
   BufAdd: `expand('<abuf>')`,
-  BufEnter: `expand('<abuf>')`,
+  BufEnter: `expand('<abuf>'), Uivonim('focus-keycomp')`,
   BufDelete: `expand('<abuf>')`,
   BufUnload: `expand('<abuf>')`,
   BufWipeout: `expand('<abuf>')`,
@@ -51,7 +51,7 @@ const autocmds = {
   CursorMoved: null,
   CursorMovedI: null,
   CompleteDone: `v:completed_item`,
-  InsertEnter: `Uivonim('insert-enter')`,
+  InsertEnter: null,
   InsertLeave: null,
   TextChanged: `b:changedtick`,
   TextChangedI: `b:changedtick`,

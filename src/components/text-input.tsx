@@ -140,15 +140,10 @@ const textInput = (
         placeholder={desc}
         // TODO(smolck): Use linkEvent() for things?
         //
-        //
-        // TODO(smolck): Did use this, but changed to use `onComponentDidUpdate`
-        // because this sometimes made the text input not focus with message-history?
-        // onBlur={() => document.getElementById('hacky-textarea')?.focus()}
-        //
         // TODO: hack to get hack to get dead keys working working
         onComponentDidUpdate={(_: any, nextProps: any) =>
           nextProps.visible
-            ? document.getElementById('hacky-textarea')?.focus()
+            ? document.getElementById('keycomp-textarea')?.focus()
             : undefined
         }
         onComponentDidMount={(e: HTMLInputElement) => {

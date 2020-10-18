@@ -22,16 +22,16 @@ import api from '../core/instance-api'
 workspace.onResize(({ rows, cols }) => nvim.resize(cols, rows))
 workspace.resize()
 
-// TODO(smolck): adding more hacks (?)
-api.onAction('insert-enter', () => document.getElementById('hacky-textarea')?.focus())
+// ensure that key composition textarea has focus
+api.onAction('focus-keycomp', () => document.getElementById('keycomp-textarea')?.focus())
 
 requestAnimationFrame(() => {
   instanceManager.createVim('main')
 
   // high priority components
   requestAnimationFrame(() => {
-    // Need to focus hacky textarea so input is registered right off the bat.
-    document.getElementById('hacky-textarea')?.focus()
+    // Need to focus keycomp textarea so input is registered right off the bat.
+    document.getElementById('keycomp-textarea')?.focus()
 
     requireDir(`${__dirname}/../components/nvim`)
   })
@@ -45,11 +45,11 @@ requestAnimationFrame(() => {
   }, 600)
 
   setTimeout(() => {
-    // Focus on hacky textarea when clicking main window, since input events are
+    // Focus on keycomp textarea when clicking main window, since input events are
     // received from that textarea.
     document.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault()
-      document.getElementById('hacky-textarea')?.focus()
+      document.getElementById('keycomp-textarea')?.focus()
     })
 
     require('../services/remote')
