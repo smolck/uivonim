@@ -6,14 +6,6 @@ import { cell } from '../core/workspace'
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
 
-  const w2 = webgl.webgl2Mode
-  const c = {
-    attr: w2 ? 'in' : 'attribute',
-    out: w2 ? 'out' : 'varying',
-    tex: w2 ? 'texture' : 'texture2D',
-    fin: w2 ? 'in' : 'varying',
-  }
-
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
     charIndex: VarKind.Attribute,
@@ -29,11 +21,11 @@ export default (webgl: WebGL) => {
   })
 
   program.setVertexShader(
-    (v) => `
-    ${c.attr} vec2 ${v.quadVertex};
-    ${c.attr} vec2 ${v.cellPosition};
-    ${c.attr} float ${v.hlid};
-    ${c.attr} float ${v.charIndex};
+    (v) => `#version 300 es
+    in vec2 ${v.quadVertex};
+    in vec2 ${v.cellPosition};
+    in float ${v.hlid};
+    in float ${v.charIndex};
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.fontAtlasResolution};
     uniform vec2 ${v.colorAtlasResolution};
@@ -41,8 +33,8 @@ export default (webgl: WebGL) => {
     uniform vec2 ${v.cellPadding};
     uniform sampler2D ${v.colorAtlasTextureId};
 
-    ${c.out} vec2 o_glyphPosition;
-    ${c.out} vec4 o_color;
+    out vec2 o_glyphPosition;
+    out vec4 o_color;
 
     void main() {
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
@@ -61,24 +53,24 @@ export default (webgl: WebGL) => {
       float color_y = 1.0 * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      o_color = ${c.tex}(${v.colorAtlasTextureId}, colorPosition);
+      o_color = texture(${v.colorAtlasTextureId}, colorPosition);
     }
   `
   )
 
   program.setFragmentShader(
-    (v) => `
+    (v) => `#version 300 es
     precision mediump float;
 
-    ${c.fin} vec2 o_glyphPosition;
-    ${c.fin} vec4 o_color;
+    in vec2 o_glyphPosition;
+    in vec4 o_color;
     uniform sampler2D ${v.fontAtlasTextureId};
 
-    ${w2 ? 'out vec4 outColor;' : ''}
+    out vec4 outColor;
 
     void main() {
-      vec4 glyphColor = ${c.tex}(${v.fontAtlasTextureId}, o_glyphPosition);
-      ${w2 ? 'outColor' : 'gl_FragColor'} = glyphColor * o_color;
+      vec4 glyphColor = texture(${v.fontAtlasTextureId}, o_glyphPosition);
+      outColor = glyphColor * o_color;
     }
   `
   )
@@ -207,7 +199,7 @@ export default (webgl: WebGL) => {
   ) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
-    webgl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
   }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
