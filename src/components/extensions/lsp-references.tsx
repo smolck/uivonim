@@ -116,16 +116,20 @@ const container = document.createElement('div')
 container.id = 'references-container'
 plugins?.appendChild(container)
 
+const assignStateAndRender = (newState: any) => (
+  Object.assign(state, newState),
+  render(<References {...state} />, container)
+)
+
 const hide = () => {
   vimFocus()
-  Object.assign(state, resetState)
-  render(<References {...state} />, container)
+  assignStateAndRender(resetState)
 }
 
 const show = ({ references, referencedSymbol }: any) => {
   vimBlur()
 
-  Object.assign(state, {
+  assignStateAndRender({
     references,
     referencedSymbol,
     cache: references,
@@ -135,21 +139,20 @@ const show = ({ references, referencedSymbol }: any) => {
     subix: -1,
     loading: false,
   })
-
-  render(<References {...state} />, container)
 }
 
 const select = () => {
   vimFocus()
-  if (!state.references.length) Object.assign(state, resetState)
+  if (!state.references.length) {
+    assignStateAndRender(resetState)
+  }
   selectResult(state.references, state.ix, state.subix)
-  Object.assign(state, resetState)
 
-  render(<References {...state} />, container)
+  assignStateAndRender(resetState)
 }
 
-const change = (val: string) => (
-  Object.assign(state, {
+const change = (val: string) =>
+  assignStateAndRender({
     val,
     references: val
       ? state.cache.map((m) => [
@@ -157,24 +160,18 @@ const change = (val: string) => (
           m[1].filter((x) => x.text.toLowerCase().includes(val)),
         ])
       : state.cache,
-  }),
-  render(<References {...state} />, container)
-)
+  })
 
 const nextGroup = () => {
   const next = state.ix + 1 > state.references.length - 1 ? 0 : state.ix + 1
   scrollIntoView(next)
-  Object.assign(state, { subix: -1, ix: next })
-
-  render(<References {...state} />, container)
+  assignStateAndRender({ subix: -1, ix: next })
 }
 
 const prevGroup = () => {
   const next = state.ix - 1 < 0 ? state.references.length - 1 : state.ix - 1
   scrollIntoView(next)
-  Object.assign(state, { subix: -1, ix: next })
-
-  render(<References {...state} />, container)
+  assignStateAndRender({ subix: -1, ix: next })
 }
 
 const next = () => {
@@ -182,9 +179,7 @@ const next = () => {
     state.subix + 1 < state.references[state.ix][1].length ? state.subix + 1 : 0
   selectResult(state.references, state.ix, next)
   scrollSubitemsIntoView(state.ix, next)
-  Object.assign(state, { subix: next })
-
-  render(<References {...state} />, container)
+  assignStateAndRender({ subix: next })
 }
 
 const prev = () => {
@@ -194,9 +189,7 @@ const prev = () => {
       : state.subix - 1
   selectResult(state.references, state.ix, previous)
   scrollSubitemsIntoView(state.ix, previous)
-  Object.assign(state, { subix: previous })
-
-  render(<References {...state} />, container)
+  assignStateAndRender({ subix: previous })
 }
 
 const down = () => {
