@@ -137,27 +137,6 @@ export default (stateName: string) => {
     },
   })
 
-  if (process.env.VEONIM_DEV) {
-    // assumes we are also using hyperapp-redux-devtools
-    // we are gonna steal the modules from ^^^
-    const { createStore } = require('redux')
-    const { composeWithDevTools } = require('redux-devtools-extension')
-
-    const composeEnhancers = composeWithDevTools({
-      name: `neovim-state-${stateName}`,
-    })
-    const reducer = (state: any, action: any) => ({
-      ...state,
-      ...action.payload,
-    })
-    const store = createStore(reducer, state, composeEnhancers())
-
-    store.subscribe(() => Object.assign(stateProxy, store.getState()))
-    onStateChange((_, key, val) => {
-      store.dispatch({ type: `SET::${key}`, payload: { [key]: val } })
-    })
-  }
-
   return {
     state: stateProxy,
     watchState,
