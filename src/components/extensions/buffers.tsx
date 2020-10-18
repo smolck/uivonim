@@ -110,8 +110,7 @@ state.inputCallbacks = {
 }
 
 const show = (buffers: BufferInfo[]) => (
-  vimBlur(),
-  assignStateAndRender({ buffers, cache: buffers, visible: true })
+  vimBlur(), assignStateAndRender({ buffers, cache: buffers, visible: true })
 )
 
 api.onAction('buffers', async () => show(await api.nvim.getBufferInfo()))

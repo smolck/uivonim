@@ -68,7 +68,7 @@ const ColorPickerView = ({
     <WhyDiv
       class={'show-cursor'}
       onComponentDidMount={(e: HTMLElement) => (
-        e.appendChild(colorPicker.element), elref = e
+        e.appendChild(colorPicker.element), (elref = e)
       )}
       onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
         if (elref) {

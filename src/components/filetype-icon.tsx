@@ -22,8 +22,9 @@ const getIcon = (path = '') => {
   const extension = extname(filename).replace(/^\./, '').toLowerCase()
 
   return (
-    findIconCustom(filename, extension) ||
-    <Icon iconHtml={feather.icons['file-text'].toSvg()}/>
+    findIconCustom(filename, extension) || (
+      <Icon iconHtml={feather.icons['file-text'].toSvg()} />
+    )
   )
 }
 

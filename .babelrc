@@ -6,8 +6,5 @@
     "@babel/plugin-proposal-class-properties",
     "@babel/plugin-transform-modules-commonjs"
   ],
-  "ignore": [
-    "**/legacy/",
-    "**/future/",
-  ]
+  "ignore": ["**/legacy/", "**/future/"]
 }

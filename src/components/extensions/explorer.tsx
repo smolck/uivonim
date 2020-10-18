@@ -257,7 +257,9 @@ state.inputCallbacks = {
   // TODO: be more precise than this? also depends on scaled devices
   down: () => {
     listElRef.scrollTop += 300
-    assignStateAndRender({ ix: Math.min(state.ix + 17, state.paths.length - 1) })
+    assignStateAndRender({
+      ix: Math.min(state.ix + 17, state.paths.length - 1),
+    })
   },
 
   up: () => {
@@ -274,8 +276,14 @@ state.inputCallbacks = {
   },
 
   hide: () => (vimFocus(), assignStateAndRender(resetState)),
-  next: () => assignStateAndRender({ ix: state.ix + 1 >= state.paths.length ? 0 : state.ix + 1 }),
-  prev: () => assignStateAndRender({ ix: state.ix - 1 < 0 ? state.paths.length - 1 : state.ix - 1 }),
+  next: () =>
+    assignStateAndRender({
+      ix: state.ix + 1 >= state.paths.length ? 0 : state.ix + 1,
+    }),
+  prev: () =>
+    assignStateAndRender({
+      ix: state.ix - 1 < 0 ? state.paths.length - 1 : state.ix - 1,
+    }),
 }
 
 api.onAction('explorer', async (customDir?: string) => {
