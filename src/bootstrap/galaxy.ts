@@ -34,9 +34,6 @@ requestAnimationFrame(() => {
     document.getElementById('hacky-textarea')?.focus()
 
     requireDir(`${__dirname}/../components/nvim`)
-    // require('../components/nvim/statusline')
-    // require('../components/nvim/command-line')
-    // require('../components/nvim/vim-search')
   })
 
   setTimeout(() => {
