@@ -51,7 +51,7 @@ const autocmds = {
   CursorMoved: null,
   CursorMovedI: null,
   CompleteDone: `v:completed_item`,
-  InsertEnter: null,
+  InsertEnter: `Uivonim('insert-enter')`,
   InsertLeave: null,
   TextChanged: `b:changedtick`,
   TextChangedI: `b:changedtick`,

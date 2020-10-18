@@ -8,6 +8,7 @@ import '../core/screen-events'
 import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
+import api from '../core/instance-api'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -20,6 +21,9 @@ import { specs as titleSpecs } from '../core/title'
 // individually once we get ext_windows working
 workspace.onResize(({ rows, cols }) => nvim.resize(cols, rows))
 workspace.resize()
+
+// TODO(smolck): adding more hacks (?)
+api.onAction('insert-enter', () => document.getElementById('hacky-textarea')?.focus())
 
 requestAnimationFrame(() => {
   instanceManager.createVim('main')
