@@ -1,59 +1,65 @@
-import { Plugin } from '../plugin-container'
-import { app, vimBlur, vimFocus } from '../../ui/uikit'
-import { CreateTask } from '../../support/utils'
-import Input from '../text-input'
-import * as Icon from 'hyperapp-feather'
+import { Plugin } from '../../plugin-container'
+import { vimBlur, vimFocus } from '../../../ui/uikit'
+import { CreateTask } from '../../../support/utils'
+import Input from '../../text-input'
+import { render } from 'inferno'
 
-const state = {
+let state = {
   value: '',
   desc: '',
   visible: false,
   task: CreateTask(),
+  inputCallbacks: {},
 }
 
 type S = typeof state
 
 const resetState = { value: '', visible: false, desc: '' }
 
-const actions = {
-  show: ({ desc, task }: any) => (
-    vimBlur(),
-    {
-      desc,
-      task,
-      value: '',
-      visible: true,
-    }
-  ),
-  hide: () => (vimFocus(), resetState),
-  change: (value: string) => ({ value }),
-  select: () => (s: S) => {
-    s.value && s.task.done(s.value)
+const feather = require('feather-icons')
+const GenericPrompt = ({ visible, value, desc, inputCallbacks }: S) => (
+  <Plugin visible={visible}>
+    <Input
+      {...inputCallbacks}
+      focus={true}
+      icon={feather.icons['help-circle'].toSvg()}
+      value={value}
+      desc={desc}
+    />
+  </Plugin>
+)
+
+const container = document.createElement('div')
+container.id = 'generic-prompt-container'
+document.getElementById('plugins')!.appendChild(container)
+
+const assignStateAndRender = (newState: any) => (
+  Object.assign(state, newState),
+  render(<GenericPrompt {...state} />, container)
+)
+
+const show = ({ desc, task }: any) => (
+  vimBlur(),
+  assignStateAndRender({
+    desc,
+    task,
+    value: '',
+    visible: true,
+  })
+)
+
+state.inputCallbacks = {
+  hide: () => (vimFocus(), assignStateAndRender(resetState)),
+  change: (value: string) => assignStateAndRender({ value }),
+  select: () => {
+    state.value && state.task.done(state.value)
     vimFocus()
-    return resetState
+    assignStateAndRender(resetState)
   },
 }
 
-type A = typeof actions
-
-const view = ($: S, a: A) =>
-  Plugin($.visible, [
-    ,
-    Input({
-      focus: true,
-      icon: Icon.HelpCircle,
-      hide: a.hide,
-      select: a.select,
-      change: a.change,
-      value: $.value,
-      desc: $.desc,
-    }),
-  ])
-
-const ui = app<S, A>({ name: 'generic-prompt', state, actions, view })
-
 export default (question: string) => {
   const task = CreateTask<string>()
-  ui.show({ task, desc: question })
+  show({ task, desc: question })
   return task.promise
 }
