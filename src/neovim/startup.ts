@@ -42,7 +42,7 @@ const stateEvents = [
 
 const autocmds = {
   BufAdd: `expand('<abuf>')`,
-  BufEnter: `expand('<abuf>'), Uivonim('focus-keycomp')`,
+  BufEnter: `expand('<abuf>')`,
   BufDelete: `expand('<abuf>')`,
   BufUnload: `expand('<abuf>')`,
   BufWipeout: `expand('<abuf>')`,
