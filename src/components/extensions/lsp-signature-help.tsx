@@ -17,14 +17,14 @@ interface ShowParams {
   selectedSignature: number
 }
 
-const fadedStyle = {
+const fadedStyle: CSSProperties = {
   color: cvar('foreground'),
   filter: 'opacity(60%)',
 }
 
-const strongStyle = {
+const strongStyle: CSSProperties = {
   color: cvar('foreground'),
-  fontWeight: 'bold',
+  'font-weight': 'bold',
 }
 
 // TODO(smolck): Inner HTML sanitization (?)
@@ -133,8 +133,8 @@ const SignatureHelp = ({
         style={{
           display: 'flex',
           padding: '8px',
-          fontFamily: 'var(--font)',
-          fontSize: 'var(--font-size)px',
+          'font-family': 'var(--font)',
+          'font-size': 'var(--font-size)px',
         }}
       >
         <div>
