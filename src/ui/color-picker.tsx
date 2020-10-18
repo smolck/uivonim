@@ -51,9 +51,6 @@ export default () => {
     }
   }, 50)
 
-  const actions = {
-      }
-
   type S = typeof state
 
   const styles = {
@@ -73,19 +70,19 @@ export default () => {
     slider: {
       height: '12px',
       width: '100%',
-      borderRadius: '2px',
+      'border-radius': '2px',
     } as CSSProperties,
     sliderHandle: {
       position: 'absolute',
       height: '16px',
       width: '16px',
       background: 'var(--background-b5)',
-      borderRadius: '50%',
-      boxShadow: '1px 1px 0.3px rgba(0, 0, 0, 0.2)',
+      'border-radius': '50%',
+      'box-shadow': '1px 1px 0.3px rgba(0, 0, 0, 0.2)',
     } as CSSProperties,
     arrow: {
       color: 'rgba(255, 255, 255, 0.3)',
-      fontSize: '0.5rem',
+      'font-size': '0.5rem',
     } as CSSProperties,
     modeButton: css((id) => [
       `.${id} {
@@ -106,7 +103,7 @@ export default () => {
     ]),
     modeActive: {
       color: 'rgba(255, 255, 255, 0.8)',
-      borderColor: 'rgba(255, 255, 255, 0.5)',
+      'border-color': 'rgba(255, 255, 255, 0.5)',
     } as CSSProperties,
   }
 
@@ -187,8 +184,7 @@ export default () => {
         updateOnMove(e, (ev) => up({ hue: calc.hue(ev, e) }))
       }}
       onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
-        if (hueSliderEl)
-          stats.hueSliderWidthMultiplier = 360 / hueSliderEl.clientWidth
+        stats.hueSliderWidthMultiplier = 360 / hueSliderEl!.clientWidth
       }}
     >
       <div
@@ -220,7 +216,7 @@ export default () => {
           background: `linear-gradient(to right, rgba(${$.red}, ${$.green}, ${$.blue}, 0), rgb(${$.red}, ${$.green}, ${$.blue}))`,
         }}
         onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
-          if (alphaSliderEl) stats.alphaSliderWidth = alphaSliderEl.clientWidth
+          stats.alphaSliderWidth = alphaSliderEl!.clientWidth
         }}
         onComponentDidMount={(e: HTMLElement) => {
           alphaSliderEl = e
@@ -289,7 +285,7 @@ export default () => {
           <div
             style={{
               position: 'absolute',
-              top: `$(-$.value + 100}%`,
+              top: `${-$.value + 100}%`,
               left: `${$.saturation}%`,
               cursor: 'default',
             }}
@@ -360,7 +356,7 @@ export default () => {
         <button
           onClick={() => up({ mode: ColorMode.hex })}
           class={styles.modeButton}
-          style={$.mode === ColorMode.hex && styles.modeActive || undefined}
+          style={($.mode === ColorMode.hex && styles.modeActive) || undefined}
         >
           HEX
         </button>
@@ -368,7 +364,7 @@ export default () => {
         <button
           onClick={() => up({ mode: ColorMode.rgb })}
           class={styles.modeButton}
-          style={$.mode === ColorMode.rgb && styles.modeActive || undefined}
+          style={($.mode === ColorMode.rgb && styles.modeActive) || undefined}
         >
           RGB
         </button>
@@ -376,7 +372,7 @@ export default () => {
         <button
           onClick={() => up({ mode: ColorMode.hsl })}
           class={styles.modeButton}
-          style={$.mode === ColorMode.hsl && styles.modeActive || undefined}
+          style={($.mode === ColorMode.hsl && styles.modeActive) || undefined}
         >
           HSL
         </button>
@@ -385,15 +381,17 @@ export default () => {
   )
 
   const element = document.createElement('div')
-  const assignStateAndRender = (newState: any) => (Object.assign(state, newState), render(<ColorPicker {...state} />, element))
+  const assignStateAndRender = (newState: any) => (
+    Object.assign(state, newState), render(<ColorPicker {...state} />, element)
+  )
 
   const up = (m: object) => {
-      const next = { ...state, ...m }
-      const [red, green, blue] = hsvToRGB(next.hue, next.saturation, next.value)
-      merge(next, { red, green, blue })
-      reportChange(next)
-      assignStateAndRender({ ...m, red, green, blue })
-    }
+    const next = { ...state, ...m }
+    const [red, green, blue] = hsvToRGB(next.hue, next.saturation, next.value)
+    merge(next, { red, green, blue })
+    reportChange(next)
+    assignStateAndRender({ ...m, red, green, blue })
+  }
 
   const onChange = (fn: (color: string) => void) => (onChangeFn = fn)
 
