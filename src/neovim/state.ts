@@ -54,7 +54,7 @@ type UntilStateValue2 = {
 
 type UntilStateValue = UntilStateValue1 & UntilStateValue2
 
-export default (stateName: string) => {
+export default (_stateName: string) => {
   const watchers = new EventEmitter()
   const stateChangeFns = new Set<Function>()
 

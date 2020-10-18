@@ -8,7 +8,6 @@ import '../core/screen-events'
 import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
-import api from '../core/instance-api'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -22,36 +21,21 @@ import api from '../core/instance-api'
 workspace.onResize(({ rows, cols }) => nvim.resize(cols, rows))
 workspace.resize()
 
-// ensure that key composition textarea has focus
-// api.onAction('focus-keycomp', () => document.getElementById('keycomp-textarea')?.focus())
-
 requestAnimationFrame(() => {
   instanceManager.createVim('main')
 
   // high priority components
   requestAnimationFrame(() => {
-    // Need to focus keycomp textarea so input is registered right off the bat.
-    // document.getElementById('keycomp-textarea')?.focus()
-
     requireDir(`${__dirname}/../components/nvim`)
   })
 
   setTimeout(() => {
-    // TODO(smolck): `requireDir` doesn't recursively search through directories
-    // for files, right?
     requireDir(`${__dirname}/../components`)
     requireDir(`${__dirname}/../components/extensions`)
     requireDir(`${__dirname}/../components/memes`)
   }, 600)
 
   setTimeout(() => {
-    // Focus on keycomp textarea when clicking main window, since input events are
-    // received from that textarea.
-    // document.addEventListener('click', (e: MouseEvent) => {
-    //   e.preventDefault()
-    //   document.getElementById('keycomp-textarea')?.focus()
-    // })
-
     require('../services/remote')
     require('../services/app-info')
 
