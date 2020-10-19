@@ -307,11 +307,6 @@ const win_float_pos = (e: any) => {
   }
 }
 
-const flush = () => {
-  windows.disposeInvalidWindows()
-  windows.layout()
-}
-
 onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
@@ -328,7 +323,7 @@ onRedraw((redrawEvents) => {
 
     // if statements ordered in wrender priority
     if (e === 'grid_line') grid_line(ev)
-    else if (e === 'flush') flush()
+    else if (e === 'flush') windows.disposeInvalidWindows()
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
