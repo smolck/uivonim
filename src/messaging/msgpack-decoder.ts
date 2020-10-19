@@ -20,14 +20,14 @@ const redrawEventKey = Buffer.from([
 ])
 
 export default class extends Transform {
-  private skipStringAllocationBecauseMsgpackIsFuckingSlow: boolean
+  private skipStringAllocation: boolean
   private partialBuffer: Buffer
   private incomplete: boolean
   private ix: number
 
   constructor() {
     super({ objectMode: true })
-    this.skipStringAllocationBecauseMsgpackIsFuckingSlow = false
+    this.skipStringAllocation = false
     this.partialBuffer = Buffer.from([])
     this.incomplete = false
     this.ix = 0
@@ -68,7 +68,7 @@ export default class extends Transform {
     // ascii char code (and maybe convert the char code to string).  we can do
     // this based on the nvim api protocol types, so anywhere where we expect
     // strings we can check for a number and convert it to str.
-    if (length === 1 && this.skipStringAllocationBecauseMsgpackIsFuckingSlow)
+    if (length === 1 && this.skipStringAllocation)
       return raw[this.ix - 1]
 
     if (this.ix > raw.length) {
@@ -296,7 +296,7 @@ export default class extends Transform {
     // is too damn slow in v8. would have been much better if neovim used JSON
     // or if i wasn't a noob and picked a statically compiled language like rust
     const part = workingBuffer.slice(0, redrawEventKey.length)
-    this.skipStringAllocationBecauseMsgpackIsFuckingSlow = redrawEventKey.equals(
+    this.skipStringAllocation = redrawEventKey.equals(
       part
     )
 
