@@ -293,7 +293,7 @@ export default class extends Transform {
     // only 1 byte long.  strings that are 1 byte long happen to be ascii chars.
     // we can handle these ascii code points as raw numbers in the rendering
     // redraw logic. this greaty improves performance as allocating strings
-    // is too damn slow in v8. would have been much better if neovim used JSON
+    // is too slow in v8. would have been much better if neovim used JSON
     // or if i wasn't a noob and picked a statically compiled language like rust
     const part = workingBuffer.slice(0, redrawEventKey.length)
     this.skipStringAllocation = redrawEventKey.equals(
