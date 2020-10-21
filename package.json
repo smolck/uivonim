@@ -35,7 +35,8 @@
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.3.1",
     "inferno": "^7.4.5",
-    "marked": "^1.2.0"
+    "marked": "^1.2.0",
+    "ts-node": "^9.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
