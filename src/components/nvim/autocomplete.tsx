@@ -21,6 +21,7 @@ export interface CompletionShow {
 export interface CompletionOption {
   /** Display text for the UI */
   text: string
+  menu: string
   /** Text that will be inserted in the buffer */
   insertText: string
   /** An enum used to display a fancy icon and color in the completion menu UI */
@@ -213,7 +214,7 @@ const Autocomplete = ({
         'max-height': `${workspace.cell.height * visibleOptions}px`,
       }}
     >
-      {options.map(({ text, kind }, id) => (
+      {options.map(({ text, menu, kind }, id) => (
         <RowComplete active={id === ix}>
           <div
             style={{
@@ -228,6 +229,7 @@ const Autocomplete = ({
             {getCompletionIcon(kind)}
           </div>
           <div>{text}</div>
+          <div style="margin-left:30px">{menu}</div>
         </RowComplete>
       ))}
     </div>
@@ -301,7 +303,8 @@ dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
   const options = items.map(
     (m) =>
       ({
-        text: `${m.word} ${m.menu}`,
+        text: m.word,
+        menu: m.menu,
         insertText: m.word,
         kind: stringToKind(m.kind),
         raw: {
