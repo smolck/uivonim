@@ -31,7 +31,6 @@
   },
   "homepage": "https://github.com/smolck/uivonim#readme",
   "dependencies": {
-    "diff-match-patch": "^1.0.5",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.3.1",
@@ -46,7 +45,6 @@
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
     "@medv/finder": "^2.0.0",
-    "@types/diff-match-patch": "1.0.32",
     "@types/fuzzaldrin-plus": "^0.6.1",
     "@types/marked": "^1.1.0",
     "@types/node": "^14.14.0",
