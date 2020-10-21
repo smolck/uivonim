@@ -3,7 +3,7 @@ import {
   Message,
   MessageReturn,
   MessageStatusUpdate,
-} from '../../protocols/veonim'
+} from '../../neovim/types'
 import { uuid, CreateTask, arrReplace } from '../../support/utils'
 import { registerOneTimeUseShortcuts } from '../../core/input'
 import { colors } from '../../ui/styles'
@@ -11,7 +11,8 @@ import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import Icon from '../icon'
 
-export { MessageKind } from '../../protocols/veonim'
+// TODO(smolck): Don't re-export this.
+export { MessageKind } from '../../neovim/types'
 
 interface MessageAction {
   label: string
