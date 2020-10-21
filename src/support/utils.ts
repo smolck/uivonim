@@ -13,11 +13,20 @@ import { createConnection } from 'net'
 // TODO: in the near future we can use require('fs').promises
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
-import { exec } from 'child_process'
+import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
 import { Transform } from 'stream'
 import * as fs from 'fs'
 export { watchFile } from '../support/fs-watch'
+
+export const spawnBinary = (
+  command: string,
+  args?: string[],
+  options?: SpawnOptions
+): ChildProcess => {
+  const name = process.platform === 'win32' ? `${command}.exe` : command
+  return spawn(name, args ?? [], options ?? {})
+}
 
 export interface Task<T> {
   done: (value: T) => void

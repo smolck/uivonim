@@ -1,6 +1,6 @@
 import { on, call } from '../messaging/worker-client'
 import { NewlineSplitter } from '../support/utils'
-import { spawnBinary } from '../support/binaries'
+import { spawnBinary } from '../support/utils'
 
 interface Request {
   query: string

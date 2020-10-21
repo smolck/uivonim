@@ -1,7 +1,6 @@
 'use strict'
 
-const { $, go, run, fromRoot, getDirFiles } = require('./runner')
-const path = require('path')
+const { $, go, run, fromRoot, } = require('./runner')
 const fs = require('fs-extra')
 
 const paths = {
@@ -32,13 +31,6 @@ const copy = {
     $`copying runtime files`
     return fs.copy(fromRoot('runtime'), fromRoot('build/runtime'))
   },
-  hyperapp: () => {
-    $`copying hyperapp`
-    return fs.copy(
-      fromRoot('src/ui/hyperapp.js'),
-      fromRoot('build/ui/hyperapp.js')
-    )
-  },
 }
 
 const copyAll = () =>
@@ -47,7 +39,6 @@ const copyAll = () =>
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
-    copy.hyperapp(),
   ])
 
 require.main === module &&
