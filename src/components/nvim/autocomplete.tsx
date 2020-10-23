@@ -194,11 +194,11 @@ const docs = (data: string) => (
   />
 )
 
-const tdStyle: CSSProperties = {
+const tdStyle = (): CSSProperties => ({
   'padding-right': '16px',
   'font-family': 'var(--font)',
-  'font-size': `${workspace.font.size}px`,
-}
+  'font-size': `${workspace.font.size - 2}px`,
+})
 
 const Autocomplete = ({
   documentation,
@@ -267,8 +267,8 @@ const Autocomplete = ({
               >
                 {getCompletionIcon(kind)}
               </td>
-              <td style={tdStyle}>{text}</td>
-              <td style={tdStyle}>{menu}</td>
+              <td style={tdStyle()}>{text}</td>
+              <td style={tdStyle()}>{menu}</td>
             </tr>
           ))}
         </table>
