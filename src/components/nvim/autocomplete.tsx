@@ -217,28 +217,39 @@ const Autocomplete = ({
       <div
         style={{
           background: cvar('background-30'),
+          display: 'flex',
+          'flex-direction': 'row',
           'overflow-y': 'hidden',
           'max-height': `${workspace.cell.height * visibleOptions}px`,
         }}
       >
-        {options.map(({ text, menu, kind }, id) => (
-          <RowComplete active={id === ix}>
-            <div
-              style={{
-                display: 'flex',
-                // TODO: this doesn't scale with font size?
-                width: '24px',
-                'margin-right': '2px',
-                'align-items': 'center',
-                'justify-content': 'center',
-              }}
-            >
-              {getCompletionIcon(kind)}
-            </div>
-            <div>{text}</div>
-            <div style='margin-left:30px'>{menu}</div>
-          </RowComplete>
-        ))}
+        <div>
+          {options.map(({ text, kind }, id) => (
+            <RowComplete active={id === ix}>
+              <div
+                style={{
+                  display: 'flex',
+                  // TODO: this doesn't scale with font size?
+                  width: '24px',
+                  'margin-right': '2px',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                }}
+              >
+                {getCompletionIcon(kind)}
+              </div>
+              <div>{text}</div>
+            </RowComplete>
+          ))}
+        </div>
+
+        <div>
+          {options.map(({ menu }, id) => (
+            <RowComplete active={id === ix}>
+              <div>{menu}</div>
+            </RowComplete>
+          ))}
+        </div>
       </div>
       {documentation && (
         <div id='autocopmlete-docs-sup-yo'>{docs(documentation)}</div>
