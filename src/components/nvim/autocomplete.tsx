@@ -256,7 +256,7 @@ const Autocomplete = ({
         </table>
       </div>
       {documentation && (
-        <div id='autocopmlete-docs-sup-yo'>{docs(documentation)}</div>
+        <div>{docs(documentation)}</div>
       )}
     </div>
   </Overlay>
