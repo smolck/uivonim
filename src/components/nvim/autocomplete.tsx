@@ -238,7 +238,13 @@ const Autocomplete = ({
           if (e) pos.container = e.getBoundingClientRect()
         }}
       >
-        <table style={{ overflow: 'hidden' }}>
+        <table
+          style={{
+            overflow: 'hidden',
+            padding: '4px 0px 4px 4px',
+            'border-spacing': 0,
+          }}
+        >
           {options.map(({ text, kind, menu }, id) => (
             <tr
               style={{
