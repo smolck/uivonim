@@ -105,7 +105,7 @@ export enum CompletionItemKind {
   TypeParameter = 24,
 }
 
-const MAX_VISIBLE_OPTIONS = 12
+const MAX_VISIBLE_OPTIONS = 20
 
 let state = {
   x: 0,
@@ -186,7 +186,7 @@ const docs = (data: string) => (
       display: 'block',
       overflow: 'visible',
       color: cvar('foreground-b20'),
-      background: cvar('background-10'),
+      background: cvar('background-30'),
       'padding-top': '6px',
       'white-space': 'normal',
       'font-size': `${workspace.font.size - 2}px`,
@@ -196,9 +196,8 @@ const docs = (data: string) => (
 
 const tdStyle: CSSProperties = {
   'padding-right': '16px',
-  'line-height': cvar('line-height'),
   'font-family': 'var(--font)',
-  'font-size': 'var(--font-size)px',
+  'font-size': `${workspace.font.size}px`,
 }
 
 const Autocomplete = ({
@@ -245,6 +244,8 @@ const Autocomplete = ({
               style={{
                 color:
                   id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
+                background:
+                  id === ix ? cvar('background-10') : cvar('background-30'),
               }}
               ref={(e: any) => {
                 // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L156
