@@ -170,7 +170,7 @@ const parseDocs = (docs?: string): string | undefined => {
 const docs = (data: string) => (
   // @ts-ignore TS wants children but there are none so ignore
   <RowNormal
-    dangerouslySetInnerHtml={`<div class=${resetMarkdownHTMLStyle}>${data}</div>`}
+    dangerouslySetInnerHTML={{ __html: `<div class=${resetMarkdownHTMLStyle}>${data}</div>`}}
     active={false}
     style={{
       ...paddingVH(6, 4),
