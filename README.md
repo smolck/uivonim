@@ -1,5 +1,7 @@
 # Uivonim
 
+![Build/release](https://github.com/smolck/uivonim/workflows/Build/release/badge.svg)
+
 Uivonim is a fork of [Veonim](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
 "a simple modal IDE built on Neovim and VSCode extensions" written in electron with WebGL GPU
 rendering and multithreading, but which is no longer maintained. The goal of
