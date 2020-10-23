@@ -189,6 +189,13 @@ const docs = (data: string) => (
   />
 )
 
+const tdStyle: CSSProperties = {
+  'padding-right': '8px',
+  'line-height': cvar('line-height'),
+  'font-family': 'var(--font)',
+  'font-size': 'var(--font-size)px',
+}
+
 const Autocomplete = ({
   documentation,
   x,
@@ -218,15 +225,20 @@ const Autocomplete = ({
         style={{
           background: cvar('background-30'),
           display: 'flex',
+          overflow: 'hidden',
           'flex-direction': 'row',
-          'overflow-y': 'hidden',
           'max-height': `${workspace.cell.height * visibleOptions}px`,
         }}
       >
-        <div>
-          {options.map(({ text, kind }, id) => (
-            <RowComplete active={id === ix}>
-              <div
+        <table style={{ overflow: 'hidden' }}>
+          {options.map(({ text, kind, menu }, id) => (
+            <tr
+              style={{
+                color:
+                  id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
+              }}
+            >
+              <td
                 style={{
                   display: 'flex',
                   // TODO: this doesn't scale with font size?
@@ -237,19 +249,12 @@ const Autocomplete = ({
                 }}
               >
                 {getCompletionIcon(kind)}
-              </div>
-              <div>{text}</div>
-            </RowComplete>
+              </td>
+              <td style={tdStyle}>{text}</td>
+              <td style={tdStyle}>{menu}</td>
+            </tr>
           ))}
-        </div>
-
-        <div>
-          {options.map(({ menu }, id) => (
-            <RowComplete active={id === ix}>
-              <div>{menu}</div>
-            </RowComplete>
-          ))}
-        </div>
+        </table>
       </div>
       {documentation && (
         <div id='autocopmlete-docs-sup-yo'>{docs(documentation)}</div>
