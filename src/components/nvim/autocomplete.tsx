@@ -242,8 +242,7 @@ const Autocomplete = ({
                 style={{
                   display: 'flex',
                   // TODO: this doesn't scale with font size?
-                  width: '24px',
-                  'margin-right': '2px',
+                  width: '16',
                   'align-items': 'center',
                   'justify-content': 'center',
                 }}
