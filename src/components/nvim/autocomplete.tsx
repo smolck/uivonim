@@ -8,7 +8,7 @@ import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
 import { cursor } from '../../core/cursor'
 import { parse as stringToMarkdown } from 'marked'
-import { render } from 'inferno'
+import { render, Component } from 'inferno'
 import Icon from '../icon'
 const feather = require('feather-icons')
 
@@ -120,6 +120,10 @@ let state = {
 
 type S = typeof state
 
+const pos: { container: ClientRect } = {
+  container: { left: 0, right: 0, bottom: 0, top: 0, height: 0, width: 0 },
+}
+
 const icon = (name: string, color?: string) => {
   return (
     <Icon
@@ -229,6 +233,9 @@ const Autocomplete = ({
           'flex-direction': 'row',
           'max-height': `${workspace.cell.height * visibleOptions}px`,
         }}
+        ref={(e: any) => {
+          if (e) pos.container = e.getBoundingClientRect()
+        }}
       >
         <table style={{ overflow: 'hidden' }}>
           {options.map(({ text, kind, menu }, id) => (
@@ -236,6 +243,13 @@ const Autocomplete = ({
               style={{
                 color:
                   id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
+              }}
+              ref={(e: any) => {
+                if (id !== ix || !e) return
+                const { top, bottom } = e.getBoundingClientRect()
+                if (top < pos.container.top) return e.scrollIntoView(true)
+                if (bottom > pos.container.bottom)
+                  return e.scrollIntoView(false)
               }}
             >
               <td
@@ -255,9 +269,7 @@ const Autocomplete = ({
           ))}
         </table>
       </div>
-      {documentation && (
-        <div>{docs(documentation)}</div>
-      )}
+      {documentation && <div>{docs(documentation)}</div>}
     </div>
   </Overlay>
 )
@@ -306,7 +318,7 @@ export const show = ({ row, col, options }: CompletionShow) => {
   Object.assign(state, {
     visibleOptions,
     anchorAbove,
-    options: options.slice(0, visibleOptions),
+    options,
     documentation: undefined,
     visible: true,
     ix: -1,
