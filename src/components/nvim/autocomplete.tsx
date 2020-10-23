@@ -190,7 +190,7 @@ const docs = (data: string) => (
 )
 
 const tdStyle: CSSProperties = {
-  'padding-right': '8px',
+  'padding-right': '16px',
   'line-height': cvar('line-height'),
   'font-family': 'var(--font)',
   'font-size': 'var(--font-size)px',
