@@ -1,6 +1,6 @@
 'use strict'
 
-const { $, go, run, fromRoot, } = require('./runner')
+const { $, go, run, fromRoot } = require('./runner')
 const fs = require('fs-extra')
 
 const paths = {

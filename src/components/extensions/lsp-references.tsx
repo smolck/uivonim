@@ -117,8 +117,7 @@ container.id = 'references-container'
 plugins?.appendChild(container)
 
 const assignStateAndRender = (newState: any) => (
-  Object.assign(state, newState),
-  render(<References {...state} />, container)
+  Object.assign(state, newState), render(<References {...state} />, container)
 )
 
 const hide = () => {

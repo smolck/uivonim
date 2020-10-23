@@ -68,8 +68,7 @@ export default class extends Transform {
     // ascii char code (and maybe convert the char code to string).  we can do
     // this based on the nvim api protocol types, so anywhere where we expect
     // strings we can check for a number and convert it to str.
-    if (length === 1 && this.skipStringAllocation)
-      return raw[this.ix - 1]
+    if (length === 1 && this.skipStringAllocation) return raw[this.ix - 1]
 
     if (this.ix > raw.length) {
       this.incomplete = true
@@ -296,9 +295,7 @@ export default class extends Transform {
     // is too slow in v8. would have been much better if neovim used JSON
     // or if i wasn't a noob and picked a statically compiled language like rust
     const part = workingBuffer.slice(0, redrawEventKey.length)
-    this.skipStringAllocation = redrawEventKey.equals(
-      part
-    )
+    this.skipStringAllocation = redrawEventKey.equals(part)
 
     const bufsize = workingBuffer.length
     if (this.incomplete) this.incomplete = false
