@@ -189,7 +189,7 @@ const docs = (data: string) => (
       background: cvar('background-30'),
       'padding-top': '6px',
       'white-space': 'normal',
-      'font-size': `${workspace.font.size - 2}px`,
+      'font-size': `${workspace.font.size - 1}px`,
     }}
   />
 )
@@ -197,7 +197,7 @@ const docs = (data: string) => (
 const tdStyle = (): CSSProperties => ({
   'padding-right': '16px',
   'font-family': 'var(--font)',
-  'font-size': `${workspace.font.size - 2}px`,
+  'font-size': `${workspace.font.size - 1}px`,
 })
 
 const Autocomplete = ({
