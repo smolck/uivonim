@@ -170,18 +170,20 @@ const parseDocs = (docs?: string): string | undefined => {
 const docs = (data: string) => (
   // @ts-ignore TS wants children but there are none so ignore
   <RowNormal
-    dangerouslySetInnerHTML={{ __html: `<div class=${resetMarkdownHTMLStyle}>${data}</div>`}}
+    dangerouslySetInnerHTML={{
+      __html: `<div class=${resetMarkdownHTMLStyle}>${data}</div>`,
+    }}
     active={false}
     style={{
       ...paddingVH(6, 4),
       // RowNormal gives us display: flex but this causes things
       // to be flex-flow: row. we just want the standard no fancy pls kthx
       display: 'block',
-      'padding-top': '6px',
       overflow: 'visible',
+      color: cvar('foreground-b20'),
+      background: cvar('background-10'),
+      'padding-top': '6px',
       'white-space': 'normal',
-      color: cvar('foreground-20'),
-      background: cvar('background-45'),
       'font-size': `${workspace.font.size - 2}px`,
     }}
   />
@@ -202,38 +204,46 @@ const Autocomplete = ({
     x={x}
     y={y}
     zIndex={200}
-    maxWidth={400}
+    maxWidth={workspace.size.width} // TODO(smolck)
     visible={visible}
     anchorAbove={anchorAbove}
   >
-    {documentation && anchorAbove && docs(documentation)}
     <div
       style={{
-        'overflow-y': 'hidden',
-        background: cvar('background-30'),
-        'max-height': `${workspace.cell.height * visibleOptions}px`,
+        display: 'flex',
+        'flex-direction': 'row',
       }}
     >
-      {options.map(({ text, menu, kind }, id) => (
-        <RowComplete active={id === ix}>
-          <div
-            style={{
-              display: 'flex',
-              // TODO: this doesn't scale with font size?
-              width: '24px',
-              'margin-right': '2px',
-              'align-items': 'center',
-              'justify-content': 'center',
-            }}
-          >
-            {getCompletionIcon(kind)}
-          </div>
-          <div>{text}</div>
-          <div style="margin-left:30px">{menu}</div>
-        </RowComplete>
-      ))}
+      <div
+        style={{
+          background: cvar('background-30'),
+          'overflow-y': 'hidden',
+          'max-height': `${workspace.cell.height * visibleOptions}px`,
+        }}
+      >
+        {options.map(({ text, menu, kind }, id) => (
+          <RowComplete active={id === ix}>
+            <div
+              style={{
+                display: 'flex',
+                // TODO: this doesn't scale with font size?
+                width: '24px',
+                'margin-right': '2px',
+                'align-items': 'center',
+                'justify-content': 'center',
+              }}
+            >
+              {getCompletionIcon(kind)}
+            </div>
+            <div>{text}</div>
+            <div style='margin-left:30px'>{menu}</div>
+          </RowComplete>
+        ))}
+      </div>
+      {documentation && (
+        <div id='autocopmlete-docs-sup-yo'>{docs(documentation)}</div>
+      )}
     </div>
-    {documentation && !anchorAbove && docs(documentation)}
   </Overlay>
 )
 
@@ -264,15 +274,13 @@ export const select = (index: number) => {
   // TODO: what are we doing with detail and documentation?
   // show both? or one or the other?
 
-  if (documentation) {
-    // TODO(smolck): Not sure why, but I get "32" as the doc sometimes, and so
-    // I just convert this to a string to make sure that doesn't break stuff.
-    // :shrug:
+  // TODO(smolck): `&& documentation !== 32` because 32 means there's no docs,
+  // I think. Long story kinda.
+  if (documentation && documentation !== 32) {
     state.documentation = parseDocs(documentation.toString())
     render(<Autocomplete {...state} />, container)
   } else {
-    // TODO(smolck): parseDocs(detail)?
-    state.documentation = detail
+    state.documentation = parseDocs(detail)
     render(<Autocomplete {...state} />, container)
   }
 }
@@ -287,7 +295,7 @@ export const show = ({ row, col, options }: CompletionShow) => {
     documentation: undefined,
     visible: true,
     ix: -1,
-    ...windows.pixelPosition(anchorAbove ? row : row + 1, col)
+    ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
   })
 
   render(<Autocomplete {...state} />, container)
