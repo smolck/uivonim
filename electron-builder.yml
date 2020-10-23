@@ -1,0 +1,21 @@
+productName: 'uivonim'
+appId: 'com.uivonim.uivonim'
+directories:
+  buildResources: 'art'
+files:
+  - 'build/**'
+  - '!**/*.map'
+  - '!**/.bin'
+mac:
+  target:
+    - 'dmg'
+    - 'zip'
+linux:
+  target:
+    - 'appimage'
+    - 'zip'
+win:
+  target:
+    - 'portable'
+    - 'zip'
+asar: false
