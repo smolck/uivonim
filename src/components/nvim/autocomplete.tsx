@@ -280,19 +280,15 @@ export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows
 
-  // TODO(smolck): Feels too imperative
-  state.visibleOptions = visibleOptions
-  state.anchorAbove = anchorAbove
-  state.options = options
-  const { x, y } = windows.pixelPosition(anchorAbove ? row : row + 1, col)
-  state.x = x
-  state.y = y
-  state.options = options.slice(0, visibleOptions)
-  state.visible = true
-  state.documentation = undefined
-  // TODO(smolck)
-  // default
-  state.ix = -1
+  Object.assign(state, {
+    visibleOptions,
+    anchorAbove,
+    options: options.slice(0, visibleOptions),
+    documentation: undefined,
+    visible: true,
+    ix: -1,
+    ...windows.pixelPosition(anchorAbove ? row : row + 1, col)
+  })
 
   render(<Autocomplete {...state} />, container)
 }
