@@ -128,7 +128,11 @@ const pos: { container: ClientRect } = {
 const icon = (name: string, color?: string) => {
   return (
     <Icon
-      iconHtml={feather.icons[name].toSvg({ width: 12, height: 12 })}
+      iconHtml={feather.icons[name].toSvg({
+        width: workspace.font.size - 1,
+        height: workspace.font.size - 2,
+        viewBox: '0 0 24 26',
+      })}
       style={{ color }}
     />
   )
