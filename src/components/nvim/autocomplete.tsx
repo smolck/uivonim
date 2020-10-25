@@ -220,9 +220,7 @@ const Autocomplete = ({
       <div
         style={{
           background: cvar('background-30'),
-          display: 'flex',
           overflow: 'hidden',
-          'flex-direction': 'row',
           'max-height': `${workspace.cell.height * visibleOptions}px`,
         }}
         ref={(e: any) => {
@@ -244,7 +242,6 @@ const Autocomplete = ({
                   id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
                 background:
                   id === ix ? cvar('background-10') : cvar('background-30'),
-                display: 'flex',
               }}
               ref={(e: any) => {
                 // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L156
@@ -257,7 +254,6 @@ const Autocomplete = ({
             >
               <td
                 style={{
-                  display: 'flex',
                   // TODO: this doesn't scale with font size?
                   width: '16',
                   'align-items': 'center',
