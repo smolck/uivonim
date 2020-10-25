@@ -11,11 +11,10 @@ import Input from '../text-input'
 import { sub } from '../../messaging/dispatch'
 import { is } from '../../support/utils'
 import { render } from 'inferno'
-const feather = require('feather-icons')
 
 const modeSwitch = new Map([
-  [CommandType.Ex, feather.icons.command.toSvg()],
-  [CommandType.Prompt, feather.icons['chevrons-right'].toSvg()],
+  [CommandType.Ex, 'command'],
+  [CommandType.Prompt, 'chevrons-right'],
 ])
 
 let state = {
@@ -71,8 +70,8 @@ const CommandLine = ({
         position={position}
         icon={
           value.startsWith('lua ') && kind === CommandType.Ex
-            ? feather.icons.moon.toSvg()
-            : modeSwitch.get(kind) || feather.icons.command.toSvg()
+            ? 'moon'
+            : modeSwitch.get(kind) || 'command'
         }
       />
       <div>

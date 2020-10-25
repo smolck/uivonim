@@ -8,9 +8,8 @@ import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
 import { cursor } from '../../core/cursor'
 import { parse as stringToMarkdown } from 'marked'
-import { render, Component } from 'inferno'
+import { render, } from 'inferno'
 import Icon from '../icon'
-const feather = require('feather-icons')
 
 export interface CompletionShow {
   row: number
@@ -128,10 +127,7 @@ const pos: { container: ClientRect } = {
 const icon = (name: string, color?: string) => {
   return (
     <Icon
-      iconHtml={feather.icons[name].toSvg({
-        width: "1em",
-        height: "1em",
-      })}
+      icon={name}
       style={{ color }}
     />
   )

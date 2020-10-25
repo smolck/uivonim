@@ -75,7 +75,6 @@ Object.assign(container.style, {
   'z-index': 900,
 })
 
-const feather = require('feather-icons')
 const Statusline = ({
   baseColor,
   cwd,
@@ -99,10 +98,7 @@ const Statusline = ({
       }}
     >
       <Icon
-        iconHtml={feather.icons['plus-square'].toSvg({
-          width: 12,
-          height: 12,
-        })}
+        icon={'plus-square'}
         style={iconStyle}
       />
     </div>
@@ -128,10 +124,7 @@ const Statusline = ({
       }}
     >
       <Icon
-        iconHtml={feather.icons['minus-square'].toSvg({
-          width: 12,
-          height: 12,
-        })}
+        icon={'minus-square'}
         style={iconStyle}
       />
     </div>
@@ -165,10 +158,7 @@ const Statusline = ({
       >
         <div style={iconBoxStyle}>
           <Icon
-            iconHtml={feather.icons['hard-drive'].toSvg({
-              width: 12,
-              height: 12,
-            })}
+            icon={'hard-drive'}
             style={iconStyle}
           />
         </div>
@@ -199,10 +189,7 @@ const Statusline = ({
             }}
           >
             <Icon
-              iconHtml={feather.icons['git-branch'].toSvg({
-                width: 12,
-                height: 12,
-              })}
+              icon={'git-branch'}
               style={iconStyle}
             />
           </div>
@@ -256,10 +243,7 @@ const Statusline = ({
       }}
     >
       <Icon
-        iconHtml={feather.icons['x-circle'].toSvg({
-          width: 12,
-          height: 12,
-        })}
+        icon={'x-circle'}
         style={iconStyle}
       />
     </div>
@@ -285,10 +269,7 @@ const Statusline = ({
       }}
     >
       <Icon
-        iconHtml={feather.icons['alert-triangle'].toSvg({
-          width: 12,
-          height: 12,
-        })}
+        icon={'alert-triangle'}
         style={iconStyle}
       />
     </div>

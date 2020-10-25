@@ -204,7 +204,6 @@ const up = () => {
 // TODO(smolck): Is this really necessary just to get 'onComponentDidMount'?
 const WhyDiv = (props: any) => <div {...props}>{props.children}</div>
 
-const feather = require('feather-icons')
 const References = ($: S) => (
   <PluginRight id={'references'} visible={$.vis}>
     <Input
@@ -220,7 +219,7 @@ const References = ($: S) => (
       nextGroup={nextGroup}
       value={$.val}
       focus={true}
-      icon={feather.icons.filter.toSvg()}
+      icon={'filter'}
       desc={'filter references'}
     />
     <WhyDiv

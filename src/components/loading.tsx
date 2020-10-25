@@ -6,9 +6,6 @@ interface LoaderParams {
   color?: string
 }
 
-// [, h(Loader, { size })]
-
-const feather = require('feather-icons')
 export default (
   { color, size = workspace.font.size + 2 } = {} as LoaderParams
 ) => (
@@ -20,6 +17,6 @@ export default (
       width: `${size}px`,
     }}
   >
-    <Icon iconHtml={feather.icons['loader'].toSvg()} style={{ size }} />
+    <Icon icon={'loader'} style={{ size }} />
   </div>
 )

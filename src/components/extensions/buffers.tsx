@@ -21,7 +21,6 @@ type S = typeof state
 
 const resetState = { value: '', visible: false, index: 0 }
 
-const feather = require('feather-icons')
 const Buffers = ({ visible, value, index, buffers, inputCallbacks }: S) => (
   <Plugin visible={visible}>
     <Input
@@ -29,7 +28,7 @@ const Buffers = ({ visible, value, index, buffers, inputCallbacks }: S) => (
       id={'buffers-input'}
       focus={true}
       value={value}
-      icon={feather.icons['list'].toSvg({ width: 12, height: 12 })}
+      icon={'list'}
       desc={'switch buffer'}
     />
 

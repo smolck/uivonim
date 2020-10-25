@@ -46,7 +46,6 @@ const resetState = {
   files: [],
 }
 
-const feather = require('feather-icons')
 // TODO: loading is so fast that setting `loading` on the Input flickers
 // and looks janky use debounce or throttle to only show this if a
 // loading operation has already been going for a few ms. e.g. 150ms or
@@ -58,7 +57,7 @@ const Files = ({ visible, inputCallbacks, val, files, ix: index }: S) => (
       id={'files-input'}
       value={val}
       focus={true}
-      icon={feather.icons['file-text'].toSvg()}
+      icon={'file-text'}
       desc={'open file'}
     />
 

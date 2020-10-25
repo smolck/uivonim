@@ -36,7 +36,6 @@ const container = document.createElement('div')
 container.id = 'code-action-container'
 plugins?.appendChild(container)
 
-const feather = require('feather-icons')
 const CodeAction = ({ x, y, visible, value, actions, index }: S) => (
   <Overlay
     x={x}
@@ -57,7 +56,7 @@ const CodeAction = ({ x, y, visible, value, actions, index }: S) => (
         value={value}
         focus={true}
         small={true}
-        icon={feather.icons.code.toSvg({ width: 12, height: 12 })}
+        icon={'code'}
         desc={'run code action'}
       />
       {actions.map((s, ix) => (

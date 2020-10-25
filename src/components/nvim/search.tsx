@@ -32,7 +32,6 @@ const printCommandType = (kind: CommandType) => {
   else return 'search'
 }
 
-const feather = require('feather-icons')
 const VimSearch = ({ visible, kind, value, position }: S) => (
   <div style={{ display: visible ? 'flex' : 'none', flex: 1 }}>
     <div
@@ -53,7 +52,7 @@ const VimSearch = ({ visible, kind, value, position }: S) => (
       focus={visible}
       desc={'search query'}
       value={value}
-      icon={feather.icons['search'].toSvg({ width: 12, height: 12 })}
+      icon={'search'}
       position={position}
     />
   </div>

@@ -23,12 +23,11 @@ const SCROLL_AMOUNT = 0.4
 
 const iconStyle = { fontSize: '1.2rem' }
 
-const feather = require('feather-icons')
 // TODO(smolck): equivalent to h(Icon.*, { color: colors.*, style: iconStyle })?
 const createIcon = (name: string, color: string) => ({
   icon: (
     <Icon
-      iconHtml={feather.icons[name].toSvg({ width: 12, height: 12 })}
+      icon={name}
       style={{ ...iconStyle, color }}
     />
   ),
@@ -71,7 +70,7 @@ const MessageHistory = ({
     <Input
       id={'message-history-input'}
       {...inputCallbacks}
-      icon={feather.icons['filter'].toSvg({ width: 12, height: 12 })}
+      icon={'filter'}
       value={query}
       desc={'filter messages'}
       focus={true}

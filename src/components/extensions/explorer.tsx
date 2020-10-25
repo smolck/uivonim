@@ -63,7 +63,6 @@ let listElRef: HTMLElement
 
 const WhyDiv = (props: any) => <div {...props}>{props.children}</div>
 
-const feather = require('feather-icons')
 const Explorer = ({
   ix: index,
   vis: visible,
@@ -82,10 +81,7 @@ const Explorer = ({
       value={value}
       focus={!pathMode}
       desc={'explorer'}
-      icon={feather.icons['hard-drive'].toSvg({
-        width: 12,
-        height: 12,
-      })}
+      icon={'hard-drive'}
     />
 
     {!pathMode && (
@@ -100,7 +96,7 @@ const Explorer = ({
         id={'explorer-path-mode-input'}
         value={pathRelativeToHome(pathValue)}
         color={colors.important}
-        icon={feather.icons['search'].toSvg({ width: 12, height: 12 })}
+        icon={'search'}
         desc={'open path'}
         small={true}
         focus={true}

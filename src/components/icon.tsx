@@ -1,8 +1,17 @@
+const feather = require('feather-icons')
+
 type Props = {
-  iconHtml: string
+  icon: string
   style?: any
 }
 
-export default ({ iconHtml, style }: Props) => (
-  <div dangerouslySetInnerHTML={{ __html: iconHtml }} style={style} />
+export default ({ icon, style }: Props) => (
+  <div
+    dangerouslySetInnerHTML={{
+      __html: feather.icons[icon].toSvg({ width: '1em', height: '1em' }),
+    }}
+    style={{
+      ...style
+    }}
+  />
 )

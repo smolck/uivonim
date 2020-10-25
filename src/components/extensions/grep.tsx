@@ -98,7 +98,6 @@ const resetState = { visible: false, loading: false }
 
 const WhyDiv = (props: any) => <div {...props}>{props.children}</div>
 
-const feather = require('feather-icons')
 const Grep = ({
   visible,
   filterVal,
@@ -117,7 +116,7 @@ const Grep = ({
       id={'grep-main-search-input'}
       value={value}
       focus={focused === FocusedElement.Search}
-      icon={feather.icons['search'].toSvg()}
+      icon={'search'}
       desc={'find in project'}
       loading={loading}
     />
@@ -126,7 +125,7 @@ const Grep = ({
       id={'grep-filter-input'}
       value={filterVal}
       focus={focused === FocusedElement.Filter}
-      icon={feather.icons['filter'].toSvg()}
+      icon={'filter'}
       small={true}
       desc={'filter files'}
     />

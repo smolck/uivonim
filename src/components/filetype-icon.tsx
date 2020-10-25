@@ -14,7 +14,7 @@ const customMappings = new Map<string, string>([
 const feather = require('feather-icons')
 const findIconCustom = (filename: string, extension: string) => {
   const mapping = customMappings.get(extension) || customMappings.get(filename)
-  return mapping && <Icon iconHtml={feather.icons[mapping].toSvg()} />
+  return mapping && <Icon icon={mapping} />
 }
 
 const getIcon = (path = '') => {
@@ -23,7 +23,7 @@ const getIcon = (path = '') => {
 
   return (
     findIconCustom(filename, extension) || (
-      <Icon iconHtml={feather.icons['file-text'].toSvg()} />
+      <Icon icon={'file-text'} />
     )
   )
 }
@@ -39,13 +39,13 @@ const featherStyle: CSSProperties = {
 
 export const Folder = (
   <div style={featherStyle}>
-    <Icon iconHtml={feather.icons['folder'].toSvg()} />
+    <Icon icon={'folder'} />
   </div>
 )
 
 export const Terminal = (
   <div style={featherStyle}>
-    <Icon iconHtml={feather.icons['terminal'].toSvg()} />
+    <Icon icon={'terminal'} />
   </div>
 )
 

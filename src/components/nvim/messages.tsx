@@ -41,9 +41,9 @@ let state = {
 
 type S = typeof state
 
-const feather = require('feather-icons')
+// TODO(smolck): No need for this?
 const createIcon = (name: string) => (
-  <Icon iconHtml={feather.icons[name].toSvg()} />
+  <Icon icon={name} />
 )
 const renderIcons = new Map([
   [MessageKind.Error, createIcon('x-circle')],
