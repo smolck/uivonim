@@ -1,10 +1,13 @@
-name: Build/release
+name: Release
 
-on: push
+on:
+  push:
+    branches: [ master ]
 
 jobs:
   release:
     runs-on: ${{ matrix.os }}
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
 
     strategy:
       matrix:
@@ -19,7 +22,7 @@ jobs:
         with:
           node-version: 14
 
-      - name: Build/release Electron app
+      - name: Build & maybe release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
           # GitHub token, automatically provided to the action

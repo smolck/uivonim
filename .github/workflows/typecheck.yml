@@ -1,4 +1,4 @@
-name: Test
+name: Typecheck
 
 on:
   push:
@@ -21,6 +21,5 @@ jobs:
 
       - run: npm install
 
-      - run: npm run build
-
-      - run: npm run test
+      - name: Typecheck
+        uses: gozala/typescript-error-reporter-action@v1.0.7
