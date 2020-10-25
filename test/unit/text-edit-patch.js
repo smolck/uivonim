@@ -1,6 +1,6 @@
 const { src, same } = require('../util')
 const { append, replace, remove } = src('neovim/text-edit-patch')
-const { Position } = src('vscode/types')
+const { Position } = src('neovim/types')
 
 describe('text edit patch', () => {
   it('append', () => {
