@@ -8,7 +8,7 @@ import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
 import { cursor } from '../../core/cursor'
 import { parse as stringToMarkdown } from 'marked'
-import { render } from 'inferno'
+import { render, Component } from 'inferno'
 import Icon from '../icon'
 const feather = require('feather-icons')
 
@@ -21,6 +21,7 @@ export interface CompletionShow {
 export interface CompletionOption {
   /** Display text for the UI */
   text: string
+  menu: string
   /** Text that will be inserted in the buffer */
   insertText: string
   /** An enum used to display a fancy icon and color in the completion menu UI */
@@ -104,7 +105,7 @@ export enum CompletionItemKind {
   TypeParameter = 24,
 }
 
-const MAX_VISIBLE_OPTIONS = 12
+const MAX_VISIBLE_OPTIONS = 20
 
 let state = {
   x: 0,
@@ -119,10 +120,19 @@ let state = {
 
 type S = typeof state
 
+// https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L34-L36
+const pos: { container: ClientRect } = {
+  container: { left: 0, right: 0, bottom: 0, top: 0, height: 0, width: 0 },
+}
+
 const icon = (name: string, color?: string) => {
   return (
     <Icon
-      iconHtml={feather.icons[name].toSvg({ width: 12, height: 12 })}
+      iconHtml={feather.icons[name].toSvg({
+        width: workspace.font.size - 1,
+        height: workspace.font.size - 2,
+        viewBox: '0 0 24 26',
+      })}
       style={{ color }}
     />
   )
@@ -169,22 +179,30 @@ const parseDocs = (docs?: string): string | undefined => {
 const docs = (data: string) => (
   // @ts-ignore TS wants children but there are none so ignore
   <RowNormal
-    dangerouslySetInnerHtml={`<div class=${resetMarkdownHTMLStyle}>${data}</div>`}
+    dangerouslySetInnerHTML={{
+      __html: `<div class=${resetMarkdownHTMLStyle}>${data}</div>`,
+    }}
     active={false}
     style={{
       ...paddingVH(6, 4),
       // RowNormal gives us display: flex but this causes things
       // to be flex-flow: row. we just want the standard no fancy pls kthx
       display: 'block',
-      'padding-top': '6px',
       overflow: 'visible',
+      color: cvar('foreground-b20'),
+      background: cvar('background-30'),
+      'padding-top': '6px',
       'white-space': 'normal',
-      color: cvar('foreground-20'),
-      background: cvar('background-45'),
-      'font-size': `${workspace.font.size - 2}px`,
+      'font-size': `${workspace.font.size * 0.9}px`,
     }}
   />
 )
+
+const tdStyle = (): CSSProperties => ({
+  'padding-right': '16px',
+  'font-family': 'var(--font)',
+  'font-size': `${workspace.font.size * 0.9}px`,
+})
 
 const Autocomplete = ({
   documentation,
@@ -201,37 +219,72 @@ const Autocomplete = ({
     x={x}
     y={y}
     zIndex={200}
-    maxWidth={400}
+    maxWidth={workspace.size.width} // TODO(smolck)
     visible={visible}
     anchorAbove={anchorAbove}
   >
-    {documentation && anchorAbove && docs(documentation)}
     <div
       style={{
-        'overflow-y': 'hidden',
-        background: cvar('background-30'),
-        'max-height': `${workspace.cell.height * visibleOptions}px`,
+        display: 'flex',
+        'flex-direction': 'row',
       }}
     >
-      {options.map(({ text, kind }, id) => (
-        <RowComplete active={id === ix}>
-          <div
-            style={{
-              display: 'flex',
-              // TODO: this doesn't scale with font size?
-              width: '24px',
-              'margin-right': '2px',
-              'align-items': 'center',
-              'justify-content': 'center',
-            }}
-          >
-            {getCompletionIcon(kind)}
-          </div>
-          <div>{text}</div>
-        </RowComplete>
-      ))}
+      <div
+        style={{
+          background: cvar('background-30'),
+          display: 'flex',
+          overflow: 'hidden',
+          'flex-direction': 'row',
+          'max-height': `${workspace.cell.height * visibleOptions}px`,
+        }}
+        ref={(e: any) => {
+          // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L146
+          if (e) pos.container = e.getBoundingClientRect()
+        }}
+      >
+        <table
+          style={{
+            overflow: 'hidden',
+            padding: '4px 0px 4px 4px',
+            'border-spacing': 0,
+          }}
+        >
+          {options.map(({ text, kind, menu }, id) => (
+            <tr
+              style={{
+                color:
+                  id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
+                background:
+                  id === ix ? cvar('background-10') : cvar('background-30'),
+              }}
+              ref={(e: any) => {
+                // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L156
+                if (id !== ix || !e) return
+                const { top, bottom } = e.getBoundingClientRect()
+                if (top < pos.container.top) return e.scrollIntoView(true)
+                if (bottom > pos.container.bottom)
+                  return e.scrollIntoView(false)
+              }}
+            >
+              <td
+                style={{
+                  display: 'flex',
+                  // TODO: this doesn't scale with font size?
+                  width: '16',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                }}
+              >
+                {getCompletionIcon(kind)}
+              </td>
+              <td style={tdStyle()}>{text}</td>
+              <td style={tdStyle()}>{menu}</td>
+            </tr>
+          ))}
+        </table>
+      </div>
+      {documentation && <div>{docs(documentation)}</div>}
     </div>
-    {documentation && !anchorAbove && docs(documentation)}
   </Overlay>
 )
 
@@ -262,15 +315,13 @@ export const select = (index: number) => {
   // TODO: what are we doing with detail and documentation?
   // show both? or one or the other?
 
-  if (documentation) {
-    // TODO(smolck): Not sure why, but I get "32" as the doc sometimes, and so
-    // I just convert this to a string to make sure that doesn't break stuff.
-    // :shrug:
+  // TODO(smolck): `&& documentation !== 32` because 32 means there's no docs,
+  // I think. Long story kinda.
+  if (documentation && documentation !== 32) {
     state.documentation = parseDocs(documentation.toString())
     render(<Autocomplete {...state} />, container)
   } else {
-    // TODO(smolck): parseDocs(detail)?
-    state.documentation = detail
+    state.documentation = parseDocs(detail)
     render(<Autocomplete {...state} />, container)
   }
 }
@@ -278,19 +329,15 @@ export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows
 
-  // TODO(smolck): Feels too imperative
-  state.visibleOptions = visibleOptions
-  state.anchorAbove = anchorAbove
-  state.options = options
-  const { x, y } = windows.pixelPosition(anchorAbove ? row : row + 1, col)
-  state.x = x
-  state.y = y
-  state.options = options.slice(0, visibleOptions)
-  state.visible = true
-  state.documentation = undefined
-  // TODO(smolck)
-  // default
-  state.ix = -1
+  Object.assign(state, {
+    visibleOptions,
+    anchorAbove,
+    options,
+    documentation: undefined,
+    visible: true,
+    ix: -1,
+    ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
+  })
 
   render(<Autocomplete {...state} />, container)
 }
@@ -301,7 +348,8 @@ dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
   const options = items.map(
     (m) =>
       ({
-        text: `${m.word} ${m.menu}`,
+        text: m.word,
+        menu: m.menu,
         insertText: m.word,
         kind: stringToKind(m.kind),
         raw: {
