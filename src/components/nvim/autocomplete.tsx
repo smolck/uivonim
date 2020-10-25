@@ -129,9 +129,8 @@ const icon = (name: string, color?: string) => {
   return (
     <Icon
       iconHtml={feather.icons[name].toSvg({
-        width: workspace.font.size - 1,
-        height: workspace.font.size - 2,
-        viewBox: '0 0 24 26',
+        width: "1em",
+        height: "1em",
       })}
       style={{ color }}
     />
@@ -199,6 +198,7 @@ const docs = (data: string) => (
 )
 
 const tdStyle = (): CSSProperties => ({
+  'align-self': 'center',
   'white-space': 'nowrap',
   'padding-right': '16px',
   'font-family': 'var(--font)',
@@ -257,6 +257,7 @@ const Autocomplete = ({
                   id === ix ? cvar('foreground-b20') : cvar('foreground-30'),
                 background:
                   id === ix ? cvar('background-10') : cvar('background-30'),
+                display: 'flex',
               }}
               ref={(e: any) => {
                 // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L156
