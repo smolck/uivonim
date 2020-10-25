@@ -22,3 +22,5 @@ jobs:
         run: npm ci
       - name: Typecheck
         uses: gozala/typescript-error-reporter-action@v1.0.5
+        with:
+            project: src/tsconfig.json
