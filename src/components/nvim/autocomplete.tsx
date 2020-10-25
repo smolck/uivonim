@@ -199,6 +199,7 @@ const docs = (data: string) => (
 )
 
 const tdStyle = (): CSSProperties => ({
+  'white-space': 'nowrap',
   'padding-right': '16px',
   'font-family': 'var(--font)',
   'font-size': `${workspace.font.size * 0.9}px`,
