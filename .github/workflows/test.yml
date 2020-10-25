@@ -29,8 +29,8 @@ jobs:
       
       - run: npm install
       
-      - name: TypeScript Error Reporter
-        uses: andoshin11/typescript-error-reporter-action@v1.0.2
+      - name: Typecheck
+        uses: gozala/typescript-error-reporter-action@v1.0.7
       
       - run: npm run build
       - run: npm run test
