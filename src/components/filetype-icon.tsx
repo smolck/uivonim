@@ -11,7 +11,6 @@ const customMappings = new Map<string, string>([
   ['svg', 'image'],
 ])
 
-const feather = require('feather-icons')
 const findIconCustom = (filename: string, extension: string) => {
   const mapping = customMappings.get(extension) || customMappings.get(filename)
   return mapping && <Icon icon={mapping} />
@@ -21,11 +20,7 @@ const getIcon = (path = '') => {
   const filename = basename(path).toLowerCase()
   const extension = extname(filename).replace(/^\./, '').toLowerCase()
 
-  return (
-    findIconCustom(filename, extension) || (
-      <Icon icon={'file-text'} />
-    )
-  )
+  return findIconCustom(filename, extension) || <Icon icon={'file-text'} />
 }
 
 const featherStyle: CSSProperties = {

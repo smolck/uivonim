@@ -11,7 +11,7 @@ export default ({ icon, style }: Props) => (
       __html: feather.icons[icon].toSvg({ width: '1em', height: '1em' }),
     }}
     style={{
-      ...style
+      ...style,
     }}
   />
 )

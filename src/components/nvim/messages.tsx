@@ -42,9 +42,7 @@ let state = {
 type S = typeof state
 
 // TODO(smolck): No need for this?
-const createIcon = (name: string) => (
-  <Icon icon={name} />
-)
+const createIcon = (name: string) => <Icon icon={name} />
 const renderIcons = new Map([
   [MessageKind.Error, createIcon('x-circle')],
   [MessageKind.Warning, createIcon('alert-triangle')],

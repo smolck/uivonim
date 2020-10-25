@@ -35,7 +35,6 @@ export default () => {
     termFormat: '',
   }
 
-  const feather = require('feather-icons')
   const Nameplate = ($: S) => (
     <div
       id={`nameplate-${uuid()}`}
@@ -50,7 +49,7 @@ export default () => {
     >
       {$.terminal && (
         <Icon
-          iconHtml={feather.icons['terminal'].toSvg()}
+          icon={'terminal'}
           style={{
             color: cvar('foreground-30'),
             display: 'flex',
@@ -95,7 +94,7 @@ export default () => {
 
       {$.termAttached && (
         <Icon
-          iconHtml={feather.icons['eye'].toSvg()}
+          icon={'eye'}
           style={{
             color: cvar('foreground-40'),
             'margin-left': '15px',

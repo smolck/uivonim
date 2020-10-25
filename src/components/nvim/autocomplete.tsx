@@ -1,4 +1,4 @@
-import { RowNormal, RowComplete } from '../row-container'
+import { RowNormal } from '../row-container'
 import { resetMarkdownHTMLStyle } from '../../ui/styles'
 import * as windows from '../../windows/window-manager'
 import * as dispatch from '../../messaging/dispatch'
@@ -8,7 +8,7 @@ import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
 import { cursor } from '../../core/cursor'
 import { parse as stringToMarkdown } from 'marked'
-import { render, } from 'inferno'
+import { render } from 'inferno'
 import Icon from '../icon'
 
 export interface CompletionShow {
@@ -125,12 +125,7 @@ const pos: { container: ClientRect } = {
 }
 
 const icon = (name: string, color?: string) => {
-  return (
-    <Icon
-      icon={name}
-      style={{ color }}
-    />
-  )
+  return <Icon icon={name} style={{ color }} />
 }
 
 const icons = new Map([

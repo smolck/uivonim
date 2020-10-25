@@ -97,10 +97,7 @@ const Statusline = ({
         color: additions > 0 ? colors.success : undefined,
       }}
     >
-      <Icon
-        icon={'plus-square'}
-        style={iconStyle}
-      />
+      <Icon icon={'plus-square'} style={iconStyle} />
     </div>
   )
 
@@ -123,10 +120,7 @@ const Statusline = ({
         'margin-left': '12px',
       }}
     >
-      <Icon
-        icon={'minus-square'}
-        style={iconStyle}
-      />
+      <Icon icon={'minus-square'} style={iconStyle} />
     </div>
   )
 
@@ -157,10 +151,7 @@ const Statusline = ({
         }
       >
         <div style={iconBoxStyle}>
-          <Icon
-            icon={'hard-drive'}
-            style={iconStyle}
-          />
+          <Icon icon={'hard-drive'} style={iconStyle} />
         </div>
 
         <Label label={cwd || 'main'} />
@@ -188,10 +179,7 @@ const Statusline = ({
               'padding-top': '4px',
             }}
           >
-            <Icon
-              icon={'git-branch'}
-              style={iconStyle}
-            />
+            <Icon icon={'git-branch'} style={iconStyle} />
           </div>
 
           <Label label={branch} />
@@ -242,10 +230,7 @@ const Statusline = ({
         color: errors > 0 ? colors.error : undefined,
       }}
     >
-      <Icon
-        icon={'x-circle'}
-        style={iconStyle}
-      />
+      <Icon icon={'x-circle'} style={iconStyle} />
     </div>
   )
 
@@ -268,10 +253,7 @@ const Statusline = ({
         'margin-left': '12px',
       }}
     >
-      <Icon
-        icon={'alert-triangle'}
-        style={iconStyle}
-      />
+      <Icon icon={'alert-triangle'} style={iconStyle} />
     </div>
   )
 

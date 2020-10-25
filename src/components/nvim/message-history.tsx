@@ -25,12 +25,7 @@ const iconStyle = { fontSize: '1.2rem' }
 
 // TODO(smolck): equivalent to h(Icon.*, { color: colors.*, style: iconStyle })?
 const createIcon = (name: string, color: string) => ({
-  icon: (
-    <Icon
-      icon={name}
-      style={{ ...iconStyle, color }}
-    />
-  ),
+  icon: <Icon icon={name} style={{ ...iconStyle, color }} />,
   color: color,
 })
 

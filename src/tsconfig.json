@@ -4,6 +4,7 @@
     "test",
     "xdg_config",
     "components/extensions/legacy",
+    "components/extensions/future",
     "dev"
   ],
   "compilerOptions": {
