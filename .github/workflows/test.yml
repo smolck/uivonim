@@ -28,5 +28,9 @@ jobs:
           node-version: 14
       
       - run: npm install
+      
+      - name: TypeScript Error Reporter
+        uses: andoshin11/typescript-error-reporter-action@v1.0.2
+      
       - run: npm run build
       - run: npm run test
