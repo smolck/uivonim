@@ -104,17 +104,14 @@ export enum CompletionItemKind {
   TypeParameter = 24,
 }
 
-const MAX_VISIBLE_OPTIONS = 20
-
 let state = {
   x: 0,
   y: 0,
   ix: 0,
-  anchorAbove: false,
   options: [] as CompletionOption[],
   visible: false,
   documentation: {} as any,
-  visibleOptions: MAX_VISIBLE_OPTIONS,
+  visibleOptions: 10,
 }
 
 type S = typeof state
@@ -203,7 +200,6 @@ const Autocomplete = ({
   visible,
   visibleOptions,
   ix,
-  anchorAbove,
   options,
 }: S) => (
   <Overlay
@@ -213,7 +209,7 @@ const Autocomplete = ({
     zIndex={200}
     maxWidth={workspace.size.width} // TODO(smolck)
     visible={visible}
-    anchorAbove={anchorAbove}
+    anchorAbove={false}
   >
     <div
       style={{
@@ -319,17 +315,20 @@ export const select = (index: number) => {
   }
 }
 export const show = ({ row, col, options }: CompletionShow) => {
-  const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
-  const anchorAbove = cursor.row + visibleOptions > workspace.size.rows
+  const visibleOptions = Math.min(
+    // Minus 2 because workspace.size.rows appears to be 2 rows greater than the actual rows
+    // TODO(smolck): Is that ^^^ right?
+    workspace.size.rows - cursor.row - 2,
+    options.length
+  )
 
   Object.assign(state, {
     visibleOptions,
-    anchorAbove,
     options,
     documentation: undefined,
     visible: true,
     ix: -1,
-    ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
+    ...windows.pixelPosition(row + 1, col),
   })
 
   render(<Autocomplete {...state} />, container)
