@@ -107,7 +107,6 @@ startup.defineFunc.UivonimState`
   let m.cwd = getcwd()
   let m.dir = expand('%:p:h')
   let m.file = expand('%f')
-  let m.colorscheme = g:colors_name
   let m.bufferType = getbufvar(currentBuffer, '&buftype')
   let m.editorTopLine = line('w0')
   let m.editorBottomLine = line('w$')
