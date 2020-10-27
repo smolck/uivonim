@@ -40,7 +40,7 @@ app.on('ready', async () => {
 
   if (process.platform === 'darwin')
     menuTemplate.unshift({
-      label: 'veonim',
+      label: 'uivonim',
       submenu: [
         {
           role: 'about',
@@ -50,7 +50,7 @@ app.on('ready', async () => {
         },
         {
           // using 'role: hide' adds cmd+h keybinding which overrides vim keybinds
-          label: 'Hide veonim',
+          label: 'Hide uivonim',
           click: () => app.hide(),
         },
         {
@@ -107,7 +107,7 @@ app.on('ready', async () => {
 
     watch(srcDir, { recursive: true }, debounce(reloader, 250))
 
-    console.log(`veonim started in develop mode. you're welcome`)
+    console.log(`uivonim started in develop mode. you're welcome`)
 
     const {
       default: installExtension,
