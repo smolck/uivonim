@@ -7,7 +7,7 @@
   "main": "build/bootstrap/main.js",
   "scripts": {
     "start": "node tools/start.js",
-    "start:release": "NODE_ENV=production electron build/bootstrap/main.js",
+    "start:release": "node tools/start-release.js",
     "build": "node tools/build.js",
     "check-types": "tsc -p src/tsconfig.json --noEmit",
     "package": "node tools/package.js",

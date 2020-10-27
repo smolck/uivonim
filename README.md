@@ -43,12 +43,18 @@ Install the following things:
 
 Then run:
 
-- `npm install` - standard issue download 5 million node_modules
+- `npm ci` - standard issue download 5 million node_modules
 - `npm run build` - release build of the code
 - `npm run start:release` (optional) - run the release code without packaging
 - `npm run package` - use electron-builder to create a binary package
 
 Binaries available in `dist`.
+
+### Development
+
+For development, follow the above steps, but replace `npm run start:release` with
+`npm run start`. Note that since `npm run start` also builds the code, there is no need to
+run `npm run build` before running it.
 
 ## Special Thanks
 
