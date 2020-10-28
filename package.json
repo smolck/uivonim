@@ -2,7 +2,7 @@
   "name": "uivonim",
   "author": "smolck",
   "license": "AGPL-3.0-only",
-  "version": "0.26.3",
+  "version": "0.26.4",
   "description": "Extensible Neovim GUI forked from Veonim",
   "main": "build/bootstrap/main.js",
   "scripts": {
