@@ -10,7 +10,7 @@ go(async () => {
   await copyAll()
 
   $`running babel stuff`
-  await run("babel --extensions '.ts,.tsx' src -d build")
+  await run('babel --extensions .ts,.tsx src -d build')
 
   run('electron build/bootstrap/main.js', {
     shh: true,

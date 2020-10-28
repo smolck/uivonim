@@ -1,6 +1,6 @@
 'use strict'
 
-const { go, run, } = require('./runner')
+const { go, run } = require('./runner')
 
 go(async () => {
   // TODO(smolck): Maybe verify `npm run build` has been run first somehow?
