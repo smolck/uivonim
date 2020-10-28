@@ -14,8 +14,8 @@ linux:
   target:
     - 'appimage'
     - 'zip'
-      # win:
-      #   target:
-      #     - 'portable'
-      #     - 'zip'
+win:
+  target:
+    - 'portable'
+    - 'zip'
 asar: false
