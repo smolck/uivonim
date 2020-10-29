@@ -12,7 +12,8 @@ const run = (cmd, opts = {}) =>
   new Promise((done) => {
     console.log(cmd)
 
-    const proc = spawn('npx', cmd.split(' '), {
+    const args = opts.args ? [...cmd.split(' '), ...opts.args] : cmd.split(' ')
+    const proc = spawn('npx', args, {
       ...opts,
       cwd: root,
       shell: true,

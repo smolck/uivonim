@@ -13,7 +13,7 @@ go(async () => {
   await run('babel --extensions .ts,.tsx src -d build')
 
   run('electron build/bootstrap/main.js', {
-    shh: true,
+    args: process.argv.slice(2),
     env: {
       ...process.env,
       VEONIM_DEV: 42,
