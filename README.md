@@ -1,4 +1,6 @@
-# Uivonim
+<p align="center">
+	<img src="./art/header.png" alt="Uivonim header"></img>
+</p>
 
 ![Typecheck](https://github.com/smolck/uivonim/workflows/Typecheck/badge.svg) ![Test](https://github.com/smolck/uivonim/workflows/Test/badge.svg)
 
