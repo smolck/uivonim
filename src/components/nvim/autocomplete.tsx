@@ -318,13 +318,16 @@ export const show = ({ row, col, options }: CompletionShow) => {
     options.length
   )
 
+  const pos = windows.pixelPosition(row + 1, col)
+  // TODO(smolck): This feels too hard-coded.
+  pos.x -= 20
   Object.assign(state, {
     visibleOptions,
     options,
     documentation: undefined,
     visible: true,
     ix: -1,
-    ...windows.pixelPosition(row + 1, col),
+    ...pos,
   })
 
   render(<Autocomplete {...state} />, container)
