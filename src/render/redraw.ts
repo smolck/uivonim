@@ -323,7 +323,7 @@ onRedraw((redrawEvents) => {
 
     // if statements ordered in wrender priority
     if (e === 'grid_line') grid_line(ev)
-    else if (e === 'flush') windows.disposeInvalidWindows()
+    else if (e === 'flush') windows.refresh()
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
