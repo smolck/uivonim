@@ -20,6 +20,7 @@ export const startupCmds = CmdGroup`
   let g:uvn_completions = []
   call UivonimRegisterAutocmds()
   call UivonimCreateHighlights()
+  set laststatus=0
 `
 
 // TODO: should we rename some of these "internal" functions so they
