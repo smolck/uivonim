@@ -143,6 +143,7 @@ const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
 const nvimCall: Functions = onFnCall((name, a) =>
   getActiveInstance().request.nvimCall(name, a)
 )
+const nvimUiSetOption = (name: string, value: boolean) => getActiveInstance().request.nvimUiSetOption(name, value)
 const nvimJumpTo = (coords: HyperspaceCoordinates) =>
   getActiveInstance().call.nvimJumpTo(coords)
 const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
@@ -193,6 +194,7 @@ const api = {
     expr: nvimExpr,
     untilStateValue,
     cmd: nvimCommand,
+    uiSetOption: nvimUiSetOption,
     getVar: nvimGetVar,
     jumpTo: nvimJumpTo,
     onLoad: nvimLoaded,
