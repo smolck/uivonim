@@ -70,7 +70,6 @@ const drawChar = (char: string, col: number, width = 1) => {
   ui.save()
   ui.beginPath()
   ui.rect(col * cell.width, 2, charWidth, cell.height)
-  ui.clip()
   ui.fillText(char, col * cell.width, 2, charWidth)
   ui.restore()
 }

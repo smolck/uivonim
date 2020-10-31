@@ -8,6 +8,8 @@ import '../core/screen-events'
 import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
+import api from '../core/instance-api'
+import * as windows from '../windows/window-manager'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -85,3 +87,6 @@ merge(pluginsContainer.style, {
 dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
+
+// TODO(smolck): Put this somewhere else?
+api.onAction('update-nameplates', () => (windows.refresh(), console.log('refresh')))

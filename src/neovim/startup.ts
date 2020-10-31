@@ -42,7 +42,7 @@ const stateEvents = [
 
 const autocmds = {
   BufAdd: `expand('<abuf>')`,
-  BufEnter: `expand('<abuf>')`,
+  BufEnter: `expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates')`,
   BufDelete: `expand('<abuf>')`,
   BufUnload: `expand('<abuf>')`,
   BufWipeout: `expand('<abuf>')`,

@@ -381,9 +381,4 @@ onRedraw((redrawEvents) => {
     windows.disposeInvalidWindows()
     windows.layout()
   })
-
-  // TODO(smolck): Make sure this is no longer necessary.
-  // TODO: we really should never have to call this outside of windows.layout
-  // we should hook into autocmd events and update the title according to that
-  // setTimeout(windows.refresh, 50)
 })
