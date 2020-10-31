@@ -38,7 +38,6 @@ requestAnimationFrame(() => {
   }, 600)
 
   setTimeout(() => {
-    require('../services/remote')
     require('../services/app-info')
 
     if (process.env.VEONIM_DEV) {
