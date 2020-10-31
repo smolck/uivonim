@@ -17,6 +17,8 @@ import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'
 import * as renderEvents from '../render/events'
+import { size as workspaceSize } from '../core/workspace'
+import api from '../core/instance-api'
 
 let dummyData = new Float32Array()
 let state_cursorVisible = true
@@ -63,7 +65,7 @@ const win_hide = (e: any) => {
 }
 
 const grid_clear = ([, [gridId]]: any) => {
-  if (gridId === 1) return
+  // if (gridId === 1) return
   if (!windows.has(gridId)) return
 
   const win = windows.get(gridId)
@@ -72,7 +74,7 @@ const grid_clear = ([, [gridId]]: any) => {
 }
 
 const grid_destroy = ([, [gridId]]: any) => {
-  if (gridId === 1) return
+  // if (gridId === 1) return
   windows.remove(gridId)
 }
 
@@ -81,7 +83,7 @@ const grid_resize = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [gridId, width, height] = e[ix]
-    if (gridId === 1) continue
+    // if (gridId === 1) continue
     // grid events show up before win events
     if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
     windows.get(gridId).resizeWindow(width, height)
@@ -90,7 +92,7 @@ const grid_resize = (e: any) => {
 
 const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
   state_cursorVisible = gridId !== 1
-  if (gridId === 1) return
+  // if (gridId === 1) return
   windows.setActiveGrid(gridId)
   moveCursor(gridId, row, col)
 }
@@ -99,7 +101,7 @@ const grid_scroll = ([
   ,
   [gridId, top, bottom /*left*/ /*right*/, , , amount],
 ]: any) => {
-  if (gridId === 1) return
+  // if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
   const win = windows.get(gridId)
@@ -125,9 +127,6 @@ const grid_line = (e: any) => {
   // we skip that because it's cool to do that
   for (let ix = 1; ix < count; ix++) {
     const [gridId, row, startCol, charData] = e[ix]
-
-    // TODO: anything of interest on grid 1? messages are supported by ext_messages
-    if (gridId === 1) continue
 
     if (gridId !== activeGrid) {
       activeGrid = gridId
@@ -384,5 +383,5 @@ onRedraw((redrawEvents) => {
 
   // TODO: we really should never have to call this outside of windows.layout
   // we should hook into autocmd events and update the title according to that
-  setTimeout(windows.refresh, 50)
+  // setTimeout(windows.refresh, 50)
 })

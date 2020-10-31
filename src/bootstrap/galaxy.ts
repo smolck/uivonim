@@ -91,6 +91,7 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
-api.onAction('enable-ext-statusline', (enable: boolean) =>
+api.onAction('enable-ext-statusline', (enable: boolean) => {
   enable ? showStatusline() : hideStatusline()
-)
+  api.nvim.cmd(`set laststatus=${enable ? '0' : '2'}`)
+})

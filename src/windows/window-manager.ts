@@ -128,7 +128,7 @@ export const set = (
   // if (windowPosition && windowExistsAtPosition(wid, row, col)) return invalidWindows.add(gid)
 
   // behavior 2: receive "grid_resize" events (gridId > 1) but no followup "win_pos" events
-  if (id < 0) return invalidWindows.add(gid)
+  // if (id < 0) return invalidWindows.add(gid)
 
   container.appendChild(win.element)
   invalidWindows.delete(gid)
