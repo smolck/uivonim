@@ -35,7 +35,6 @@ export default (name: string, opts = {} as WorkerOptions) => {
   const sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
   const sharedArray = new Int32Array(sharedBuffer)
 
-  // @ts-ignore - Atomics typings are wrong
   const wakeThread = () => Atomics.notify(sharedArray, 0)
 
   const writeSharedArray = (id: number, data: any) => {
