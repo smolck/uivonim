@@ -14,6 +14,8 @@ import {
 } from '../render/highlight-attributes'
 import { sub } from '../messaging/dispatch'
 import { css } from '../ui/uikit'
+// TODO(smolck): Fine to import this?
+import { setCursorColor } from '../core/cursor'
 
 // this will return a var like '244, 120, 042'
 // then we can use this var in rgba color styles
@@ -72,6 +74,12 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   getColorAndSetVar('uvnFunction', 'function')
   getColorAndSetVar('uvnPreProc', 'preproc')
   getColorAndSetVar('uvnLink', 'linkcolor')
+
+  getColorByName('uvnCursor')
+    .then(({ background }) =>
+      background ? setCursorColor(background) : undefined
+    )
+    .catch((_err) => {})
 }
 
 sub('colors-changed', refreshColors)
