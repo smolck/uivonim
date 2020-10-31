@@ -42,6 +42,7 @@ let state = {
   additions: 0,
   deletions: 0,
   baseColor: '#4e415a',
+  visible: true,
 }
 
 type S = typeof state
@@ -89,6 +90,7 @@ const Statusline = ({
   column,
   tabs,
   active,
+  visible,
 }: S) => {
   const additionsIcon = (
     <div
@@ -335,7 +337,7 @@ const Statusline = ({
     <div
       style={{
         flex: '1',
-        display: 'flex',
+        display: visible ? 'flex' : 'none',
         background: cvar('background-30'),
         'z-index': 999,
         'justify-content': 'space-between',
@@ -348,7 +350,19 @@ const Statusline = ({
 }
 
 const assignStateAndRender = (newState: any) => (
-  Object.assign(state, newState), render(<Statusline {...state} />, container)
+  Object.assign(state, newState),
+  render(<Statusline {...state} />, container),
+  Object.assign(container.style, {
+    // TODO(smolck): Even formatted, this code is . . . questionable.
+    display:
+      newState.visible === undefined
+        ? state.visible
+          ? 'flex'
+          : 'none'
+        : newState.visible
+        ? 'flex'
+        : 'none',
+  })
 )
 
 const iconStyle = { 'font-size': '16px' }
@@ -417,3 +431,6 @@ setImmediate(async () => {
   const { background } = await getColorByName('StatusLine')
   if (background) assignStateAndRender({ baseColor: background })
 })
+
+export const hide = () => assignStateAndRender({ visible: false })
+export const show = () => assignStateAndRender({ visible: true })

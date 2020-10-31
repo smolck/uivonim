@@ -9,6 +9,10 @@ import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
 import api from '../core/instance-api'
+import {
+  hide as hideStatusline,
+  show as showStatusline,
+} from '../components/nvim/statusline'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -87,6 +91,6 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
-api.onAction('set-ui-option', (name: string, value: boolean) =>
-  api.nvim.uiSetOption(name, value)
+api.onAction('enable-ext-statusline', (enable: boolean) =>
+  enable ? showStatusline() : hideStatusline()
 )
