@@ -323,7 +323,7 @@ onRedraw((redrawEvents) => {
 
     // if statements ordered in wrender priority
     if (e === 'grid_line') grid_line(ev)
-    else if (e === 'flush') windows.refresh()
+    else if (e === 'flush') winUpdates = true
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
@@ -382,7 +382,8 @@ onRedraw((redrawEvents) => {
     windows.layout()
   })
 
+  // TODO(smolck): Make sure this is no longer necessary.
   // TODO: we really should never have to call this outside of windows.layout
   // we should hook into autocmd events and update the title according to that
-  setTimeout(windows.refresh, 50)
+  // setTimeout(windows.refresh, 50)
 })
