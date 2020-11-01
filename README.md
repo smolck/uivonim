@@ -2,7 +2,7 @@
 	<img src="./art/header.png" alt="Uivonim header"></img>
 </p>
 
-![Typecheck](https://github.com/smolck/uivonim/workflows/Typecheck/badge.svg) ![Test](https://github.com/smolck/uivonim/workflows/Test/badge.svg)
+![Typecheck](https://github.com/smolck/uivonim/workflows/Typecheck/badge.svg) ![Test](https://github.com/smolck/uivonim/workflows/Test/badge.svg) [![Gitter](https://badges.gitter.im/uivonim/community.svg)](https://gitter.im/uivonim/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 > NOTE: Due to [neovim/neovim#13196](https://github.com/neovim/neovim/issues/13196), if you have `conceallevel` set to a value higher than 0 CPU usage may be abnormally high. See [#39 (comment)](https://github.com/smolck/uivonim/issues/39#issuecomment-719816263).
 
