@@ -161,7 +161,7 @@ export default () => {
   container.appendChild(nameplate.element)
   container.appendChild(content)
 
-  const dimensions = new WeakMap()
+  // const dimensions = new WeakMap()
 
   const api = {
     get id() {
@@ -280,15 +280,16 @@ export default () => {
   }
 
   api.refreshLayout = () => {
-    let rect
-    if (dimensions.has(content)) {
-      rect = dimensions.get(content)
-    }
-    else {
-      rect = content.getBoundingClientRect()
-      dimensions.set(content, rect)
-    }
-    const { top, left, width, height } = rect
+    // TODO(smolck): This doesn't work with splits
+    // let rect
+    // if (dimensions.has(content)) {
+    //   rect = dimensions.get(content)
+    // }
+    // else {
+    //   rect = content.getBoundingClientRect()
+    //   dimensions.set(content, rect)
+    // }
+    const { top, left, width, height } = content.getBoundingClientRect()
 
     const x = left
     const y = top - titleSpecs.height
