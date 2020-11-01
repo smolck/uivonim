@@ -8,7 +8,6 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import {
-  moveCursor,
   hideCursor,
   showCursor,
   updateCursorChar,
@@ -92,7 +91,7 @@ const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
   state_cursorVisible = gridId !== 1
   if (gridId === 1) return
   windows.setActiveGrid(gridId)
-  moveCursor(gridId, row, col)
+  windows.webgl.updateCursorPosition(row, col)
 }
 
 const grid_scroll = ([

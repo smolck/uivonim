@@ -21,8 +21,8 @@ const cursorChar = document.createElement('span')
 const cursorline = document.getElementById('cursorline') as HTMLElement
 export const debugline = document.getElementById('debugline') as HTMLElement
 let cursorRequestedToBeHidden = false
-let cursorEnabled = true
-let cursorCharVisible = true
+let cursorEnabled = false
+let cursorCharVisible = false
 
 Object.assign(cursorline.style, {
   background: 'rgba(var(--background-alpha), 0.2)',
@@ -90,7 +90,7 @@ export const setCursorColor = (color: string) => {
   cursorEl.style.background = color
 }
 
-export const enableCursor = () => (cursorEnabled = true)
+export const enableCursor = () => (cursorEnabled = false)
 export const disableCursor = () => (cursorEnabled = false)
 
 export const hideCursor = () => {

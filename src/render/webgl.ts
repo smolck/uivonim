@@ -31,6 +31,9 @@ const nutella = () => {
     textFGRenderer.resize(width, height)
   }
 
+  const updateCursorPosition = (row: number, col: number) =>
+    textBGRenderer.updateCursorPosition(row, col)
+
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
     textFGRenderer.updateFontAtlas(fontAtlas)
   }
@@ -143,6 +146,7 @@ const nutella = () => {
     updateCellSize,
     updateFontAtlas,
     updateColorAtlas,
+    updateCursorPosition,
     foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,
   }
