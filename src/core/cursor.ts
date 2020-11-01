@@ -2,6 +2,7 @@ import * as windows from '../windows/window-manager'
 import { partialFill, translate } from '../ui/css'
 import { paddingX } from '../windows/window'
 import { cell } from '../core/workspace'
+import { hexToRGB } from '../ui/css'
 
 export enum CursorShape {
   block,
@@ -12,82 +13,30 @@ export enum CursorShape {
 export const cursor = {
   row: 0,
   col: 0,
-  color: '#fff',
+  color: [0, 0, 0],
   shape: CursorShape.block,
 }
 
-const cursorEl = document.getElementById('cursor') as HTMLElement
-const cursorChar = document.createElement('span')
-const cursorline = document.getElementById('cursorline') as HTMLElement
-export const debugline = document.getElementById('debugline') as HTMLElement
 let cursorRequestedToBeHidden = false
 let cursorEnabled = false
 let cursorCharVisible = false
 
-Object.assign(cursorline.style, {
-  background: 'rgba(var(--background-alpha), 0.2)',
-  position: 'absolute',
-  'mix-blend-mode': 'screen',
-  height: `${cell.height}px`,
-  'z-index': 60,
-})
+// export const getCursorBoundingClientRect = () =>
+  // cursorline.getBoundingClientRect()
 
-Object.assign(debugline.style, {
-  display: 'none',
-  position: 'absolute',
-  'mix-blend-mode': 'screen',
-  height: `${cell.height}px`,
-  'z-index': 60,
-})
-
-Object.assign(cursorEl.style, {
-  'z-index': 70,
-  position: 'absolute',
-  display: 'none',
-  'justify-content': 'center',
-  'align-items': 'center',
-})
-
-Object.assign(cursorChar.style, {
-  filter: 'invert(1) grayscale(1)',
-  'font-family': 'var(--font)',
-  'font-size': 'calc(var(--font-size) * 1px)',
-})
-
-cursorEl.appendChild(cursorChar)
-
-export const getCursorBoundingClientRect = () =>
-  cursorline.getBoundingClientRect()
-
-export const setCursorShape = (shape: CursorShape, size = 20) => {
+export const setCursorShape = (shape: CursorShape) => {
   cursor.shape = shape
-
-  if (shape === CursorShape.block)
-    Object.assign(cursorEl.style, {
-      background: cursor.color,
-      height: `${cell.height}px`,
-      width: `${cell.width}px`,
-    })
-
-  if (shape === CursorShape.line)
-    Object.assign(cursorEl.style, {
-      background: cursor.color,
-      height: `${cell.height}px`,
-      width: `${(cell.width * (size / 100)).toFixed(2)}px`,
-    })
-
-  if (shape === CursorShape.underline)
-    Object.assign(cursorEl.style, {
-      background: partialFill('horizontal', cursor.color, size),
-      height: `${cell.height}px`,
-      width: `${cell.width}px`,
-    })
 }
 
 export const setCursorColor = (color: string) => {
-  cursorChar.style.color = color
-  cursor.color = color
-  cursorEl.style.background = color
+  let [r, g, b] = hexToRGB(color)
+  r /= 255
+  g /= 255
+  b /= 255
+  cursor.color = [r, g, b]
+
+  console.log('update cursor color', color, `rgb: ${r}, ${g}, ${b}`)
+  windows.webgl.updateCursorColor(r, g, b)
 }
 
 export const enableCursor = () => (cursorEnabled = false)
@@ -97,42 +46,42 @@ export const hideCursor = () => {
   if (!cursorEnabled) return
 
   cursorRequestedToBeHidden = true
-  cursorEl.style.display = 'none'
-  cursorline.style.display = 'none'
+  // cursorEl.style.display = 'none'
+  // cursorline.style.display = 'none'
 }
 
 export const showCursor = () => {
   if (!cursorEnabled) return
 
   cursorRequestedToBeHidden = false
-  cursorEl.style.display = 'flex'
-  cursorline.style.display = 'none'
+  // cursorEl.style.display = 'flex'
+  // cursorline.style.display = 'none'
 }
 
 export const showCursorline = () => (cursorline.style.display = '')
 
 export const updateCursorChar = () => {
-  cursorChar.innerText =
-    cursor.shape === CursorShape.block
-      ? windows.getActive().editor.getChar(cursor.row, cursor.col)
-      : ''
+  // cursorChar.innerText =
+  //   cursor.shape === CursorShape.block
+  //     ? windows.getActive().editor.getChar(cursor.row, cursor.col)
+  //     : ''
 
-  if (cursor.shape === CursorShape.block && !cursorCharVisible)
-    cursorChar.style.display = ''
+  // if (cursor.shape === CursorShape.block && !cursorCharVisible)
+  //   cursorChar.style.display = ''
 }
 
 const updateCursorCharInternal = (gridId: number, row: number, col: number) => {
-  if (cursor.shape !== CursorShape.block) {
-    cursorChar.style.display = 'none'
-    cursorCharVisible = false
-    cursorChar.innerText = ''
-    return
-  }
+  // if (cursor.shape !== CursorShape.block) {
+  //   cursorChar.style.display = 'none'
+  //   cursorCharVisible = false
+  //   cursorChar.innerText = ''
+  //   return
+  // }
 
-  const char = windows.get(gridId).editor.getChar(row, col)
-  cursorChar.innerText = char
-  cursorChar.style.display = ''
-  cursorCharVisible = true
+  // const char = windows.get(gridId).editor.getChar(row, col)
+  // cursorChar.innerText = char
+  // cursorChar.style.display = ''
+  // cursorCharVisible = true
 }
 
 export const moveCursor = (gridId: number, row: number, col: number) => {
@@ -146,13 +95,13 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
   const linePos = win.positionToWorkspacePixels(row, 0)
   const { width } = win.getWindowSize()
 
-  cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)
+  // cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)
 
-  Object.assign(cursorline.style, {
-    transform: translate(linePos.x - paddingX, linePos.y),
-    width: `${width}px`,
-    height: `${cell.height}px`,
-  })
+  // Object.assign(cursorline.style, {
+  //   transform: translate(linePos.x - paddingX, linePos.y),
+  //   width: `${width}px`,
+  //   height: `${cell.height}px`,
+  // })
 
   updateCursorCharInternal(gridId, row, col)
 

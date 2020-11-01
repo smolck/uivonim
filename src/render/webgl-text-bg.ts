@@ -17,6 +17,7 @@ export default (webgl: WebGL) => {
     colorAtlasTextureId: VarKind.Uniform,
     cellSize: VarKind.Uniform,
     cursorPosition: VarKind.Uniform,
+    cursorColor: VarKind.Uniform,
   })
 
   program.setVertexShader(
@@ -28,6 +29,7 @@ export default (webgl: WebGL) => {
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.colorAtlasResolution};
     uniform vec2 ${v.cellSize};
+    uniform vec4 ${v.cursorColor};
     uniform float ${v.hlidType};
     uniform sampler2D ${v.colorAtlasTextureId};
 
@@ -47,10 +49,10 @@ export default (webgl: WebGL) => {
       float color_y = ${v.hlidType} * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
       if (${v.cursorPosition} == ${v.cellPosition}) {
-        o_color = vec4(1.0 - textureColor.r, 1.0 - textureColor.g, 1.0 - textureColor.b, 1);
+        o_color = cursorColor;
       } else {
+        vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
         o_color = textureColor;
       }
     }
@@ -83,11 +85,8 @@ export default (webgl: WebGL) => {
     colorAtlas.width,
     colorAtlas.height
   )
-  webgl.gl.uniform2f(
-    program.vars.cursorPosition,
-    0,
-    0,
-  )
+  webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
+  webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -207,12 +206,12 @@ export default (webgl: WebGL) => {
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
   }
 
+  const updateCursorColor = (color: [number, number, number]) => {
+    webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
+  }
+
   const updateCursorPosition = (row: number, col: number) => {
-    webgl.gl.uniform2f(
-      program.vars.cursorPosition,
-      col,
-      row,
-    )
+    webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
@@ -243,5 +242,14 @@ export default (webgl: WebGL) => {
     webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
-  return { clear, clearAll, render, resize, updateColorAtlas, updateCellSize, updateCursorPosition }
+  return {
+    clear,
+    clearAll,
+    render,
+    resize,
+    updateColorAtlas,
+    updateCellSize,
+    updateCursorPosition,
+    updateCursorColor,
+  }
 }
