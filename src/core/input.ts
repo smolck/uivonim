@@ -9,19 +9,9 @@ export enum InputType {
   Up = 'up',
 }
 
-interface RemapModifer {
-  from: string
-  to: string
-}
-
-interface KeyShape extends KeyboardEvent {
-  mode?: VimMode
-}
-
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
-const remaps = new Map<string, string>()
 let isCapturing = true
 let windowHasFocus = true
 let lastEscapeTimestamp = 0
@@ -73,9 +63,8 @@ const wrapKey = (key: string): string =>
   key.length > 1 && isUpper(key[0]) ? `<${key}>` : key
 const combineModsWithKey = (mods: string, key: string) =>
   mods.length ? `${mods}-${key}` : key
-const userModRemaps = (mods: string[]) => mods.map((m) => remaps.get(m) || m)
 const joinModsWithDash = (mods: string[]) => mods.join('-')
-const mapMods = $<string>(handleMods, userModRemaps, joinModsWithDash)
+const mapMods = $<string>(handleMods, joinModsWithDash)
 const mapKey = $<string>(bypassEmptyMod, toVimKey)
 const formatInput = $<string>(combineModsWithKey, wrapKey)
 const shortcuts = new Map<string, Function>()
