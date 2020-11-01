@@ -32,7 +32,16 @@ const getWindowById = (windowId: number) => {
 const getInstanceWindows = (id = instances.current) =>
   [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
 
+let webglTimeout: NodeJS.Timeout | undefined;
+
 const refreshWebGLGrid = () => {
+  if (webglTimeout)
+    clearTimeout(webglTimeout)
+  webglTimeout = setTimeout(refreshWebGLGridImplementation, 15)
+}
+
+const refreshWebGLGridImplementation = () => {
+  webglTimeout = undefined
   webgl.clearAll()
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }

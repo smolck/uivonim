@@ -161,6 +161,8 @@ export default () => {
   container.appendChild(nameplate.element)
   container.appendChild(content)
 
+  const dimensions = new WeakMap()
+
   const api = {
     get id() {
       return wininfo.id
@@ -278,7 +280,15 @@ export default () => {
   }
 
   api.refreshLayout = () => {
-    const { top, left, width, height } = content.getBoundingClientRect()
+    let rect
+    if (dimensions.has(content)) {
+      rect = dimensions.get(content)
+    }
+    else {
+      rect = content.getBoundingClientRect()
+      dimensions.set(content, rect)
+    }
+    const { top, left, width, height } = rect
 
     const x = left
     const y = top - titleSpecs.height
