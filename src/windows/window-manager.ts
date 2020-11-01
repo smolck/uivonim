@@ -205,15 +205,6 @@ export const layout = () => {
   // wait for flex grid styles to be applied to all windows and trigger dom layout
   windowGridInfo.forEach(({ gridId }) => windows.get(gridId)!.refreshLayout())
   refreshWebGLGrid()
-
-  // cursorline width does not always get resized correctly after window
-  // layout changes, so we will force an update of the cursor to make sure
-  // it is correct. test case: two vert splits, move to left and :bo
-  state.activeGrid &&
-    requestAnimationFrame(() => {
-      if (!windows.has(state.activeGrid)) return
-      moveCursor(state.activeInstanceGrid, cursor.row, cursor.col)
-    })
 }
 
 const updateWindowNameplates = () =>

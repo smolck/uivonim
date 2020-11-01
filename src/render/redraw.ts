@@ -10,7 +10,6 @@ import {
 import {
   hideCursor,
   showCursor,
-  updateCursorChar,
 } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
@@ -311,7 +310,6 @@ let layoutTimeout: NodeJS.Timeout | undefined
 const refreshOrStartLayoutTimer = (winUpdates: boolean) => {
   layoutTimeout = setTimeout(() => {
     state_cursorVisible ? showCursor() : hideCursor()
-    if (state_cursorVisible) updateCursorChar()
     dispatch.pub('redraw')
     if (!winUpdates) return
 
