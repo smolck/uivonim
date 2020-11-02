@@ -1,6 +1,6 @@
 import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
-import { $, } from '../support/utils'
+import { $ } from '../support/utils'
 import api from '../core/instance-api'
 import { remote } from 'electron'
 

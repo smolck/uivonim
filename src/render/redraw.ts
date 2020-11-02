@@ -7,10 +7,7 @@ import {
   getCharIndex,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
-import {
-  hideCursor,
-  showCursor,
-} from '../core/cursor'
+import { hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'

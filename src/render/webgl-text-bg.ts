@@ -194,7 +194,7 @@ export default (webgl: WebGL) => {
     x: number,
     y: number,
     width: number,
-    height: number,
+    height: number
   ) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
@@ -211,7 +211,8 @@ export default (webgl: WebGL) => {
   }
 
   // @ts-ignore
-  const showCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+  const showCursor = (enable: boolean) =>
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
