@@ -18,7 +18,7 @@ export default (webgl: WebGL) => {
     cellSize: VarKind.Uniform,
     cursorPosition: VarKind.Uniform,
     cursorColor: VarKind.Uniform,
-    cursorEnabled: VarKind.Uniform,
+    shouldShowCursor: VarKind.Uniform,
   })
 
   program.setVertexShader(
@@ -31,7 +31,7 @@ export default (webgl: WebGL) => {
     uniform vec2 ${v.colorAtlasResolution};
     uniform vec2 ${v.cellSize};
     uniform vec4 ${v.cursorColor};
-    uniform bool ${v.cursorEnabled};
+    uniform bool ${v.shouldShowCursor};
     uniform float ${v.hlidType};
     uniform sampler2D ${v.colorAtlasTextureId};
 
@@ -51,7 +51,7 @@ export default (webgl: WebGL) => {
       float color_y = ${v.hlidType} * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      if (${v.cursorPosition} == ${v.cellPosition} && ${v.cursorEnabled}) {
+      if (${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor}) {
         o_color = cursorColor;
       } else {
         vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
@@ -90,7 +90,7 @@ export default (webgl: WebGL) => {
   webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
   webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
   // @ts-ignore
-  webgl.gl.uniform1i(program.vars.cursorEnabled, true)
+  webgl.gl.uniform1i(program.vars.shouldShowCursor, true)
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -194,7 +194,7 @@ export default (webgl: WebGL) => {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
@@ -211,7 +211,7 @@ export default (webgl: WebGL) => {
   }
 
   // @ts-ignore
-  const enableCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.cursorEnabled, enable)
+  const showCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
@@ -256,7 +256,7 @@ export default (webgl: WebGL) => {
     resize,
     updateColorAtlas,
     updateCellSize,
-    enableCursor,
+    showCursor,
     updateCursorPosition,
     updateCursorColor,
   }

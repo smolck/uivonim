@@ -8,14 +8,15 @@ export enum CursorShape {
 }
 
 export const cursor = {
+  row: 0,
+  col: 0,
   color: [0, 0, 0],
   shape: CursorShape.block,
 }
 
-let cursorRequestedToBeHidden = false
 let cursorEnabled = false
 // export const getCursorBoundingClientRect = () =>
-  // cursorline.getBoundingClientRect()
+// cursorline.getBoundingClientRect()
 
 export const setCursorShape = (shape: CursorShape) => {
   cursor.shape = shape
@@ -31,28 +32,25 @@ export const setCursorColor = (color: string) => {
   windows.webgl.updateCursorColor(r, g, b)
 }
 
-export const enableCursor = () => (windows.webgl.enableCursor(true), cursorEnabled = true)
-export const disableCursor = () => (windows.webgl.enableCursor(false), cursorEnabled = false)
+export const enableCursor = () => (cursorEnabled = true)
+export const disableCursor = () => (cursorEnabled = false)
 
 export const hideCursor = () => {
-  return
   if (!cursorEnabled) return
 
-  console.log('hide cursor')
-  windows.webgl.enableCursor(false)
+  windows.webgl.showCursor(false)
 }
 
 export const showCursor = () => {
-  return
   if (!cursorEnabled) return
 
-  console.log('show cursor')
-  windows.webgl.enableCursor(true)
+  windows.webgl.showCursor(true)
 }
 
 // export const showCursorline = () => (cursorline.style.display = '')
 
 export const moveCursor = (row: number, col: number) => {
+  Object.assign(cursor, { row, col })
   windows.webgl.updateCursorPosition(row, col)
 }
 
