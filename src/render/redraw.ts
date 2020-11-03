@@ -313,6 +313,7 @@ const refreshOrStartLayoutTimer = (winUpdates: boolean) => {
   layoutTimeout = setTimeout(() => {
     renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
     state_cursorVisible ? showCursor() : hideCursor()
+    if (state_cursorVisible) updateCursorChar()
     dispatch.pub('redraw')
     if (!winUpdates) return
 
