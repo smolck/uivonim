@@ -9,6 +9,7 @@ export default (webgl: WebGL) => {
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
+    isCursorTri: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
     hlidType: VarKind.Uniform,
@@ -26,6 +27,7 @@ export default (webgl: WebGL) => {
     (v) => `#version 300 es
     in vec2 ${v.quadVertex};
     in vec2 ${v.cellPosition};
+    in float ${v.isCursorTri};
     in float ${v.hlid};
     uniform vec2 ${v.cursorPosition};
     uniform vec2 ${v.canvasResolution};
@@ -43,13 +45,7 @@ export default (webgl: WebGL) => {
       bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition;
-      if (${v.cursorShape} == 1 && isCursorCell) {
-        vertexPosition =
-          absolutePixelPosition + vec2(${v.quadVertex}.x / 8.0, ${v.quadVertex}.y);
-      } else {
-        vertexPosition = absolutePixelPosition + ${v.quadVertex};
-      }
+      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
       vec2 posFloat = vertexPosition / ${v.canvasResolution};
       float posx = posFloat.x * 2.0 - 1.0;
       float posy = posFloat.y * -2.0 + 1.0;
@@ -60,7 +56,19 @@ export default (webgl: WebGL) => {
       float color_y = ${v.hlidType} * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      if (isCursorCell) {
+      bool condition;
+      ${/*
+        TODO(smolck): I'm almost certain there's a way to do this
+        condition all in one without extra if statements, but my brain is
+        not finding it right now.
+      */''}
+      if (${v.cursorShape} == 1) {
+        condition = isCursorCell && isCursorTri == 1.0;
+      } else {
+        condition = isCursorCell;
+      }
+
+      if (condition) {
         o_color = cursorColor;
       } else {
         vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
@@ -123,28 +131,53 @@ export default (webgl: WebGL) => {
     },
   ])
 
-  const quadBuffer = program.setupData({
-    pointer: program.vars.quadVertex,
-    type: webgl.gl.FLOAT,
-    size: 2,
-    offset: 0,
-  })
+  console.log(Float32Array.BYTES_PER_ELEMENT)
+  const quadBuffer = program.setupData([
+    {
+      pointer: program.vars.quadVertex,
+      type: webgl.gl.FLOAT,
+      size: 2,
+      offset: 0,
+    },
+    {
+      pointer: program.vars.isCursorTri,
+      type: webgl.gl.FLOAT,
+      size: 1,
+      offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12
+    }
+  ])
 
   const updateCellSize = (initial = false) => {
+    const w = cell.width
+    const h = cell.height
+    const w6th = w / 6
+
     const next = {
       boxes: new Float32Array([
-        0,
-        0,
-        cell.width,
-        cell.height,
-        0,
-        cell.height,
-        cell.width,
-        0,
-        cell.width,
-        cell.height,
-        0,
-        0,
+        0, 0,
+        w6th, h,
+        0, h,
+
+        w6th, 0,
+        w6th, h,
+        0, 0,
+
+        w6th, 0,
+        w, h,
+        w6th, h,
+
+        w, 0,
+        w, h,
+        w6th, 0,
+
+        // TODO(smolck): More compact way of doing this. Also, note that the 1's
+        // specify which triangles of the above to color in for the cursor, and the zeroes
+        // which triangles not to color in, *if* the cursor is a line shape. If
+        // it isn't a line shape (atm a block shape), these are ignored.
+        1, 1, 1,
+        1, 1, 1,
+        0, 0, 0,
+        0, 0, 0,
       ]),
       lines: new Float32Array([
         0,
@@ -212,7 +245,7 @@ export default (webgl: WebGL) => {
     // background
     quadBuffer.setData(quads.boxes)
     webgl.gl.uniform1f(program.vars.hlidType, 0)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
 
     // underlines
     quadBuffer.setData(quads.lines)
