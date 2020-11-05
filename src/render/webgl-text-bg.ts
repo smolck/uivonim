@@ -131,7 +131,6 @@ export default (webgl: WebGL) => {
     },
   ])
 
-  console.log(Float32Array.BYTES_PER_ELEMENT)
   const quadBuffer = program.setupData([
     {
       pointer: program.vars.quadVertex,
