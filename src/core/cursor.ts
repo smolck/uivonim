@@ -2,9 +2,9 @@ import * as windows from '../windows/window-manager'
 import { hexToRGB } from '../ui/css'
 
 export enum CursorShape {
-  block,
-  line,
-  underline,
+  block = 0,
+  line = 1,
+  underline = 2,
 }
 
 export const cursor = {
@@ -12,14 +12,16 @@ export const cursor = {
   col: 0,
   color: [0, 0, 0],
   shape: CursorShape.block,
+  size: 20,
 }
 
 let cursorEnabled = false
 // export const getCursorBoundingClientRect = () =>
 // cursorline.getBoundingClientRect()
 
-export const setCursorShape = (shape: CursorShape) => {
+export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
+  cursor.size = size;
 }
 
 export const setCursorColor = (color: string) => {

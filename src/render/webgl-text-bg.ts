@@ -18,6 +18,7 @@ export default (webgl: WebGL) => {
     cellSize: VarKind.Uniform,
     cursorPosition: VarKind.Uniform,
     cursorColor: VarKind.Uniform,
+    cursorShape: VarKind.Uniform,
     shouldShowCursor: VarKind.Uniform,
   })
 
@@ -32,6 +33,7 @@ export default (webgl: WebGL) => {
     uniform vec2 ${v.cellSize};
     uniform vec4 ${v.cursorColor};
     uniform bool ${v.shouldShowCursor};
+    uniform int ${v.cursorShape};
     uniform float ${v.hlidType};
     uniform sampler2D ${v.colorAtlasTextureId};
 
@@ -39,8 +41,15 @@ export default (webgl: WebGL) => {
     out vec2 o_colorPosition;
 
     void main() {
+      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
+      vec2 vertexPosition;
+      if (${v.cursorShape} == 1 && isCursorCell) {
+        vertexPosition =
+          absolutePixelPosition + vec2(${v.quadVertex}.x / 2.0, ${v.quadVertex}.y);
+      } else {
+        vertexPosition = absolutePixelPosition + ${v.quadVertex};
+      }
       vec2 posFloat = vertexPosition / ${v.canvasResolution};
       float posx = posFloat.x * 2.0 - 1.0;
       float posy = posFloat.y * -2.0 + 1.0;
@@ -51,7 +60,7 @@ export default (webgl: WebGL) => {
       float color_y = ${v.hlidType} * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      if (${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor}) {
+      if (isCursorCell) {
         o_color = cursorColor;
       } else {
         vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
@@ -118,6 +127,7 @@ export default (webgl: WebGL) => {
     pointer: program.vars.quadVertex,
     type: webgl.gl.FLOAT,
     size: 2,
+    offset: 0,
   })
 
   const updateCellSize = (initial = false) => {
@@ -125,14 +135,19 @@ export default (webgl: WebGL) => {
       boxes: new Float32Array([
         0,
         0,
+
         cell.width,
         cell.height,
+
         0,
         cell.height,
+
         cell.width,
         0,
+
         cell.width,
         cell.height,
+
         0,
         0,
       ]),
@@ -219,6 +234,7 @@ export default (webgl: WebGL) => {
   }
 
   const updateCursorPosition = (row: number, col: number) => {
+    webgl.gl.uniform1i(program.vars.cursorShape, cursor.shape)
     webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
   }
 
