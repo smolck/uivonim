@@ -36,17 +36,17 @@ export default (webgl: WebGL) => {
     uniform int ${v.cursorShape};
     uniform float ${v.hlidType};
     uniform sampler2D ${v.colorAtlasTextureId};
-
     out vec4 o_color;
     out vec2 o_colorPosition;
 
     void main() {
       bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
+
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition;
       if (${v.cursorShape} == 1 && isCursorCell) {
         vertexPosition =
-          absolutePixelPosition + vec2(${v.quadVertex}.x / 2.0, ${v.quadVertex}.y);
+          absolutePixelPosition + vec2(${v.quadVertex}.x / 8.0, ${v.quadVertex}.y);
       } else {
         vertexPosition = absolutePixelPosition + ${v.quadVertex};
       }
@@ -135,19 +135,14 @@ export default (webgl: WebGL) => {
       boxes: new Float32Array([
         0,
         0,
-
         cell.width,
         cell.height,
-
         0,
         cell.height,
-
         cell.width,
         0,
-
         cell.width,
         cell.height,
-
         0,
         0,
       ]),
