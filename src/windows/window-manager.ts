@@ -1,7 +1,6 @@
 import { generateColorLookupAtlas } from '../render/highlight-attributes'
 import { onSwitchVim, instances } from '../core/instance-manager'
 import CreateWindow, { Window, paddingX } from '../windows/window'
-import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../core/workspace'

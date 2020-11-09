@@ -6,6 +6,7 @@ import { cursor } from '../core/cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
+  let shouldShowCursor = true
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
@@ -42,7 +43,9 @@ export default (webgl: WebGL) => {
     out vec2 o_colorPosition;
 
     void main() {
-      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
+      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${
+      v.shouldShowCursor
+    };
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
@@ -57,11 +60,13 @@ export default (webgl: WebGL) => {
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
       bool condition;
-      ${/*
+      ${
+        /*
         TODO(smolck): I'm almost certain there's a way to do this
         condition all in one without extra if statements, but my brain is
         not finding it right now.
-      */''}
+      */ ''
+      }
       if (${v.cursorShape} == 1) {
         condition = isCursorCell && isCursorTri == 1.0;
       } else {
@@ -107,7 +112,7 @@ export default (webgl: WebGL) => {
   webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
   webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
   // @ts-ignore
-  webgl.gl.uniform1i(program.vars.shouldShowCursor, true)
+  webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -142,8 +147,8 @@ export default (webgl: WebGL) => {
       pointer: program.vars.isCursorTri,
       type: webgl.gl.FLOAT,
       size: 1,
-      offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12
-    }
+      offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12,
+    },
   ])
 
   const updateCellSize = (initial = false) => {
@@ -153,30 +158,50 @@ export default (webgl: WebGL) => {
 
     const next = {
       boxes: new Float32Array([
-        0, 0,
-        w6th, h,
-        0, h,
+        0,
+        0,
+        w6th,
+        h,
+        0,
+        h,
 
-        w6th, 0,
-        w6th, h,
-        0, 0,
+        w6th,
+        0,
+        w6th,
+        h,
+        0,
+        0,
 
-        w6th, 0,
-        w, h,
-        w6th, h,
+        w6th,
+        0,
+        w,
+        h,
+        w6th,
+        h,
 
-        w, 0,
-        w, h,
-        w6th, 0,
+        w,
+        0,
+        w,
+        h,
+        w6th,
+        0,
 
         // TODO(smolck): More compact way of doing this. Also, note that the 1's
         // specify which triangles of the above to color in for the cursor, and the zeroes
         // which triangles not to color in, *if* the cursor is a line shape. If
         // it isn't a line shape (atm a block shape), these are ignored.
-        1, 1, 1,
-        1, 1, 1,
-        0, 0, 0,
-        0, 0, 0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
       ]),
       lines: new Float32Array([
         0,
@@ -191,6 +216,13 @@ export default (webgl: WebGL) => {
         cell.height,
         0,
         cell.height - 1,
+
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
       ]),
     }
 
@@ -248,13 +280,20 @@ export default (webgl: WebGL) => {
 
     // underlines
     quadBuffer.setData(quads.lines)
+
+    // @ts-ignore TODO(smolck): HACKS
+    if (shouldShowCursor) webgl.gl.uniform1i(program.vars.shouldShowCursor, false)
+
     webgl.gl.uniform1f(program.vars.hlidType, 2)
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+
+    // @ts-ignore TODO(smolck): HACKS
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
   }
 
-  // @ts-ignore
   const showCursor = (enable: boolean) =>
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+    // @ts-ignore
+    (shouldShowCursor = enable, webgl.gl.uniform1i(program.vars.shouldShowCursor, enable))
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
