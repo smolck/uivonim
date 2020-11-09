@@ -259,9 +259,15 @@ Object.assign(webgl.backgroundElement.style, {
 
 Object.assign(webgl.foregroundElement.style, {
   position: 'absolute',
+  zIndex: 5,
+})
+
+Object.assign(webgl.amazingElement.style, {
+  position: 'absolute',
   zIndex: 4,
 })
 
+webglContainer.appendChild(webgl.amazingElement)
 webglContainer.appendChild(webgl.backgroundElement)
 webglContainer.appendChild(webgl.foregroundElement)
 
