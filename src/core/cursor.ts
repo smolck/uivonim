@@ -8,6 +8,7 @@ export enum CursorShape {
 }
 
 export const cursor = {
+  visible: false,
   row: 0,
   col: 0,
   color: [0, 0, 0],
@@ -44,6 +45,7 @@ export const hideCursor = () => {
   cursorRequestedToBeHidden = true
 
   windows.webgl.showCursor(false)
+  Object.assign(cursor, { visible: false })
 }
 
 export const showCursor = () => {
@@ -51,6 +53,7 @@ export const showCursor = () => {
   cursorRequestedToBeHidden = false
 
   windows.webgl.showCursor(true)
+  Object.assign(cursor, { visible: true })
 }
 
 // export const showCursorline = () => (cursorline.style.display = '')

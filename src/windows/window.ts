@@ -14,6 +14,7 @@ import { makel } from '../ui/vanilla'
 export interface WindowInfo {
   id: string
   gridId: string
+  gridIdNumber: number
   row: number
   col: number
   width: number
@@ -116,6 +117,7 @@ export default () => {
   const wininfo: WindowInfo = {
     id: '0',
     gridId: '0',
+    gridIdNumber: 0,
     row: 0,
     col: 0,
     width: 0,
@@ -125,7 +127,7 @@ export default () => {
     anchor: '',
   }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
-  const webgl = createWebGLView()
+  const webgl = createWebGLView(0)
 
   const container = makel({
     flexFlow: 'column',
@@ -229,6 +231,7 @@ export default () => {
 
     container.id = `${info.id}`
     container.setAttribute('gridid', info.gridId)
+    webgl.updateGridId(info.gridIdNumber)
     Object.assign(wininfo, info)
   }
 

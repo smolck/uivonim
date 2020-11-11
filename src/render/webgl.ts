@@ -3,7 +3,8 @@ import CreateWebGL from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import TextFG from '../render/webgl-text-fg'
 import TextBG from '../render/webgl-text-bg'
-import { CursorShape } from '../core/cursor'
+import { cursor as cursorState, CursorShape } from '../core/cursor'
+import { getActiveGridId } from '../windows/window-manager'
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
@@ -18,6 +19,7 @@ export interface WebGLView {
   getGridLine: (row: number) => Float32Array
   getGridBuffer: () => Float32Array
   getBuffer: () => Float32Array
+  updateGridId: (gridId: number) => void
 }
 
 const nutella = () => {
@@ -61,11 +63,14 @@ const nutella = () => {
     textFGRenderer.clearAll()
   }
 
-  const createView = (): WebGLView => {
+  const createView = (initialGridId: number): WebGLView => {
+    let gridId = initialGridId
     const viewport = { x: 0, y: 0, width: 0, height: 0 }
     const gridSize = { rows: 0, cols: 0 }
     const gridBuffer = CreateWebGLBuffer()
     let dataBuffer = new Float32Array()
+
+    const updateGridId = (newGridId: number) => gridId = newGridId
 
     const resize = (rows: number, cols: number) => {
       const width = cols * cell.width
@@ -96,15 +101,23 @@ const nutella = () => {
     const render = (elements: number) => {
       const buffer = dataBuffer.subarray(0, elements)
       const { x, y, width, height } = viewport
+
+      const doHacks = gridId !== getActiveGridId() && cursorState.visible
+      if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
       textFGRenderer.render(buffer, x, y, width, height)
+      if (doHacks) showCursor(true)
     }
 
     const renderGridBuffer = () => {
       const { x, y, width, height } = viewport
       const buffer = gridBuffer.getBuffer()
+
+      const doHacks = gridId !== getActiveGridId() && cursorState.visible
+      if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
       textFGRenderer.render(buffer, x, y, width, height)
+      if (doHacks) showCursor(true)
     }
 
     const clear = () => {
@@ -140,6 +153,7 @@ const nutella = () => {
       moveRegionDown,
       clearGridBuffer,
       renderGridBuffer,
+      updateGridId,
       getGridCell: gridBuffer.getCell,
       getGridLine: gridBuffer.getLine,
       getGridBuffer: gridBuffer.getBuffer,
