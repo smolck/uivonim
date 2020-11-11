@@ -7,7 +7,7 @@ import {
   getCharIndex,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
-import { hideCursor, showCursor } from '../core/cursor'
+import { hideCursor, showCursor, moveCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'
@@ -87,7 +87,7 @@ const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
   state_cursorVisible = gridId !== 1
   if (gridId === 1) return
   windows.setActiveGrid(gridId)
-  windows.webgl.updateCursorPosition(row, col)
+  moveCursor(row, col)
 }
 
 const grid_scroll = ([

@@ -1,12 +1,14 @@
 import { generateColorLookupAtlas } from '../render/highlight-attributes'
 import { onSwitchVim, instances } from '../core/instance-manager'
 import CreateWindow, { Window, paddingX } from '../windows/window'
+import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../core/workspace'
 import { throttle } from '../support/utils'
 import windowSizer from '../windows/sizer'
 import api from '../core/instance-api'
+
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -195,6 +197,15 @@ export const layout = () => {
   // wait for flex grid styles to be applied to all windows and trigger dom layout
   windowGridInfo.forEach(({ gridId }) => windows.get(gridId)!.refreshLayout())
   refreshWebGLGrid()
+
+  // cursorline width does not always get resized correctly after window
+  // layout changes, so we will force an update of the cursor to make sure
+  // it is correct. test case: two vert splits, move to left and :bo
+  state.activeGrid &&
+    requestAnimationFrame(() => {
+      if (!windows.has(state.activeGrid)) return
+      moveCursor(cursor.row, cursor.col)
+    })
 }
 
 const updateWindowNameplates = () =>

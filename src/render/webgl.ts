@@ -3,6 +3,7 @@ import CreateWebGL from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import TextFG from '../render/webgl-text-fg'
 import TextBG from '../render/webgl-text-bg'
+import { CursorShape } from '../core/cursor'
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
@@ -32,6 +33,8 @@ const nutella = () => {
   }
 
   const showCursor = (enable: boolean) => textBGRenderer.showCursor(enable)
+
+  const updateCursorShape = (shape: CursorShape) => textBGRenderer.updateCursorShape(shape)
 
   const updateCursorColor = (r: number, g: number, b: number) =>
     textBGRenderer.updateCursorColor([r, g, b])
@@ -151,6 +154,7 @@ const nutella = () => {
     updateCellSize,
     updateFontAtlas,
     updateColorAtlas,
+    updateCursorShape,
     updateCursorPosition,
     updateCursorColor,
     showCursor,

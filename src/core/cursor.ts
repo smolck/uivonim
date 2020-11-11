@@ -16,12 +16,14 @@ export const cursor = {
 }
 
 let cursorEnabled = false
+let cursorRequestedToBeHidden = false
 // export const getCursorBoundingClientRect = () =>
 // cursorline.getBoundingClientRect()
 
 export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
   cursor.size = size;
+  windows.webgl.updateCursorShape(shape)
 }
 
 export const setCursorColor = (color: string) => {
@@ -39,12 +41,14 @@ export const disableCursor = () => (cursorEnabled = false)
 
 export const hideCursor = () => {
   if (!cursorEnabled) return
+  cursorRequestedToBeHidden = true
 
   windows.webgl.showCursor(false)
 }
 
 export const showCursor = () => {
   if (!cursorEnabled) return
+  cursorRequestedToBeHidden = false
 
   windows.webgl.showCursor(true)
 }
@@ -53,6 +57,9 @@ export const showCursor = () => {
 
 export const moveCursor = (row: number, col: number) => {
   Object.assign(cursor, { row, col })
+
+  if (cursorRequestedToBeHidden) return
+  showCursor()
   windows.webgl.updateCursorPosition(row, col)
 }
 

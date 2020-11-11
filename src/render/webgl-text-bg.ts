@@ -2,7 +2,7 @@ import { getColorAtlas, colors } from '../render/highlight-attributes'
 import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
-import { cursor } from '../core/cursor'
+import { CursorShape } from '../core/cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -299,8 +299,11 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
   }
 
+  const updateCursorShape = (shape: CursorShape) => {
+    webgl.gl.uniform1i(program.vars.cursorShape, shape)
+  }
+
   const updateCursorPosition = (row: number, col: number) => {
-    webgl.gl.uniform1i(program.vars.cursorShape, cursor.shape)
     webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
   }
 
@@ -341,6 +344,7 @@ export default (webgl: WebGL) => {
     updateCellSize,
     showCursor,
     updateCursorPosition,
+    updateCursorShape,
     updateCursorColor,
   }
 }
