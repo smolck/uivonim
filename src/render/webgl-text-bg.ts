@@ -110,7 +110,7 @@ export default (webgl: WebGL) => {
     colorAtlas.height
   )
   webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
-  webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
+  webgl.gl.uniform4fv(program.vars.cursorColor, [1, 1, 1, 1])
   // @ts-ignore
   webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
 
@@ -186,43 +186,53 @@ export default (webgl: WebGL) => {
         w6th,
         0,
 
-        // TODO(smolck): More compact way of doing this. Also, note that the 1's
+        // TODO(smolck): Better way of doing this? Also, note that the 1's
         // specify which triangles of the above to color in for the cursor, and the zeroes
         // which triangles not to color in, *if* the cursor is a line shape. If
         // it isn't a line shape (atm a block shape), these are ignored.
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
+        ...Array(6).fill(1),
+        ...Array(6).fill(0),
       ]),
+      // TODO(smolck): Don't draw double the tris for underliens too, maybe use
+      // a separate buffer for quadVertex somehow or something?
       lines: new Float32Array([
+        /* Previous values (for future ref):
+         * 0, cell.height - 1,
+         * cell.width, cell.height,
+         * 0, cell.height,
+         *
+         * cell.width, cell.height - 1,
+         * cell.width, cell.height,
+         * 0, cell.height - 1, */
         0,
-        cell.height - 1,
-        cell.width,
-        cell.height,
+        h - 1,
+        w6th,
+        h,
         0,
-        cell.height,
-        cell.width,
-        cell.height - 1,
-        cell.width,
-        cell.height,
-        0,
-        cell.height - 1,
+        h,
 
+        w6th,
+        h - 1,
+        w6th,
+        h,
         0,
-        0,
-        0,
-        0,
-        0,
-        0,
+        h - 1,
+
+        w6th,
+        h - 1,
+        w,
+        h,
+        w6th,
+        h,
+
+        w,
+        h - 1,
+        w,
+        h,
+        w6th,
+        h - 1,
+
+        ...Array(12).fill(0),
       ]),
     }
 
@@ -281,19 +291,24 @@ export default (webgl: WebGL) => {
     // underlines
     quadBuffer.setData(quads.lines)
 
-    // @ts-ignore TODO(smolck): HACKS
-    if (shouldShowCursor) webgl.gl.uniform1i(program.vars.shouldShowCursor, false)
-
+    // @ts-ignore <- for using a boolean with `uniform1i`
+    // Just want to ignore the cursor logic in the vertex shader for underlines,
+    // so set shouldShowCursor to false, then back to it's previous value after
+    // the draw call.
+    if (shouldShowCursor)
+      // @ts-ignore
+      webgl.gl.uniform1i(program.vars.shouldShowCursor, false)
     webgl.gl.uniform1f(program.vars.hlidType, 2)
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
-
-    // @ts-ignore TODO(smolck): HACKS
+    // @ts-ignore
     webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
   }
 
-  const showCursor = (enable: boolean) =>
+  const showCursor = (enable: boolean) => (
+    (shouldShowCursor = enable),
     // @ts-ignore
-    (shouldShowCursor = enable, webgl.gl.uniform1i(program.vars.shouldShowCursor, enable))
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+  )
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])

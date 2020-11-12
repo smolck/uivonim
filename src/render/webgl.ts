@@ -34,15 +34,28 @@ const nutella = () => {
     textFGRenderer.resize(width, height)
   }
 
-  const showCursor = (enable: boolean) => textBGRenderer.showCursor(enable)
+  const showCursor = (enable: boolean) => {
+    textBGRenderer.showCursor(enable)
+    textFGRenderer.showCursor(enable)
+  }
 
-  const updateCursorShape = (shape: CursorShape) => textBGRenderer.updateCursorShape(shape)
+  const updateCursorShape = (shape: CursorShape) => {
+    textBGRenderer.updateCursorShape(shape)
+    textFGRenderer.updateCursorShape(shape)
+  }
 
-  const updateCursorColor = (r: number, g: number, b: number) =>
+  // const updateCharUnderCursorColor = (r: number, g: number, b: number) =>
+    // textFGRenderer.updateCursorColor([r, g, b])
+
+  const updateCursorColor = (r: number, g: number, b: number) => {
     textBGRenderer.updateCursorColor([r, g, b])
+    textFGRenderer.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b])
+  }
 
-  const updateCursorPosition = (row: number, col: number) =>
+  const updateCursorPosition = (row: number, col: number) => {
     textBGRenderer.updateCursorPosition(row, col)
+    textFGRenderer.updateCursorPosition(row, col)
+  }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
     textFGRenderer.updateFontAtlas(fontAtlas)
@@ -171,6 +184,7 @@ const nutella = () => {
     updateCursorShape,
     updateCursorPosition,
     updateCursorColor,
+    // updateCharUnderCursorColor,
     showCursor,
     foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,

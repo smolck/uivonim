@@ -2,6 +2,7 @@ import { getColorAtlas } from '../render/highlight-attributes'
 import generateFontAtlas from '../render/font-texture-atlas'
 import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
+import { CursorShape } from '../core/cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -18,6 +19,11 @@ export default (webgl: WebGL) => {
     colorAtlasTextureId: VarKind.Uniform,
     cellSize: VarKind.Uniform,
     cellPadding: VarKind.Uniform,
+
+    shouldShowCursor: VarKind.Uniform,
+    cursorPosition: VarKind.Uniform,
+    cursorShape: VarKind.Uniform,
+    cursorColor: VarKind.Uniform,
   })
 
   program.setVertexShader(
@@ -33,10 +39,17 @@ export default (webgl: WebGL) => {
     uniform vec2 ${v.cellPadding};
     uniform sampler2D ${v.colorAtlasTextureId};
 
+    uniform vec4 ${v.cursorColor};
+    uniform vec2 ${v.cursorPosition};
+    uniform bool ${v.shouldShowCursor};
+    uniform int ${v.cursorShape};
+
     out vec2 o_glyphPosition;
     out vec4 o_color;
 
     void main() {
+      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
+
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex} + ${v.cellPadding};
       vec2 posFloat = vertexPosition / ${v.canvasResolution};
@@ -53,7 +66,13 @@ export default (webgl: WebGL) => {
       float color_y = 1.0 * texelSize + 1.0;
       vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
 
-      o_color = texture(${v.colorAtlasTextureId}, colorPosition);
+      vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
+
+      if (isCursorCell && cursorShape == 0) {
+        o_color = ${v.cursorColor};
+      } else {
+        o_color = textureColor;
+      }
     }
   `
   )
@@ -103,6 +122,12 @@ export default (webgl: WebGL) => {
     colorAtlas.width,
     colorAtlas.height
   )
+
+  webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
+  webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
+  webgl.gl.uniform1i(program.vars.cursorShape, 0) // CursorShape.block = 0
+  // @ts-ignore
+  webgl.gl.uniform1i(program.vars.shouldShowCursor, true)
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -231,6 +256,22 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
   }
 
+  const showCursor = (enable: boolean) =>
+    // @ts-ignore
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+
+  const updateCursorColor = (color: [number, number, number]) => {
+    webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
+  }
+
+  const updateCursorShape = (shape: CursorShape) => {
+    webgl.gl.uniform1i(program.vars.cursorShape, shape)
+  }
+
+  const updateCursorPosition = (row: number, col: number) => {
+    webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
+  }
+
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE1)
     webgl.gl.uniform2f(
@@ -263,5 +304,9 @@ export default (webgl: WebGL) => {
     updateFontAtlas,
     updateColorAtlas,
     updateCellSize,
+    updateCursorPosition,
+    updateCursorShape,
+    updateCursorColor,
+    showCursor,
   }
 }
