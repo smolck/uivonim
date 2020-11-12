@@ -41,6 +41,7 @@ const nutella = () => {
 
   const updateCursorShape = (shape: CursorShape) => {
     textBGRenderer.updateCursorShape(shape)
+    // TODO(smolck): If cursor size changes need to update cells . . .
     textBGRenderer.updateCellSize(false, cursorState.size)
 
     textFGRenderer.updateCursorShape(shape)
