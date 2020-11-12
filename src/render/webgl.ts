@@ -41,11 +41,10 @@ const nutella = () => {
 
   const updateCursorShape = (shape: CursorShape) => {
     textBGRenderer.updateCursorShape(shape)
+    textBGRenderer.updateCellSize(false, cursorState.size)
+
     textFGRenderer.updateCursorShape(shape)
   }
-
-  // const updateCharUnderCursorColor = (r: number, g: number, b: number) =>
-    // textFGRenderer.updateCursorColor([r, g, b])
 
   const updateCursorColor = (r: number, g: number, b: number) => {
     textBGRenderer.updateCursorColor([r, g, b])
@@ -184,7 +183,6 @@ const nutella = () => {
     updateCursorShape,
     updateCursorPosition,
     updateCursorColor,
-    // updateCharUnderCursorColor,
     showCursor,
     foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,

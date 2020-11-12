@@ -2,11 +2,12 @@ import { getColorAtlas, colors } from '../render/highlight-attributes'
 import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
-import { CursorShape } from '../core/cursor'
+import { CursorShape, } from '../core/cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
   let shouldShowCursor = true
+  let cursorSize = 20
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
@@ -151,39 +152,39 @@ export default (webgl: WebGL) => {
     },
   ])
 
-  const updateCellSize = (initial = false) => {
+  const updateCellSize = (initial = false, cursorSize = 20) => {
     const w = cell.width
     const h = cell.height
-    const w6th = w / 6
+    const smallerW = w * (cursorSize / 100.0)
 
     const next = {
       boxes: new Float32Array([
         0,
         0,
-        w6th,
+        smallerW,
         h,
         0,
         h,
 
-        w6th,
+        smallerW,
         0,
-        w6th,
+        smallerW,
         h,
         0,
         0,
 
-        w6th,
+        smallerW,
         0,
         w,
         h,
-        w6th,
+        smallerW,
         h,
 
         w,
         0,
         w,
         h,
-        w6th,
+        smallerW,
         0,
 
         // TODO(smolck): Better way of doing this? Also, note that the 1's
@@ -206,30 +207,30 @@ export default (webgl: WebGL) => {
          * 0, cell.height - 1, */
         0,
         h - 1,
-        w6th,
+        smallerW,
         h,
         0,
         h,
 
-        w6th,
+        smallerW,
         h - 1,
-        w6th,
+        smallerW,
         h,
         0,
         h - 1,
 
-        w6th,
+        smallerW,
         h - 1,
         w,
         h,
-        w6th,
+        smallerW,
         h,
 
         w,
         h - 1,
         w,
         h,
-        w6th,
+        smallerW,
         h - 1,
 
         ...Array(12).fill(0),
@@ -314,6 +315,8 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
   }
 
+  const updateCursorSize = (size: number) => cursorSize = size
+
   const updateCursorShape = (shape: CursorShape) => {
     webgl.gl.uniform1i(program.vars.cursorShape, shape)
   }
@@ -360,6 +363,7 @@ export default (webgl: WebGL) => {
     showCursor,
     updateCursorPosition,
     updateCursorShape,
+    updateCursorSize,
     updateCursorColor,
   }
 }

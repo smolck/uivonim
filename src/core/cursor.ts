@@ -24,6 +24,7 @@ let cursorRequestedToBeHidden = false
 export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
   cursor.size = size;
+
   windows.webgl.updateCursorShape(shape)
 }
 
