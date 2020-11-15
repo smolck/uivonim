@@ -18,8 +18,6 @@ export const cursor = {
 
 let cursorEnabled = false
 let cursorRequestedToBeHidden = false
-// export const getCursorBoundingClientRect = () =>
-// cursorline.getBoundingClientRect()
 
 export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
