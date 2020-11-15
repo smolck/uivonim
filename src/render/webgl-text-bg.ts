@@ -300,7 +300,7 @@ export default (webgl: WebGL) => {
       // @ts-ignore
       webgl.gl.uniform1i(program.vars.shouldShowCursor, false)
     webgl.gl.uniform1f(program.vars.hlidType, 2)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
     // @ts-ignore
     webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
   }
