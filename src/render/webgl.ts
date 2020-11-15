@@ -83,7 +83,7 @@ const nutella = () => {
     const gridBuffer = CreateWebGLBuffer()
     let dataBuffer = new Float32Array()
 
-    const updateGridId = (newGridId: number) => gridId = newGridId
+    const updateGridId = (newGridId: number) => (gridId = newGridId)
 
     const resize = (rows: number, cols: number) => {
       const width = cols * cell.width

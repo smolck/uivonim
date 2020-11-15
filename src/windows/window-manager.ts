@@ -9,7 +9,6 @@ import { throttle } from '../support/utils'
 import windowSizer from '../windows/sizer'
 import api from '../core/instance-api'
 
-
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
 const windows = new Map<string, Window>()

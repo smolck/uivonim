@@ -2,12 +2,12 @@ import { getColorAtlas, colors } from '../render/highlight-attributes'
 import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
-import { CursorShape, } from '../core/cursor'
+import { CursorShape } from '../core/cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
   let shouldShowCursor = true
-  let cursorSize = 20
+  let cursorShape = 0 /* CursorShape.block */
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
@@ -156,6 +156,7 @@ export default (webgl: WebGL) => {
     const w = cell.width
     const h = cell.height
     const smallerW = w * (cursorSize / 100.0)
+    const percentH = h * (cursorSize / 100.0)
 
     const next = {
       boxes: new Float32Array([
@@ -208,28 +209,28 @@ export default (webgl: WebGL) => {
         0,
         h - 1,
         smallerW,
-        h,
+        percentH,
         0,
-        h,
+        percentH,
 
         smallerW,
         h - 1,
         smallerW,
-        h,
+        percentH,
         0,
         h - 1,
 
         smallerW,
         h - 1,
         w,
-        h,
+        percentH,
         smallerW,
-        h,
+        percentH,
 
         w,
         h - 1,
         w,
-        h,
+        percentH,
         smallerW,
         h - 1,
 
@@ -284,25 +285,28 @@ export default (webgl: WebGL) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
 
+    if (shouldShowCursor && cursorShape == 2)
+      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
     // background
     quadBuffer.setData(quads.boxes)
     webgl.gl.uniform1f(program.vars.hlidType, 0)
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
 
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+
     // underlines
     quadBuffer.setData(quads.lines)
 
-    // @ts-ignore <- for using a boolean with `uniform1i`
     // Just want to ignore the cursor logic in the vertex shader for underlines,
     // so set shouldShowCursor to false, then back to it's previous value after
     // the draw call.
-    if (shouldShowCursor)
-      // @ts-ignore
-      webgl.gl.uniform1i(program.vars.shouldShowCursor, false)
+    if (shouldShowCursor && cursorShape != 2 /* CursorShape.underline */)
+      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
+
     webgl.gl.uniform1f(program.vars.hlidType, 2)
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
-    // @ts-ignore
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
+
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
   }
 
   const showCursor = (enable: boolean) => (
@@ -315,9 +319,8 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
   }
 
-  const updateCursorSize = (size: number) => cursorSize = size
-
   const updateCursorShape = (shape: CursorShape) => {
+    cursorShape = shape
     webgl.gl.uniform1i(program.vars.cursorShape, shape)
   }
 
@@ -363,7 +366,6 @@ export default (webgl: WebGL) => {
     showCursor,
     updateCursorPosition,
     updateCursorShape,
-    updateCursorSize,
     updateCursorColor,
   }
 }
