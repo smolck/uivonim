@@ -74,7 +74,9 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   }
 }
 
-export const createWebGLView = () => webgl.createView()
+export const createWebGLView = (gridId: number) => webgl.createView(gridId)
+
+export const getActiveGridId = () => state.activeInstanceGrid
 
 export const setActiveGrid = (id: number) =>
   Object.assign(state, {
@@ -114,6 +116,7 @@ export const set = (
     visible: true,
     id: wid,
     gridId: gid,
+    gridIdNumber: gridId,
   })
 
   if (!windows.has(gid)) windows.set(gid, win)
@@ -203,7 +206,7 @@ export const layout = () => {
   state.activeGrid &&
     requestAnimationFrame(() => {
       if (!windows.has(state.activeGrid)) return
-      moveCursor(state.activeInstanceGrid, cursor.row, cursor.col)
+      moveCursor(cursor.row, cursor.col)
     })
 }
 

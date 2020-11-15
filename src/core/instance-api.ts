@@ -91,11 +91,6 @@ onSwitchVim(async () => {
   ee.emit('git.status', gitInfo.status)
   ee.emit('git.branch', gitInfo.branch)
   ee.emit('nvim.load', true)
-
-  const mappings = await instance.request.nvimGetVar('veonim_remap_modifiers')
-  ee.emit('input.remap.modifiers', mappings)
-  const transforms = await instance.request.nvimGetVar('veonim_key_transforms')
-  ee.emit('input.key.transforms', transforms)
 })
 
 const getBufferInfo = (): Promise<BufferInfo[]> =>

@@ -88,4 +88,7 @@ dispatch.sub('window.change', () => {
 })
 
 // TODO(smolck): Put this somewhere else?
-api.onAction('update-nameplates', () => (windows.refresh(), console.log('refresh')))
+api.onAction(
+  'update-nameplates',
+  () => (windows.refresh(), console.log('refresh'))
+)

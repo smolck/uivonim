@@ -2,7 +2,7 @@ import { RowNormal, RowHeader } from '../row-container'
 import { PluginRight } from '../plugin-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import { simplifyPath } from '../../support/utils'
-import { showCursorline } from '../../core/cursor'
+// TODO(smolck): import { showCursorline } from '../../core/cursor'
 import { badgeStyle } from '../../ui/styles'
 import { render } from 'inferno'
 import Input from '../text-input'
@@ -82,7 +82,7 @@ const selectResult = (references: Refs[], ix: number, subix: number) => {
     line: lineNum - 1,
     column: column - 1,
   })
-  showCursorline()
+  // TODO(smolck): showCursorline()
 }
 
 const highlightPattern = (

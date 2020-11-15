@@ -1,6 +1,5 @@
 import Loading from './loading'
 import { paddingVH, cvar } from '../ui/css'
-import { xfrmUp } from '../core/input'
 import { FormEvent } from 'inferno'
 import Icon from './icon'
 
@@ -58,25 +57,6 @@ const nopMaybe = (obj: object) =>
   new Proxy(obj, {
     get: (_, key) => Reflect.get(obj, key) || (() => {}),
   }) as Props
-
-const keToStr = (e: KeyboardEvent) =>
-  [
-    e.key,
-    (e.ctrlKey as any) | 0,
-    (e.metaKey as any) | 0,
-    (e.altKey as any) | 0,
-    (e.shiftKey as any) | 0,
-  ].join('')
-
-// TODO: could be better? it's global so will be shared between different
-// inputs. however only one input will have focus at a time, so perhaps
-// it's not a big deal
-//
-// the reason this has to live outside the function is because the view
-// function will be triggered on re-render. pressing keys will potentially
-// trigger re-renders, thus reseting the value of lastDown when inside
-// the function.
-let lastDown = ''
 
 // TODO(smolck): But why though? Has to be another way to get access to
 // `onComponentDidMount` with normal stuff like <input>
@@ -167,23 +147,9 @@ const textInput = (
           setFocus(e.currentTarget, focus)
           setPosition(e.currentTarget, position)
         }}
-        onKeyUp={(e: KeyboardEvent) => {
-          const prevKeyAndThisOne = lastDown + keToStr(e)
-
-          if (xfrmUp.has(prevKeyAndThisOne)) {
-            const { key } = xfrmUp.get(prevKeyAndThisOne)!(e)
-            if (key.toLowerCase() === '<esc>') {
-              lastDown = ''
-              ;(e.target as HTMLInputElement).blur()
-              return $.hide()
-            }
-          }
-        }}
         onKeyDown={(e: KeyboardEvent) => {
           const { ctrlKey: ctrl, metaKey: meta, key } = e
           const cm = ctrl || meta
-
-          lastDown = keToStr(e)
 
           if (key === 'Tab') {
             e.preventDefault()

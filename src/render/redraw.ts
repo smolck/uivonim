@@ -7,12 +7,7 @@ import {
   getCharIndex,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
-import {
-  moveCursor,
-  hideCursor,
-  showCursor,
-  updateCursorChar,
-} from '../core/cursor'
+import { hideCursor, showCursor, moveCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'
@@ -92,7 +87,7 @@ const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
   state_cursorVisible = gridId !== 1
   if (gridId === 1) return
   windows.setActiveGrid(gridId)
-  moveCursor(gridId, row, col)
+  moveCursor(row, col)
 }
 
 const grid_scroll = ([
@@ -307,21 +302,6 @@ const win_float_pos = (e: any) => {
   }
 }
 
-let layoutTimeout: NodeJS.Timeout | undefined
-
-const refreshOrStartLayoutTimer = (winUpdates: boolean) => {
-  layoutTimeout = setTimeout(() => {
-    renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-    state_cursorVisible ? showCursor() : hideCursor()
-    if (state_cursorVisible) updateCursorChar()
-    dispatch.pub('redraw')
-    if (!winUpdates) return
-
-    windows.disposeInvalidWindows()
-    windows.layout()
-  }, 10)
-}
-
 onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
@@ -386,6 +366,11 @@ onRedraw((redrawEvents) => {
     else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
   }
 
-  if (layoutTimeout) clearTimeout(layoutTimeout)
-  refreshOrStartLayoutTimer(winUpdates)
+  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
+  state_cursorVisible ? showCursor() : hideCursor()
+  dispatch.pub('redraw')
+  if (!winUpdates) return
+
+  windows.disposeInvalidWindows()
+  windows.layout()
 })

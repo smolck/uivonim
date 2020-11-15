@@ -83,7 +83,7 @@ startup.defineFunc.UivonimCreateHighlights`
   hi! link uvnFunction Function
   hi! link uvnBuiltin Constant
   hi! link uvnKeyword Keyword
-  hi! link uvnCursor CursorNormal
+  hi! link uvnCursor Cursor
 `
 
 // autocmds in a separate function because chaining autocmds with "|" is bad
