@@ -7,7 +7,7 @@ import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../core/title'
 import instanceAPI from '../core/instance-api'
-import { WebGLView } from '../render/webgl'
+import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../core/workspace'
 import { makel } from '../ui/vanilla'
 

@@ -1,10 +1,10 @@
-import CreateWebGLBuffer from '../render/webgl-grid-buffer'
-import CreateWebGL from '../render/webgl-utils'
-import { cell } from '../core/workspace'
-import TextFG from '../render/webgl-text-fg'
-import TextBG from '../render/webgl-text-bg'
-import { cursor as cursorState, CursorShape } from '../core/cursor'
-import { getActiveGridId } from '../windows/window-manager'
+import CreateWebGLBuffer from './grid-buffer'
+import CreateWebGL from './utils'
+import { cell } from '../../core/workspace'
+import TextFG from './text-fg'
+import TextBG from './text-bg'
+import { cursor as cursorState, CursorShape } from '../../core/cursor'
+import { getActiveGridId } from '../../windows/window-manager'
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
