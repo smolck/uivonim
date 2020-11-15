@@ -57,7 +57,7 @@ export const showCursor = () => {
   Object.assign(cursor, { visible: true })
 }
 
-// export const showCursorline = () => (cursorline.style.display = '')
+// TODO(smolck): export const showCursorline = () => (cursorline.style.display = '')
 
 export const moveCursor = (row: number, col: number) => {
   Object.assign(cursor, { row, col })

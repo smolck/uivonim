@@ -1,7 +1,7 @@
 import { RowNormal, RowHeader } from '../row-container'
 import { PluginRight } from '../plugin-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
-import { showCursorline } from '../../core/cursor'
+// TODO(smolck): import { showCursorline } from '../../core/cursor'
 import Input from '../text-input'
 import { badgeStyle } from '../../ui/styles'
 import { render } from 'inferno'
@@ -67,7 +67,7 @@ const selectResult = (results: Result[], ix: number, subix: number) => {
   const [path, items] = results[ix]
   const { line, column } = items[subix]
   api.nvim.jumpTo({ path, line, column })
-  showCursorline()
+  // TODO(smolck): showCursorline()
 }
 
 const highlightPattern = (
