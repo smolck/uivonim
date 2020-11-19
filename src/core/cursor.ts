@@ -54,8 +54,8 @@ export const showCursor = () => {
   windows.webgl.showCursor(true)
   Object.assign(cursor, { visible: true })
 
-  // TODO(smolck): Hack
-  // document.getElementById('keycomp-textarea')?.focus()
+  // TODO(smolck): Hack for the dead keys
+  document.getElementById('keycomp-textarea')?.focus()
 }
 
 // TODO(smolck): export const showCursorline = () => (cursorline.style.display = '')
