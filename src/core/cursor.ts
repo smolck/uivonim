@@ -45,6 +45,8 @@ export const hideCursor = () => {
 
   windows.webgl.showCursor(false)
   Object.assign(cursor, { visible: false })
+
+  document.getElementById('keycomp-textarea')?.focus()
 }
 
 export const showCursor = () => {
