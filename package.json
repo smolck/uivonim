@@ -33,7 +33,7 @@
   "dependencies": {
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
-    "highlight.js": "^10.3.2",
+    "highlight.js": "^10.4.0",
     "inferno": "^7.4.6",
     "marked": "^1.2.4",
     "ts-node": "^9.0.0"
