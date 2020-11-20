@@ -32,7 +32,7 @@ const getWindowById = (windowId: number) => {
 const getInstanceWindows = (id = instances.current) =>
   [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
 
-const refreshWebGLGrid = () => {
+export const refreshWebGLGrid = () => {
   webgl.clearAll()
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }
@@ -198,7 +198,8 @@ export const layout = () => {
 
   // wait for flex grid styles to be applied to all windows and trigger dom layout
   windowGridInfo.forEach(({ gridId }) => windows.get(gridId)!.refreshLayout())
-  refreshWebGLGrid()
+  // TODO(smolck): This is now done in src/render/redraw.ts
+  // refreshWebGLGrid()
 
   // cursorline width does not always get resized correctly after window
   // layout changes, so we will force an update of the cursor to make sure

@@ -302,6 +302,19 @@ const win_float_pos = (e: any) => {
   }
 }
 
+let layoutTimeout: NodeJS.Timeout | undefined
+const refreshLayoutTimeout = (winUpdates: boolean) => {
+  layoutTimeout = setTimeout(() => {
+    renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
+    state_cursorVisible ? showCursor() : hideCursor()
+    dispatch.pub('redraw')
+    if (!winUpdates) return
+
+    windows.disposeInvalidWindows()
+    windows.layout()
+  }, 5)
+}
+
 onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
@@ -366,11 +379,8 @@ onRedraw((redrawEvents) => {
     else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
   }
 
-  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-  state_cursorVisible ? showCursor() : hideCursor()
-  dispatch.pub('redraw')
-  if (!winUpdates) return
+  if (layoutTimeout) clearTimeout(layoutTimeout)
+  refreshLayoutTimeout(winUpdates)
 
-  windows.disposeInvalidWindows()
-  windows.layout()
+  windows.refreshWebGLGrid()
 })
