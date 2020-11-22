@@ -141,32 +141,21 @@ const keydownHandler = (e: KeyboardEvent) => {
   sendKeys(e, InputType.Down)
 }
 
-// Need to handle key events from window for GUI elements like the external
-// cmdline, so if the key composition textarea isn't focused (which it won't
-// be when those elements are in use), handle the event from the window.
+// TODO(smolck): Used to get dead keys to work, but `keypress` is
+// apparently deprecated so . . .
 document.addEventListener('keypress', (e) => {
   if (textarea) if (textarea === document.activeElement) return
 
-  e.preventDefault()
   keydownHandler(e)
 })
 document.addEventListener('keydown', (e) => {
   if (textarea) if (textarea === document.activeElement) return
-  // Chars are handled by `keypress` handler.
+  // Chars are handled by `keypress` handler above.
   if (e.key.length === 1) return
 
   e.preventDefault()
   keydownHandler(e)
 })
-
-textarea?.addEventListener('keydown', (e) => {
-  // Chars are handled by `keypress` handler.
-  if (e.key.length === 1) return
-
-  e.preventDefault()
-  keydownHandler(e)
-})
-textarea?.addEventListener('keypress', keydownHandler)
 
 remote.getCurrentWindow().on('focus', () => {
   windowHasFocus = true
