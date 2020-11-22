@@ -167,7 +167,7 @@ document.oninput =
         keydownHandler(e)
       }
 
-const isNotChar = (e: KeyboardEvent) => {
+const isNotChar = (e: KeyboardEvent): boolean => {
   // Chars are handled by `oninput` handler so we don't handle those.
   if (
     e.key.length === 1 &&
