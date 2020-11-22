@@ -105,28 +105,14 @@ const initPointer = () => ({
   deltaY: 0,
   down: false,
   moved: false,
-  color: { r: 30, g: 0, b: 300 }
+  color: { r: 30, g: 0, b: 300 },
 })
 
 let pointers: Pointer[] = []
 let splatStack: any[] = []
 pointers.push(initPointer())
 
-const { gl, ext } = getWebGLContext(canvas)
-
-if (isMobile()) {
-  config.DYE_RESOLUTION = 512
-}
-if (!ext.supportLinearFiltering) {
-  config.DYE_RESOLUTION = 512
-  config.SHADING = false
-  config.BLOOM = false
-  config.SUNRAYS = false
-}
-
-// startGUI();
-
-function getWebGLContext(canvas) {
+const getWebGLContext = (canvas: HTMLCanvasElement) => {
   const params = {
     alpha: true,
     depth: false,
@@ -135,12 +121,12 @@ function getWebGLContext(canvas) {
     preserveDrawingBuffer: false,
   }
 
-  let gl = canvas.getContext('webgl2', params)
-  const isWebGL2 = !!gl
-  if (!isWebGL2)
-    gl =
-      canvas.getContext('webgl', params) ||
-      canvas.getContext('experimental-webgl', params)
+  const gl =
+    (canvas.getContext('webgl2', params) as WebGL2RenderingContext) ||
+    (canvas.getContext('webgl', params) as WebGLRenderingContext) ||
+    (canvas.getContext('experimental-webgl', params) as WebGLRenderingContext)
+  // TODO(smolck): Same as `!(gl instanceof WebGLRenderingContext)`, right?
+  const isWebGL2 = gl instanceof WebGL2RenderingContext
 
   let halfFloat
   let supportLinearFiltering
@@ -154,6 +140,9 @@ function getWebGLContext(canvas) {
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
 
+  // TODO(smolck): What's up with this `Object is possibly 'null' or 'undefined'
+  // error` (referring to `isWebGL2`)?
+  // @ts-ignore
   const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat.HALF_FLOAT_OES
   let formatRGBA
   let formatRG
@@ -186,6 +175,18 @@ function getWebGLContext(canvas) {
       supportLinearFiltering,
     },
   }
+}
+
+const { gl, ext } = getWebGLContext(canvas)
+
+if (isMobile()) {
+  config.DYE_RESOLUTION = 512
+}
+if (!ext.supportLinearFiltering) {
+  config.DYE_RESOLUTION = 512
+  config.SHADING = false
+  config.BLOOM = false
+  config.SUNRAYS = false
 }
 
 function getSupportedFormat(gl, internalFormat, format, type) {
@@ -293,8 +294,29 @@ const hashCode = (s: string) => {
   return hash
 }
 
+const createProgram = (vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram => {
+  let program = gl.createProgram()
+  if (!program) {
+    throw new Error("Problem creating webgl program! This probably shouldn't happen.")
+  }
+  gl.attachShader(program, vertexShader)
+  gl.attachShader(program, fragmentShader)
+  gl.linkProgram(program)
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+    console.trace(gl.getProgramInfoLog(program))
+
+  return program
+}
+
 class Material {
-  constructor(vertexShader, fragmentShaderSource) {
+  vertexShader: WebGLShader
+  fragmentShaderSource: string
+  programs: any[]
+  activeProgram: WebGLProgram | null
+  uniforms: any[]
+
+  constructor(vertexShader: WebGLShader, fragmentShaderSource: string) {
     this.vertexShader = vertexShader
     this.fragmentShaderSource = fragmentShaderSource
     this.programs = []
@@ -302,7 +324,7 @@ class Material {
     this.uniforms = []
   }
 
-  setKeywords(keywords) {
+  setKeywords(keywords: string[]) {
     let hash = 0
     for (let i = 0; i < keywords.length; i++) hash += hashCode(keywords[i])
 
@@ -329,7 +351,10 @@ class Material {
 }
 
 class Program {
-  constructor(vertexShader, fragmentShader) {
+  uniforms: any
+  program: WebGLProgram | null
+
+  constructor(vertexShader: WebGLShader, fragmentShader: WebGLShader) {
     this.uniforms = {}
     this.program = createProgram(vertexShader, fragmentShader)
     this.uniforms = getUniforms(this.program)
@@ -340,19 +365,7 @@ class Program {
   }
 }
 
-function createProgram(vertexShader, fragmentShader) {
-  let program = gl.createProgram()
-  gl.attachShader(program, vertexShader)
-  gl.attachShader(program, fragmentShader)
-  gl.linkProgram(program)
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    console.trace(gl.getProgramInfoLog(program))
-
-  return program
-}
-
-function getUniforms(program) {
+function getUniforms(program: Program) {
   let uniforms = []
   let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
   for (let i = 0; i < uniformCount; i++) {
@@ -362,10 +375,14 @@ function getUniforms(program) {
   return uniforms
 }
 
-function compileShader(type, source, keywords) {
+function compileShader(type: number, source: string, keywords: string[]) {
   source = addKeywords(source, keywords)
 
   const shader = gl.createShader(type)
+  if (!shader) {
+    throw new Error("Problem creating shader!")
+  }
+
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
 
@@ -1301,11 +1318,7 @@ function updateKeywords() {
 updateKeywords()
 initFramebuffers()
 
-const HSVtoRGB = (
-  h: number,
-  s: number,
-  v: number
-): Color => {
+const HSVtoRGB = (h: number, s: number, v: number): Color => {
   let r, g, b, i, f, p, q, t
   i = Math.floor(h * 6)
   f = h * 6 - i
@@ -1334,7 +1347,6 @@ const HSVtoRGB = (
       break
   }
 
-
   return {
     // TODO(smolck): Safe ignores?
     // @ts-ignore
@@ -1353,6 +1365,33 @@ const generateColor = (): Color => {
   c.b *= 0.15
   return c
 }
+
+const correctRadius = (radius: number) => {
+  let aspectRatio = canvas.width / canvas.height
+  if (aspectRatio > 1) radius *= aspectRatio
+  return radius
+}
+
+const splat = (x: number, y: number, dx: number, dy: number, color: Color) => {
+  splatProgram.bind()
+  gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0))
+  gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height)
+  gl.uniform2f(splatProgram.uniforms.point, x, y)
+  gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0)
+  gl.uniform1f(
+    splatProgram.uniforms.radius,
+    correctRadius(config.SPLAT_RADIUS / 100.0)
+  )
+  blit(velocity.write)
+  velocity.swap()
+
+  gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0))
+  gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b)
+  blit(dye.write)
+  dye.swap()
+}
+
+
 
 const multipleSplats = (amount: number) => {
   for (let i = 0; i < amount; i++) {
@@ -1440,35 +1479,13 @@ const render = (target) => {
   drawDisplay(target)
 }
 
-const update = () => {
-  const dt = calcDeltaTime()
-  if (resizeCanvas()) initFramebuffers()
-  updateColors(dt)
-  applyInputs()
-  if (!config.PAUSED) step(dt)
-  render(null)
-  requestAnimationFrame(update)
+const splatPointer = (pointer: Pointer) => {
+  let dx = pointer.deltaX * config.SPLAT_FORCE
+  let dy = pointer.deltaY * config.SPLAT_FORCE
+  splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color)
 }
 
-let lastUpdateTime = Date.now()
-let colorUpdateTimer = 0.0
-update()
-
-function calcDeltaTime() {
-  let now = Date.now()
-  let dt = (now - lastUpdateTime) / 1000
-  dt = Math.min(dt, 0.016666)
-  lastUpdateTime = now
-  return dt
-}
-
-const wrap = (value: number, min: number, max: number) => {
-  let range = max - min
-  if (range == 0) return min
-  return ((value - min) % range) + min
-}
-
-function applyInputs() {
+const applyInputs = () => {
   if (splatStack.length > 0) multipleSplats(splatStack.pop())
 
   pointers.forEach((p) => {
@@ -1479,7 +1496,15 @@ function applyInputs() {
   })
 }
 
-function step(dt) {
+const calcDeltaTime = () => {
+  let now = Date.now()
+  let dt = (now - lastUpdateTime) / 1000
+  dt = Math.min(dt, 0.016666)
+  lastUpdateTime = now
+  return dt
+}
+
+const step = (dt: number) => {
   gl.disable(gl.BLEND)
 
   curlProgram.bind()
@@ -1590,6 +1615,26 @@ function step(dt) {
 
 
 
+const update = () => {
+  const dt = calcDeltaTime()
+  if (resizeCanvas()) initFramebuffers()
+  updateColors(dt)
+  applyInputs()
+  if (!config.PAUSED) step(dt)
+  render(null)
+  requestAnimationFrame(update)
+}
+
+let lastUpdateTime = Date.now()
+let colorUpdateTimer = 0.0
+update()
+
+const wrap = (value: number, min: number, max: number) => {
+  let range = max - min
+  if (range == 0) return min
+  return ((value - min) % range) + min
+}
+
 function drawColor(target, color) {
   colorProgram.bind()
   gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
@@ -1687,36 +1732,27 @@ function blur(target, temp, iterations) {
   }
 }
 
-function splatPointer(pointer) {
-  let dx = pointer.deltaX * config.SPLAT_FORCE
-  let dy = pointer.deltaY * config.SPLAT_FORCE
-  splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color)
-}
 
-function splat(x, y, dx, dy, color) {
-  splatProgram.bind()
-  gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0))
-  gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height)
-  gl.uniform2f(splatProgram.uniforms.point, x, y)
-  gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0)
-  gl.uniform1f(
-    splatProgram.uniforms.radius,
-    correctRadius(config.SPLAT_RADIUS / 100.0)
-  )
-  blit(velocity.write)
-  velocity.swap()
 
-  gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0))
-  gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b)
-  blit(dye.write)
-  dye.swap()
-}
-
-function correctRadius(radius) {
-  let aspectRatio = canvas.width / canvas.height
-  if (aspectRatio > 1) radius *= aspectRatio
-  return radius
-}
+const updatePointerDownData = (
+  pointer: Pointer,
+  id: number,
+  posX: number,
+  posY: number
+) =>
+  // TODO(smolck): Make sure this does actually change `pointer`.
+  Object.assign(pointer, {
+    id: id,
+    down: true,
+    moved: false,
+    texcoordX: posX / canvas.width,
+    texcoordY: 1.0 - posY / canvas.height,
+    prevTexcoordX: pointer.texcoordX,
+    prevTexcoordY: pointer.texcoordY,
+    deltaX: 0,
+    deltaY: 0,
+    color: generateColor(),
+  })
 
 canvas.addEventListener('mousedown', (e) => {
   let posX = scaleByPixelRatio(e.offsetX)
@@ -1725,6 +1761,18 @@ canvas.addEventListener('mousedown', (e) => {
   if (pointer == null) pointer = initPointer()
   updatePointerDownData(pointer, -1, posX, posY)
 })
+
+const correctDeltaX = (delta: number) => {
+  let aspectRatio = canvas.width / canvas.height
+  if (aspectRatio < 1) delta *= aspectRatio
+  return delta
+}
+
+const correctDeltaY = (delta: number) => {
+  let aspectRatio = canvas.width / canvas.height
+  if (aspectRatio > 1) delta /= aspectRatio
+  return delta
+}
 
 const updatePointerMoveData = (pointer: any, posX: number, posY: number) => {
   pointer.prevTexcoordX = pointer.texcoordX
@@ -1748,6 +1796,12 @@ window.addEventListener('mouseup', () => {
   pointers[0].down = false
 })
 
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyP') config.PAUSED = !config.PAUSED
+  if (e.key === ' ') splatStack.push(Math.random() * 20 + 5)
+})
+
+/* TODO(smolck)
 canvas.addEventListener('touchstart', (e) => {
   e.preventDefault()
   const touches = e.targetTouches
@@ -1784,33 +1838,4 @@ window.addEventListener('touchend', (e) => {
     pointer.down = false
   }
 })
-
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'KeyP') config.PAUSED = !config.PAUSED
-  if (e.key === ' ') splatStack.push(parseInt(Math.random() * 20) + 5)
-})
-
-function updatePointerDownData(pointer, id, posX, posY) {
-  pointer.id = id
-  pointer.down = true
-  pointer.moved = false
-  pointer.texcoordX = posX / canvas.width
-  pointer.texcoordY = 1.0 - posY / canvas.height
-  pointer.prevTexcoordX = pointer.texcoordX
-  pointer.prevTexcoordY = pointer.texcoordY
-  pointer.deltaX = 0
-  pointer.deltaY = 0
-  pointer.color = generateColor()
-}
-
-const correctDeltaX = (delta: number) => {
-  let aspectRatio = canvas.width / canvas.height
-  if (aspectRatio < 1) delta *= aspectRatio
-  return delta
-}
-
-const correctDeltaY = (delta: number) => {
-  let aspectRatio = canvas.width / canvas.height
-  if (aspectRatio > 1) delta /= aspectRatio
-  return delta
-}
+*/
