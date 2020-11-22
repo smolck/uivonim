@@ -147,71 +147,68 @@ const keydownHandler = (e: KeyboardEvent) => {
   sendKeys(e, InputType.Down)
 }
 
+// TODO(smolck): For macOS. See explanation below.
 let previousKeyWasDead = false
 let keyIsDead = false
+
 document.oninput =
   remote.process.platform === 'linux' || remote.process.platform === 'win32'
     ? // @ts-ignore
       (e) => keydownHandler(e)
     : (e) => {
-        // TODO(smolck): For macOS. Don't even ask.
+        // TODO(smolck): For macOS. See explanation below.
         if (!previousKeyWasDead && keyIsDead) {
           keyIsDead = false
           previousKeyWasDead = true
           return
         }
+
         // @ts-ignore
         keydownHandler(e)
       }
 
+const isNotChar = (e: KeyboardEvent) => {
+  // Chars are handled by `oninput` handler so we don't handle those.
+  if (
+    e.key.length === 1 &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    !e.shiftKey
+  )
+    return false
+  if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1)
+    return false
+
+  return true
+}
+
+// TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it
+// isn't actually typed, it's received by the `oninput` handler, which causes an
+// issue where it's sent to Neovim when it shouldn't be. To fix that, we make
+// sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
+// which is the way it should be.
+const deadKeyWasPressedTwiceInARow = (e: KeyboardEvent) => {
+  if (e.key === 'Dead' && !previousKeyWasDead) {
+    keyIsDead = true
+    previousKeyWasDead = false
+    return
+  }
+  if (previousKeyWasDead)
+    (previousKeyWasDead = false), (keyIsDead = e.key === 'Dead')
+}
+
 document.onkeydown =
   remote.process.platform === 'linux' || remote.process.platform === 'win32'
     ? (e) => {
-        // Chars are handled by `oninput` handler above.
-        if (
-          e.key.length === 1 &&
-          !e.ctrlKey &&
-          !e.metaKey &&
-          !e.altKey &&
-          !e.shiftKey
-        )
-          return
-        if (
-          e.shiftKey &&
-          !(e.ctrlKey || e.metaKey || e.altKey) &&
-          e.key.length === 1
-        )
-          return
-
-        keydownHandler(e)
+        if (isNotChar(e)) {
+          keydownHandler(e)
+        }
       }
     : (e) => {
-        // Chars are handled by `oninput` handler above.
-        if (
-          e.key.length === 1 &&
-          !e.ctrlKey &&
-          !e.metaKey &&
-          !e.altKey &&
-          !e.shiftKey
-        )
-          return
-        if (
-          e.shiftKey &&
-          !(e.ctrlKey || e.metaKey || e.altKey) &&
-          e.key.length === 1
-        )
-          return
-
-        // TODO(smolck): For macOS. Don't even ask.
-        if (e.key === 'Dead' && !previousKeyWasDead) {
-          keyIsDead = true
-          previousKeyWasDead = false
-          return
+        if (isNotChar(e) && deadKeyWasPressedTwiceInARow(e)) {
+          keydownHandler(e)
         }
-        if (previousKeyWasDead)
-          (previousKeyWasDead = false), (keyIsDead = e.key === 'Dead')
-
-        keydownHandler(e)
       }
 
 document.onclick = (e) => {
