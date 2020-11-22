@@ -144,12 +144,9 @@ const keydownHandler = (e: KeyboardEvent) => {
 // TODO(smolck): Used to get dead keys to work, but `keypress` is
 // apparently deprecated so . . .
 document.addEventListener('keypress', (e) => {
-  if (textarea) if (textarea === document.activeElement) return
-
   keydownHandler(e)
 })
 document.addEventListener('keydown', (e) => {
-  if (textarea) if (textarea === document.activeElement) return
   // Chars are handled by `keypress` handler above.
   if (e.key.length === 1) return
 
