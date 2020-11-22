@@ -129,7 +129,7 @@ let previousKeyWasDead = false
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
   if (!key) return
-  if (key === 'Dead') {
+  if (key === 'Dead' && !previousKeyWasDead) {
     console.log('Dead')
     previousKeyWasDead = true
     return
