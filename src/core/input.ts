@@ -125,14 +125,33 @@ export const registerOneTimeUseShortcuts = (
 let textarea = document.getElementById('keycomp-textarea') as
   | HTMLTextAreaElement
   | undefined
+let previousKeyWasDead = false
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
   if (!key) return
+  if (key === 'Dead') {
+    console.log('Dead')
+    previousKeyWasDead = true
+    return
+  }
 
-  const inputKeys = formatInput(mapMods(e), mapKey(e.key))
+  if (previousKeyWasDead) {
+    console.log('Dead handler', textarea?.value)
+    previousKeyWasDead = false
 
-  if (sendInputToVim) return sendToVim(inputKeys)
-  keyListener(inputKeys, inputType)
+    const inputKey = textarea?.value.charAt(textarea?.value.length - 1)
+    if (textarea) textarea.value = ''
+
+    if (inputKey) {
+      if (sendInputToVim) return sendToVim(inputKey)
+      keyListener(inputKey, inputType)
+    }
+  } else {
+    const inputKeys = formatInput(mapMods(e), mapKey(e.key))
+
+    if (sendInputToVim) return sendToVim(inputKeys)
+    keyListener(inputKeys, inputType)
+  }
 }
 
 const keydownHandler = (e: KeyboardEvent) => {
@@ -141,16 +160,31 @@ const keydownHandler = (e: KeyboardEvent) => {
   sendKeys(e, InputType.Down)
 }
 
+// textarea?.addEventListener('keydown', (e) => {
+// keydownHandler(e)
+// })
+
 // TODO(smolck): Used to get dead keys to work, but `keypress` is
 // apparently deprecated so . . .
-document.addEventListener('keypress', (e) => {
-  keydownHandler(e)
+// document.addEventListener('keypress', (e) => {
+//   if (textarea) if (textarea === document.activeElement) return
+//
+//   keydownHandler(e)
+// })
+document.addEventListener('keyup', (e) => {
+  if (previousKeyWasDead) {
+    keydownHandler(e)
+  } else {
+    previousKeyWasDead = e.key === 'Dead'
+  }
 })
 document.addEventListener('keydown', (e) => {
   // Chars are handled by `keypress` handler above.
-  if (e.key.length === 1) return
+  // if (e.key.length === 1) return
 
-  e.preventDefault()
+  if (previousKeyWasDead) {
+    return
+  }
   keydownHandler(e)
 })
 

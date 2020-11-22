@@ -143,6 +143,8 @@ export const onExit = (fn: ExitFn) => {
 }
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
 export const input = (keys: string) => {
+  // TODO: get hack to get hack to get dead keys working working working better
+  document.getElementById('keycomp-textarea')?.focus()
   api.input(keys)
 }
 export const getMode = () =>
