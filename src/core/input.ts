@@ -149,33 +149,70 @@ const keydownHandler = (e: KeyboardEvent) => {
 
 let previousKeyWasDead = false
 let keyIsDead = false
- document.oninput = (e) => {
-  // TODO(smolck) for macOS. don't even ask.
-  if (!previousKeyWasDead && keyIsDead) {
-    keyIsDead = false
-    previousKeyWasDead = true
-    return
-  }
-   // @ts-ignore
-   keydownHandler(e)
- }
+document.oninput =
+  remote.process.platform === 'linux' || remote.process.platform === 'win32'
+    ? // @ts-ignore
+      (e) => keydownHandler(e)
+    : (e) => {
+        // TODO(smolck): For macOS. Don't even ask.
+        if (!previousKeyWasDead && keyIsDead) {
+          keyIsDead = false
+          previousKeyWasDead = true
+          return
+        }
+        // @ts-ignore
+        keydownHandler(e)
+      }
 
- document.onkeydown = (e) => {
-   // Chars are handled by `oninput` handler above.
-  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey)
-    return
-  if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1)
-    return
-  // TODO(smolck) for macOS. don't even ask.
-  if (e.key === 'Dead' && !previousKeyWasDead) {
-    keyIsDead = true
-    previousKeyWasDead = false
-    return
-  }
-  if (previousKeyWasDead) (previousKeyWasDead = false, keyIsDead = e.key === 'Dead')
+document.onkeydown =
+  remote.process.platform === 'linux' || remote.process.platform === 'win32'
+    ? (e) => {
+        // Chars are handled by `oninput` handler above.
+        if (
+          e.key.length === 1 &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.altKey &&
+          !e.shiftKey
+        )
+          return
+        if (
+          e.shiftKey &&
+          !(e.ctrlKey || e.metaKey || e.altKey) &&
+          e.key.length === 1
+        )
+          return
 
-   keydownHandler(e)
- }
+        keydownHandler(e)
+      }
+    : (e) => {
+        // Chars are handled by `oninput` handler above.
+        if (
+          e.key.length === 1 &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.altKey &&
+          !e.shiftKey
+        )
+          return
+        if (
+          e.shiftKey &&
+          !(e.ctrlKey || e.metaKey || e.altKey) &&
+          e.key.length === 1
+        )
+          return
+
+        // TODO(smolck): For macOS. Don't even ask.
+        if (e.key === 'Dead' && !previousKeyWasDead) {
+          keyIsDead = true
+          previousKeyWasDead = false
+          return
+        }
+        if (previousKeyWasDead)
+          (previousKeyWasDead = false), (keyIsDead = e.key === 'Dead')
+
+        keydownHandler(e)
+      }
 
 document.onclick = (e) => {
   e.preventDefault()
