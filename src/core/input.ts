@@ -154,9 +154,13 @@ document.oninput = (e) => {
 
 document.onkeydown = (e) => {
   // Chars are handled by `oninput` handler above.
-  if (e.key.length === 1) return
+  if (e.key.length === 1 &&
+     !e.ctrlKey &&
+     !e.metaKey &&
+     !e.altKey &&
+     !e.shiftKey) return
+  if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1) return
 
-  // e.preventDefault()
   keydownHandler(e)
 }
 
