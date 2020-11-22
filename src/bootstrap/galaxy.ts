@@ -28,6 +28,9 @@ requestAnimationFrame(() => {
 
   // high priority components
   requestAnimationFrame(() => {
+    // Focus textarea at start of application to receive input right away.
+    document.getElementById('keycomp-textarea')?.focus()
+
     requireDir(`${__dirname}/../components/nvim`)
   })
 

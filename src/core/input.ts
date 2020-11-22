@@ -122,13 +122,18 @@ export const registerOneTimeUseShortcuts = (
   shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
 }
 
-let textarea = document.getElementById('keycomp-textarea')
-
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   const key = bypassEmptyMod(e.key)
-  if (!key) return
-  if (key === 'Dead' && textarea)
-    (textarea as HTMLTextAreaElement).value = 'things'
+  if (!key) {
+    // @ts-ignore
+    const inputKey = e.data
+    if (!inputKey) return
+
+    if (sendInputToVim) return sendToVim(inputKey)
+    keyListener(inputKey, inputType)
+
+    return
+  }
 
   const inputKeys = formatInput(mapMods(e), mapKey(e.key))
 
@@ -142,16 +147,76 @@ const keydownHandler = (e: KeyboardEvent) => {
   sendKeys(e, InputType.Down)
 }
 
-// Need to handle key events from window for GUI elements like the external
-// cmdline, so if the key composition textarea isn't focused (which it won't
-// be when those elements are in use), handle the event from the window.
-window.addEventListener('keydown', (e) => {
-  if (textarea) if (textarea === document.activeElement) return
+// TODO(smolck): For macOS. See explanation below.
+let previousKeyWasDead = false
+let keyIsDead = false
 
-  keydownHandler(e)
-})
+document.oninput =
+  remote.process.platform === 'linux' || remote.process.platform === 'win32'
+    ? // @ts-ignore
+      (e) => keydownHandler(e)
+    : (e) => {
+        // TODO(smolck): For macOS. See explanation below.
+        if (!previousKeyWasDead && keyIsDead) {
+          keyIsDead = false
+          previousKeyWasDead = true
+          return
+        }
 
-textarea?.addEventListener('keydown', keydownHandler)
+        // @ts-ignore
+        keydownHandler(e)
+      }
+
+const isNotChar = (e: KeyboardEvent): boolean => {
+  // Chars are handled by `oninput` handler so we don't handle those.
+  if (
+    e.key.length === 1 &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    !e.shiftKey
+  )
+    return false
+  if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1)
+    return false
+
+  return true
+}
+
+// TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it
+// isn't actually typed, it's received by the `oninput` handler, which causes an
+// issue where it's sent to Neovim when it shouldn't be. To fix that, we make
+// sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
+// which is the way it should be.
+const workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS = (e: KeyboardEvent): boolean => {
+  if (e.key === 'Dead' && !previousKeyWasDead) {
+    keyIsDead = true
+    previousKeyWasDead = false
+    return false
+  }
+  if (previousKeyWasDead)
+    (previousKeyWasDead = false), (keyIsDead = e.key === 'Dead')
+
+  return true
+}
+
+document.onkeydown =
+  remote.process.platform === 'linux' || remote.process.platform === 'win32'
+    ? (e) => {
+        if (isNotChar(e)) {
+          keydownHandler(e)
+        }
+      }
+    : (e) => {
+        if (isNotChar(e) && workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(e)) {
+          keydownHandler(e)
+        }
+      }
+
+document.onclick = (e) => {
+  e.preventDefault()
+  document.getElementById('keycomp-textarea')?.focus()
+}
 
 remote.getCurrentWindow().on('focus', () => {
   windowHasFocus = true
