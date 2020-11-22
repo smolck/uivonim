@@ -144,6 +144,9 @@ export const onExit = (fn: ExitFn) => {
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
 export const input = (keys: string) => {
   api.input(keys)
+  if (document.activeElement === document.body) {
+    document.getElementById('keycomp-textarea')?.focus()
+  }
 }
 export const getMode = () =>
   req.getMode() as Promise<{ mode: string; blocking: boolean }>

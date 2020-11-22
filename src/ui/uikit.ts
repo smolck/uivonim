@@ -14,6 +14,7 @@ export const css = (builder: (classname: string) => string[]): string => {
 
 export const vimFocus = () => {
   setImmediate(() => viminput.focus())
+  document.getElementById('keycomp-textarea')?.focus()
   showCursor()
 }
 

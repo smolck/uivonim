@@ -202,8 +202,10 @@ document.onkeydown =
       }
 
 document.onclick = (e) => {
-  e.preventDefault()
-  document.getElementById('keycomp-textarea')?.focus()
+  if (document.activeElement === document.body) {
+    e.preventDefault()
+    document.getElementById('keycomp-textarea')?.focus()
+  }
 }
 
 remote.getCurrentWindow().on('focus', () => {
