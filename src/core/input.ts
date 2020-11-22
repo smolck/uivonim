@@ -188,7 +188,7 @@ const isNotChar = (e: KeyboardEvent): boolean => {
 // issue where it's sent to Neovim when it shouldn't be. To fix that, we make
 // sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
 // which is the way it should be.
-const deadKeyWasPressedTwiceInARow = (e: KeyboardEvent): boolean => {
+const workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS = (e: KeyboardEvent): boolean => {
   if (e.key === 'Dead' && !previousKeyWasDead) {
     keyIsDead = true
     previousKeyWasDead = false
@@ -208,7 +208,7 @@ document.onkeydown =
         }
       }
     : (e) => {
-        if (isNotChar(e) && deadKeyWasPressedTwiceInARow(e)) {
+        if (isNotChar(e) && workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(e)) {
           keydownHandler(e)
         }
       }
