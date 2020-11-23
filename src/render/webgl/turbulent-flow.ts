@@ -112,6 +112,63 @@ let pointers: Pointer[] = []
 let splatStack: any[] = []
 pointers.push(initPointer())
 
+const supportRenderTextureFormat = (
+  gl: WebGLRenderingContext,
+  internalFormat: number,
+  format: number,
+  type: number
+): boolean => {
+  let texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null)
+
+  let fbo = gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    texture,
+    0
+  )
+
+  let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER)
+  return status == gl.FRAMEBUFFER_COMPLETE
+}
+
+// TODO(smolck): Return type is what?
+const getSupportedFormat = (
+  gl: WebGLRenderingContext,
+  internalFormat: number,
+  format: number,
+  type: number
+): any => {
+  if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
+    // TODO(smolck): ts-ignores below vvvv
+    switch (internalFormat) {
+      // @ts-ignore
+      case gl.R16F:
+        // @ts-ignore
+        return getSupportedFormat(gl, gl.RG16F, gl.RG, type)
+      // @ts-ignore
+      case gl.RG16F:
+        // @ts-ignore
+        return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type)
+      default:
+        return null
+    }
+  }
+
+  return {
+    internalFormat,
+    format,
+  }
+}
+
 const getWebGLContext = (canvas: HTMLCanvasElement) => {
   const params = {
     alpha: true,
@@ -179,9 +236,6 @@ const getWebGLContext = (canvas: HTMLCanvasElement) => {
 
 const { gl, ext } = getWebGLContext(canvas)
 
-if (isMobile()) {
-  config.DYE_RESOLUTION = 512
-}
 if (!ext.supportLinearFiltering) {
   config.DYE_RESOLUTION = 512
   config.SHADING = false
@@ -189,52 +243,7 @@ if (!ext.supportLinearFiltering) {
   config.SUNRAYS = false
 }
 
-function getSupportedFormat(gl, internalFormat, format, type) {
-  if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
-    switch (internalFormat) {
-      case gl.R16F:
-        return getSupportedFormat(gl, gl.RG16F, gl.RG, type)
-      case gl.RG16F:
-        return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type)
-      default:
-        return null
-    }
-  }
-
-  return {
-    internalFormat,
-    format,
-  }
-}
-
-function supportRenderTextureFormat(gl, internalFormat, format, type) {
-  let texture = gl.createTexture()
-  gl.bindTexture(gl.TEXTURE_2D, texture)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null)
-
-  let fbo = gl.createFramebuffer()
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
-  gl.framebufferTexture2D(
-    gl.FRAMEBUFFER,
-    gl.COLOR_ATTACHMENT0,
-    gl.TEXTURE_2D,
-    texture,
-    0
-  )
-
-  let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER)
-  return status == gl.FRAMEBUFFER_COMPLETE
-}
-
-function isMobile() {
-  return /Mobi|Android/i.test(navigator.userAgent)
-}
-
-function framebufferToTexture(target) {
+const framebufferToTexture = (target) => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo)
   let length = target.width * target.height * 4
   let texture = new Float32Array(length)
@@ -242,7 +251,7 @@ function framebufferToTexture(target) {
   return texture
 }
 
-function normalizeTexture(texture, width, height) {
+const normalizeTexture = (texture, width: number, height: number) => {
   let result = new Uint8Array(texture.length)
   let id = 0
   for (let i = height - 1; i >= 0; i--) {
@@ -258,11 +267,11 @@ function normalizeTexture(texture, width, height) {
   return result
 }
 
-function clamp01(input) {
+const clamp01 = (input: number) => {
   return Math.min(Math.max(input, 0), 1)
 }
 
-function textureToCanvas(texture, width, height) {
+const textureToCanvas = (texture, width: number, height: number) => {
   let captureCanvas = document.createElement('canvas')
   let ctx = captureCanvas.getContext('2d')
   captureCanvas.width = width
@@ -275,15 +284,6 @@ function textureToCanvas(texture, width, height) {
   return captureCanvas
 }
 
-function downloadURI(filename, uri) {
-  let link = document.createElement('a')
-  link.download = filename
-  link.href = uri
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
 const hashCode = (s: string) => {
   if (s.length == 0) return 0
   let hash = 0
@@ -294,10 +294,15 @@ const hashCode = (s: string) => {
   return hash
 }
 
-const createProgram = (vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram => {
+const createProgram = (
+  vertexShader: WebGLShader,
+  fragmentShader: WebGLShader
+): WebGLProgram => {
   let program = gl.createProgram()
   if (!program) {
-    throw new Error("Problem creating webgl program! This probably shouldn't happen.")
+    throw new Error(
+      "Problem creating webgl program! This probably shouldn't happen."
+    )
   }
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
@@ -365,7 +370,7 @@ class Program {
   }
 }
 
-function getUniforms(program: Program) {
+const getUniforms = (program: Program) => {
   let uniforms = []
   let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
   for (let i = 0; i < uniformCount; i++) {
@@ -375,12 +380,12 @@ function getUniforms(program: Program) {
   return uniforms
 }
 
-function compileShader(type: number, source: string, keywords: string[]) {
+const compileShader = (type: number, source: string, keywords: string[]) => {
   source = addKeywords(source, keywords)
 
   const shader = gl.createShader(type)
   if (!shader) {
-    throw new Error("Problem creating shader!")
+    throw new Error('Problem creating shader!')
   }
 
   gl.shaderSource(shader, source)
@@ -392,7 +397,7 @@ function compileShader(type: number, source: string, keywords: string[]) {
   return shader
 }
 
-function addKeywords(source, keywords) {
+const addKeywords = (source, keywords) => {
   if (keywords == null) return source
   let keywordsString = ''
   keywords.forEach((keyword) => {
@@ -948,7 +953,7 @@ const blit = (() => {
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
   gl.enableVertexAttribArray(0)
 
-  return (target, clear = false) => {
+  return (target: FBO, clear = false) => {
     if (target == null) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -965,7 +970,7 @@ const blit = (() => {
   }
 })()
 
-function CHECK_FRAMEBUFFER_STATUS() {
+const CHECK_FRAMEBUFFER_STATUS = () => {
   let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER)
   if (status != gl.FRAMEBUFFER_COMPLETE)
     console.trace('Framebuffer error: ' + status)
@@ -1020,15 +1025,15 @@ const createTextureAsync = (url: string): Texture => {
   return obj
 }
 
-let dye
-let velocity
-let divergence
-let curl
-let pressure
-let bloom
-let bloomFramebuffers = []
-let sunrays
-let sunraysTemp
+let dye: DoubleFBO,
+  velocity: DoubleFBO,
+  divergence: FBO,
+  curl: FBO,
+  pressure: DoubleFBO,
+  bloom: FBO,
+  sunrays: FBO,
+  sunraysTemp: FBO
+let bloomFramebuffers: FBO[] = []
 
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png')
 
@@ -1070,7 +1075,7 @@ const getResolution = (resolution: number) => {
   else return { width: min, height: max }
 }
 
-function initFramebuffers() {
+const initFramebuffers = () => {
   let simRes = getResolution(config.SIM_RESOLUTION)
   let dyeRes = getResolution(config.DYE_RESOLUTION)
 
@@ -1151,7 +1156,7 @@ function initFramebuffers() {
   initSunraysFramebuffers()
 }
 
-function initBloomFramebuffers() {
+const initBloomFramebuffers = () => {
   let res = getResolution(config.BLOOM_RESOLUTION)
 
   const texType = ext.halfFloatTexType
@@ -1186,7 +1191,7 @@ function initBloomFramebuffers() {
   }
 }
 
-function initSunraysFramebuffers() {
+const initSunraysFramebuffers = () => {
   let res = getResolution(config.SUNRAYS_RESOLUTION)
 
   const texType = ext.halfFloatTexType
@@ -1211,9 +1216,29 @@ function initSunraysFramebuffers() {
   )
 }
 
-function createFBO(w, h, internalFormat, format, type, param) {
+type FBO = {
+  texture: WebGLTexture
+  fbo: WebGLFramebuffer
+  width: number
+  height: number
+  texelSizeX: number
+  texelSizeY: number
+  attach: (id: number) => number
+}
+
+const createFBO = (
+  w: number,
+  h: number,
+  internalFormat: number,
+  format: number,
+  type: number,
+  param: number
+): FBO => {
   gl.activeTexture(gl.TEXTURE0)
   let texture = gl.createTexture()
+  if (!texture) {
+    throw new Error('Problem creating texture!')
+  }
   gl.bindTexture(gl.TEXTURE_2D, texture)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param)
@@ -1222,6 +1247,9 @@ function createFBO(w, h, internalFormat, format, type, param) {
   gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null)
 
   let fbo = gl.createFramebuffer()
+  if (!fbo) {
+    throw new Error('Problem creating framebuffer!')
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
   gl.framebufferTexture2D(
     gl.FRAMEBUFFER,
@@ -1243,7 +1271,7 @@ function createFBO(w, h, internalFormat, format, type, param) {
     height: h,
     texelSizeX,
     texelSizeY,
-    attach(id) {
+    attach(id: number) {
       gl.activeTexture(gl.TEXTURE0 + id)
       gl.bindTexture(gl.TEXTURE_2D, texture)
       return id
@@ -1251,36 +1279,86 @@ function createFBO(w, h, internalFormat, format, type, param) {
   }
 }
 
-function createDoubleFBO(w, h, internalFormat, format, type, param) {
+interface DoubleFBOConstructorArgs {
+  fbo1: FBO
+  fbo2: FBO
+  width: number
+  height: number
+  texelSizeX: number
+  texelSizeY: number
+}
+
+class DoubleFBO {
+  private fbo1: FBO
+  private fbo2: FBO
+
+  width: number
+  height: number
+  texelSizeX: number
+  texelSizeY: number
+
+  constructor(args: DoubleFBOConstructorArgs) {
+    this.fbo1 = args.fbo1
+    this.fbo2 = args.fbo2
+    this.width = args.width
+    this.height = args.height
+    this.texelSizeX = args.texelSizeX
+    this.texelSizeY = args.texelSizeY
+  }
+
+  get read() {
+    return this.fbo1
+  }
+
+  set read(value: FBO) {
+    this.fbo1 = value
+  }
+
+  get write() {
+    return this.fbo2
+  }
+
+  set write(value: FBO) {
+    this.fbo2 = value
+  }
+
+  swap() {
+    let temp = this.fbo1
+    this.fbo1 = this.fbo2
+    this.fbo2 = temp
+  }
+}
+
+const createDoubleFBO = (
+  w: number,
+  h: number,
+  internalFormat: number,
+  format: number,
+  type: number,
+  param: number
+): DoubleFBO => {
   let fbo1 = createFBO(w, h, internalFormat, format, type, param)
   let fbo2 = createFBO(w, h, internalFormat, format, type, param)
 
-  return {
+  return new DoubleFBO({
+    fbo1,
+    fbo2,
     width: w,
     height: h,
     texelSizeX: fbo1.texelSizeX,
     texelSizeY: fbo1.texelSizeY,
-    get read() {
-      return fbo1
-    },
-    set read(value) {
-      fbo1 = value
-    },
-    get write() {
-      return fbo2
-    },
-    set write(value) {
-      fbo2 = value
-    },
-    swap() {
-      let temp = fbo1
-      fbo1 = fbo2
-      fbo2 = temp
-    },
-  }
+  })
 }
 
-function resizeFBO(target, w, h, internalFormat, format, type, param) {
+const resizeFBO = (
+  target: FBO,
+  w: number,
+  h: number,
+  internalFormat: number,
+  format: number,
+  type: number,
+  param: number
+) => {
   let newFBO = createFBO(w, h, internalFormat, format, type, param)
   copyProgram.bind()
   gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0))
@@ -1288,7 +1366,15 @@ function resizeFBO(target, w, h, internalFormat, format, type, param) {
   return newFBO
 }
 
-function resizeDoubleFBO(target, w, h, internalFormat, format, type, param) {
+const resizeDoubleFBO = (
+  target: DoubleFBO,
+  w: number,
+  h: number,
+  internalFormat: number,
+  format: number,
+  type: number,
+  param: number
+) => {
   if (target.width == w && target.height == h) return target
   target.read = resizeFBO(
     target.read,
@@ -1307,7 +1393,7 @@ function resizeDoubleFBO(target, w, h, internalFormat, format, type, param) {
   return target
 }
 
-function updateKeywords() {
+const updateKeywords = () => {
   let displayKeywords = []
   if (config.SHADING) displayKeywords.push('SHADING')
   if (config.BLOOM) displayKeywords.push('BLOOM')
@@ -1391,8 +1477,6 @@ const splat = (x: number, y: number, dx: number, dy: number, color: Color) => {
   dye.swap()
 }
 
-
-
 const multipleSplats = (amount: number) => {
   for (let i = 0; i < amount; i++) {
     const color = generateColor()
@@ -1459,7 +1543,95 @@ const drawDisplay = (target) => {
   blit(target)
 }
 
-const render = (target) => {
+const applyBloom = (source: FBO, destination: FBO) => {
+  if (bloomFramebuffers.length < 2) return
+
+  let last = destination
+
+  gl.disable(gl.BLEND)
+  bloomPrefilterProgram.bind()
+  let knee = config.BLOOM_THRESHOLD * config.BLOOM_SOFT_KNEE + 0.0001
+  let curve0 = config.BLOOM_THRESHOLD - knee
+  let curve1 = knee * 2
+  let curve2 = 0.25 / knee
+  gl.uniform3f(bloomPrefilterProgram.uniforms.curve, curve0, curve1, curve2)
+  gl.uniform1f(bloomPrefilterProgram.uniforms.threshold, config.BLOOM_THRESHOLD)
+  gl.uniform1i(bloomPrefilterProgram.uniforms.uTexture, source.attach(0))
+  blit(last)
+
+  bloomBlurProgram.bind()
+  for (let i = 0; i < bloomFramebuffers.length; i++) {
+    let dest = bloomFramebuffers[i]
+    gl.uniform2f(
+      bloomBlurProgram.uniforms.texelSize,
+      last.texelSizeX,
+      last.texelSizeY
+    )
+    gl.uniform1i(bloomBlurProgram.uniforms.uTexture, last.attach(0))
+    blit(dest)
+    last = dest
+  }
+
+  gl.blendFunc(gl.ONE, gl.ONE)
+  gl.enable(gl.BLEND)
+
+  for (let i = bloomFramebuffers.length - 2; i >= 0; i--) {
+    let baseTex = bloomFramebuffers[i]
+    gl.uniform2f(
+      bloomBlurProgram.uniforms.texelSize,
+      last.texelSizeX,
+      last.texelSizeY
+    )
+    gl.uniform1i(bloomBlurProgram.uniforms.uTexture, last.attach(0))
+    gl.viewport(0, 0, baseTex.width, baseTex.height)
+    blit(baseTex)
+    last = baseTex
+  }
+
+  gl.disable(gl.BLEND)
+  bloomFinalProgram.bind()
+  gl.uniform2f(
+    bloomFinalProgram.uniforms.texelSize,
+    last.texelSizeX,
+    last.texelSizeY
+  )
+  gl.uniform1i(bloomFinalProgram.uniforms.uTexture, last.attach(0))
+  gl.uniform1f(bloomFinalProgram.uniforms.intensity, config.BLOOM_INTENSITY)
+  blit(destination)
+}
+
+const applySunrays = (source, mask, destination) => {
+  gl.disable(gl.BLEND)
+  sunraysMaskProgram.bind()
+  gl.uniform1i(sunraysMaskProgram.uniforms.uTexture, source.attach(0))
+  blit(mask)
+
+  sunraysProgram.bind()
+  gl.uniform1f(sunraysProgram.uniforms.weight, config.SUNRAYS_WEIGHT)
+  gl.uniform1i(sunraysProgram.uniforms.uTexture, mask.attach(0))
+  blit(destination)
+}
+
+const blur = (target, temp, iterations: number) => {
+  blurProgram.bind()
+  for (let i = 0; i < iterations; i++) {
+    gl.uniform2f(blurProgram.uniforms.texelSize, target.texelSizeX, 0.0)
+    gl.uniform1i(blurProgram.uniforms.uTexture, target.attach(0))
+    blit(temp)
+
+    gl.uniform2f(blurProgram.uniforms.texelSize, 0.0, target.texelSizeY)
+    gl.uniform1i(blurProgram.uniforms.uTexture, temp.attach(0))
+    blit(target)
+  }
+}
+
+const drawColor = (target: FBO, color: Color) => {
+  colorProgram.bind()
+  gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
+  blit(target)
+}
+
+const render = (target: FBO) => {
   if (config.BLOOM) applyBloom(dye.read, bloom)
   if (config.SUNRAYS) {
     applySunrays(dye.read, dye.write, sunrays)
@@ -1613,8 +1785,6 @@ const step = (dt: number) => {
   dye.swap()
 }
 
-
-
 const update = () => {
   const dt = calcDeltaTime()
   if (resizeCanvas()) initFramebuffers()
@@ -1635,13 +1805,7 @@ const wrap = (value: number, min: number, max: number) => {
   return ((value - min) % range) + min
 }
 
-function drawColor(target, color) {
-  colorProgram.bind()
-  gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
-  blit(target)
-}
-
-function drawCheckerboard(target) {
+const drawCheckerboard = (target) => {
   checkerboardProgram.bind()
   gl.uniform1f(
     checkerboardProgram.uniforms.aspectRatio,
@@ -1649,90 +1813,6 @@ function drawCheckerboard(target) {
   )
   blit(target)
 }
-
-function applyBloom(source, destination) {
-  if (bloomFramebuffers.length < 2) return
-
-  let last = destination
-
-  gl.disable(gl.BLEND)
-  bloomPrefilterProgram.bind()
-  let knee = config.BLOOM_THRESHOLD * config.BLOOM_SOFT_KNEE + 0.0001
-  let curve0 = config.BLOOM_THRESHOLD - knee
-  let curve1 = knee * 2
-  let curve2 = 0.25 / knee
-  gl.uniform3f(bloomPrefilterProgram.uniforms.curve, curve0, curve1, curve2)
-  gl.uniform1f(bloomPrefilterProgram.uniforms.threshold, config.BLOOM_THRESHOLD)
-  gl.uniform1i(bloomPrefilterProgram.uniforms.uTexture, source.attach(0))
-  blit(last)
-
-  bloomBlurProgram.bind()
-  for (let i = 0; i < bloomFramebuffers.length; i++) {
-    let dest = bloomFramebuffers[i]
-    gl.uniform2f(
-      bloomBlurProgram.uniforms.texelSize,
-      last.texelSizeX,
-      last.texelSizeY
-    )
-    gl.uniform1i(bloomBlurProgram.uniforms.uTexture, last.attach(0))
-    blit(dest)
-    last = dest
-  }
-
-  gl.blendFunc(gl.ONE, gl.ONE)
-  gl.enable(gl.BLEND)
-
-  for (let i = bloomFramebuffers.length - 2; i >= 0; i--) {
-    let baseTex = bloomFramebuffers[i]
-    gl.uniform2f(
-      bloomBlurProgram.uniforms.texelSize,
-      last.texelSizeX,
-      last.texelSizeY
-    )
-    gl.uniform1i(bloomBlurProgram.uniforms.uTexture, last.attach(0))
-    gl.viewport(0, 0, baseTex.width, baseTex.height)
-    blit(baseTex)
-    last = baseTex
-  }
-
-  gl.disable(gl.BLEND)
-  bloomFinalProgram.bind()
-  gl.uniform2f(
-    bloomFinalProgram.uniforms.texelSize,
-    last.texelSizeX,
-    last.texelSizeY
-  )
-  gl.uniform1i(bloomFinalProgram.uniforms.uTexture, last.attach(0))
-  gl.uniform1f(bloomFinalProgram.uniforms.intensity, config.BLOOM_INTENSITY)
-  blit(destination)
-}
-
-function applySunrays(source, mask, destination) {
-  gl.disable(gl.BLEND)
-  sunraysMaskProgram.bind()
-  gl.uniform1i(sunraysMaskProgram.uniforms.uTexture, source.attach(0))
-  blit(mask)
-
-  sunraysProgram.bind()
-  gl.uniform1f(sunraysProgram.uniforms.weight, config.SUNRAYS_WEIGHT)
-  gl.uniform1i(sunraysProgram.uniforms.uTexture, mask.attach(0))
-  blit(destination)
-}
-
-function blur(target, temp, iterations) {
-  blurProgram.bind()
-  for (let i = 0; i < iterations; i++) {
-    gl.uniform2f(blurProgram.uniforms.texelSize, target.texelSizeX, 0.0)
-    gl.uniform1i(blurProgram.uniforms.uTexture, target.attach(0))
-    blit(temp)
-
-    gl.uniform2f(blurProgram.uniforms.texelSize, 0.0, target.texelSizeY)
-    gl.uniform1i(blurProgram.uniforms.uTexture, temp.attach(0))
-    blit(target)
-  }
-}
-
-
 
 const updatePointerDownData = (
   pointer: Pointer,
