@@ -36,7 +36,7 @@
     "highlight.js": "^10.4.1",
     "inferno": "^7.4.6",
     "marked": "^1.2.5",
-    "ts-node": "^9.1.0"
+    "ts-node": "^9.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.8",
