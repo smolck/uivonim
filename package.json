@@ -39,7 +39,7 @@
     "ts-node": "^9.1.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.8",
+    "@babel/cli": "^7.12.10",
     "@babel/core": "^7.12.10",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
