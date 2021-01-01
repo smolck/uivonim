@@ -1,5 +1,13 @@
 import { app, BrowserWindow, Menu } from 'electron'
 
+if (process.platform === 'darwin') {
+  // For some reason '/usr/local/bin' isn't in the path when
+  // running on macOS, and if the `nvim` binary is located there
+  // then uivonim won't work properly (since no Neovim instance can
+  // be spawned).
+  process.env.PATH += ':/usr/local/bin'
+}
+
 let win: any
 app.setName('uivonim')
 
