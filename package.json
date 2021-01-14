@@ -34,7 +34,7 @@
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.5.0",
-    "inferno": "^7.4.6",
+    "inferno": "^7.4.7",
     "marked": "^1.2.7",
     "ts-node": "^9.1.1"
   },
