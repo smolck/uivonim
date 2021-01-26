@@ -114,6 +114,9 @@ sub('cmd.hide', () => {
   enableCursor()
   showCursor()
 
+  // TODO(smolck)
+  document.getElementById('keycomp-textarea')?.focus()
+
   state.visible = false
 
   render(<CommandLine {...state} />, container)
