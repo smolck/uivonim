@@ -6,7 +6,7 @@
 
 > NOTE: Due to [neovim/neovim#13196](https://github.com/neovim/neovim/issues/13196), if you have `conceallevel` set to a value higher than 0 CPU usage may be abnormally high. See [#39 (comment)](https://github.com/smolck/uivonim/issues/39#issuecomment-719816263).
 
-Uivonim is a fork of [Veonim](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
+Uivonim is a fork of Veonim,
 "a simple modal IDE built on Neovim and VSCode extensions" written in electron with WebGL GPU
 rendering and multithreading. The goal of
 Uivonim is to use Veonim as a base for building a feature-rich cross-platform GUI
@@ -31,7 +31,9 @@ without reliance on VSCode extensions.
 
 ## Getting Started
 
-Download the latest GitHub release, or build from source (see the "build" section at the bottom of this README).
+Download the latest GitHub release, or build from source (see the "build" section at the bottom of this README). Alternatively,
+if you use Arch Linux, there is an [AUR package](https://aur.archlinux.org/packages/uivonim-git/) for uivonim, kindly provided
+by [@SilverRainZ](https://github.com/SilverRainZ) (see [#55](https://github.com/smolck/uivonim/issues/55)).
 
 ## Other Cool Projects
 
