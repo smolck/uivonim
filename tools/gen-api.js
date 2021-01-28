@@ -1,10 +1,7 @@
 'use strict'
 
-// TODO: we should probably just move this file to @veonim/neovim repo
-// that way the generate API typings match the package version installed
 const {
   encode,
-  decode,
   createEncodeStream,
   createDecodeStream,
 } = require('msgpack-lite')
@@ -12,33 +9,22 @@ const { createWriteStream } = require('fs')
 const { spawn } = require('child_process')
 const { join } = require('path')
 
-let Neovim
-if (process.platform === 'darwin')
-  Neovim = require('@veonim/neovim-mac').default
-if (process.platform === 'win32') Neovim = require('@veonim/neovim-win').default
-if (process.platform === 'linux')
-  Neovim = require('@veonim/neovim-linux').default
-
 const out = createWriteStream(join(__dirname, '../src/neovim/protocol.ts'))
 const leftPad = (str, amt) => Array(amt).fill(' ').join('') + str
 const write = (m = '', pad = 0) => out.write(leftPad(`${m}\n`, pad))
 const mix = (...a) => Object.assign({}, ...a)
 
-const { stdin, stdout } = Neovim(['--embed', '-u', 'NORC'])
+const nvimProc = spawn('nvim', ['--embed', '-u', 'NORC'])
+const stdin = nvimProc.stdin
+const stdout = nvimProc.stdout
+// const { stdin, stdout } = Neovim(['--embed', '-u', 'NORC'])
+
 const stupidEncoder = createEncodeStream()
 const encoder = stupidEncoder.pipe(stdin)
 const toVim = (m) => encoder.write(encode(m))
 
 const decoder = createDecodeStream()
 stdout.pipe(decoder)
-
-const param = (p) => {
-  const res = []
-  for (let ix = 0; ix < p.length; ix += 2) {
-    res.push(`${p[ix]}: ${p[ix + 1]}`)
-  }
-  return res
-}
 
 const wildcard = (t) => {
   if (t.includes('ArrayOf(Integer')) return 'number[]'
@@ -174,7 +160,7 @@ decoder.on('data', (raw) => {
   extraTypes.forEach((t) => write(t.name + ',', 2))
   write('}')
 
-  setTimeout((m) => process.exit(0), 2e3)
+  setTimeout((_) => process.exit(0), 2e3)
 })
 
 toVim([0, 1, 'nvim_get_api_info', []])
