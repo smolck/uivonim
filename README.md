@@ -13,7 +13,7 @@ Uivonim is to use Veonim as a base for building a feature-rich cross-platform GU
 that leverages the latest Neovim features (floating windows, builtin LSP, Lua)
 without reliance on VSCode extensions.
 
-*Veonim is being actively developed as well. For a glimpse at the future, check out <https://glitchtron.org/veonim/>.*
+_Veonim is being actively developed as well. For a glimpse at the future, check out <https://glitchtron.org/veonim/>._
 
 ![](./screenshots/main.png)
 

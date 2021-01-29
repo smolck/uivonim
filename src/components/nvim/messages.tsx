@@ -239,7 +239,7 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
   if (!message || message.stealsFocus) return
 
   const shortcuts = message.actions.map((m) => m.shortcut)
-  console.log("shortcuts", shortcuts)
+  console.log('shortcuts', shortcuts)
   registerOneTimeUseShortcuts(shortcuts, (shortcut) => {
     const action = message.actions.find((m) => m.shortcut === shortcut)
     if (action) message.onAction(action.label)
