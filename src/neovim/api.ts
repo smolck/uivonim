@@ -746,7 +746,7 @@ const createBuffer = (id: any) =>
       ]),
     addVirtualText: (line, text) => {
       // TODO: set highlight groups in the chunks arr
-      api.buf.setVirtualText(id, -1, line, [text])
+      api.buf.setVirtualText(id, -1, line, [text], {})
     },
   } as Buffer)
 

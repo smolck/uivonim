@@ -45,6 +45,7 @@ const toJSTypes = (type) =>
     Object: 'any',
     Array: 'any[]',
     Integer: 'number',
+    Float: 'number',
     Boolean: 'boolean',
     String: 'string',
     Dictionary: 'object',

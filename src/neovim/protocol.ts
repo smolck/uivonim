@@ -1,5 +1,5 @@
 // AUTO-GENERATED! This file automagically generated with gen-api.js
-// Thu, 28 Jan 2021 01:04:31 GMT
+// Fri, 29 Jan 2021 03:33:45 GMT
 // Neovim version: 0.5.0
 
 export interface ExtContainer {
@@ -76,8 +76,8 @@ export interface Events {
     win: ExtContainer,
     anchor: string,
     anchor_grid: number,
-    anchor_row: Float,
-    anchor_col: Float,
+    anchor_row: number,
+    anchor_col: number,
     focusable: boolean
   ): void
   win_external_pos(grid: number, win: ExtContainer): void
@@ -141,7 +141,7 @@ export interface Api {
   uiSetOption(name: string, value: any): void
   uiTryResizeGrid(grid: number, width: number, height: number): void
   uiPumSetHeight(height: number): void
-  uiPumSetBounds(width: Float, height: Float, row: Float, col: Float): void
+  uiPumSetBounds(width: number, height: number, row: number, col: number): void
   exec(src: string, output: boolean): Promise<string>
   command(command: string): void
   getHlByName(name: string, rgb: boolean): Promise<object>
@@ -327,7 +327,8 @@ export interface Buffer {
     chunks: any[],
     opts: object
   ): Promise<number>
-  call(buffer: Buffer, fun: LuaRef): Promise<any>
+  // TODO(smolck): Not exactly sure what this is, or what LuaRef should be in TS
+  // call(buffer: Buffer, fun: LuaRef): Promise<any>
   getNumber(buffer: Buffer): Promise<number>
   clearHighlight(
     buffer: Buffer,
