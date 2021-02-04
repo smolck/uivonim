@@ -34,7 +34,7 @@
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.5.0",
     "inferno": "^7.4.7",
-    "marked": "^1.2.8",
+    "marked": "^1.2.9",
     "ts-node": "^9.1.1"
   },
   "devDependencies": {
