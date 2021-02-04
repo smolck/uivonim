@@ -47,7 +47,7 @@
     "@medv/finder": "^2.0.0",
     "@types/fuzzaldrin-plus": "^0.6.1",
     "@types/marked": "^1.2.2",
-    "@types/node": "^14.14.22",
+    "@types/node": "^14.14.24",
     "@types/webgl2": "0.0.5",
     "babel-plugin-inferno": "^6.1.1",
     "babel-plugin-syntax-jsx": "^6.18.0",
