@@ -32,7 +32,7 @@ export const getActiveInstance = () => {
 }
 
 export const createVim = async (name: string, dir?: string) => {
-  const { id, path } = await create({ dir })
+  const { id, path } = await create(dir)
   const lastId = currentVimID
   const instance = Worker('instance', {
     workerData: { id, nvimPath: path },
