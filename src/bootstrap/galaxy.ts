@@ -30,7 +30,7 @@ let nvimBinaryPath: string | undefined = undefined
 if ((args.length - 1) == nvimIndex) {
   console.warn("No argument passed to --nvim, using default `nvim`")
 } else {
-  nvimBinaryPath = args[args.findIndex((val) => val == '--nvim') + 1]
+  nvimBinaryPath = args[nvimIndex + 1]
 }
 
 requestAnimationFrame(() => {
