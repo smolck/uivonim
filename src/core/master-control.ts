@@ -55,8 +55,8 @@ const vimInstances = new Map<number, VimInstance>()
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = (pipeName: string) =>
-  spawn('nvim', [
+const spawnVimInstance = (pipeName: string, nvimBinary?: string) =>
+  spawn(nvimBinary ?? 'nvim', [
     '--cmd',
     `com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)`,
     '--embed',
@@ -64,9 +64,9 @@ const spawnVimInstance = (pipeName: string) =>
     pipeName,
   ])
 
-const createNewVimInstance = (): number => {
+const createNewVimInstance = (nvimBinary?: string): number => {
   const pipeName = getPipeName('veonim-instance')
-  const proc = spawnVimInstance(pipeName)
+  const proc = spawnVimInstance(pipeName, nvimBinary)
   const id = ids.vim.next()
 
   vimInstances.set(id, { id, proc, pipeName, attached: false })
@@ -103,9 +103,12 @@ export const switchTo = (id: number) => {
 }
 
 export const create = async (
-  { dir } = {} as { dir?: string }
+  // TODO(smolck): Should be equivalent to this:
+  // { dir } = {} as { dir?: string }
+  dir?: string,
+  nvimBinary?: string
 ): Promise<NewVimResponse> => {
-  const id = createNewVimInstance()
+  const id = createNewVimInstance(nvimBinary)
   switchTo(id)
 
   api.command(`${startupFuncs()} | ${startupCmds}`)
