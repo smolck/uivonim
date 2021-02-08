@@ -31,7 +31,11 @@ export const getActiveInstance = () => {
   return nvim.instance
 }
 
-export const createVim = async (name: string, useWsl: boolean, dir?: string) => {
+export const createVim = async (
+  name: string,
+  useWsl: boolean,
+  dir?: string
+) => {
   const { id, path } = await create(useWsl, dir)
   const lastId = currentVimID
   const instance = Worker('instance', {

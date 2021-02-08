@@ -55,7 +55,11 @@ const vimInstances = new Map<number, VimInstance>()
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = (pipeName: string, useWsl: boolean, nvimBinary?: string) => {
+const spawnVimInstance = (
+  pipeName: string,
+  useWsl: boolean,
+  nvimBinary?: string
+) => {
   const args = [
     '--cmd',
     `com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)`,
@@ -63,10 +67,12 @@ const spawnVimInstance = (pipeName: string, useWsl: boolean, nvimBinary?: string
     '--listen',
     pipeName,
   ]
-  return useWsl ? spawn('wsl', [nvimBinary ?? 'nvim', ...args]) : spawn(nvimBinary ?? 'nvim', args)
+  return useWsl
+    ? spawn('wsl', [nvimBinary ?? 'nvim', ...args])
+    : spawn(nvimBinary ?? 'nvim', args)
 }
 
-const createNewVimInstance = (useWsl: boolean,nvimBinary?: string): number => {
+const createNewVimInstance = (useWsl: boolean, nvimBinary?: string): number => {
   const pipeName = getPipeName('veonim-instance')
   const proc = spawnVimInstance(pipeName, useWsl, nvimBinary)
   const id = ids.vim.next()
@@ -109,7 +115,7 @@ export const create = async (
   // { dir } = {} as { dir?: string }
   useWsl: boolean,
   dir?: string,
-  nvimBinary?: string,
+  nvimBinary?: string
 ): Promise<NewVimResponse> => {
   const id = createNewVimInstance(useWsl, nvimBinary)
   switchTo(id)
