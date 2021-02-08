@@ -27,8 +27,8 @@ workspace.resize()
 const args = remote.process.argv.slice(2)
 const nvimIndex = args.findIndex((val) => val == '--nvim')
 let nvimBinaryPath: string | undefined = undefined
-if ((args.length - 1) == nvimIndex) {
-  console.warn("No argument passed to --nvim, using default `nvim`")
+if (args.length - 1 == nvimIndex) {
+  console.warn('No argument passed to --nvim, using default `nvim`')
 } else {
   nvimBinaryPath = args[nvimIndex + 1]
 }
