@@ -165,7 +165,7 @@ const isNotChar = (e: KeyboardEvent): boolean => {
     !e.shiftKey
   )
     return false
-  if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1)
+  if ((e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) && e.key.length === 1)
     return false
 
   return true
