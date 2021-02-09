@@ -31,7 +31,8 @@ if (wslIndex != -1) useWsl = true
 
 const nvimIndex = args.findIndex((val) => val == '--nvim')
 let nvimBinaryPath: string | undefined = undefined
-if (args.length - 1 == nvimIndex) {
+// TODO(smolck)
+if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
   console.warn('No argument passed to --nvim, using default `nvim`')
 } else if (nvimIndex != -1) {
   nvimBinaryPath = args[nvimIndex + 1]
