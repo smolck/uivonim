@@ -1,6 +1,5 @@
 import {
   asColor,
-  // TODO(smolck): ID,
   onFnCall,
   merge,
   prefixWith,
