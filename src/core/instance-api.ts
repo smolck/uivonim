@@ -5,9 +5,9 @@ import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import * as dispatch from '../messaging/dispatch'
+import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
-import { GitStatus } from '../support/git'
 import { clipboard } from 'electron'
 
 const ee = new EventEmitter()
@@ -20,7 +20,7 @@ const {
 } = NeovimState('nvim-mirror')
 
 const actionRegistrations: string[] = []
-export const setupNvimStuff = () => {
+export const setupNvimOnHandlers = () => {
   const workerInstance = getWorkerInstance()
   if (actionRegistrations.length)
     actionRegistrations.forEach((name) => workerInstance.call.onAction(name))

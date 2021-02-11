@@ -13,7 +13,7 @@ import { Api, Prefixes } from '../neovim/protocol'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
 import SetupRPC from '../messaging/rpc'
-import { setupNvimStuff } from '../core/instance-api'
+import { setupNvimOnHandlers } from '../core/instance-api'
 import { remote } from 'electron'
 
 type RedrawFn = (m: any[]) => void
@@ -133,10 +133,7 @@ export const createNvim = async (
   workerInstance = Worker('instance', {
     workerData: { nvimPath: path },
   })
-  setupNvimStuff()
-  // TODO(smolck):
-  // nvimInstance.active = true
-  // nvimInstance.nameFollowsCwd = !!dir,
+  setupNvimOnHandlers()
 }
 
 const { notify, request, onEvent, onData } = SetupRPC((m) =>

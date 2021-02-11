@@ -1,4 +1,3 @@
-// import * as instanceManager from '../core/instance-manager'
 import { requireDir, debounce } from '../support/utils'
 import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
