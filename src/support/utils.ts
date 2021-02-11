@@ -210,10 +210,14 @@ export const asColor = (color?: number) =>
     : undefined
 
 // https://stackoverflow.com/a/35008327
-export const exists = async (path: string): Promise<boolean> => fs.access(path).then(() => true).catch(() => false)
+export const exists = async (path: string): Promise<boolean> =>
+  fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false)
 
 export const readFile = (path: string, encoding = 'utf8') =>
-  // TODO(smolck): 
+  // TODO(smolck):
   // @ts-ignore
   fs.readFile(path, { encoding: encoding })
 export const writeFile = async (path: string, data: string) => {
@@ -239,9 +243,7 @@ interface DirFileInfo {
 }
 
 export const getDirFiles = async (path: string): Promise<DirFileInfo[]> => {
-  const paths = (await fs.readdir(
-    path
-  ).catch((_e: string) => [])) as string[]
+  const paths = (await fs.readdir(path).catch((_e: string) => [])) as string[]
   const filepaths = paths.map((f) => ({ name: f, path: join(path, f) }))
 
   const filesreq = await Promise.all(
@@ -390,8 +392,10 @@ export const ensureDir = (path: string) =>
     (q, dir, ix, arr) =>
       q.then(async () => {
         try {
-              return fs.mkdir(join(...arr.slice(0, ix), dir))
-          } catch (e) { console.warn(`error in ensureDir, src/support/utils.ts: ${e}`)}
+          return fs.mkdir(join(...arr.slice(0, ix), dir))
+        } catch (e) {
+          console.warn(`error in ensureDir, src/support/utils.ts: ${e}`)
+        }
       }),
     Promise.resolve()
   )

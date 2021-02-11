@@ -168,7 +168,8 @@ export const getColorByName = async (name: string): Promise<Color> => {
 }
 
 export const getColorById = (id: number): Color => {
-  const hlgrp = highlights.get(getWorkerInstance(), id) || ({} as HighlightGroup)
+  const hlgrp =
+    highlights.get(getWorkerInstance(), id) || ({} as HighlightGroup)
   return {
     foreground: hlgrp.foreground,
     background: hlgrp.background,

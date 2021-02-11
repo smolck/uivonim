@@ -121,7 +121,7 @@ const createAndSetupVimInstance = (useWsl: boolean, nvimBinary?: string) => {
 export const createVim = async (
   useWsl: boolean,
   nvimBinaryPath?: string,
-  dir?: string,
+  dir?: string
 ) => {
   // const { id, path } = await create(useWsl, dir)
   createAndSetupVimInstance(useWsl, nvimBinaryPath)

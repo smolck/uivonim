@@ -39,14 +39,12 @@ export const setupNvimStuff = () => {
     dispatch.pub('message.status', message)
   })
   workerInstance.on.vimrcLoaded(() => ee.emit('nvim.load', false))
-  workerInstance.on.gitStatus(
-    (status: GitStatus) => ee.emit('git.status', status)
+  workerInstance.on.gitStatus((status: GitStatus) =>
+    ee.emit('git.status', status)
   )
-  workerInstance.on.gitBranch(
-    (branch: string) => ee.emit('git.branch', branch)
-  )
-  workerInstance.on.actionCalled(
-    (name: string, args: any[]) => ee.emit(`action.${name}`, ...args)
+  workerInstance.on.gitBranch((branch: string) => ee.emit('git.branch', branch))
+  workerInstance.on.actionCalled((name: string, args: any[]) =>
+    ee.emit(`action.${name}`, ...args)
   )
   workerInstance.on.ai((namespace: string, method: string, args: any[]) => {
     ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
