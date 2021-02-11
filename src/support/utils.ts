@@ -10,7 +10,7 @@ import {
   relative,
 } from 'path'
 import { createConnection } from 'net'
-import * as fs from 'fs/promises'
+import { promises as fs } from 'fs'
 import { EventEmitter } from 'events'
 import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
