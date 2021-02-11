@@ -81,6 +81,7 @@ export const prefixWith = (prefix: string) => (m: string) =>
 export const merge = Object.assign
 export const cc = (...a: any[]) => Promise.all(a)
 export const delay = (t: number) => new Promise((d) => setTimeout(d, t))
+export const ID = (val = 0) => ({ next: () => (val++, val) })
 export const $ = <T>(...fns: Function[]) => (...a: any[]) =>
   (fns.reduce((res, fn, ix) => (ix ? fn(res) : fn(...res)), a) as unknown) as T
 export const is = new Proxy<Types>({} as Types, {
