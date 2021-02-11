@@ -25,7 +25,7 @@ interface NvimInstance {
   pipeName: string
 }
 
-const vimOptions = {
+const nvimOptions = {
   ext_popupmenu: true,
   ext_tabline: true,
   ext_wildmenu: true,
@@ -89,14 +89,14 @@ const attachNvim = () => {
     console.warn('Already attached nvim')
   }
 
-  api.uiAttach(clientSize.width, clientSize.height, vimOptions)
+  api.uiAttach(clientSize.width, clientSize.height, nvimOptions)
   // highlight groups defined before nvim_ui_attach get reset
   api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
   api.command(`highlight ${Highlight.Underline} gui=underline`)
   nvim.attached = true
 }
 
-const createAndSetupVimInstance = (useWsl: boolean, nvimBinary?: string) => {
+const createAndSetupNvimInstance = (useWsl: boolean, nvimBinary?: string) => {
   if (nvimInstance) {
     console.log('Already created vim instance???')
   }
@@ -118,13 +118,13 @@ const createAndSetupVimInstance = (useWsl: boolean, nvimBinary?: string) => {
   setupNvimInstance()
 }
 
-export const createVim = async (
+export const createNvim = async (
   useWsl: boolean,
   nvimBinaryPath?: string,
   dir?: string
 ) => {
   // const { id, path } = await create(useWsl, dir)
-  createAndSetupVimInstance(useWsl, nvimBinaryPath)
+  createAndSetupNvimInstance(useWsl, nvimBinaryPath)
   const { pipeName: path } = nvimInstance!
 
   api.command(`${startupFuncs()} | ${startupCmds}`)

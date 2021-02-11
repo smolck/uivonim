@@ -39,8 +39,7 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
 }
 
 requestAnimationFrame(() => {
-  // nvim.createVim('main', useWsl, nvimBinaryPath)
-  nvim.createVim(useWsl, nvimBinaryPath)
+  nvim.createNvim(useWsl, nvimBinaryPath)
 
   // high priority components
   requestAnimationFrame(() => {
