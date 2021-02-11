@@ -1,18 +1,13 @@
-import {
-  getActiveInstance,
-  onSwitchVim,
-  onCreateVim,
-  instances,
-} from '../core/instance-manager'
+import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import * as dispatch from '../messaging/dispatch'
-import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
+import { GitStatus } from '../support/git'
 import { clipboard } from 'electron'
 
 const ee = new EventEmitter()
@@ -23,86 +18,67 @@ const {
   onStateChange,
   untilStateValue,
 } = NeovimState('nvim-mirror')
+
 const actionRegistrations: string[] = []
-
-onCreateVim((info) => {
-  const isActive = () => info.id && instances.current
-  const instance = getActiveInstance()
-
+export const setupNvimStuff = () => {
+  const workerInstance = getWorkerInstance()
   if (actionRegistrations.length)
-    actionRegistrations.forEach((name) => instance.call.onAction(name))
+    actionRegistrations.forEach((name) => workerInstance.call.onAction(name))
 
-  instance.on.nvimStateUpdate((stateDiff: any) => {
-    if (info.id !== instances.current) return
+  workerInstance.on.nvimStateUpdate((stateDiff: any) => {
     // TODO: do we need this to always be updated or can we query these values?
     // this will trigger on every cursor move and take up time in the render cycle
     Object.assign(state, stateDiff)
   })
 
-  instance.on.showNeovimMessage(async (...a: any[]) => {
-    if (!isActive()) return
+  workerInstance.on.showNeovimMessage(async (...a: any[]) => {
     const msg = require('../components/nvim/messages').default.show(...a)
     return msg.promise
   })
-  instance.on.showStatusBarMessage((message: string) => {
-    isActive() && dispatch.pub('message.status', message)
+  workerInstance.on.showStatusBarMessage((message: string) => {
+    dispatch.pub('message.status', message)
   })
-  instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
-  instance.on.gitStatus(
-    (status: GitStatus) => isActive() && ee.emit('git.status', status)
+  workerInstance.on.vimrcLoaded(() => ee.emit('nvim.load', false))
+  workerInstance.on.gitStatus(
+    (status: GitStatus) => ee.emit('git.status', status)
   )
-  instance.on.gitBranch(
-    (branch: string) => isActive() && ee.emit('git.branch', branch)
+  workerInstance.on.gitBranch(
+    (branch: string) => ee.emit('git.branch', branch)
   )
-  instance.on.actionCalled(
-    (name: string, args: any[]) =>
-      isActive() && ee.emit(`action.${name}`, ...args)
+  workerInstance.on.actionCalled(
+    (name: string, args: any[]) => ee.emit(`action.${name}`, ...args)
   )
-  instance.on.ai((namespace: string, method: string, args: any[]) => {
-    isActive() && ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
+  workerInstance.on.ai((namespace: string, method: string, args: any[]) => {
+    ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
   })
 
-  instance.on.getDefaultColors(async () => ({
+  workerInstance.on.getDefaultColors(async () => ({
     background: colors.background,
     foreground: colors.foreground,
     special: colors.special,
   }))
 
-  instance.on.getCursorPosition(async () => {
+  workerInstance.on.getCursorPosition(async () => {
     const {
       cursor: { row, col },
     } = require('../core/cursor')
     return { row, col }
   })
 
-  instance.on.clipboardRead(async () => clipboard.readText())
-  instance.on.clipboardWrite((text: string) => clipboard.writeText(text))
-})
-
-onSwitchVim(async () => {
-  const instance = getActiveInstance()
-
-  const [nextState, gitInfo] = await Promise.all([
-    instance.request.getState(),
-    instance.request.getGitInfo(),
-  ])
-
-  Object.assign(state, nextState)
-  ee.emit('git.status', gitInfo.status)
-  ee.emit('git.branch', gitInfo.branch)
-  ee.emit('nvim.load', true)
-})
+  workerInstance.on.clipboardRead(async () => clipboard.readText())
+  workerInstance.on.clipboardWrite((text: string) => clipboard.writeText(text))
+}
 
 const getBufferInfo = (): Promise<BufferInfo[]> =>
-  getActiveInstance().request.getBufferInfo()
+  getWorkerInstance().request.getBufferInfo()
 
 const setMode = (mode: VimMode) => {
   Object.assign(state, { mode })
-  getActiveInstance().call.setNvimMode(mode)
+  getWorkerInstance().call.setNvimMode(mode)
 }
 
 const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
-  return getActiveInstance().request.getWindowMetadata()
+  return getWorkerInstance().request.getWindowMetadata()
 }
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {
@@ -111,7 +87,7 @@ const onAction = (name: string, fn: (...args: any[]) => void) => {
   actionRegistrations.push(name)
   ee.on(`action.${name}`, fn)
   try {
-    getActiveInstance().call.onAction(name)
+    getWorkerInstance().call.onAction(name)
   } catch (_) {
     // not worried if no instance, we will register later in 'onCreateVim'
   }
@@ -123,28 +99,28 @@ const git = {
 }
 
 const bufferSearch = (file: string, query: string) =>
-  getActiveInstance().request.bufferSearch(file, query)
+  getWorkerInstance().request.bufferSearch(file, query)
 const bufferSearchVisible = (query: string) =>
-  getActiveInstance().request.bufferSearchVisible(query)
+  getWorkerInstance().request.bufferSearchVisible(query)
 
 const nvimLoaded = (fn: (switchInstance: boolean) => void) =>
   ee.on('nvim.load', fn)
-const nvimGetVar = (key: string) => getActiveInstance().request.nvimGetVar(key)
+const nvimGetVar = (key: string) => getWorkerInstance().request.nvimGetVar(key)
 const nvimCommand = (command: string) =>
-  getActiveInstance().call.nvimCommand(command)
+  getWorkerInstance().call.nvimCommand(command)
 const nvimFeedkeys = (keys: string, mode = 'm') =>
-  getActiveInstance().call.nvimFeedkeys(keys, mode)
-const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
+  getWorkerInstance().call.nvimFeedkeys(keys, mode)
+const nvimExpr = (expr: string) => getWorkerInstance().request.nvimExpr(expr)
 const nvimCall: Functions = onFnCall((name, a) =>
-  getActiveInstance().request.nvimCall(name, a)
+  getWorkerInstance().request.nvimCall(name, a)
 )
 const nvimJumpTo = (coords: HyperspaceCoordinates) =>
-  getActiveInstance().call.nvimJumpTo(coords)
-const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
+  getWorkerInstance().call.nvimJumpTo(coords)
+const nvimGetKeymap = () => getWorkerInstance().request.nvimGetKeymap()
 const nvimGetColorByName = (name: string) =>
-  getActiveInstance().request.nvimGetColorByName(name)
+  getWorkerInstance().request.nvimGetColorByName(name)
 const nvimSaveCursor = async () => {
-  const instance = getActiveInstance()
+  const instance = getWorkerInstance()
   const position = await instance.request.nvimSaveCursor()
   return () => instance.call.nvimRestoreCursor(position)
 }
@@ -153,14 +129,14 @@ const nvimHighlightSearchPattern = async (
   pattern: string,
   id?: number
 ): Promise<number> => {
-  return getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
+  return getWorkerInstance().request.nvimHighlightSearchPattern(pattern, id)
 }
 
 const nvimRemoveHighlightSearch = async (
   id: number,
   pattern?: string
 ): Promise<boolean> => {
-  return getActiveInstance().request.nvimRemoveHighlightSearch(id, pattern)
+  return getWorkerInstance().request.nvimRemoveHighlightSearch(id, pattern)
 }
 
 const onConfig = {
