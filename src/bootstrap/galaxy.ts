@@ -1,4 +1,3 @@
-import * as instanceManager from '../core/instance-manager'
 import { requireDir, debounce } from '../support/utils'
 import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
@@ -39,7 +38,7 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
 }
 
 requestAnimationFrame(() => {
-  instanceManager.createVim('main', useWsl, nvimBinaryPath)
+  nvim.createNvim(useWsl, nvimBinaryPath)
 
   // high priority components
   requestAnimationFrame(() => {

@@ -1,11 +1,11 @@
 import {
   asColor,
-  ID,
   onFnCall,
   merge,
   prefixWith,
   getPipeName,
 } from '../support/utils'
+import Worker from '../messaging/worker'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { startupFuncs, startupCmds } from '../neovim/startup'
@@ -13,23 +13,19 @@ import { Api, Prefixes } from '../neovim/protocol'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
 import SetupRPC from '../messaging/rpc'
+import { setupNvimOnHandlers } from '../core/instance-api'
+import { remote } from 'electron'
 
 type RedrawFn = (m: any[]) => void
-type ExitFn = (id: number, code: number) => void
+type ExitFn = (code: number) => void
 
-interface VimInstance {
-  id: number
+interface NvimInstance {
   proc: ChildProcess
   attached: boolean
   pipeName: string
 }
 
-interface NewVimResponse {
-  id: number
-  path: string
-}
-
-const vimOptions = {
+const nvimOptions = {
   ext_popupmenu: true,
   ext_tabline: true,
   ext_wildmenu: true,
@@ -39,11 +35,6 @@ const vimOptions = {
   ext_hlstate: true,
 }
 
-const ids = {
-  vim: ID(),
-  activeVim: -1,
-}
-
 const clientSize = {
   width: 0,
   height: 0,
@@ -51,11 +42,12 @@ const clientSize = {
 
 let onExitFn: ExitFn = () => {}
 const prefix = prefixWith(Prefixes.Core)
-const vimInstances = new Map<number, VimInstance>()
+let nvimInstance: NvimInstance | undefined = undefined
+let workerInstance: any = undefined
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = (
+const spawnNvimInstance = (
   pipeName: string,
   useWsl: boolean,
   nvimBinary?: string
@@ -72,70 +64,76 @@ const spawnVimInstance = (
     : spawn(nvimBinary ?? 'nvim', args)
 }
 
-const createNewVimInstance = (useWsl: boolean, nvimBinary?: string): number => {
-  const pipeName = getPipeName('veonim-instance')
-  const proc = spawnVimInstance(pipeName, useWsl, nvimBinary)
-  const id = ids.vim.next()
-
-  vimInstances.set(id, { id, proc, pipeName, attached: false })
-
-  proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
-  proc.stdout!.on('error', (e: any) =>
-    console.error(`vim ${id} stdout err ${JSON.stringify(e)}`)
-  )
-  proc.stdin!.on('error', (e: any) =>
-    console.error(`vim ${id} stdin err ${JSON.stringify(e)}`)
-  )
-  proc.on('exit', (c: any) => onExitFn(id, c))
-
-  return id
-}
-
-export const switchTo = (id: number) => {
-  if (!vimInstances.has(id)) return
-  const { proc, attached } = vimInstances.get(id)!
-
-  if (ids.activeVim > -1) {
-    msgpackEncoder.unpipe()
-    vimInstances.get(ids.activeVim)!.proc.stdout!.unpipe()
+const setupNvimInstance = () => {
+  if (!nvimInstance) {
+    throw new Error('INITIALIZE FIRST!!!!')
   }
+  const { proc, attached } = nvimInstance
 
   msgpackEncoder.pipe(proc.stdin!)
+
   // don't kill decoder stream when this stdout stream ends (need for other stdouts)
   proc.stdout!.pipe(msgpackDecoder, { end: false })
-  ids.activeVim = id
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen
   // this is how to repaint the UI with the new vim instance. not the most obvious...
   if (attached) api.uiTryResize(clientSize.width, clientSize.height)
 }
 
-export const create = async (
-  // TODO(smolck): Should be equivalent to this:
-  // { dir } = {} as { dir?: string }
+const attachNvim = () => {
+  if (!nvimInstance) {
+    console.warn('Tried attaching nvim before initializing it')
+  }
+  const nvim = nvimInstance!
+  if (nvim.attached) {
+    console.warn('Already attached nvim')
+  }
+
+  api.uiAttach(clientSize.width, clientSize.height, nvimOptions)
+  // highlight groups defined before nvim_ui_attach get reset
+  api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
+  api.command(`highlight ${Highlight.Underline} gui=underline`)
+  nvim.attached = true
+}
+
+const createAndSetupNvimInstance = (useWsl: boolean, nvimBinary?: string) => {
+  if (nvimInstance) {
+    console.log('Already created vim instance???')
+  }
+  const pipeName = getPipeName('veonim-instance')
+  const proc = spawnNvimInstance(pipeName, useWsl, nvimBinary)
+
+  nvimInstance = { proc, pipeName, attached: false }
+
+  proc.on('error', (e: any) => console.error(`nvim err ${e}`))
+  proc.stdout!.on('error', (e: any) =>
+    console.error(`nvim stdout err ${JSON.stringify(e)}`)
+  )
+  proc.stdin!.on('error', (e: any) =>
+    console.error(`nvim stdin err ${JSON.stringify(e)}`)
+  )
+  proc.on('exit', (c: any) => onExitFn(c))
+
+  attachNvim()
+  setupNvimInstance()
+}
+
+export const createNvim = async (
   useWsl: boolean,
-  dir?: string,
-  nvimBinary?: string
-): Promise<NewVimResponse> => {
-  const id = createNewVimInstance(useWsl, nvimBinary)
-  switchTo(id)
+  nvimBinaryPath?: string,
+  dir?: string
+) => {
+  // const { id, path } = await create(useWsl, dir)
+  createAndSetupNvimInstance(useWsl, nvimBinaryPath)
+  const { pipeName: path } = nvimInstance!
 
   api.command(`${startupFuncs()} | ${startupCmds}`)
   dir && api.command(`cd ${dir}`)
 
-  const { pipeName } = vimInstances.get(id)!
-  return { id, path: pipeName }
-}
-
-export const attachTo = (id: number) => {
-  if (!vimInstances.has(id)) return
-  const vim = vimInstances.get(id)!
-  if (vim.attached) return
-  api.uiAttach(clientSize.width, clientSize.height, vimOptions)
-  // highlight groups defined before nvim_ui_attach get reset
-  api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
-  api.command(`highlight ${Highlight.Underline} gui=underline`)
-  vim.attached = true
+  workerInstance = Worker('instance', {
+    workerData: { nvimPath: path },
+  })
+  setupNvimOnHandlers()
 }
 
 const { notify, request, onEvent, onData } = SetupRPC((m) =>
@@ -150,9 +148,15 @@ const api: Api = onFnCall((name: string, args: any[]) =>
   notify(prefix(name), args)
 )
 
-export const onExit = (fn: ExitFn) => {
+export const getWorkerInstance = () => workerInstance
+
+const onExit = (fn: ExitFn) => {
   onExitFn = fn
 }
+onExit(() => {
+  return remote.app.quit()
+})
+
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
 export const input = (keys: string) => {
   api.input(keys)
@@ -168,7 +172,7 @@ export const resizeGrid = (grid: number, width: number, height: number) =>
 
 export const resize = (width: number, height: number) => {
   merge(clientSize, { width, height })
-  if (ids.activeVim > -1) api.uiTryResize(width, height)
+  api.uiTryResize(width, height)
 }
 
 export const getColor = async (id: number) => {

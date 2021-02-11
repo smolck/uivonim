@@ -1,4 +1,3 @@
-import { onSwitchVim, getCurrentName } from '../../core/instance-manager'
 import { getColorByName } from '../../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../../messaging/dispatch'
 import { darken, brighten, cvar } from '../../ui/css'
@@ -7,7 +6,6 @@ import Icon from '../icon'
 import api from '../../core/instance-api'
 import { colors } from '../../ui/styles'
 import { basename } from 'path'
-import { homedir } from 'os'
 import { render } from 'inferno'
 
 interface Tab {
@@ -383,7 +381,7 @@ api.nvim.watchState.filetype((filetype) => assignStateAndRender({ filetype }))
 api.nvim.watchState.line((line) => assignStateAndRender({ line }))
 api.nvim.watchState.column((column) => assignStateAndRender({ column }))
 api.nvim.watchState.cwd((cwd: string) => {
-  const next = homedir() === cwd ? getCurrentName() : basename(cwd)
+  const next = basename(cwd)
   assignStateAndRender({ cwd: next })
 })
 
@@ -405,7 +403,6 @@ api.git.onStatus((status) =>
 // sub('ai.start', (opts) => ui.aiStart(opts))
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
-onSwitchVim(() => assignStateAndRender({ active: -1, tabs: [] }))
 
 api.nvim.watchState.colorscheme(async () => {
   const { background } = await getColorByName('StatusLine')

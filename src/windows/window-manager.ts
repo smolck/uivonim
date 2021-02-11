@@ -1,5 +1,4 @@
-import { generateColorLookupAtlas } from '../render/highlight-attributes'
-import { onSwitchVim, instances } from '../core/instance-manager'
+import { getWorkerInstance } from '../core/master-control'
 import CreateWindow, { Window, paddingX } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl/renderer'
@@ -18,7 +17,7 @@ const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const superid = (id: number) => `i${instances.current}-${id}`
+const superid = (id: number) => `i${getWorkerInstance()}-${id}`
 
 const getWindowById = (windowId: number) => {
   const win = windowsById.get(superid(windowId))
@@ -29,7 +28,7 @@ const getWindowById = (windowId: number) => {
   return win
 }
 
-const getInstanceWindows = (id = instances.current) =>
+const getInstanceWindows = (id = getWorkerInstance()) =>
   [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
 
 const refreshWebGLGrid = () => {
@@ -272,22 +271,6 @@ onElementResize(webglContainer, (w, h) => {
     w.refreshLayout()
     w.redrawFromGridBuffer()
   })
-})
-
-onSwitchVim((id, lastId) => {
-  getInstanceWindows(lastId).forEach((w) => w.maybeHide())
-  getInstanceWindows(id).forEach((w) => w.maybeShow())
-  const wininfos = getInstanceWindows(id).map((w) => ({ ...w.getWindowInfo() }))
-  const { gridTemplateRows, gridTemplateColumns } = windowSizer(wininfos)
-  Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
-
-  // it's possible that the highlights may be different between nvim instances
-  // even if they are using the same colorscheme. i have personally experienced
-  // this, so we will force update the color atlas to make sure we have
-  // accurate colors for this nvim instance
-  const colorAtlas = generateColorLookupAtlas()
-  webgl.updateColorAtlas(colorAtlas)
-  workspace.resize()
 })
 
 api.nvim.watchState.colorscheme(() =>

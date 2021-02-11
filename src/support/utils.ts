@@ -10,13 +10,11 @@ import {
   relative,
 } from 'path'
 import { createConnection } from 'net'
-// TODO: in the near future we can use require('fs').promises
-import { promisify as P } from 'util'
+import { promises as fs } from 'fs'
 import { EventEmitter } from 'events'
 import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
 import { Transform } from 'stream'
-import * as fs from 'fs'
 export { watchFile } from '../support/fs-watch'
 
 export const spawnBinary = (
@@ -212,13 +210,20 @@ export const asColor = (color?: number) =>
         .join('')
     : undefined
 
-export const exists = (path: string): Promise<boolean> =>
-  new Promise((fin) => fs.access(path, (e) => fin(!e)))
+// https://stackoverflow.com/a/35008327
+export const exists = async (path: string): Promise<boolean> =>
+  fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false)
+
 export const readFile = (path: string, encoding = 'utf8') =>
-  P(fs.readFile)(path, encoding)
+  // TODO(smolck):
+  // @ts-ignore
+  fs.readFile(path, { encoding: encoding })
 export const writeFile = async (path: string, data: string) => {
   await ensureDir(dirname(path))
-  return P(fs.writeFile)(path, data)
+  return fs.writeFile(path, data)
 }
 
 const emptyStat = {
@@ -227,8 +232,7 @@ const emptyStat = {
   isSymbolicLink: () => false,
 }
 
-const getFSStat = async (path: string) =>
-  P(fs.stat)(path).catch((_) => emptyStat)
+const getFSStat = async (path: string) => fs.stat(path).catch((_) => emptyStat)
 
 interface DirFileInfo {
   name: string
@@ -240,9 +244,7 @@ interface DirFileInfo {
 }
 
 export const getDirFiles = async (path: string): Promise<DirFileInfo[]> => {
-  const paths = (await P(fs.readdir)(
-    path
-  ).catch((_e: string) => [])) as string[]
+  const paths = (await fs.readdir(path).catch((_e: string) => [])) as string[]
   const filepaths = paths.map((f) => ({ name: f, path: join(path, f) }))
 
   const filesreq = await Promise.all(
@@ -273,14 +275,14 @@ export const getDirs = async (path: string) =>
   (await getDirFiles(path)).filter((m) => m.dir)
 export const getFiles = async (path: string) =>
   (await getDirFiles(path)).filter((m) => m.file)
-const isFile = async (path: string) => (await P(fs.stat)(path)).isFile()
-const copyFile = (src: string, dest: string) => P(fs.copyFile)(src, dest)
+const isFile = async (path: string) => (await fs.stat(path)).isFile()
+const copyFile = (src: string, dest: string) => fs.copyFile(src, dest)
 
 export const getDirsFilesRecursively = async (
   startPath: string
 ): Promise<DirFileInfo[]> => {
   const dive = async (path: string): Promise<DirFileInfo[]> => {
-    const paths = (await P(fs.readdir)(path).catch(() => [])) as string[]
+    const paths = (await fs.readdir(path).catch(() => [])) as string[]
     const filepaths = paths.map((f) => ({ name: f, path: join(path, f) }))
     const filesreq = await Promise.all(
       filepaths.map(async (f) => ({
@@ -327,22 +329,22 @@ export const remove = async (
     throw new Error(`remove: ${path} does not exist`)
   }
 
-  if (await isFile(path)) return P(fs.unlink)(path)
+  if (await isFile(path)) return fs.unlink(path)
 
   const dfs = await getDirsFilesRecursively(path)
-  if (!dfs.length) return P(fs.rmdir)(path)
+  if (!dfs.length) return fs.rmdir(path)
 
   const files = dfs.filter((m) => m.file)
-  await Promise.all(files.map((f) => P(fs.unlink)(f.path)))
+  await Promise.all(files.map((f) => fs.unlink(f.path)))
   await dfs
     .filter((m) => m.dir)
     .map((m) => ({ ...m, depth: m.path.split(sep).length }))
     .sort((a, b) => b.depth - a.depth)
     .reduce(async (q, m) => {
-      return await q, P(fs.rmdir)(m.path)
+      return await q, fs.rmdir(m.path)
     }, Promise.resolve())
 
-  return P(fs.rmdir)(path)
+  return fs.rmdir(path)
 }
 
 interface CopyOptions {
@@ -376,7 +378,7 @@ export const copy = async (
 
 export const rename = async (path: string, newPath: string) => {
   if (!(await exists(path))) throw new Error(`rename: ${path} does not exist`)
-  return P(fs.rename)(path, newPath)
+  return fs.rename(path, newPath)
 }
 
 export const pathParts = (path: string) => {
@@ -389,8 +391,12 @@ export const pathParts = (path: string) => {
 export const ensureDir = (path: string) =>
   pathParts(path).reduce(
     (q, dir, ix, arr) =>
-      q.then(() => {
-        return P(fs.mkdir)(join(...arr.slice(0, ix), dir)).catch(() => {})
+      q.then(async () => {
+        try {
+          return fs.mkdir(join(...arr.slice(0, ix), dir))
+        } catch (e) {
+          console.warn(`error in ensureDir, src/support/utils.ts: ${e}`)
+        }
       }),
     Promise.resolve()
   )
