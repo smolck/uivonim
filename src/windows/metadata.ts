@@ -45,7 +45,7 @@ const betterTitles = (windows: any[]): WindowMetadata[] => {
 }
 
 export default async (): Promise<WindowMetadata[]> => {
-  const activeWindow = await nvim.current.window.id
+  const activeWindow = nvim.current.window.id
   const wins = await nvim.current.tabpage.windows
 
   const windowsWithApiData = await Promise.all(

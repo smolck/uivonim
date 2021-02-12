@@ -23,7 +23,6 @@ import {
 import {
   is,
   onFnCall,
-  onProp,
   prefixWith,
   simplifyPath,
   remove,
@@ -33,7 +32,6 @@ import {
   workerData,
   request as requestFromUI,
 } from '../messaging/worker-client'
-import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import * as TextEditPatch from '../neovim/text-edit-patch'
 import { normalizeVimMode } from '../support/neovim-utils'
 import { Functions } from '../neovim/function-types'
@@ -42,6 +40,7 @@ import CreateVimState from '../neovim/state'
 import { Position } from '../neovim/types'
 import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
+import * as neovim from 'neovim'
 
 const prefix = {
   core: prefixWith(Prefixes.Core),
@@ -56,7 +55,13 @@ if (!workerData || !workerData.nvimPath)
       workerData
     )}`
   )
-const { notify, request, onEvent } = ConnectMsgpackRPC(workerData.nvimPath)
+
+const nvim = neovim.attach({ socket: workerData.nvimPath })
+const request = nvim.request
+const notify = nvim.notify
+// nvim.on('notification', (x) => console.log("notify bruh", x))
+// nvim.on('notification', (x) => console.log('notify', x))
+const onEvent = (event: string, fn: (...args: any[]) => void) => nvim.on(event, fn)
 
 const registeredEventActions = new Set<string>()
 const {
@@ -148,29 +153,19 @@ const getOptionCurrentAndFuture = (name: string, fn: (value: any) => void) => {
 
 const getVarCurrentAndFuture = (name: string, fn: (value: any) => void) => {
   Reflect.get(g, name).then(fn)
-  cmd(`call dictwatcheradd(g:, '${name}', 'UivonimGChange')`)
+  nvim.command(`call dictwatcheradd(g:, '${name}', 'UivonimGChange')`)
   const key = `gvar::${name}`
   watchers.internal.on(key, fn)
   return () => {
-    cmd(`call dictwatcherdel(g:, '${name}', 'UivonimGChange')`)
+    nvim.command(`call dictwatcherdel(g:, '${name}', 'UivonimGChange')`)
     watchers.internal.removeListener(key, fn)
   }
 }
 
-const cmd = (command: string) => api.core.command(command)
-const cmdOut = (command: string) => req.core.commandOutput(command)
-const expr = (expression: string) => req.core.eval(expression)
-const call: Functions = onFnCall((name, args) =>
-  req.core.callFunction(name, args)
-)
-const feedkeys = (keys: string, mode = 'm', escapeCSI = false) =>
-  req.core.feedkeys(keys, mode, escapeCSI)
-const normal = (keys: string) => cmd(`norm! "${keys.replace(/"/g, '\\"')}"`)
-const callAtomic = (calls: any[]) => req.core.callAtomic(calls)
 const onAction = (event: string, cb: GenericCallback) => {
   watchers.actions.on(event, cb)
   registeredEventActions.add(event)
-  cmd(`let g:uvn_cmd_completions .= "${event}\\n"`)
+  nvim.command(`let g:uvn_cmd_completions .= "${event}\\n"`)
 }
 
 const highlightedIds = new Set<number>()
@@ -216,7 +211,6 @@ const highlightSearchPattern = async (pattern: string, id?: number) => {
 // TODO; nvim_get_color_by_name does not work yet
 // const getColorByName = (name: string) => req.core.getColorByName(name)
 const getColorByName = (name: string) => req.core.getHlByName(name, true)
-const getCurrentLine = () => req.core.getCurrentLine()
 
 const parseKeymap = (keymap: any): Keymap =>
   keymap.reduce((res: Keymap, m: any) => {
@@ -243,16 +237,6 @@ const getKeymap = async (mode = 'n') => {
   return parseKeymap(map)
 }
 
-const getNamedBuffers = async () => {
-  const bufs = await buffers.list()
-  return Promise.all(
-    bufs.map(async (b) => ({
-      buffer: b,
-      name: await b.name,
-    }))
-  )
-}
-
 const loadBuffer = async (file: string): Promise<boolean> => {
   const targetBuffer = await buffers.find(file)
   if (!targetBuffer) return false
@@ -265,12 +249,14 @@ type JumpOpts = HyperspaceCoordinates
 
 const jumpToPositionInFile = async ({ line, path, column }: JumpOpts) => {
   // TODO(smolck): Should this be unconditionally done if there's a path?
-  if (path) cmd(`e ${path}`)
+  if (path) nvim.command(`e ${path}`)
 
   // nvim_win_set_cursor params
   // line: 1-index based
   // column: 0-index based
-  current.window.setCursor(line + 1, column || 0)
+  ;(await nvim.window).cursor = [line + 1, column || 0]
+  // TODO(smolck): Above works/equivalent to below?
+  // current.window.setCursor(line + 1, column || 0)
 }
 
 const jumpTo = async ({ line, column, path }: HyperspaceCoordinates) => {
@@ -283,48 +269,56 @@ const systemAction = (event: string, cb: GenericCallback) =>
 const buffers = {
   /** Get a buffer using a filesystem path. If buffer is not yet in buffer list it will be added to the list */
   getBufferFromPath: async (path: string): Promise<Buffer> => {
-    const bufs = await getNamedBuffers()
+    const bufs = await nvim.buffers
     const found = bufs.find((b) => b.name === path)
-    return found ? found.buffer : buffers.add(path)
+    return found ? found : buffers.add(path)
   },
   /** Create untitled buffer and open it up. Also optionally set filetype and initial contents */
   create: async ({ filetype = '', content = '' } = {}) => {
-    const bufid = await call.bufnr('[No Name]', 420)
-    cmd(`b ${bufid}`)
-    const buffer = createBuffer(bufid)
-    if (filetype) buffer.setOption(BufferOption.Filetype, filetype)
-    if (content) buffer.append(0, content.split('\n'))
+    // TODO(smolck): Umm . . . what is this even doing?
+    // const bufid = await nvim.call('bufnr', ['[No Name]', 420])
+    // nvim.command(`b ${bufid}`)
+    const buffer = await nvim.createBuffer(true, false)
+    // TODO(smolck)
+    if (buffer === 0) throw new Error("ERROR MESSAGE GOES HERE BUFFER STUFF")
+
+    if (filetype) (buffer as neovim.Buffer).setOption(BufferOption.Filetype, filetype)
+    // if (content) (buffer as neovim.Buffer).append(0, content.split('\n'))
+
+    // TODO(smolck): Below isn't really equivalent, but . . .
+    if (content) (buffer as neovim.Buffer).append(content.split('\n'))
     return buffer
   },
   /** List all buffers */
-  list: () => as.bufl(req.core.listBufs()),
+  list: () => nvim.buffers,
   /** Open a buffer from a filesystem path in the current window */
   open: async (path: string) => {
     const loaded = await loadBuffer(path)
     if (loaded) return true
 
-    cmd(`badd ${path}`)
+    nvim.command(`badd ${path}`)
     return loadBuffer(path)
   },
   /** Find a buffer from a filesystem path */
   find: async (path: string) => {
-    const buffers = await getNamedBuffers()
+    const bufs = await nvim.buffers
+
     // it appears that buffers name will have a fullpath, like
     // `/Users/anna/${name}` so we will try to substring match
     // the end of the name
-    const found = buffers.find((b) => b.name.endsWith(path)) || {
-      buffer: dummy.buf,
-    }
-    return found.buffer
+
+    // TODO(smolck)
+    const found = bufs.find(async (b) => (await b.name).endsWith(path))
+    return found
   },
   /** Add a new buffer to the buffer list from the given filesystem path */
   add: async (path: string) => {
-    const bufs = await getNamedBuffers()
+    const bufs = await nvim.buffers
     const existingBuffer = bufs.find((m) => m.name === path)
-    if (existingBuffer) return existingBuffer.buffer
+    if (existingBuffer) return existingBuffer
 
     // TODO: use nvim_create_buf() when it is available
-    cmd(`badd ${path}`)
+    nvim.command(`badd ${path}`)
     const buffer = await buffers.find(path)
     if (!buffer)
       throw new Error(
@@ -333,7 +327,7 @@ const buffers = {
     return buffer
   },
   /** Remove a buffer from the buffer list */
-  remove: (path: string) => cmd(`bdelete ${path}`),
+  remove: (path: string) => nvim.command(`bdelete ${path}`),
   /** Rename buffer and file given old and new paths. This affects the filesystem */
   rename: async (oldPath: string, newPath: string) => {
     buffers.remove(oldPath)
@@ -348,15 +342,15 @@ const buffers = {
   /** List all buffers with some useful metadata preloaded */
   listWithInfo: async (): Promise<BufferInfo[]> => {
     const bufs = await buffers.list()
-    const currentBufferId = current.buffer.id
+    const currentBufferId = (await nvim.buffer).id
 
     const bufInfo = await Promise.all(
       bufs.map(async (b) => ({
         name: await b.name,
         current: b.id === currentBufferId,
-        modified: await b.getOption(BufferOption.Modified),
-        listed: await b.getOption(BufferOption.Listed),
-        terminal: await b.isTerminal(),
+        modified: await b.getOption(BufferOption.Modified) as boolean,
+        listed: await b.getOption(BufferOption.Listed) as string,
+        terminal: await b.getOption(BufferOption.Type) === BufferType.Terminal,
       }))
     )
 
@@ -392,11 +386,11 @@ const buffers = {
 }
 
 const windows = {
-  list: () => as.winl(req.core.listWins()),
+  list: () => nvim.windows,
 }
 
 const tabs = {
-  list: () => as.tabl(req.core.listTabpages()),
+  list: () => nvim.tabpages,
 }
 
 const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
@@ -406,7 +400,7 @@ const getCursorPosition = () => requestFromUI.getCursorPosition()
 const emptyObject: { [index: string]: any } = Object.create(null)
 const g = new Proxy(emptyObject, {
   get: async (_t, name: string) => {
-    const val = await req.core.getVar(name as string).catch((e) => e)
+    const val = await nvim.getVar(name as string).catch((e) => e)
     const err =
       is.array(val) && is.string(val[1]) && /Key (.*?)not found/.test(val[1])
     return err ? undefined : val
@@ -441,7 +435,7 @@ const untilEvent: UntilEvent = new Proxy(Object.create(null), {
 })
 
 const refreshState = async () => {
-  const nextState = await call.UivonimState()
+  const nextState = await nvim.call('UivonimState')
   Object.assign(state, nextState)
 }
 
@@ -454,7 +448,7 @@ const registerFiletype = (bufnr: number, filetype: string) => {
 }
 
 const events = [...registeredEventActions.values()].join('\\n')
-cmd(`let g:uvn_cmd_completions .= "${events}\\n"`)
+nvim.command(`let g:uvn_cmd_completions .= "${events}\\n"`)
 
 subscribe('uivonim', ([event, args = []]) =>
   watchers.actions.emit(event, ...args)
@@ -508,19 +502,19 @@ autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
 autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
 autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
 autocmd.BufAdd((bufId) =>
-  watchers.events.emit('bufOpen', createBuffer(bufId - 0))
+  watchers.events.emit('bufOpen', bufId)
 )
 autocmd.BufEnter((bufId) =>
-  watchers.events.emit('bufLoad', createBuffer(bufId - 0))
+  watchers.events.emit('bufLoad', bufId)
 )
 autocmd.BufWritePre((bufId) =>
-  watchers.events.emit('bufWritePre', createBuffer(bufId - 0))
+  watchers.events.emit('bufWritePre', bufId)
 )
 autocmd.BufWritePost((bufId) =>
-  watchers.events.emit('bufWrite', createBuffer(bufId - 0))
+  watchers.events.emit('bufWrite', bufId)
 )
 autocmd.BufWipeout((bufId) =>
-  watchers.events.emit('bufClose', createBuffer(bufId - 0))
+  watchers.events.emit('bufClose', bufId)
 )
 autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
@@ -560,50 +554,19 @@ const _currentCache: CurrentCache = {
 }
 
 const current = {
-  get buffer(): Buffer {
-    const promise = as.buf(req.core.getCurrentBuf())
-
-    return onProp<Buffer>((prop) => {
-      if (prop === 'id' && _currentCache.buffer) return _currentCache.buffer.id
-      const testValue = Reflect.get(dummy.buf, prop)
-      if (testValue == null)
-        throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then((m) => Reflect.get(m, prop))
-    })
+  get buffer(): neovim.Buffer {
+    return nvim.buffer
   },
-  get window(): Window {
-    const promise = as.win(req.core.getCurrentWin())
-
-    return onProp<Window>((prop) => {
-      if (prop === 'id' && _currentCache.window) return _currentCache.window.id
-      const testValue = Reflect.get(dummy.win, prop)
-      if (testValue == null)
-        throw new TypeError(`${prop as string} does not exist on Neovim.Window`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then((m) => Reflect.get(m, prop))
-    })
+  get window(): neovim.Window {
+    return nvim.window
   },
-  get tabpage(): Tabpage {
-    const promise = as.tab(req.core.getCurrentTabpage())
-
-    return onProp<Tabpage>((prop) => {
-      const testValue = Reflect.get(dummy.tab, prop)
-      if (testValue == null)
-        throw new TypeError(
-          `${prop as string} does not exist on Neovim.Tabpage`
-        )
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then((m) => Reflect.get(m, prop))
-    })
+  get tabpage(): neovim.Tabpage {
+    return nvim.tabpage
   },
 }
 
 const fromId = {
-  buffer: (id: number): Buffer => createBuffer(id),
+  // buffer: (id: number): Buffer => nvim.,
   window: (id: number): Window => createWindow(id),
   tabpage: (id: number): Tabpage => createTabpage(id),
 }
@@ -611,144 +574,144 @@ const fromId = {
 const HL_CLR = 'nvim_buf_clear_highlight'
 const HL_ADD = 'nvim_buf_add_highlight'
 
-const createBuffer = (id: any) =>
-  ({
-    id,
-    get number() {
-      return req.buf.getNumber(id)
-    },
-    get valid() {
-      return req.buf.isValid(id)
-    },
-    get name() {
-      return req.buf.getName(id)
-    },
-    get length() {
-      return req.buf.lineCount(id)
-    },
-    get changedtick() {
-      return req.buf.getChangedtick(id)
-    },
-    getOffset: (line) => req.buf.getOffset(id, line),
-    isLoaded: () => req.buf.isLoaded(id),
-    isTerminal: async () =>
-      (await req.buf.getOption(id, BufferOption.Type)) === BufferType.Terminal,
-    attach: ({ sendInitialBuffer }, cb) => {
-      watchers.bufferEvents.on(`change:${id}`, cb)
-      req.buf.attach(id, sendInitialBuffer, {}).then((attached) => {
-        if (!attached) return console.error('could not attach to buffer:', id)
-      })
-      watchers.bufferEvents.once(`detach:${id}`, () => {
-        watchers.bufferEvents.removeListener(`change:${id}`, cb)
-      })
-    },
-    onChangedTick: (onChangedTickFn) => {
-      watchers.bufferEvents.on(`changedtick:${id}`, onChangedTickFn)
-      watchers.bufferEvents.once(`detach:${id}`, () => {
-        watchers.bufferEvents.removeListener(
-          `changedtick:${id}`,
-          onChangedTickFn
-        )
-      })
-    },
-    onDetach: (onDetachFn) => {
-      watchers.bufferEvents.once(`detach:${id}`, onDetachFn)
-    },
-    detach: () => {
-      watchers.bufferEvents.removeAllListeners(`change:${id}`)
-      req.buf.detach(id).then((detached) => {
-        if (!detached) console.error('could not detach from buffer:', id)
-      })
-    },
-    append: async (start, lines) => {
-      const replacement = is.array(lines)
-        ? (lines as string[])
-        : [lines as string]
-      const linesBelow = await req.buf.getLines(id, start, -2, false)
-      const newLines = [...replacement, ...linesBelow]
-
-      api.buf.setLines(
-        id,
-        start + 1,
-        start + 1 + newLines.length,
-        false,
-        newLines
-      )
-    },
-    getAllLines: () => req.buf.getLines(id, 0, -2, true),
-    // getLines line ranges are end exclusive so we +1
-    getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
-    getLine: (start) =>
-      req.buf.getLines(id, start, start + 1, true).then((m) => m[0]),
-    setLines: (start, end, lines) =>
-      api.buf.setLines(id, start, end, true, lines),
-    delete: (start) => api.buf.setLines(id, start, start + 1, true, []),
-    appendRange: async (
-      position: { line: any; character: any },
-      text: any,
-      undojoin = false
-    ) => {
-      const { line, character: column } = position
-      const lines = await req.buf.getLines(id, line, -2, false)
-      const updatedLines = TextEditPatch.append({ lines, column, text })
-      req.buf.setLines(
-        id,
-        line,
-        line + updatedLines.length,
-        false,
-        updatedLines
-      )
-      if (undojoin) cmd('undojoin')
-    },
-    replaceRange: async ({ start, end }: any, text: any, undojoin = false) => {
-      const lines = await req.buf.getLines(id, start.line, end.line + 1, false)
-      const updatedLines = TextEditPatch.replace({
-        lines,
-        start: new Position(0, start.character),
-        end: new Position(end.line - start.line, end.character),
-        text,
-      })
-      req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
-      if (undojoin) cmd('undojoin')
-    },
-    deleteRange: async ({ start, end }: any, undojoin = false) => {
-      const lines = await req.buf.getLines(id, start.line, end.line, false)
-      const updatedLines = TextEditPatch.remove({
-        lines,
-        start: new Position(0, start.character),
-        end: new Position(end.line - start.line, end.character),
-      })
-      req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
-      if (undojoin) cmd('undojoin')
-    },
-    replace: (start, line) =>
-      api.buf.setLines(id, start, start + 1, false, [line]),
-    getVar: (name) => req.buf.getVar(id, name),
-    setVar: (name, value) => api.buf.setVar(id, name, value),
-    getKeymap: (mode) => req.buf.getKeymap(id, mode),
-    delVar: (name) => api.buf.delVar(id, name),
-    getOption: (name) => req.buf.getOption(id, name),
-    setOption: (name, value) => api.buf.setOption(id, name, value),
-    setName: (name) => api.buf.setName(id, name),
-    getMark: (name) => req.buf.getMark(id, name),
-    addHighlight: (sourceId, hlGroup, line, colStart, colEnd) =>
-      req.buf.addHighlight(id, sourceId, hlGroup, line, colStart, colEnd),
-    clearHighlight: (sourceId, lineStart, lineEnd) =>
-      api.buf.clearHighlight(id, sourceId, lineStart, lineEnd),
-    clearAllHighlights: () => api.buf.clearHighlight(id, -1, 0, -1),
-    highlightProblems: async (problems) =>
-      callAtomic([
-        [HL_CLR, [id, problems[0].id, 0, -1]],
-        ...problems.map((p) => [
-          HL_ADD,
-          [id, p.id, p.group, p.line, p.columnStart, p.columnEnd],
-        ]),
-      ]),
-    addVirtualText: (line, text) => {
-      // TODO: set highlight groups in the chunks arr
-      api.buf.setVirtualText(id, -1, line, [text], {})
-    },
-  } as Buffer)
+// const createBuffer = (id: any) =>
+//   ({
+//     id,
+//     get number() {
+//       return req.buf.getNumber(id)
+//     },
+//     get valid() {
+//       return req.buf.isValid(id)
+//     },
+//     get name() {
+//       return req.buf.getName(id)
+//     },
+//     get length() {
+//       return req.buf.lineCount(id)
+//     },
+//     get changedtick() {
+//       return req.buf.getChangedtick(id)
+//     },
+//     getOffset: (line) => req.buf.getOffset(id, line),
+//     isLoaded: () => req.buf.isLoaded(id),
+//     isTerminal: async () =>
+//       (await req.buf.getOption(id, BufferOption.Type)) === BufferType.Terminal,
+//     attach: ({ sendInitialBuffer }, cb) => {
+//       watchers.bufferEvents.on(`change:${id}`, cb)
+//       req.buf.attach(id, sendInitialBuffer, {}).then((attached) => {
+//         if (!attached) return console.error('could not attach to buffer:', id)
+//       })
+//       watchers.bufferEvents.once(`detach:${id}`, () => {
+//         watchers.bufferEvents.removeListener(`change:${id}`, cb)
+//       })
+//     },
+//     onChangedTick: (onChangedTickFn) => {
+//       watchers.bufferEvents.on(`changedtick:${id}`, onChangedTickFn)
+//       watchers.bufferEvents.once(`detach:${id}`, () => {
+//         watchers.bufferEvents.removeListener(
+//           `changedtick:${id}`,
+//           onChangedTickFn
+//         )
+//       })
+//     },
+//     onDetach: (onDetachFn) => {
+//       watchers.bufferEvents.once(`detach:${id}`, onDetachFn)
+//     },
+//     detach: () => {
+//       watchers.bufferEvents.removeAllListeners(`change:${id}`)
+//       req.buf.detach(id).then((detached) => {
+//         if (!detached) console.error('could not detach from buffer:', id)
+//       })
+//     },
+//     append: async (start, lines) => {
+//       const replacement = is.array(lines)
+//         ? (lines as string[])
+//         : [lines as string]
+//       const linesBelow = await req.buf.getLines(id, start, -2, false)
+//       const newLines = [...replacement, ...linesBelow]
+//
+//       api.buf.setLines(
+//         id,
+//         start + 1,
+//         start + 1 + newLines.length,
+//         false,
+//         newLines
+//       )
+//     },
+//     getAllLines: () => req.buf.getLines(id, 0, -2, true),
+//     // getLines line ranges are end exclusive so we +1
+//     getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
+//     getLine: (start) =>
+//       req.buf.getLines(id, start, start + 1, true).then((m) => m[0]),
+//     setLines: (start, end, lines) =>
+//       api.buf.setLines(id, start, end, true, lines),
+//     delete: (start) => api.buf.setLines(id, start, start + 1, true, []),
+//     appendRange: async (
+//       position: { line: any; character: any },
+//       text: any,
+//       undojoin = false
+//     ) => {
+//       const { line, character: column } = position
+//       const lines = await req.buf.getLines(id, line, -2, false)
+//       const updatedLines = TextEditPatch.append({ lines, column, text })
+//       req.buf.setLines(
+//         id,
+//         line,
+//         line + updatedLines.length,
+//         false,
+//         updatedLines
+//       )
+//       if (undojoin) cmd('undojoin')
+//     },
+//     replaceRange: async ({ start, end }: any, text: any, undojoin = false) => {
+//       const lines = await req.buf.getLines(id, start.line, end.line + 1, false)
+//       const updatedLines = TextEditPatch.replace({
+//         lines,
+//         start: new Position(0, start.character),
+//         end: new Position(end.line - start.line, end.character),
+//         text,
+//       })
+//       req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+//       if (undojoin) cmd('undojoin')
+//     },
+//     deleteRange: async ({ start, end }: any, undojoin = false) => {
+//       const lines = await req.buf.getLines(id, start.line, end.line, false)
+//       const updatedLines = TextEditPatch.remove({
+//         lines,
+//         start: new Position(0, start.character),
+//         end: new Position(end.line - start.line, end.character),
+//       })
+//       req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+//       if (undojoin) cmd('undojoin')
+//     },
+//     replace: (start, line) =>
+//       api.buf.setLines(id, start, start + 1, false, [line]),
+//     getVar: (name) => req.buf.getVar(id, name),
+//     setVar: (name, value) => api.buf.setVar(id, name, value),
+//     getKeymap: (mode) => req.buf.getKeymap(id, mode),
+//     delVar: (name) => api.buf.delVar(id, name),
+//     getOption: (name) => req.buf.getOption(id, name),
+//     setOption: (name, value) => api.buf.setOption(id, name, value),
+//     setName: (name) => api.buf.setName(id, name),
+//     getMark: (name) => req.buf.getMark(id, name),
+//     addHighlight: (sourceId, hlGroup, line, colStart, colEnd) =>
+//       req.buf.addHighlight(id, sourceId, hlGroup, line, colStart, colEnd),
+//     clearHighlight: (sourceId, lineStart, lineEnd) =>
+//       api.buf.clearHighlight(id, sourceId, lineStart, lineEnd),
+//     clearAllHighlights: () => api.buf.clearHighlight(id, -1, 0, -1),
+//     highlightProblems: async (problems) =>
+//       callAtomic([
+//         [HL_CLR, [id, problems[0].id, 0, -1]],
+//         ...problems.map((p) => [
+//           HL_ADD,
+//           [id, p.id, p.group, p.line, p.columnStart, p.columnEnd],
+//         ]),
+//       ]),
+//     addVirtualText: (line, text) => {
+//       // TODO: set highlight groups in the chunks arr
+//       api.buf.setVirtualText(id, -1, line, [text], {})
+//     },
+//   } as Buffer)
 
 const createWindow = (id: any) =>
   ({
@@ -819,26 +782,25 @@ const exportAPI = {
   onStateChange,
   onStateValue,
   untilStateValue,
-  cmd,
-  cmdOut,
-  expr,
-  call,
-  feedkeys,
-  normal,
-  callAtomic,
+  cmd: nvim.command,
+  cmdOut: nvim.commandOutput,
+  expr: nvim.eval,
+  call: nvim.call,
+  feedkeys: (keys: string, mode = 'm', escapeCSI = false) => nvim.feedKeys(keys, mode, escapeCSI),
+  normal: (keys: string) => nvim.command(`norm! "${keys.replace(/"/g, '\\"')}"`),
+  callAtomic: nvim.callAtomic,
   onAction,
-  getCurrentLine,
+  getCurrentLine: nvim.line, // TODO(smolck): Make sure this is right
   jumpTo,
   systemAction,
   current,
-  g,
   on,
   untilEvent,
   buffers,
   windows,
   tabs,
   options: readonlyOptions,
-  Buffer: fromId.buffer,
+  // Buffer: fromId.buffer,
   Window: fromId.window,
   Tabpage: fromId.tabpage,
   getKeymap,
