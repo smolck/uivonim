@@ -22,7 +22,7 @@ const shadowBuffers = new Map<string, ShadowBuffer>()
 export const registerShadowComponent = (initFn: () => ShadowBuffer) => {
   const shadowComponent = initFn()
   shadowBuffers.set(shadowComponent.name, shadowComponent)
-  nvim.buffers.addShadow(shadowComponent.name)
+  nvim.addShadowBuffer(shadowComponent.name)
 }
 
 export const getShadowBuffer = (name: string) => shadowBuffers.get(name)

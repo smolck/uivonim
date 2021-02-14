@@ -34,7 +34,7 @@ nvim.onAction('buffer-prev', async () => {
   const endIndex = bs.stack.length - bs.jumpOffset - 1
   const jumpBuffer = bs.stack[endIndex]
 
-  const bufferList = await nvim.buffers.list()
+  const bufferList = await nvim.buffers
   const buffers = await Promise.all(
     bufferList.map(async (b) => ({
       id: b.id,
@@ -43,7 +43,7 @@ nvim.onAction('buffer-prev', async () => {
   )
 
   const targetBuffer = buffers.find((b) => b.name === jumpBuffer)
-  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`)
+  if (targetBuffer) nvim.command(`b ${targetBuffer.id}`)
 })
 
 nvim.onAction('buffer-next', async () => {
@@ -63,7 +63,7 @@ nvim.onAction('buffer-next', async () => {
   const endIndex = bs.stack.length - bs.jumpOffset - 1
   const jumpBuffer = bs.stack[endIndex]
 
-  const bufferList = await nvim.buffers.list()
+  const bufferList = await nvim.buffers
   const buffers = await Promise.all(
     bufferList.map(async (b) => ({
       id: b.id,
@@ -72,12 +72,12 @@ nvim.onAction('buffer-next', async () => {
   )
 
   const targetBuffer = buffers.find((b) => b.name === jumpBuffer)
-  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`)
+  if (targetBuffer) nvim.command(`b ${targetBuffer.id}`)
 })
 
 nvim.on.winEnter(async (id) => {
   activeWindow = id
-  const bufferName = await nvim.current.buffer.name
+  const bufferName = await nvim.buffer.name
 
   if (!bufferStacks.has(id))
     return bufferStacks.set(id, {
@@ -101,7 +101,7 @@ nvim.on.bufLoad(async () => {
       'can not add buffer to stack - no window present. this is not supposed to happen'
     )
 
-  const bufferName = await nvim.current.buffer.name
+  const bufferName = await nvim.buffer.name
   const { stack, jumpOffset } = bufferStacks.get(activeWindow)!
   const lastItem = stack[stack.length - 1]
 
@@ -127,8 +127,8 @@ nvim.on.bufLoad(async () => {
 })
 
 setTimeout(async () => {
-  activeWindow = await nvim.current.window.id
-  const currentBufferName = await nvim.current.buffer.name
+  activeWindow = nvim.window.id
+  const currentBufferName = await nvim.buffer.name
 
   bufferStacks.set(activeWindow, {
     jumpOffset: 0,
