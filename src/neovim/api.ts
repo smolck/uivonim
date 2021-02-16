@@ -62,7 +62,6 @@ type Neovim = {
   readonlyOptions: VimOption
 }
 
-const onActionHandlers = new Map<string, GenericCallback>()
 const registeredEventActions = new Set<string>()
 const events = [...registeredEventActions.values()].join('\\n')
 const highlightedIds = new Set<number>()
@@ -236,11 +235,6 @@ const nvim: Neovim = {
   isTerminalBuffer: async (buffer: neovim.Buffer) => await buffer.getOption(BufferOption.Type) === BufferType.Terminal,
 } as Neovim
 
-const subscribe = (event: string, fn: (data: any) => void) => {
-  nvimInstance.on(event, fn)
-  nvimInstance.subscribe(event)
-}
-
 const registerFiletype = (bufnr: number, filetype: string) => {
   documentFiletypes.set(bufnr, filetype)
 }
@@ -361,9 +355,5 @@ autocmd.TextChangedI((revision) => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
-
-// autocmd.WinEnter((id: number) => (_currentCache.window = createWindow(id - 0)))
-// as.win(req.core.getCurrentWin()).then((win) => (_currentCache.window = win))
-// on.bufLoad((buffer) => (_currentCache.buffer = buffer))
 
 export default Object.assign(nvimInstance, nvim)
