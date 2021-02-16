@@ -1,6 +1,7 @@
 import { simplifyPath, is } from '../support/utils'
 import { basename, dirname } from 'path'
-import { Keymap, BufferInfo, BufferOption, BufferType, BufferHide, BufferEvent, GenericCallback } from '../neovim/types'
+import { Keymap, BufferInfo, BufferOption, BufferType, BufferHide, BufferEvent, GenericCallback, VimOption } from '../neovim/types'
+import { Autocmds } from '../neovim/startup'
 import { normalizeVimMode } from '../support/neovim-utils'
 import { EventEmitter } from 'events'
 import CreateVimState from '../neovim/state'
@@ -39,7 +40,7 @@ type OnEvent = {
     fn: (value: BufferEvent[Key]) => void
   ) => RemoveListener
 }
-type Neovim = neovim.NeovimClient & {
+type Neovim = {
   // onAction: (name: string, fn: (...args: any[]) => void) => void
   onAction: (event: string, cb: GenericCallback) => void
   jumpTo: (line: number, column?: number, path?: string) => Promise<void>
@@ -58,20 +59,33 @@ type Neovim = neovim.NeovimClient & {
 
   addShadowBuffer: (name: string) => Promise<neovim.Buffer>
   isTerminalBuffer: (buffer: neovim.Buffer) => Promise<boolean>
+  readonlyOptions: VimOption
 }
 
+const onActionHandlers = new Map<string, GenericCallback>()
 const registeredEventActions = new Set<string>()
+const events = [...registeredEventActions.values()].join('\\n')
 const highlightedIds = new Set<number>()
+const options = new Map<string, any>()
 const emptyObject: { [index: string]: any } = Object.create(null)
+const documentFiletypes = new Map<number, string>()
+
+const nvimInstance = neovim.attach({ socket: workerData.nvimPath })
+
+const getOption = async (name: string) => {
+  const optionValue = await nvimInstance.getOption(name)
+  options.set(name, optionValue)
+  return optionValue
+}
 
 const addBuffer = async (path: string) => {
-  const bufs = await nvim.buffers
+  const bufs = await nvimInstance.buffers
   const existingBuffer = bufs.find((m) => m.name === path)
   if (existingBuffer) return existingBuffer
 
   // TODO: use nvim_create_buf() when it is available
-  nvim.command(`badd ${path}`)
-  const buffer = (await nvim.buffers).find(async (b) => (await b.name).endsWith(path))
+  nvimInstance.command(`badd ${path}`)
+  const buffer = (await nvimInstance.buffers).find(async (b) => (await b.name).endsWith(path))
   if (!buffer)
     throw new Error(
       `buffers.add(${path}) failed. probably we were not able to find the buffer after adding it`
@@ -80,7 +94,6 @@ const addBuffer = async (path: string) => {
 }
 
 const nvim: Neovim = {
-  ...neovim.attach({ socket: workerData.nvimPath }), 
   state,
   watchState,
   onStateChange,
@@ -89,33 +102,38 @@ const nvim: Neovim = {
 
   g: new Proxy(emptyObject, {
     get: async (_t, name: string) => {
-      const val = await nvim.getVar(name as string).catch((e) => e)
+      const val = await nvimInstance.getVar(name as string).catch((e) => e)
       const err =
         is.array(val) && is.string(val[1]) && /Key (.*?)not found/.test(val[1])
       return err ? undefined : val
     },
-    set: (_t, name: string, val: any) => (nvim.setVar(name, val), true),
+    set: (_t, name: string, val: any) => (nvimInstance.setVar(name, val), true),
   }),
 
   on: new Proxy(Object.create(null), {
     get: (_, event: BufferEvents) => (fn: any) => watchers.events.on(event, fn),
   }),
 
+  readonlyOptions: new Proxy(Object.create(null), {
+    get: (_, key: string) =>
+      options.has(key) ? Promise.resolve(options.get(key)) : getOption(key),
+  }),
+
   onAction: (event: string, cb: GenericCallback) => {
     watchers.actions.on(event, cb)
     registeredEventActions.add(event)
-    nvim.command(`let g:uvn_cmd_completions .= "${event}\\n"`)
+    nvimInstance.command(`let g:uvn_cmd_completions .= "${event}\\n"`)
   },
   // TODO(smolck): Test this (and others)
   jumpTo: async (line, column, path) => {
     // TODO(smolck): Should this be unconditionally done if there's a path?
-    if (path) nvim.command(`e ${path}`)
+    if (path) nvimInstance.command(`e ${path}`)
 
     // line: 1-index based
     // column: 0-index based
-    ;(await nvim.window).cursor = [line + 1, column || 0]
+    ;(await nvimInstance.window).cursor = [line + 1, column || 0]
   },
-  getAndParseKeymap: async (mode: string = 'n') => (await nvim.getKeymap(mode)).reduce((res: Keymap, m: any) => {
+  getAndParseKeymap: async (mode: string = 'n') => (await nvimInstance.getKeymap(mode)).reduce((res: Keymap, m: any) => {
     const { lhs, rhs, sid, buffer, mode } = m
 
     res.set(lhs, {
@@ -134,8 +152,8 @@ const nvim: Neovim = {
     return res
   }, new Map()),
   listBuffersWithInfo: async () => {
-    const bufs = await nvim.buffers
-    const currentBufferId = (await nvim.buffer).id
+    const bufs = await nvimInstance.buffers
+    const currentBufferId = (await nvimInstance.buffer).id
 
     const bufInfo = await Promise.all(
       bufs.map(async (b) => ({
@@ -173,7 +191,7 @@ const nvim: Neovim = {
 
     if (pattern) calls.push(['nvim_command', [pattern]])
 
-    const [results, errors] = await nvim.callAtomic(calls)
+    const [results, errors] = await nvimInstance.callAtomic(calls)
     // TODO(smolck): See TODO in `highlightSearchPattern` below
     if (errors /*&& errors.length*/) {
       console.error('neovim-api.removeHighlightSearch error:', errors)
@@ -192,7 +210,7 @@ const nvim: Neovim = {
       calls.unshift(['nvim_call_function', ['matchdelete', [id]]])
     }
 
-    const [results, errors] = await nvim.callAtomic(calls)
+    const [results, errors] = await nvimInstance.callAtomic(calls)
     // TODO(smolck): Umm maybe the neovim node-client is wrong with the return
     // type here? (i.e. the function is wrong)
     if (errors /*&& errors.length*/) {
@@ -218,10 +236,134 @@ const nvim: Neovim = {
   isTerminalBuffer: async (buffer: neovim.Buffer) => await buffer.getOption(BufferOption.Type) === BufferType.Terminal,
 } as Neovim
 
-
 const subscribe = (event: string, fn: (data: any) => void) => {
-  nvim.on(event, fn)
-  nvim.subscribe(event)
+  nvimInstance.on(event, fn)
+  nvimInstance.subscribe(event)
 }
 
-export default nvim
+const registerFiletype = (bufnr: number, filetype: string) => {
+  documentFiletypes.set(bufnr, filetype)
+}
+
+nvimInstance.command(`let g:uvn_cmd_completions .= "${events}\\n"`)
+
+nvimInstance.subscribe('uivonim')
+nvimInstance.subscribe('uivonim-state')
+nvimInstance.subscribe('uivonim-position')
+nvimInstance.subscribe('uivonim-g')
+nvimInstance.subscribe('uivonim-autocmd')
+nvimInstance.on('notification', (method, args) => {
+  switch (method) {
+    case 'uivonim':
+      watchers.actions.emit(args[0], ...(args[1] || []))
+      break
+    case 'uivonim-state':
+      Object.assign(state, args[0])
+      break
+    case 'uivonim-position':
+      Object.assign(state, args[0])
+      break
+    case 'uivonim-g':
+      watchers.internal.emit(`gvar::${args[0]}`, args[1].new)
+      break
+    case 'uivonim-autocmd':
+      if (args[0] === 'FileType') registerFiletype(args[1], args[2])
+      watchers.autocmds.emit(args[0], ...args.slice(1))
+      break
+    default:
+      console.log(method, ...args)
+  }
+})
+
+nvimInstance.subscribe('nvim_buf_detach_event')
+nvimInstance.on('nvim_buf_detach_event', (args: any[]) => {
+  watchers.bufferEvents.emit(`detach:${args[0].id}`)
+})
+
+nvimInstance.subscribe('nvim_buf_changedtick_event')
+nvimInstance.on('nvim_buf_changedtick_event', (args: any[]) => {
+  const [extContainerData, changedTick] = args
+  const bufId = extContainerData.id
+  watchers.bufferEvents.emit(`changedtick:${bufId}`, changedTick)
+})
+
+nvimInstance.subscribe('nvim_buf_lines_event')
+nvimInstance.on('nvim_buf_lines_event', (args: any[]) => {
+  const [
+    extContainerData,
+    changedTick,
+    firstLine,
+    lastLine,
+    lineData,
+    more,
+  ] = args
+  const bufId = extContainerData.id
+
+  watchers.bufferEvents.emit(`change:${bufId}`, {
+    filetype: documentFiletypes.get(bufId),
+    changedTick,
+    firstLine,
+    lastLine,
+    lineData,
+    more,
+  })
+})
+
+// Refresh uivonim state
+nvimInstance.call('UivonimState').then((newState) => Object.assign(state, newState))
+watchers.events.emit('bufLoad')
+
+type RegisterAutocmd = {
+  [Key in Autocmds]: (fn: (...arg: any[]) => void) => void | any
+}
+
+const autocmd: RegisterAutocmd = new Proxy(Object.create(null), {
+  get: (_, event: Autocmds) => (fn: any) => watchers.autocmds.on(event, fn),
+})
+
+autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
+autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
+autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
+autocmd.BufAdd((bufId) =>
+  watchers.events.emit('bufOpen', bufId)
+)
+autocmd.BufEnter((bufId) =>
+  watchers.events.emit('bufLoad', bufId)
+)
+autocmd.BufWritePre((bufId) =>
+  watchers.events.emit('bufWritePre', bufId)
+)
+autocmd.BufWritePost((bufId) =>
+  watchers.events.emit('bufWrite', bufId)
+)
+autocmd.BufWipeout((bufId) =>
+  watchers.events.emit('bufClose', bufId)
+)
+autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
+autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
+autocmd.FileType((_, filetype: string) =>
+  watchers.events.emit('filetype', filetype)
+)
+autocmd.OptionSet((name: string, value: any) => {
+  options.set(name, value)
+  watchers.internal.emit(`option-set::${name}`, value)
+})
+
+autocmd.TextChanged((revision) => {
+  state.revision = revision - 0
+  watchers.events.emit('bufChange', nvimInstance.buffer)
+})
+
+autocmd.TextChangedI((revision) => {
+  state.revision = revision - 0
+  watchers.events.emit('bufChangeInsert', nvimInstance.buffer)
+})
+
+// TODO: i think we should just determine this from render events
+autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
+
+// autocmd.WinEnter((id: number) => (_currentCache.window = createWindow(id - 0)))
+// as.win(req.core.getCurrentWin()).then((win) => (_currentCache.window = win))
+// on.bufLoad((buffer) => (_currentCache.buffer = buffer))
+
+export default Object.assign(nvimInstance, nvim)
