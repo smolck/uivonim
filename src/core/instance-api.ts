@@ -46,9 +46,6 @@ export const setupNvimOnHandlers = () => {
   workerInstance.on.actionCalled((name: string, args: any[]) =>
     ee.emit(`action.${name}`, ...args)
   )
-  workerInstance.on.ai((namespace: string, method: string, args: any[]) => {
-    ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
-  })
 
   workerInstance.on.getDefaultColors(async () => ({
     background: colors.background,
