@@ -5,8 +5,8 @@ import { remote } from 'electron'
 import '../core/screen-events'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
-// import api from '../core/instance-api'
-// import * as windows from '../windows/window-manager'
+import api from '../core/instance-api'
+import * as windows from '../windows/window-manager'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -104,7 +104,7 @@ dispatch.sub('window.change', () => {
 })
 
 // TODO(smolck): Put this somewhere else?
-/* api.onAction(
+api.onAction(
   'update-nameplates',
   () => (windows.refresh(), console.log('refresh'))
-) */
+)
