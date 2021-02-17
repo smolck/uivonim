@@ -1,20 +1,15 @@
 import {
   asColor,
-  onFnCall,
   merge,
-  prefixWith,
   getPipeName,
 } from '../support/utils'
 import Worker from '../messaging/worker'
-import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
-import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { startupFuncs, startupCmds } from '../neovim/startup'
-import { Api, Prefixes } from '../neovim/protocol'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
-import SetupRPC from '../messaging/rpc'
 import { setupNvimOnHandlers } from '../core/instance-api'
 import { remote } from 'electron'
+import * as neovim from 'neovim'
 
 type RedrawFn = (m: any[]) => void
 type ExitFn = (code: number) => void
@@ -41,11 +36,9 @@ const clientSize = {
 }
 
 let onExitFn: ExitFn = () => {}
-const prefix = prefixWith(Prefixes.Core)
 let nvimInstance: NvimInstance | undefined = undefined
 let workerInstance: any = undefined
-const msgpackDecoder = new MsgpackStreamDecoder()
-const msgpackEncoder = new MsgpackStreamEncoder()
+let nvimApi: neovim.Neovim | undefined = undefined
 
 const spawnNvimInstance = (
   pipeName: string,
@@ -65,34 +58,31 @@ const spawnNvimInstance = (
 }
 
 const setupNvimInstance = () => {
-  if (!nvimInstance) {
-    throw new Error('INITIALIZE FIRST!!!!')
+  if (!nvimApi) {
+    throw new Error('I NEED TO BE ATTACHED DUDEEEE')
   }
-  const { proc, attached } = nvimInstance
-
-  msgpackEncoder.pipe(proc.stdin!)
-
-  // don't kill decoder stream when this stdout stream ends (need for other stdouts)
-  proc.stdout!.pipe(msgpackDecoder, { end: false })
+  const { attached } = nvimInstance!
+  // nvimApi = neovim.attach({ proc })
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen
   // this is how to repaint the UI with the new vim instance. not the most obvious...
-  if (attached) api.uiTryResize(clientSize.width, clientSize.height)
+  if (attached) nvimApi!.uiTryResize(clientSize.width, clientSize.height)
 }
 
 const attachNvim = () => {
+  nvimApi = neovim.attach({ proc: nvimInstance!.proc })
   if (!nvimInstance) {
-    console.warn('Tried attaching nvim before initializing it')
+    console.warn('Tried attaching nvim before initializing it, and/or setup api')
   }
   const nvim = nvimInstance!
   if (nvim.attached) {
     console.warn('Already attached nvim')
   }
 
-  api.uiAttach(clientSize.width, clientSize.height, nvimOptions)
+  nvimApi!.uiAttach(clientSize.width, clientSize.height, nvimOptions)
   // highlight groups defined before nvim_ui_attach get reset
-  api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
-  api.command(`highlight ${Highlight.Underline} gui=underline`)
+  nvimApi!.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
+  nvimApi!.command(`highlight ${Highlight.Underline} gui=underline`)
   nvim.attached = true
 }
 
@@ -127,26 +117,14 @@ export const createNvim = async (
   createAndSetupNvimInstance(useWsl, nvimBinaryPath)
   const { pipeName: path } = nvimInstance!
 
-  api.command(`${startupFuncs()} | ${startupCmds}`)
-  dir && api.command(`cd ${dir}`)
+  nvimApi!.command(`${startupFuncs()} | ${startupCmds}`)
+  dir && nvimApi!.command(`cd ${dir}`)
 
   workerInstance = Worker('instance', {
     workerData: { nvimPath: path },
   })
   setupNvimOnHandlers()
 }
-
-const { notify, request, onEvent, onData } = SetupRPC((m) =>
-  msgpackEncoder.write(m)
-)
-msgpackDecoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
-
-const req: Api = onFnCall((name: string, args: any[] = []) =>
-  request(prefix(name), args)
-)
-const api: Api = onFnCall((name: string, args: any[]) =>
-  notify(prefix(name), args)
-)
 
 export const getWorkerInstance = () => workerInstance
 
@@ -157,26 +135,33 @@ onExit(() => {
   return remote.app.quit()
 })
 
-export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
+export const onRedraw = (fn: RedrawFn) => {
+  nvimApi!.on('notification', (method: string, args) => method === 'redraw' ? fn(args) : {})
+}
+
 export const input = (keys: string) => {
-  api.input(keys)
+  nvimApi!.input(keys)
   if (document.activeElement === document.body) {
     document.getElementById('keycomp-textarea')?.focus()
   }
 }
-export const getMode = () =>
-  req.getMode() as Promise<{ mode: string; blocking: boolean }>
+export const getMode = async () => {
+  const mode = await nvimApi?.mode
+  console.log(`getmode: ${mode}`)
+  return mode as { mode: string; blocking: boolean }
+  // (await nvimApi!.mode) as { mode: string; blocking: boolean }
+}
 
 export const resizeGrid = (grid: number, width: number, height: number) =>
-  api.uiTryResizeGrid(grid, width, height)
+  nvimApi?.uiTryResizeGrid(grid, width, height)
 
 export const resize = (width: number, height: number) => {
   merge(clientSize, { width, height })
-  api.uiTryResize(width, height)
+  nvimApi?.uiTryResize(width, height)
 }
 
 export const getColor = async (id: number) => {
-  const { foreground, background } = (await req.getHlById(id, true)) as Color
+  const { foreground, background } = (await nvimApi?.getHighlightById(id, true)) as Color
   return {
     fg: asColor(foreground),
     bg: asColor(background),

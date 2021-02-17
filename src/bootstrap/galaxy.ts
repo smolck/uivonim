@@ -1,14 +1,12 @@
-import { requireDir, debounce } from '../support/utils'
+import { requireDir, debounce, merge } from '../support/utils'
 import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
 import { remote } from 'electron'
-import '../render/redraw'
 import '../core/screen-events'
-import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
-import api from '../core/instance-api'
-import * as windows from '../windows/window-manager'
+// import api from '../core/instance-api'
+// import * as windows from '../windows/window-manager'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
@@ -39,6 +37,7 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
 
 requestAnimationFrame(() => {
   nvim.createNvim(useWsl, nvimBinaryPath)
+  require('../render/redraw')
 
   // high priority components
   requestAnimationFrame(() => {
@@ -105,7 +104,7 @@ dispatch.sub('window.change', () => {
 })
 
 // TODO(smolck): Put this somewhere else?
-api.onAction(
+/* api.onAction(
   'update-nameplates',
   () => (windows.refresh(), console.log('refresh'))
-)
+) */
