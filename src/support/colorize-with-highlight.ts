@@ -1,4 +1,8 @@
-import { ColorData } from '../services/colorizer'
+export interface ColorData {
+  color: string
+  text: string
+  highlight?: boolean
+}
 
 interface FilterResult {
   line: string

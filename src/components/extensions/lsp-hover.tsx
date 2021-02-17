@@ -1,5 +1,5 @@
 import * as windows from '../../windows/window-manager'
-import { ColorData } from '../../services/colorizer'
+import { ColorData } from '../../support/colorize-with-highlight'
 import { sub } from '../../messaging/dispatch'
 import { debounce } from '../../support/utils'
 import Overlay from '../overlay'
