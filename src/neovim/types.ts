@@ -2,6 +2,13 @@ export type GenericCallback = (...args: any[]) => void
 export type VimOption = { [index: string]: Promise<any> }
 export type Keymap = Map<string, KeymapObject>
 
+// TODO(smolck): This used to be generated from the nvim API, should it still be?
+export interface ExtContainer {
+  extContainer: boolean
+  kind: number
+  id: any
+}
+
 export enum MessageKind {
   Error = 'error',
   Warning = 'warning',

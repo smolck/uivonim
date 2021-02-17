@@ -17,7 +17,6 @@
     "test:integration": "mocha test/integration -t 10000",
     "test:watch": "npm run test -- -w",
     "test:integration:watch": "npm run test:integration -- -w",
-    "gen:api": "node tools/gen-api.js",
     "gen:font-sizes": "electron tools/font-sizer/index.js",
     "unused-exports": "ts-unused-exports src/tsconfig.json"
   },
