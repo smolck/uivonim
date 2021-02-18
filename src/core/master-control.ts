@@ -47,6 +47,8 @@ const spawnNvimInstance = (
 ) => {
   const args = [
     '--cmd',
+    `${startupFuncs()} | ${startupCmds}`,
+    '--cmd',
     `com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)`,
     '--embed',
     '--listen',
@@ -117,13 +119,12 @@ export const createNvim = async (
   createAndSetupNvimInstance(useWsl, nvimBinaryPath)
   const { pipeName: path } = nvimInstance!
 
-  nvimApi!.command(`${startupFuncs()} | ${startupCmds}`)
-  dir && nvimApi!.command(`cd ${dir}`)
-
   workerInstance = Worker('instance', {
     workerData: { nvimPath: path },
   })
   setupNvimOnHandlers()
+
+  dir && await nvimApi!.command(`cd ${dir}`)
 }
 
 export const getWorkerInstance = () => workerInstance
