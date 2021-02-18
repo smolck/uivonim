@@ -1,14 +1,21 @@
 import { simplifyPath, is } from '../support/utils'
 import { basename, dirname } from 'path'
-import { Keymap, BufferInfo, BufferOption, BufferType, BufferHide, BufferEvent, GenericCallback, VimOption } from '../neovim/types'
+import {
+  Keymap,
+  BufferInfo,
+  BufferOption,
+  BufferType,
+  BufferHide,
+  BufferEvent,
+  GenericCallback,
+  VimOption,
+} from '../neovim/types'
 import { Autocmds } from '../neovim/startup'
 import { normalizeVimMode } from '../support/neovim-utils'
 import { EventEmitter } from 'events'
 import CreateVimState from '../neovim/state'
 import * as neovim from 'neovim'
-import {
-  workerData,
-} from '../messaging/worker-client'
+import { workerData } from '../messaging/worker-client'
 
 if (!workerData || !workerData.nvimPath)
   throw new Error(
@@ -45,11 +52,11 @@ type Neovim = {
   onAction: (event: string, cb: GenericCallback) => void
   jumpTo: (line: number, column?: number, path?: string) => Promise<void>
   getAndParseKeymap: (mode: string) => Promise<Keymap>
-  state: typeof state,
+  state: typeof state
   watchState: typeof watchState
-  onStateChange: typeof onStateChange,
-  onStateValue: typeof onStateValue,
-  untilStateValue: typeof untilStateValue,
+  onStateChange: typeof onStateChange
+  onStateValue: typeof onStateValue
+  untilStateValue: typeof untilStateValue
   listBuffersWithInfo: () => Promise<BufferInfo[]>
   highlightSearchPattern: (pattern: string, id?: number) => Promise<number[]>
   removeHighlightSearch: (id: number, pattern?: string) => Promise<boolean>
@@ -84,7 +91,9 @@ const addBuffer = async (path: string) => {
 
   // TODO: use nvim_create_buf() when it is available
   nvimInstance.command(`badd ${path}`)
-  const buffer = (await nvimInstance.buffers).find(async (b) => (await b.name).endsWith(path))
+  const buffer = (await nvimInstance.buffers).find(async (b) =>
+    (await b.name).endsWith(path)
+  )
   if (!buffer)
     throw new Error(
       `buffers.add(${path}) failed. probably we were not able to find the buffer after adding it`
@@ -126,30 +135,32 @@ const nvim: Neovim = {
   // TODO(smolck): Test this (and others)
   jumpTo: async (line, column, path) => {
     // TODO(smolck): Should this be unconditionally done if there's a path?
-    if (path) nvimInstance.command(`e ${path}`)
+    if (path)
+      nvimInstance.command(`e ${path}`)
 
-    // line: 1-index based
-    // column: 0-index based
+      // line: 1-index based
+      // column: 0-index based
     ;(await nvimInstance.window).cursor = [line + 1, column || 0]
   },
-  getAndParseKeymap: async (mode: string = 'n') => (await nvimInstance.getKeymap(mode)).reduce((res: Keymap, m: any) => {
-    const { lhs, rhs, sid, buffer, mode } = m
+  getAndParseKeymap: async (mode: string = 'n') =>
+    (await nvimInstance.getKeymap(mode)).reduce((res: Keymap, m: any) => {
+      const { lhs, rhs, sid, buffer, mode } = m
 
-    res.set(lhs, {
-      lhs,
-      rhs,
-      sid,
-      buffer,
-      mode: normalizeVimMode(mode),
-      // vim does not have booleans. these values are returned as either 0 or 1
-      expr: !!m.expr,
-      silent: !!m.silent,
-      nowait: !!m.nowait,
-      noremap: !!m.noremap,
-    })
+      res.set(lhs, {
+        lhs,
+        rhs,
+        sid,
+        buffer,
+        mode: normalizeVimMode(mode),
+        // vim does not have booleans. these values are returned as either 0 or 1
+        expr: !!m.expr,
+        silent: !!m.silent,
+        nowait: !!m.nowait,
+        noremap: !!m.noremap,
+      })
 
-    return res
-  }, new Map()),
+      return res
+    }, new Map()),
   listBuffersWithInfo: async () => {
     const bufs = await nvimInstance.buffers
     const currentBufferId = (await nvimInstance.buffer).id
@@ -158,9 +169,10 @@ const nvim: Neovim = {
       bufs.map(async (b) => ({
         name: await b.name,
         current: b.id === currentBufferId,
-        modified: await b.getOption(BufferOption.Modified) as boolean,
-        listed: await b.getOption(BufferOption.Listed) as string,
-        terminal: await b.getOption(BufferOption.Type) === BufferType.Terminal,
+        modified: (await b.getOption(BufferOption.Modified)) as boolean,
+        listed: (await b.getOption(BufferOption.Listed)) as string,
+        terminal:
+          (await b.getOption(BufferOption.Type)) === BufferType.Terminal,
       }))
     )
 
@@ -232,7 +244,8 @@ const nvim: Neovim = {
 
     return buffer
   },
-  isTerminalBuffer: async (buffer: neovim.Buffer) => await buffer.getOption(BufferOption.Type) === BufferType.Terminal,
+  isTerminalBuffer: async (buffer: neovim.Buffer) =>
+    (await buffer.getOption(BufferOption.Type)) === BufferType.Terminal,
 } as Neovim
 
 const registerFiletype = (bufnr: number, filetype: string) => {
@@ -304,7 +317,9 @@ nvimInstance.on('nvim_buf_lines_event', (args: any[]) => {
 })
 
 // Refresh uivonim state
-nvimInstance.call('UivonimState').then((newState) => Object.assign(state, newState))
+nvimInstance
+  .call('UivonimState')
+  .then((newState) => Object.assign(state, newState))
 watchers.events.emit('bufLoad')
 
 type RegisterAutocmd = {
@@ -318,21 +333,11 @@ const autocmd: RegisterAutocmd = new Proxy(Object.create(null), {
 autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
 autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
 autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
-autocmd.BufAdd((bufId) =>
-  watchers.events.emit('bufOpen', bufId)
-)
-autocmd.BufEnter((bufId) =>
-  watchers.events.emit('bufLoad', bufId)
-)
-autocmd.BufWritePre((bufId) =>
-  watchers.events.emit('bufWritePre', bufId)
-)
-autocmd.BufWritePost((bufId) =>
-  watchers.events.emit('bufWrite', bufId)
-)
-autocmd.BufWipeout((bufId) =>
-  watchers.events.emit('bufClose', bufId)
-)
+autocmd.BufAdd((bufId) => watchers.events.emit('bufOpen', bufId))
+autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', bufId))
+autocmd.BufWritePre((bufId) => watchers.events.emit('bufWritePre', bufId))
+autocmd.BufWritePost((bufId) => watchers.events.emit('bufWrite', bufId))
+autocmd.BufWipeout((bufId) => watchers.events.emit('bufClose', bufId))
 autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.FileType((_, filetype: string) =>

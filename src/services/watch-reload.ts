@@ -8,7 +8,9 @@ nvim.on.bufLoad(async () => {
   if (!filepath) return
   if (watchers.has(filepath)) return
   if (!(await exists(filepath))) return
-  const w = await watchFile(filepath, () => nvim.command(`checktime ${filepath}`))
+  const w = await watchFile(filepath, () =>
+    nvim.command(`checktime ${filepath}`)
+  )
   watchers.set(filepath, w)
 })
 

@@ -1,8 +1,4 @@
-import {
-  asColor,
-  merge,
-  getPipeName,
-} from '../support/utils'
+import { asColor, merge, getPipeName } from '../support/utils'
 import Worker from '../messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
@@ -74,7 +70,9 @@ const setupNvimInstance = () => {
 const attachNvim = () => {
   nvimApi = neovim.attach({ proc: nvimInstance!.proc })
   if (!nvimInstance) {
-    console.warn('Tried attaching nvim before initializing it, and/or setup api')
+    console.warn(
+      'Tried attaching nvim before initializing it, and/or setup api'
+    )
   }
   const nvim = nvimInstance!
   if (nvim.attached) {
@@ -115,7 +113,6 @@ export const createNvim = async (
   nvimBinaryPath?: string,
   dir?: string
 ) => {
-  // const { id, path } = await create(useWsl, dir)
   createAndSetupNvimInstance(useWsl, nvimBinaryPath)
   const { pipeName: path } = nvimInstance!
 
@@ -124,7 +121,7 @@ export const createNvim = async (
   })
   setupNvimOnHandlers()
 
-  dir && await nvimApi!.command(`cd ${dir}`)
+  dir && (await nvimApi!.command(`cd ${dir}`))
 }
 
 export const getWorkerInstance = () => workerInstance
@@ -137,7 +134,9 @@ onExit(() => {
 })
 
 export const onRedraw = (fn: RedrawFn) => {
-  nvimApi!.on('notification', (method: string, args) => method === 'redraw' ? fn(args) : {})
+  nvimApi!.on('notification', (method: string, args) =>
+    method === 'redraw' ? fn(args) : {}
+  )
 }
 
 export const input = (keys: string) => {
@@ -162,7 +161,10 @@ export const resize = (width: number, height: number) => {
 }
 
 export const getColor = async (id: number) => {
-  const { foreground, background } = (await nvimApi?.getHighlightById(id, true)) as Color
+  const { foreground, background } = (await nvimApi?.getHighlightById(
+    id,
+    true
+  )) as Color
   return {
     fg: asColor(foreground),
     bg: asColor(background),

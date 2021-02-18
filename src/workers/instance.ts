@@ -34,9 +34,13 @@ on.bufferSearch(async (file: string, query: string) =>
 on.bufferSearchVisible(async (query: string) =>
   bufferSearch.fuzzyVisible(query)
 )
-on.nvimJumpTo((coords: HyperspaceCoordinates) => nvim.jumpTo(coords.line, coords.column, coords.path))
+on.nvimJumpTo((coords: HyperspaceCoordinates) =>
+  nvim.jumpTo(coords.line, coords.column, coords.path)
+)
 on.nvimExpr(async (expr: string) => nvim.eval(expr))
-on.nvimFeedkeys((keys: string, mode: string) => nvim.feedKeys(keys, mode, false))
+on.nvimFeedkeys((keys: string, mode: string) =>
+  nvim.feedKeys(keys, mode, false)
+)
 on.nvimCall(async (name: string, args: any[]) =>
   Reflect.get(nvim.call, name)(...args)
 )
@@ -52,7 +56,10 @@ on.getWindowMetadata(async () => getWindowMetadata())
 on.nvimSaveCursor(async () => (await nvim.window).cursor)
 
 // TODO(smolck): This wasn't async before, make sure still works
-on.nvimRestoreCursor(async (position: number[]) => (await nvim.window).cursor = [position[0], position[1]])
+on.nvimRestoreCursor(
+  async (position: number[]) =>
+    ((await nvim.window).cursor = [position[0], position[1]])
+)
 
 on.nvimHighlightSearchPattern(async (pattern: string, id?: number) =>
   nvim.highlightSearchPattern(pattern, id)
