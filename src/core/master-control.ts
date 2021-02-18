@@ -57,10 +57,9 @@ const spawnNvimInstance = (
 
 const setupNvimInstance = () => {
   if (!nvimApi) {
-    throw new Error('I NEED TO BE ATTACHED DUDEEEE')
+    throw new Error('setupNvimInstance called before attachNvim, this shouldn\'t happen')
   }
   const { attached } = nvimInstance!
-  // nvimApi = neovim.attach({ proc })
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen
   // this is how to repaint the UI with the new vim instance. not the most obvious...
