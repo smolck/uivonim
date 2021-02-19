@@ -1,7 +1,7 @@
 import { getColorByName } from '../../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../../messaging/dispatch'
 import { darken, brighten, cvar } from '../../ui/css'
-import { ExtContainer } from '../../neovim/protocol'
+import { ExtContainer } from '../../neovim/types'
 import Icon from '../icon'
 import api from '../../core/instance-api'
 import { colors } from '../../ui/styles'

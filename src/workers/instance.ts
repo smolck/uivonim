@@ -34,25 +34,31 @@ on.bufferSearch(async (file: string, query: string) =>
 on.bufferSearchVisible(async (query: string) =>
   bufferSearch.fuzzyVisible(query)
 )
-on.nvimJumpTo((coords: HyperspaceCoordinates) => nvim.jumpTo(coords))
-on.nvimExpr(async (expr: string) => nvim.expr(expr))
-on.nvimFeedkeys((keys: string, mode: string) => nvim.feedkeys(keys, mode))
-on.nvimCall(async (name: string, args: any[]) =>
-  Reflect.get(nvim.call, name)(...args)
+on.nvimJumpTo((coords: HyperspaceCoordinates) =>
+  nvim.jumpTo(coords.line, coords.column, coords.path)
 )
-on.nvimCommand(async (command: string) => nvim.cmd(command))
+on.nvimExpr(async (expr: string) => nvim.eval(expr))
+on.nvimFeedkeys((keys: string, mode: string) =>
+  nvim.feedKeys(keys, mode, false)
+)
+on.nvimCall(async (name: string, args: any[]) => nvim.call(name, args))
+on.nvimCommand(async (command: string) => nvim.command(command))
 on.nvimGetVar(async (key: string) => Reflect.get(nvim.g, key))
-on.nvimGetKeymap(async () => nvim.getKeymap())
+on.nvimGetKeymap(async () => nvim.getAndParseKeymap('n'))
 on.nvimGetColorByName(async (name: string) => nvim.getColorByName(name))
 on.setNvimMode((mode: VimMode) => Object.assign(nvim.state, { mode }))
-on.getBufferInfo(async () => nvim.buffers.listWithInfo())
+on.getBufferInfo(async () => nvim.listBuffersWithInfo())
 on.getGitInfo(async () => git.getGitInfo())
 on.getState(async () => ({ ...nvim.state }))
 on.getWindowMetadata(async () => getWindowMetadata())
-on.nvimSaveCursor(async () => nvim.current.window.cursor)
-on.nvimRestoreCursor((position: number[]) =>
-  nvim.current.window.setCursor(position[0], position[1])
+on.nvimSaveCursor(async () => (await nvim.window).cursor)
+
+// TODO(smolck): This wasn't async before, make sure still works
+on.nvimRestoreCursor(
+  async (position: number[]) =>
+    ((await nvim.window).cursor = [position[0], position[1]])
 )
+
 on.nvimHighlightSearchPattern(async (pattern: string, id?: number) =>
   nvim.highlightSearchPattern(pattern, id)
 )

@@ -1,6 +1,6 @@
 import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
-import { onFnCall, pascalCase } from '../support/utils'
+import { onFnCall } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
@@ -46,9 +46,6 @@ export const setupNvimOnHandlers = () => {
   workerInstance.on.actionCalled((name: string, args: any[]) =>
     ee.emit(`action.${name}`, ...args)
   )
-  workerInstance.on.ai((namespace: string, method: string, args: any[]) => {
-    ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
-  })
 
   workerInstance.on.getDefaultColors(async () => ({
     background: colors.background,

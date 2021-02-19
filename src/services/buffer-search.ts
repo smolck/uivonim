@@ -47,7 +47,12 @@ export const fuzzy = async (
 
 export const fuzzyVisible = async (query: string): Promise<FilterResult[]> => {
   const { editorTopLine: start, editorBottomLine: end } = nvim.state
-  const visibleLines = await nvim.current.buffer.getLines(start, end)
+  // TODO(smolck): `end + 1` or just `end`?
+  const visibleLines = await (await nvim.buffer).getLines({
+    start,
+    end: end + 1,
+    strictIndexing: true,
+  })
   const results = fuzzyFilter(visibleLines, query)
   return asFilterResults(results, visibleLines, query)
 }

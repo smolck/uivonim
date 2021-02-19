@@ -45,8 +45,8 @@ const betterTitles = (windows: any[]): WindowMetadata[] => {
 }
 
 export default async (): Promise<WindowMetadata[]> => {
-  const activeWindow = await nvim.current.window.id
-  const wins = await nvim.current.tabpage.windows
+  const activeWindow = nvim.window.id
+  const wins = await nvim.tabpage.windows
 
   const windowsWithApiData = await Promise.all(
     wins.map(async (w) => {
@@ -61,7 +61,7 @@ export default async (): Promise<WindowMetadata[]> => {
           ''
         ),
         modified: await buffer.getOption(BufferOption.Modified),
-        terminal: await buffer.isTerminal(),
+        terminal: await nvim.isTerminalBuffer(buffer),
         termAttached: await buffer
           .getVar(BufferVar.TermAttached)
           .catch(() => false),

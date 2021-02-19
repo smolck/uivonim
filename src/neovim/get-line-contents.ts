@@ -74,7 +74,7 @@ const getLinesFromFilesystem = async (locations: LocationMeta[]) => {
 }
 
 export default async (locations: Location[]): Promise<LocationResult[]> => {
-  const bufs = await nvim.buffers.list()
+  const bufs = await nvim.buffers
   const buffers = await Promise.all(
     bufs.map(async (buffer) => ({
       buffer,

@@ -1,10 +1,8 @@
-import { requireDir, debounce } from '../support/utils'
+import { requireDir, debounce, merge } from '../support/utils'
 import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
 import { remote } from 'electron'
-import '../render/redraw'
 import '../core/screen-events'
-import { merge } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import { specs as titleSpecs } from '../core/title'
 import api from '../core/instance-api'
@@ -39,6 +37,7 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
 
 requestAnimationFrame(() => {
   nvim.createNvim(useWsl, nvimBinaryPath)
+  require('../render/redraw')
 
   // high priority components
   requestAnimationFrame(() => {

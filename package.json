@@ -17,7 +17,6 @@
     "test:integration": "mocha test/integration -t 10000",
     "test:watch": "npm run test -- -w",
     "test:integration:watch": "npm run test:integration -- -w",
-    "gen:api": "node tools/gen-api.js",
     "gen:font-sizes": "electron tools/font-sizer/index.js",
     "unused-exports": "ts-unused-exports src/tsconfig.json"
   },
@@ -35,6 +34,7 @@
     "highlight.js": "^10.6.0",
     "inferno": "^7.4.8",
     "marked": "^2.0.0",
+    "neovim": "^4.9.0",
     "ts-node": "^9.1.1"
   },
   "devDependencies": {
