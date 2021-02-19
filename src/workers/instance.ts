@@ -41,9 +41,7 @@ on.nvimExpr(async (expr: string) => nvim.eval(expr))
 on.nvimFeedkeys((keys: string, mode: string) =>
   nvim.feedKeys(keys, mode, false)
 )
-on.nvimCall(async (name: string, args: any[]) =>
-  Reflect.get(nvim.call, name)(...args)
-)
+on.nvimCall(async (name: string, args: any[]) => nvim.call(name, args))
 on.nvimCommand(async (command: string) => nvim.command(command))
 on.nvimGetVar(async (key: string) => Reflect.get(nvim.g, key))
 on.nvimGetKeymap(async () => nvim.getAndParseKeymap('n'))
