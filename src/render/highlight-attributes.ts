@@ -19,7 +19,7 @@ export interface Attrs {
   cterm_bg?: number
 }
 
-interface Color {
+export interface Color {
   foreground?: string
   background?: string
 }

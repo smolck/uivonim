@@ -96,8 +96,8 @@ const grid_scroll = ([
   const win = windows.get(gridId)
 
   amount > 0
-    ? win.webgl.moveRegionUp(amount, top, bottom)
-    : win.webgl.moveRegionDown(-amount, top, bottom)
+    ? win.canvas.moveRegionUp(amount, top, bottom)
+    : win.canvas.moveRegionDown(-amount, top, bottom)
 }
 
 const grid_line = (e: any) => {

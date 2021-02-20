@@ -142,12 +142,12 @@ export default () => {
 
   onElementResize(container, (w, h) => canvas.resizeCanvas(w, h))
 
-  const content = makel({
+  /*const content = makel({
     display: 'flex',
     flex: 1,
     background: 'none',
     position: 'relative',
-  })
+  }) */
 
   const overlay = makel({
     display: 'flex',
@@ -159,16 +159,16 @@ export default () => {
   const nameplate = CreateWindowNameplate()
 
   overlay.setAttribute('wat', 'overlay')
-  content.setAttribute('wat', 'content')
+  // content.setAttribute('wat', 'content')
   nameplate.element.setAttribute('wat', 'nameplate')
 
   Object.assign(nameplate.element.style, {
     background: 'var(--background-30)',
   })
 
-  content.appendChild(overlay)
+  // content.appendChild(overlay)
   container.appendChild(nameplate.element)
-  container.appendChild(content)
+  // container.appendChild(content)
   container.appendChild(canvas.canvasElement)
 
   const api = {
@@ -294,9 +294,9 @@ export default () => {
   }
 
   api.refreshLayout = () => {
-    const { top, left, width, height } = content.getBoundingClientRect()
+    // const { top, left, width, height } = content.getBoundingClientRect()
 
-    const x = left
+    /*const x = left
     const y = top - titleSpecs.height
 
     const same =
@@ -307,7 +307,7 @@ export default () => {
 
     if (same) return
 
-    Object.assign(layout, { x, y, width, height })
+    Object.assign(layout, { x, y, width, height }) */
     // canvas.resizeCanvas(width, height)
     // webgl.layout(x + paddingX, y + paddingY, width, height)
 
