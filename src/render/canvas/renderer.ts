@@ -69,7 +69,8 @@ const m = (initialGridId: number) => {
         const y = (idx + 1) * scaledH
 
         ctx.fillStyle = bg
-        ctx.fillRect(x, idx * scaledH + (workspaceCell.padding * 2), scaledW, scaledH)
+        // TODO(smolck): This is just . . . no
+        ctx.fillRect(x + (workspaceCell.padding * 2.5), idx * scaledH + (workspaceCell.padding * 2), scaledW, scaledH)
 
         ctx.save()
 
