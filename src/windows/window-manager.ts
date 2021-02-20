@@ -3,7 +3,7 @@ import CreateWindow, { Window, paddingX } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
 // import createCanvasRenderer from '../render/canvas/renderer'
 // import CreateWebGLRenderer from '../render/webgl/renderer'
-import { onElementResize } from '../ui/vanilla'
+// import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../core/workspace'
 import { throttle } from '../support/utils'
 import windowSizer from '../windows/sizer'
@@ -270,7 +270,7 @@ Object.assign(container.style, {
 // webglContainer.appendChild(webgl.backgroundElement)
 // webglContainer.appendChild(webgl.foregroundElement)
 
-onElementResize(webglContainer, (w, h) => {
+/* onElementResize(webglContainer, (w, h) => {
   Object.assign(size, { width: w, height: h })
   // canvas.resizeCanvas(w, h)
   // webgl.resizeCanvas(w, h)
@@ -278,7 +278,7 @@ onElementResize(webglContainer, (w, h) => {
     w.refreshLayout()
     w.redrawFromGridBuffer()
   })
-})
+}) */
 
 api.nvim.watchState.colorscheme(() =>
   requestAnimationFrame(() => {

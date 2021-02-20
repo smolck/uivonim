@@ -74,6 +74,7 @@ const grid_resize = (e: any) => {
     if (gridId === 1) continue
     // grid events show up before win events
     if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
+    console.log(gridId)
     windows.get(gridId).resizeWindow(width, height)
   }
 }
@@ -135,7 +136,8 @@ const grid_line = (e: any) => {
     const gridId = grids[ix]
     const win = windows.get(gridId)
     // const renderCount = gridRenderIndexes[gridId]
-    win.redrawFromGridBuffer()
+    // win.redrawFromGridBuffer()
+    win.canvas.render()
     // win.webgl.render(renderCount)
   }
 }

@@ -37,6 +37,8 @@ const resizeArray = (inputArr: Array<Array<string>>, rows: number, cols: number)
 
   console.assert(inputArr.length === rows, `inputArr.length == ${inputArr.length}, rows == ${rows}`)
   console.assert(inputArr[0].length === cols)
+  
+  return inputArr
 }
 
 const m = (initialGridId: number) => {
@@ -52,13 +54,14 @@ const m = (initialGridId: number) => {
     ctx.font = `${font.size}px ${font.face}`
     ctx.fillStyle = `${colors.foreground}`
     lines.forEach((line, idx) => {
-      ctx.fillText(line.join(''), 0, idx * cell.height)
+      ctx.fillText(line.join(''), 0, (idx + 1) * cell.height)
     })
   }
 
   const updateThingNess = (row: number, startCol: number, cells: any[]) => {
     cells.forEach((cell, idx) => {
       const [text, hlId, repeat] = cell
+      // console.log('repeat', repeat, `text: '${text}'`, 'row', row)
       if (repeat) {
         lines[row] = lines[row].fill(text, startCol + idx, startCol + idx + repeat)
       } else {
@@ -70,6 +73,7 @@ const m = (initialGridId: number) => {
   }
 
   const resizeGrid = (rows: number, cols: number) => {
+    console.log('resize grid')
     const width = cols * cell.width
     const height = rows * cell.height
 
@@ -78,8 +82,9 @@ const m = (initialGridId: number) => {
     if (sameGridSize && sameCanvasSize) return
 
     Object.assign(gridSize, { rows, cols })
-    if (!sameGridSize) resizeArray(lines, rows, cols)
+    if (!sameGridSize) lines = resizeArray(lines, rows, cols)
     if (!sameCanvasSize) canvas.resize(width, height)
+    console.log('resize grid end', gridSize, lines)
   }
 
   const resizeCanvas = (width: number, height: number) => {

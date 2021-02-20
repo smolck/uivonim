@@ -12,6 +12,8 @@ import { Canvas2dRenderer } from '../render/canvas/renderer'
 import { cell } from '../core/workspace'
 import { makel } from '../ui/vanilla'
 
+import { onElementResize } from '../ui/vanilla'
+
 export interface WindowInfo {
   id: string
   gridId: string
@@ -137,6 +139,8 @@ export default () => {
     background: 'none',
     display: 'flex',
   })
+
+  onElementResize(container, (w, h) => canvas.resizeCanvas(w, h))
 
   const content = makel({
     display: 'flex',
