@@ -130,6 +130,7 @@ export const resize = () => {
     cols: Math.floor(width / cell.width) - 2,
   })
 
+  console.log("RESIZE", size)
   ee.emit('resize', size)
 }
 

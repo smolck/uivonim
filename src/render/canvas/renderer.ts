@@ -37,7 +37,7 @@ const resizeArray = (inputArr: Array<Array<string>>, rows: number, cols: number)
 
   console.assert(inputArr.length === rows, `inputArr.length == ${inputArr.length}, rows == ${rows}`)
   console.assert(inputArr[0].length === cols)
-  
+
   return inputArr
 }
 
@@ -51,10 +51,11 @@ const m = (initialGridId: number) => {
   let lines: Array<Array<string>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
 
   const render = () => {
-    ctx.font = `${font.size}px ${font.face}`
+    console.log(font)
+    ctx.font = `${font.size * window.devicePixelRatio}px ${font.face}`
     ctx.fillStyle = `${colors.foreground}`
     lines.forEach((line, idx) => {
-      ctx.fillText(line.join(''), 0, (idx + 1) * cell.height)
+      ctx.fillText(line.join(''), 0, (idx + 1) * cell.height * window.devicePixelRatio)
     })
   }
 
