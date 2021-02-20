@@ -1,7 +1,8 @@
 import { getWorkerInstance } from '../core/master-control'
 import CreateWindow, { Window, paddingX } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
-import CreateWebGLRenderer from '../render/webgl/renderer'
+// import createCanvasRenderer from '../render/canvas/renderer'
+// import CreateWebGLRenderer from '../render/webgl/renderer'
 import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../core/workspace'
 import { throttle } from '../support/utils'
@@ -9,13 +10,12 @@ import windowSizer from '../windows/sizer'
 import api from '../core/instance-api'
 
 export const size = { width: 0, height: 0 }
-export const webgl = CreateWebGLRenderer()
 const windows = new Map<string, Window>()
 const windowsById = new Map<string, Window>()
 const invalidWindows = new Set<string>()
 const state = { activeGrid: '', activeInstanceGrid: 1 }
-const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
+const container = document.getElementById('windows') as HTMLElement
 
 const superid = (id: number) => `i${getWorkerInstance()}-${id}`
 
@@ -32,8 +32,10 @@ const getInstanceWindows = (id = getWorkerInstance()) =>
   [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
 
 const refreshWebGLGrid = () => {
-  webgl.clearAll()
-  getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
+  getInstanceWindows().forEach((w) => { 
+    w.canvas.clearAll()
+    w.redrawFromGridBuffer()
+  })
 }
 
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
@@ -73,7 +75,7 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   }
 }
 
-export const createWebGLView = (gridId: number) => webgl.createView(gridId)
+// export const createWebGLView = (gridId: number) => webgl.createView(gridId)
 
 export const getActiveGridId = () => state.activeInstanceGrid
 
@@ -227,8 +229,9 @@ export const pixelPosition = (row: number, col: number) => {
   return { x: 0, y: 0 }
 }
 
-webgl.backgroundElement.setAttribute('wat', 'webgl-background')
-webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
+// canvas.canvasElement.setAttribute('wat', 'canvas-obviously')
+// webgl.backgroundElement.setAttribute('wat', 'webgl-background')
+// webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
 
 Object.assign(webglContainer.style, {
   position: 'absolute',
@@ -251,22 +254,26 @@ Object.assign(container.style, {
   background: 'none',
 })
 
-Object.assign(webgl.backgroundElement.style, {
+// Object.assign(webgl.backgroundElement.style, {
+/* Object.assign(canvas.canvasElement.style, {
   position: 'absolute',
   zIndex: 3,
-})
+}) */
 
-Object.assign(webgl.foregroundElement.style, {
+// Object.assign(webgl.foregroundElement.style, {
+/* Object.assign(canvas.canvasElement.style, {
   position: 'absolute',
   zIndex: 4,
-})
+}) */
 
-webglContainer.appendChild(webgl.backgroundElement)
-webglContainer.appendChild(webgl.foregroundElement)
+// webglContainer.appendChild(canvas.canvasElement)
+// webglContainer.appendChild(webgl.backgroundElement)
+// webglContainer.appendChild(webgl.foregroundElement)
 
 onElementResize(webglContainer, (w, h) => {
   Object.assign(size, { width: w, height: h })
-  webgl.resizeCanvas(w, h)
+  // canvas.resizeCanvas(w, h)
+  // webgl.resizeCanvas(w, h)
   getInstanceWindows().forEach((w) => {
     w.refreshLayout()
     w.redrawFromGridBuffer()
@@ -275,7 +282,8 @@ onElementResize(webglContainer, (w, h) => {
 
 api.nvim.watchState.colorscheme(() =>
   requestAnimationFrame(() => {
-    webgl.clearAll()
-    getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
+    // canvas.clearAll()
+    // webgl.clearAll()
+    getInstanceWindows().forEach((w) => (w.canvas.clearAll(), w.redrawFromGridBuffer()))
   })
 )

@@ -207,9 +207,9 @@ const updateFont = () => {
   const changed = workspace.updateEditorFont({ face, size, lineSpace })
   if (!changed) return
 
-  const atlas = forceRegenerateFontAtlas()
-  windows.webgl.updateFontAtlas(atlas)
-  windows.webgl.updateCellSize()
+  // const atlas = forceRegenerateFontAtlas()
+  // windows.webgl.updateFontAtlas(atlas)
+  // windows.webgl.updateCellSize()
   workspace.resize()
 }
 

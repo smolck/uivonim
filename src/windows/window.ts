@@ -1,13 +1,14 @@
 import {
-  createWebGLView,
   size as windowsGridSize,
 } from '../windows/window-manager'
+import createCanvasRenderer from '../render/canvas/renderer'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
-import { getCharFromIndex } from '../render/font-texture-atlas'
+// import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../core/title'
 import instanceAPI from '../core/instance-api'
-import { WebGLView } from '../render/webgl/renderer'
+import { Canvas2dRenderer } from '../render/canvas/renderer'
+// import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../core/workspace'
 import { makel } from '../ui/vanilla'
 
@@ -69,10 +70,10 @@ export interface Editor {
 
 export interface Window {
   id: string
+  canvas: Canvas2dRenderer
   gridId: string
   row: number
   col: number
-  webgl: WebGLView
   visible: boolean
   element: HTMLElement
   editor: Editor
@@ -92,6 +93,8 @@ export interface Window {
   positionToWorkspacePixels(row: number, col: number, opts?: PosOpts): Position
   getWindowSize(): Size
   resizeWindow(width: number, height: number): void
+
+  gridLine(row: number, startCol: number, cells: any[]): void
 }
 
 const edgeDetection = (el: HTMLElement) => {
@@ -127,7 +130,7 @@ export default () => {
     anchor: '',
   }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
-  const webgl = createWebGLView(0)
+  const canvas = createCanvasRenderer(0)
 
   const container = makel({
     flexFlow: 'column',
@@ -162,6 +165,7 @@ export default () => {
   content.appendChild(overlay)
   container.appendChild(nameplate.element)
   container.appendChild(content)
+  container.appendChild(canvas.canvasElement)
 
   const api = {
     get id() {
@@ -185,17 +189,22 @@ export default () => {
     get visible() {
       return wininfo.visible
     },
-    get webgl() {
-      return webgl
+    get canvas() {
+      return canvas
     },
     get element() {
       return container
     },
   } as Window
 
+  api.gridLine = (row, startCol, cells) => {
+    canvas.updateThingNess(row, startCol, cells)
+  }
+
   api.resizeWindow = (width, height) => {
     Object.assign(wininfo, { height, width })
-    webgl.resize(height, width)
+    console.log(width, height)
+    canvas.resizeGrid(height, width)
   }
 
   api.setWindowInfo = (info) => {
@@ -226,12 +235,12 @@ export default () => {
 
     if (!wininfo.visible) {
       container.style.display = 'flex'
-      webgl.renderGridBuffer()
+      canvas.render()
     }
 
     container.id = `${info.id}`
     container.setAttribute('gridid', info.gridId)
-    webgl.updateGridId(info.gridIdNumber)
+    canvas.updateGridId(info.gridIdNumber)
     Object.assign(wininfo, info)
   }
 
@@ -261,7 +270,7 @@ export default () => {
   api.hide = () => {
     wininfo.visible = false
     container.style.display = 'none'
-    webgl.clear()
+    canvas.clearAll()
   }
 
   // maybeHide + maybeShow used for hiding/showing windows when
@@ -271,13 +280,13 @@ export default () => {
   api.maybeHide = () => {
     if (!wininfo.visible) return
     container.style.display = 'none'
-    webgl.clear()
+    canvas.clearAll()
   }
 
   api.maybeShow = () => {
     if (!wininfo.visible) return
     container.style.display = 'flex'
-    webgl.renderGridBuffer()
+    canvas.render()
   }
 
   api.refreshLayout = () => {
@@ -295,7 +304,8 @@ export default () => {
     if (same) return
 
     Object.assign(layout, { x, y, width, height })
-    webgl.layout(x + paddingX, y + paddingY, width, height)
+    // canvas.resizeCanvas(width, height)
+    // webgl.layout(x + paddingX, y + paddingY, width, height)
 
     // Don't add border to floats.
     if (!wininfo.is_float) {
@@ -320,23 +330,16 @@ export default () => {
     }
   }
 
-  api.redrawFromGridBuffer = () => webgl.renderGridBuffer()
+  api.redrawFromGridBuffer = () => canvas.render()
 
   api.updateNameplate = (data) => nameplate.update(data)
 
   api.editor = {
     getChar: (row, col) => {
-      const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3] || 0)
+      return canvas.getGridCell(row, col)
     },
     getLine: (row) => {
-      const buf = webgl.getGridLine(row)
-      let line = ''
-      for (let ix = 0; ix < buf.length; ix += 4) {
-        const charIndex = buf[ix + 3]
-        line += getCharFromIndex(charIndex)
-      }
-      return line
+      return canvas.getGridLine(row)
     },
     getAllLines: () => {
       const lines: any = []
@@ -353,13 +356,15 @@ export default () => {
 
       for (let row = 0; row < wininfo.height; row++) {
         for (let col = 0; col < wininfo.width; col++) {
-          const buf = webgl.getGridCell(row, col)
-          if (highlights.includes(buf[2]))
+          // TODO(smolck)
+          // const buf = canvas.getGridCell(row, col)
+
+          /* if (highlights.includes(buf[2]))
             results.push({
               col: buf[0],
               row: buf[1],
               char: getCharFromIndex(buf[3]),
-            })
+            }) */
         }
       }
 

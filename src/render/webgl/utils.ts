@@ -33,7 +33,7 @@ type SD1 = (pointers: AttribPointer) => SetupData
 type SD2 = (pointers: AttribPointer[]) => SetupData
 type SetupDataFunc = SD1 & SD2
 
-const create = (options?: WebGLContextAttributes) => {
+export const createWebGL = (options?: WebGLContextAttributes) => {
   const canvas = document.createElement('canvas')
   const gl = canvas.getContext('webgl2', options) as WebGL2RenderingContext
 
@@ -212,5 +212,4 @@ const create = (options?: WebGLContextAttributes) => {
   }
 }
 
-export type WebGL = ReturnType<typeof create>
-export default create
+export type WebGL = ReturnType<typeof createWebGL>

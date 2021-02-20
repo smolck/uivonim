@@ -3,17 +3,12 @@ import {
   generateColorLookupAtlas,
   setDefaultColors,
 } from '../render/highlight-attributes'
-import {
-  getCharIndex,
-  getUpdatedFontAtlasMaybe,
-} from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
 import { hideCursor, showCursor, moveCursor } from '../core/cursor'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'
 import * as renderEvents from '../render/events'
 
-let dummyData = new Float32Array()
 let state_cursorVisible = true
 
 const default_colors_set = (e: any) => {
@@ -28,8 +23,8 @@ const default_colors_set = (e: any) => {
 
   if (!defaultColorsChanged) return
 
-  const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
+  // const colorAtlas = generateColorLookupAtlas()
+  // windows.webgl.updateColorAtlas(colorAtlas)
 }
 
 const hl_attr_define = (e: any) => {
@@ -41,7 +36,7 @@ const hl_attr_define = (e: any) => {
   }
 
   const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
+  // windows.webgl.updateColorAtlas(colorAtlas)
 }
 
 const win_pos = (e: any) => {
@@ -62,8 +57,8 @@ const grid_clear = ([, [gridId]]: any) => {
   if (!windows.has(gridId)) return
 
   const win = windows.get(gridId)
-  win.webgl.clear()
-  win.webgl.clearGridBuffer()
+  win.canvas.clearAll()
+  win.canvas.clearGrid()
 }
 
 const grid_destroy = ([, [gridId]]: any) => {
@@ -108,13 +103,10 @@ const grid_line = (e: any) => {
   const count = e.length
   const gridRenderIndexes: any = []
   const grids: any = []
-  let hlid = 0
   let activeGrid = 0
-  let buffer = dummyData
-  let gridBuffer = dummyData
-  let width = 1
-  let col = 0
-  let charIndex = 0
+  // let width = 1
+  // let col = 0
+  // let charIndex = 0
 
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
@@ -127,60 +119,24 @@ const grid_line = (e: any) => {
     if (gridId !== activeGrid) {
       activeGrid = gridId
       const win = windows.get(gridId)
-      width = win.cols
-      buffer = win.webgl.getBuffer()
-      gridBuffer = win.webgl.getGridBuffer()
+      // width = win.cols
       if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
       grids.push(activeGrid)
     }
 
-    hlid = 0
-    col = startCol
-    const charDataSize = charData.length
-
-    for (let cd = 0; cd < charDataSize; cd++) {
-      const data = charData[cd]
-      const char = data[0]
-      const repeats = data[2] || 1
-      hlid = typeof data[1] === 'number' ? data[1] : hlid
-
-      if (typeof char === 'string') {
-        const nextCD = charData[cd + 1]
-        const doubleWidth =
-          nextCD &&
-          typeof nextCD[0] === 'string' &&
-          nextCD[0].codePointAt(0) === undefined
-        charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-      } else charIndex = char - 32
-
-      for (let r = 0; r < repeats; r++) {
-        buffer[gridRenderIndexes[gridId]] = col
-        buffer[gridRenderIndexes[gridId] + 1] = row
-        buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = charIndex
-        gridRenderIndexes[gridId] += 4
-
-        // TODO: could maybe deffer this to next frame?
-        const bufix = col * 4 + width * row * 4
-        gridBuffer[bufix] = col
-        gridBuffer[bufix + 1] = row
-        gridBuffer[bufix + 2] = hlid
-        gridBuffer[bufix + 3] = charIndex
-
-        col++
-      }
-    }
+    // hlid = 0
+    // col = startCol
+    windows.get(gridId).gridLine(row, startCol, charData)
   }
 
-  const atlas = getUpdatedFontAtlasMaybe()
-  if (atlas) windows.webgl.updateFontAtlas(atlas)
-
   const gridCount = grids.length
+  // windows.canvas.render()
   for (let ix = 0; ix < gridCount; ix++) {
     const gridId = grids[ix]
     const win = windows.get(gridId)
-    const renderCount = gridRenderIndexes[gridId]
-    win.webgl.render(renderCount)
+    // const renderCount = gridRenderIndexes[gridId]
+    win.redrawFromGridBuffer()
+    // win.webgl.render(renderCount)
   }
 }
 

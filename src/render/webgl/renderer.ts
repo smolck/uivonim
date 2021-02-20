@@ -1,5 +1,5 @@
 import CreateWebGLBuffer from './grid-buffer'
-import CreateWebGL from './utils'
+import { createWebGL } from './utils'
 import { cell } from '../../core/workspace'
 import TextFG from './text-fg'
 import TextBG from './text-bg'
@@ -23,8 +23,8 @@ export interface WebGLView {
 }
 
 const nutella = () => {
-  const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
-  const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
+  const foregroundGL = createWebGL({ alpha: true, preserveDrawingBuffer: true })
+  const backgroundGL = createWebGL({ alpha: true, preserveDrawingBuffer: true })
 
   const textFGRenderer = TextFG(foregroundGL)
   const textBGRenderer = TextBG(backgroundGL)
