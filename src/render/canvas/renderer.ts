@@ -46,8 +46,36 @@ const m = (initialGridId: number) => {
   const gridSize = { rows: 0, cols: 0 }
   let lines: Array<Array<Cell>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
 
+  const moveRegionUp = (linesblah: number, _top: number, _bottom: number) => {
+    console.log("sup bro")
+
+    for (let i = 0; i < linesblah; i++) {
+      lines.shift()
+      lines.push((new Array(gridSize.cols)).fill({ text: ' ', highlight: 0 }))
+    }
+    // const scaledW = workspaceCell.width * window.devicePixelRatio
+    // const scaledH = workspaceCell.height * window.devicePixelRatio
+    // const height = (bottom - top) * scaledH
+
+    // ctx.save()
+
+    // ctx.fillStyle = 'white'
+    // ctx.fillRect(200, 200, canvas.width, canvas.height)
+
+    // const img = ctx.getImageData(0, top * scaledH, canvas.width, height)
+    //ctx.putImageData(img, (top * scaledH) - (lines * scaledH), 0)
+
+    // ctx.restore()
+  }
+
+  const moveRegionDown = (linesblah: number, _top: number, _bottom: number) => {
+    for (let i = 0; i < linesblah; i++) {
+      lines.pop()
+      lines.unshift((new Array(gridSize.cols)).fill({ text: ' ', highlight: 0 }))
+    }
+  }
+
   const renderCursor = () => {
-    console.log('render cursor')
     if (!cursor.visible) return
 
     const scaledW = workspaceCell.width * window.devicePixelRatio
@@ -74,9 +102,8 @@ const m = (initialGridId: number) => {
   }
 
   const render = () => {
-    ctx.fillStyle = `${colors.background}`
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
+    // ctx.fillStyle = `${colors.background}`
+    // ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.font = `${font.size * window.devicePixelRatio}px ${font.face}`
     ctx.fillStyle = `${colors.foreground}`
 
@@ -85,7 +112,7 @@ const m = (initialGridId: number) => {
     const scaledH = workspaceCell.height * window.devicePixelRatio
 
     lines.forEach((line, idx) => {
-      if (line[0].highlight) prevHighlight = line[0].highlight
+      // if (line[0].highlight) prevHighlight = line[0].highlight
 
       line.forEach((cell, idx2) => {
         if (cell.highlight) {
@@ -172,6 +199,8 @@ const m = (initialGridId: number) => {
   }
 
   return {
+    moveRegionUp,
+    moveRegionDown,
     renderCursor,
     clearGrid,
     getGridCell,
