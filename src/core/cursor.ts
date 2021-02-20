@@ -8,10 +8,12 @@ export enum CursorShape {
 }
 
 export const cursor = {
-  visible: false,
+  visible: true,
   row: 0,
   col: 0,
   color: [0, 0, 0],
+  // TODO(smolck): Better naming, probably just switch `color` to be hex
+  colorNice: '#eeeeee',
   shape: CursorShape.block,
   size: 20,
 }
@@ -19,21 +21,26 @@ export const cursor = {
 let cursorEnabled = false
 let cursorRequestedToBeHidden = false
 
+// TODO(smolck): For some reason, initially windows may not be defined in full,
+// so here we make sure it is before trying to call it to avoid errors
+const redraw = () => windows.redrawCursor ? windows.redrawCursor() : {}
+
 export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
   cursor.size = size
 
-  windows.webgl?.updateCursorShape(shape)
+  redraw()
 }
 
 export const setCursorColor = (color: string) => {
+  cursor.colorNice = color
   let [r, g, b] = hexToRGB(color)
   r /= 255
   g /= 255
   b /= 255
   cursor.color = [r, g, b]
 
-  windows.webgl?.updateCursorColor(r, g, b)
+  redraw()
 }
 
 export const enableCursor = () => (cursorEnabled = true)
@@ -43,7 +50,7 @@ export const hideCursor = () => {
   if (!cursorEnabled) return
   cursorRequestedToBeHidden = true
 
-  windows.webgl?.showCursor(false)
+  redraw()
   Object.assign(cursor, { visible: false })
 }
 
@@ -51,7 +58,7 @@ export const showCursor = () => {
   if (!cursorEnabled) return
   cursorRequestedToBeHidden = false
 
-  windows.webgl?.showCursor(true)
+  redraw()
   Object.assign(cursor, { visible: true })
 }
 
@@ -62,7 +69,7 @@ export const moveCursor = (row: number, col: number) => {
 
   if (cursorRequestedToBeHidden) return
   showCursor()
-  windows.webgl?.updateCursorPosition(row, col)
+  redraw()
 }
 
 setCursorShape(CursorShape.block)

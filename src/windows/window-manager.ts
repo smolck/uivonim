@@ -38,6 +38,11 @@ const refreshWebGLGrid = () => {
   })
 }
 
+export const redrawCursor = () => {
+  const win = windows.get(state.activeGrid)
+  win?.canvas.renderCursor()
+}
+
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   // TODO(smolck): Throw error?
   if (!anchorWin.element.style.gridArea)

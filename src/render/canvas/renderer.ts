@@ -2,6 +2,7 @@ import { colors, getColorById, Color } from '../highlight-attributes'
 import { cell as workspaceCell } from '../../core/workspace'
 import { createCanvas } from './utils'
 import { font } from '../../core/workspace'
+import { cursor, CursorShape } from '../../core/cursor'
 
 type Cell = {
   text: string
@@ -45,6 +46,33 @@ const m = (initialGridId: number) => {
   const gridSize = { rows: 0, cols: 0 }
   let lines: Array<Array<Cell>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
 
+  const renderCursor = () => {
+    console.log('render cursor')
+    if (!cursor.visible) return
+
+    const scaledW = workspaceCell.width * window.devicePixelRatio
+    const scaledH = workspaceCell.height * window.devicePixelRatio
+
+    const x = cursor.col * scaledW
+    const y = cursor.row * scaledH + (workspaceCell.padding * 2)
+
+    // TODO(smolck): look into when to do save() and restore() and when it isn't
+    // necessary
+    ctx.save()
+
+    ctx.fillStyle = cursor.colorNice
+    ctx.fillRect(x,
+                 y,
+                 cursor.shape == CursorShape.line ? scaledW / 10 : scaledW,
+                 scaledH)
+
+    if (cursor.shape === CursorShape.block) {
+      ctx.fillStyle = colors.background
+      ctx.fillText(lines[cursor.row][cursor.col].text, x, (cursor.row + 1) * scaledH)
+    }
+    ctx.restore()
+  }
+
   const render = () => {
     ctx.fillStyle = `${colors.background}`
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -55,6 +83,7 @@ const m = (initialGridId: number) => {
     let prevHighlight: Color = { foreground: colors.foreground, background: colors.background }
     const scaledW = workspaceCell.width * window.devicePixelRatio
     const scaledH = workspaceCell.height * window.devicePixelRatio
+
     lines.forEach((line, idx) => {
       if (line[0].highlight) prevHighlight = line[0].highlight
 
@@ -143,6 +172,7 @@ const m = (initialGridId: number) => {
   }
 
   return {
+    renderCursor,
     clearGrid,
     getGridCell,
     getGridLine,
