@@ -33,7 +33,7 @@
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.6.0",
     "inferno": "^7.4.8",
-    "marked": "^2.0.0",
+    "marked": "^2.0.1",
     "neovim": "^4.9.0",
     "ts-node": "^9.1.1"
   },
