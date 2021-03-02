@@ -88,6 +88,7 @@ app.on('ready', async () => {
       enableRemoteModule: true,
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
+      contextIsolation: false,
     },
   })
 
