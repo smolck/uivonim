@@ -12,6 +12,7 @@ export default (webgl: WebGL) => {
     charIndex: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
+
     canvasResolution: VarKind.Uniform,
     fontAtlasResolution: VarKind.Uniform,
     colorAtlasResolution: VarKind.Uniform,

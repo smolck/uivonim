@@ -11,6 +11,8 @@ if (process.platform === 'darwin') {
 let win: any
 app.setName('uivonim')
 
+app.commandLine.appendSwitch('enable-unsafe-webgpu')
+
 const comscan = (() => {
   type DispatchFn = (ch: string, message: any) => void
   const windows = new Set<DispatchFn>()
@@ -115,23 +117,6 @@ app.on('ready', async () => {
     }
 
     watch(srcDir, { recursive: true }, debounce(reloader, 250))
-
-    console.log(`uivonim started in develop mode. you're welcome`)
-
-    const {
-      default: installExtension,
-      REACT_DEVELOPER_TOOLS,
-      REDUX_DEVTOOLS,
-    } = require('electron-devtools-installer')
-
-    const load = (ext: any) =>
-      installExtension(ext)
-        .then((n: any) => console.log('loaded ext:', n))
-        .catch((e: any) => console.log('failed to load ext because...', e))
-
-    // TODO: .id is a hack to make it work for electron 2.0+
-    load(REACT_DEVELOPER_TOOLS.id)
-    load(REDUX_DEVTOOLS.id)
 
     win.webContents.openDevTools()
   }
