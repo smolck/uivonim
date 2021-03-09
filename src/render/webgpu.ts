@@ -2,6 +2,7 @@
 import { getColorAtlas, getColorAtlasImageData } from './highlight-attributes'
 import generateFontAtlas, { getFontAtlasImageData } from './font-texture-atlas'
 import { cell } from '../core/workspace'
+import { CursorShape } from '../core/cursor'
 
 export default async (canvas: HTMLCanvasElement) => {
   if (!navigator.gpu) return
@@ -15,7 +16,11 @@ export default async (canvas: HTMLCanvasElement) => {
   if (!ctx) return
 
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
+  // TODO(smolck): Use object for state (specifically cursor state) probably?
   let canvasRes = [0, 0]
+  let cursorPos = [0, 0]
+  let cursorShape = CursorShape.block
+  let cursorColor = [0, 0, 0, 1]
 
   const swapChainFormat = await ctx.getSwapChainPreferredFormat(device)
   const swapChain = ctx.configureSwapChain({
@@ -299,6 +304,19 @@ export default async (canvas: HTMLCanvasElement) => {
     ])
     uniformBuffer.unmap()
 
+    new Float32Array(cursorBuffer.getMappedRange()).set([
+      // cursor visible 
+      // @ts-ignore TODO(smolck)
+      true,
+      // cursor position
+      cursorPos[0], cursorPos[1],
+      // cursor shape
+      cursorShape,
+      // cursor color,
+      ...cursorColor
+    ])
+    cursorBuffer.unmap()
+
     // TODO(smolck): Create every frame?
     const attributeBuffer = device.createBuffer({
       size: buffer.length,
@@ -353,8 +371,23 @@ export default async (canvas: HTMLCanvasElement) => {
     // webgl.gl.uniform2f(program.vars.canvasResolution, width, height)
   }
 
+  const updateCursorPosition = (row: number, col: number) => {
+    cursorPos = [col, row]
+  }
+
+  const updateCursorShape = (shape: CursorShape) => {
+    cursorShape = shape
+  }
+
+  const updateCursorColor = (color: [number, number, number]) => {
+    cursorColor = [...color, 1]
+  }
+
   return {
     render,
     readjustViewportMaybe,
+    updateCursorPosition,
+    updateCursorShape,
+    updateCursorColor
   }
 }
