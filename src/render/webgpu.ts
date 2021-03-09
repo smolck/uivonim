@@ -424,6 +424,7 @@ export default async (canvas: HTMLCanvasElement) => {
       0,
       0,
     ])
+    quadBuffer.unmap()
 
     // TODO(smolck): Currently, the cellSize and cellPadding aren't stored in
     // state, just assigned every time from `cell` in `render`; should they be?
