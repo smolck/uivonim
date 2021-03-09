@@ -219,3 +219,5 @@ export const generateColorLookupAtlas = () => {
 }
 
 export const getColorAtlas = () => canvas
+export const getColorAtlasImageData = () =>
+  ui.getImageData(0, 0, canvas.width, canvas.height)

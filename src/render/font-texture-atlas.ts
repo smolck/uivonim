@@ -80,6 +80,9 @@ export const forceRegenerateFontAtlas = () => {
   return canvas
 }
 
+export const getFontAtlasImageData = () =>
+  ui.getImageData(0, 0, canvas.width, canvas.height)
+
 export default () => {
   if (needToRegenAtlas) regenAtlas()
   return canvas
