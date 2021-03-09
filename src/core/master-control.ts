@@ -57,7 +57,9 @@ const spawnNvimInstance = (
 
 const setupNvimInstance = () => {
   if (!nvimApi) {
-    throw new Error('setupNvimInstance called before attachNvim, this shouldn\'t happen')
+    throw new Error(
+      "setupNvimInstance called before attachNvim, this shouldn't happen"
+    )
   }
   const { attached } = nvimInstance!
 

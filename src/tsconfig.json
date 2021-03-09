@@ -19,6 +19,6 @@
     "noUnusedParameters": true,
     "sourceMap": true,
     "plugins": [{ "transform": "../tools/transform-no-dev.js" }],
-    "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@webgpu/types", "./node_modules/@types"]
   }
 }
