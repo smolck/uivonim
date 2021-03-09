@@ -356,7 +356,17 @@ export default async (canvas: HTMLCanvasElement) => {
 
     const commandEncoder = device.createCommandEncoder()
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
+    // TODO(smolck): Last two params are minDepth and maxDepth of viewport, what
+    // to use there? 0 and 1 as is done now or something else?
+    //
+    // Also, should be roughly equivalent to the following I think?
+    // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
+    // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
+    passEncoder.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, 0, 1)
+    passEncoder.setScissorRect(viewport.x, viewport.y, viewport.width, viewport.height)
+
     passEncoder.setPipeline(foregroundPipeline)
+
     // TODO(smolck): Verify the first param to `setVertexBuffer`, `slot`, does
     // what I think it does.
     passEncoder.setVertexBuffer(0, attributeBuffer)
@@ -374,8 +384,6 @@ export default async (canvas: HTMLCanvasElement) => {
     height: number
   ) => {
     const bottom = (y + height) * window.devicePixelRatio
-    // TODO(smolck)
-    // const yy = Math.round(webgl.canvasElement.height - bottom)
     const yy = Math.round(canvas.height - bottom)
     const xx = Math.round(x * window.devicePixelRatio)
     const ww = Math.round(width * window.devicePixelRatio)
@@ -391,10 +399,6 @@ export default async (canvas: HTMLCanvasElement) => {
 
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
     canvasRes = [width, height]
-    // TODO(smolck)
-    // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
-    // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    // webgl.gl.uniform2f(program.vars.canvasResolution, width, height)
   }
 
   const updateCursorPosition = (row: number, col: number) => {
