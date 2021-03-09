@@ -284,6 +284,28 @@ export default async (canvas: HTMLCanvasElement) => {
     ],
   }
 
+  const quads = new Float32Array([
+    0,
+    0,
+    cell.width,
+    cell.height,
+    0,
+    cell.height,
+    cell.width,
+    0,
+    cell.width,
+    cell.height,
+    0,
+    0,
+  ])
+  const quadBuffer = device.createBuffer({
+    size: quads.byteLength,
+    usage: GPUBufferUsage.VERTEX,
+    mappedAtCreation: true,
+  })
+  new Float32Array(quadBuffer.getMappedRange()).set(quads)
+  quadBuffer.unmap()
+
   const render = (buffer: Float32Array) => {
     new Float32Array(uniformBuffer.getMappedRange()).set([
       // canvasResolution
@@ -305,21 +327,22 @@ export default async (canvas: HTMLCanvasElement) => {
     uniformBuffer.unmap()
 
     new Float32Array(cursorBuffer.getMappedRange()).set([
-      // cursor visible 
+      // cursor visible
       // @ts-ignore TODO(smolck)
       true,
       // cursor position
-      cursorPos[0], cursorPos[1],
+      cursorPos[0],
+      cursorPos[1],
       // cursor shape
       cursorShape,
       // cursor color,
-      ...cursorColor
+      ...cursorColor,
     ])
     cursorBuffer.unmap()
 
     // TODO(smolck): Create every frame?
     const attributeBuffer = device.createBuffer({
-      size: buffer.length,
+      size: buffer.byteLength,
       usage: GPUBufferUsage.VERTEX,
       mappedAtCreation: true,
     })
@@ -334,7 +357,10 @@ export default async (canvas: HTMLCanvasElement) => {
     const commandEncoder = device.createCommandEncoder()
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(foregroundPipeline)
+    // TODO(smolck): Verify the first param to `setVertexBuffer`, `slot`, does
+    // what I think it does.
     passEncoder.setVertexBuffer(0, attributeBuffer)
+    passEncoder.setVertexBuffer(1, quadBuffer)
     passEncoder.setBindGroup(0, bindGroup)
     passEncoder.draw(6, buffer.length / 4)
     passEncoder.endPass()
@@ -383,11 +409,34 @@ export default async (canvas: HTMLCanvasElement) => {
     cursorColor = [...color, 1]
   }
 
+  const updateCellSize = () => {
+    new Float32Array(quadBuffer.getMappedRange()).set([
+      0,
+      0,
+      cell.width,
+      cell.height,
+      0,
+      cell.height,
+      cell.width,
+      0,
+      cell.width,
+      cell.height,
+      0,
+      0,
+    ])
+
+    // TODO(smolck): Currently, the cellSize and cellPadding aren't stored in
+    // state, just assigned every time from `cell` in `render`; should they be?
+    // webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+    // webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
+  }
+
   return {
     render,
     readjustViewportMaybe,
     updateCursorPosition,
     updateCursorShape,
-    updateCursorColor
+    updateCursorColor,
+    updateCellSize,
   }
 }
