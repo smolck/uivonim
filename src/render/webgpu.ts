@@ -99,7 +99,8 @@ export default async (canvas: HTMLCanvasElement) => {
           var colorPosition : vec2<f32> = vec2<f32>(color_x, color_y) / uniforms.colorAtlasResolution;
 
           // TODO(smolck): textureLoad or textureSample?
-          var textureColor : vec4<f32> = textureSample(colorAtlasTexture, colorAtlasSampler, colorPosition);
+          // TODO(smolck): LOD should be something else?
+          var textureColor : vec4<f32> = textureSampleLevel(colorAtlasTexture, colorAtlasSampler, colorPosition, 1.0);
 
           o_color = textureColor;
           // if (isCursorCell && cursor.shape == 0) {
@@ -127,7 +128,8 @@ export default async (canvas: HTMLCanvasElement) => {
         [[stage(fragment)]]
         fn main() -> void {
           // TODO(smolck): textureLoad or textureSample?
-          var glyphColor : vec4<f32> = textureSample(fontAtlasTexture, fontAtlasSampler, o_glyphPosition);
+          // TODO(smolck): LOD should be something else?
+          var glyphColor : vec4<f32> = textureSampleLevel(fontAtlasTexture, fontAtlasSampler, o_glyphPosition, 1.0);
           outColor = glyphColor * o_color;
           return;
         }
