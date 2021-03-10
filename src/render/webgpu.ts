@@ -35,7 +35,6 @@ export default async (canvas: HTMLCanvasElement) => {
       module: device.createShaderModule({
         code: `
         [[location(0)]] var<in> quadVertex : vec2<f32>;
-
         [[location(1)]] var<in> cellPosition : vec2<f32>;
         [[location(2)]] var<in> hlId : f32;
         [[location(3)]] var<in> charIndex : f32;
@@ -52,9 +51,6 @@ export default async (canvas: HTMLCanvasElement) => {
         [[binding(1), group(0)]] var<uniform> colorAtlasSampler : sampler;
         [[binding(2), group(0)]] var<uniform> colorAtlasTexture : texture2D;
 
-        [[binding(3), group(0)]] var<uniform> fontAtlasSampler : sampler;
-        [[binding(4), group(0)]] var<uniform> fontAtlasTexture : texture2D;
-
         [[block]] struct CursorUniforms {
           visible : bool;
           position : vec2<f32>;
@@ -65,8 +61,38 @@ export default async (canvas: HTMLCanvasElement) => {
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
 
+        [[location(0)]] var<out> o_glyphPosition : vec2<f32>;
+        [[location(1)]] var<out> o_color : vec4<f32>;
+
         [[stage(vertex)]]
-        fn main() -> void {}
+        fn main() -> void {
+          bool isCursorCell = cursor.position == cellPosition && cursor.visible;
+
+          vec2 absolutePixelPos = cellPosition * uniforms.cellSize;
+          vec2 vertexPos = absolutePixelPos + quadVertex + uniforms.cellPadding;
+          vec2 posFloat = vertexPos / uniforms.canvasResolution;
+          float posx = posFloat.x * 2.0 - 1.0;
+          float posy = posFloat.y * -2.0 + 1.0;
+          Position = vec4(posx, posy, 0, 1);
+
+          vec2 glyphPixelPos = vec2(charIndex, 0) * uniforms.cellSize;
+          vec2 glyphVertex = glyphPixelPos + quadVertex;
+          o_glyphPosition = glyphVertex / uniforms.fontAtlasResolution;
+
+          float texelSize = 2.0;
+          float color_x = hlId * texelSize + 1.0;
+          float color_y = 1.0 * texelSize + 1.0;
+          vec2 colorPosition = vec2(color_xd, color_y) / uniforms.colorAtlasResolution;
+
+          // TODO(smolck): textureLoad or textureSample?
+          vec4 textureColor = textureSample(colorAtlasTexture, colorAtlasSampler, colorPosition);
+
+          if (isCursorCell && cursor.shape == 0) {
+            o_color = cursor.color;
+          } else {
+            o_color = textureColor;
+          }
+        }
         `,
       }),
       entryPoint: 'main',
@@ -74,6 +100,20 @@ export default async (canvas: HTMLCanvasElement) => {
     fragmentStage: {
       module: device.createShaderModule({
         code: `
+        [[location(0)]] var<in> o_glyphPosition : vec2<f32>;
+        [[location(1)]] var<in> o_color : vec4<f32>;
+
+        [[binding(3), group(0)]] var<uniform> fontAtlasSampler : sampler;
+        [[binding(4), group(0)]] var<uniform> fontAtlasTexture : texture2D;
+
+        [[location(0)]] var<out> outColor : vec4<f32>;
+
+        [[stage(fragment)]]
+        fn main() -> void {
+          // TODO(smolck): textureLoad or textureSample?
+          vec4 glyphColor = textureSample(fontAtlasTexture, fontAtlasSampler, o_glyphPosition);
+          outColor = glyphColor * o_color;
+        }
         `,
       }),
       entryPoint: 'main',
@@ -145,11 +185,11 @@ export default async (canvas: HTMLCanvasElement) => {
               type: 'sampled-texture',
             },
             // fontAtlasSampler
-            { binding: 3, visibility: GPUShaderStage.VERTEX, type: 'sampler' },
+            { binding: 3, visibility: GPUShaderStage.FRAGMENT, type: 'sampler' },
             // fontAtlasTexture
             {
               binding: 4,
-              visibility: GPUShaderStage.VERTEX,
+              visibility: GPUShaderStage.FRAGMENT,
               type: 'sampled-texture',
             },
             // cursor
