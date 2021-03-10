@@ -5,15 +5,27 @@ import { cell } from '../core/workspace'
 import { CursorShape } from '../core/cursor'
 
 export default async (canvas: HTMLCanvasElement) => {
-  if (!navigator.gpu) return
+  if (!navigator.gpu) {
+    console.error('no navigator.gpu!')
+    return
+  }
   const adapter = await navigator.gpu.requestAdapter()
-  if (!adapter) return
+  if (!adapter) {
+    console.error('no GPU adapter!')
+    return
+  }
 
   const device = await adapter.requestDevice()
-  if (!device) return
+  if (!device) {
+    console.error('no GPU device!')
+    return
+  }
 
   const ctx = canvas.getContext('gpupresent')
-  if (!ctx) return
+  if (!ctx) {
+    console.error('no gpu context!')
+    return
+  }
 
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
   // TODO(smolck): Use object for state (specifically cursor state) probably?
@@ -22,9 +34,11 @@ export default async (canvas: HTMLCanvasElement) => {
   let cursorShape = CursorShape.block
   let cursorColor = [0, 0, 0, 1]
 
-  const swapChainFormat = await ctx.getSwapChainPreferredFormat(device)
+  // @ts-ignore
+  const swapChainFormat = ctx.getSwapChainPreferredFormat(adapter)
   const swapChain = ctx.configureSwapChain({
     device,
+    // @ts-ignore
     format: swapChainFormat,
   })
 
@@ -40,23 +54,23 @@ export default async (canvas: HTMLCanvasElement) => {
         [[location(3)]] var<in> charIndex : f32;
 
         [[block]] struct Uniforms {
-          canvasResolution : vec2<f32>;
-          fontAtlasResolution : vec2<f32>;
-          colorAtlasResolution : vec2<f32>;
-          cellSize : vec2<f32>;
-          cellPadding : vec2<f32>;
-        }
+          [[offset(0)]] canvasResolution : vec2<f32>;
+          [[offset(8)]] fontAtlasResolution : vec2<f32>;
+          [[offset(16)]] colorAtlasResolution : vec2<f32>;
+          [[offset(24)]] cellSize : vec2<f32>;
+          [[offset(32)]] cellPadding : vec2<f32>;
+        };
         [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
 
         [[binding(1), group(0)]] var<uniform> colorAtlasSampler : sampler;
-        [[binding(2), group(0)]] var<uniform> colorAtlasTexture : texture2D;
+        [[binding(2), group(0)]] var<uniform> colorAtlasTexture : texture_2d<f32>;
 
         [[block]] struct CursorUniforms {
-          visible : bool;
-          position : vec2<f32>;
-          shape : i32;
-          color : vec4<f32>;
-        }
+          [[offset(0)]] visible : i32;
+          [[offset(4)]] position : vec2<f32>;
+          [[offset(12)]] shape : i32;
+          [[offset(16)]] color : vec4<f32>;
+        };
         [[binding(5), group(0)]] var<uniform> cursor : CursorUniforms;
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
@@ -66,32 +80,34 @@ export default async (canvas: HTMLCanvasElement) => {
 
         [[stage(vertex)]]
         fn main() -> void {
-          bool isCursorCell = cursor.position == cellPosition && cursor.visible;
+          // var isCursorCell : bool = (cursor.position == cellPosition && cursor.visible == 1);
 
-          vec2 absolutePixelPos = cellPosition * uniforms.cellSize;
-          vec2 vertexPos = absolutePixelPos + quadVertex + uniforms.cellPadding;
-          vec2 posFloat = vertexPos / uniforms.canvasResolution;
-          float posx = posFloat.x * 2.0 - 1.0;
-          float posy = posFloat.y * -2.0 + 1.0;
-          Position = vec4(posx, posy, 0, 1);
+          var absolutePixelPos : vec2<f32> = cellPosition * uniforms.cellSize;
+          var vertexPos : vec2<f32> = absolutePixelPos + quadVertex + uniforms.cellPadding;
+          var posFloat : vec2<f32> = vertexPos / uniforms.canvasResolution;
+          var posx : f32 = posFloat.x * 2.0 - 1.0;
+          var posy : f32 = posFloat.y * -2.0 + 1.0;
+          Position = vec4<f32>(posx, posy, 0, 1);
 
-          vec2 glyphPixelPos = vec2(charIndex, 0) * uniforms.cellSize;
-          vec2 glyphVertex = glyphPixelPos + quadVertex;
+          var glyphPixelPos : vec2<f32> = vec2<f32>(charIndex, 0) * uniforms.cellSize;
+          var glyphVertex : vec2<f32> = glyphPixelPos + quadVertex;
           o_glyphPosition = glyphVertex / uniforms.fontAtlasResolution;
 
-          float texelSize = 2.0;
-          float color_x = hlId * texelSize + 1.0;
-          float color_y = 1.0 * texelSize + 1.0;
-          vec2 colorPosition = vec2(color_xd, color_y) / uniforms.colorAtlasResolution;
+          var texelSize : f32 = 2.0;
+          var color_x : f32 = hlId * texelSize + 1.0;
+          var color_y : f32 = 1.0 * texelSize + 1.0;
+          var colorPosition : vec2<f32> = vec2<f32>(color_x, color_y) / uniforms.colorAtlasResolution;
 
           // TODO(smolck): textureLoad or textureSample?
-          vec4 textureColor = textureSample(colorAtlasTexture, colorAtlasSampler, colorPosition);
+          var textureColor : vec4<f32> = textureSample(colorAtlasTexture, colorAtlasSampler, colorPosition);
 
-          if (isCursorCell && cursor.shape == 0) {
-            o_color = cursor.color;
-          } else {
-            o_color = textureColor;
-          }
+          o_color = textureColor;
+          // if (isCursorCell && cursor.shape == 0) {
+            // o_color = cursor.color;
+          // } else {
+          // }
+          
+          return;
         }
         `,
       }),
@@ -104,15 +120,16 @@ export default async (canvas: HTMLCanvasElement) => {
         [[location(1)]] var<in> o_color : vec4<f32>;
 
         [[binding(3), group(0)]] var<uniform> fontAtlasSampler : sampler;
-        [[binding(4), group(0)]] var<uniform> fontAtlasTexture : texture2D;
+        [[binding(4), group(0)]] var<uniform> fontAtlasTexture : texture_2d<f32>;
 
         [[location(0)]] var<out> outColor : vec4<f32>;
 
         [[stage(fragment)]]
         fn main() -> void {
           // TODO(smolck): textureLoad or textureSample?
-          vec4 glyphColor = textureSample(fontAtlasTexture, fontAtlasSampler, o_glyphPosition);
+          var glyphColor : vec4<f32> = textureSample(fontAtlasTexture, fontAtlasSampler, o_glyphPosition);
           outColor = glyphColor * o_color;
+          return;
         }
         `,
       }),
@@ -133,18 +150,18 @@ export default async (canvas: HTMLCanvasElement) => {
           stepMode: 'vertex',
           attributes: [
             // cellPosition
-            { shaderLocation: 1, offset: 0, format: 'float32x2' },
+            { shaderLocation: 1, offset: 0, format: 'float2' },
             // hlId
             {
               shaderLocation: 2,
               offset: 2 * Float32Array.BYTES_PER_ELEMENT,
-              format: 'float32',
+              format: 'float',
             },
             // charIndex
             {
               shaderLocation: 3,
               offset: 3 * Float32Array.BYTES_PER_ELEMENT,
-              format: 'float32',
+              format: 'float',
             },
           ],
         },
@@ -158,7 +175,7 @@ export default async (canvas: HTMLCanvasElement) => {
               // quadVertex
               shaderLocation: 0,
               offset: 0,
-              format: 'float32x2',
+              format: 'float2',
             },
           ],
         },
@@ -185,7 +202,11 @@ export default async (canvas: HTMLCanvasElement) => {
               type: 'sampled-texture',
             },
             // fontAtlasSampler
-            { binding: 3, visibility: GPUShaderStage.FRAGMENT, type: 'sampler' },
+            {
+              binding: 3,
+              visibility: GPUShaderStage.FRAGMENT,
+              type: 'sampler',
+            },
             // fontAtlasTexture
             {
               binding: 4,
@@ -209,6 +230,7 @@ export default async (canvas: HTMLCanvasElement) => {
     size: 5 * 2 * 4,
     // TODO(smolck)
     usage: GPUBufferUsage.UNIFORM,
+    mappedAtCreation: true,
   })
 
   const cursorBuffer = device.createBuffer({
@@ -216,9 +238,10 @@ export default async (canvas: HTMLCanvasElement) => {
       4 /* shape : i32 */ +
       2 * 4 /* position : vec2<f32> */ +
       4 * 4 /* color : vec4<f32> */ +
-      4 /* visible: bool - is this size correct?*/,
+      4 /* visible: i32 */,
     // TODO(smolck)
     usage: GPUBufferUsage.UNIFORM,
+    mappedAtCreation: true,
   })
 
   const colorAtlas = getColorAtlas()
@@ -257,7 +280,7 @@ export default async (canvas: HTMLCanvasElement) => {
 
   const fontAtlasTexture = device.createTexture({
     // TODO(smolck): What is this 1 for?
-    size: [fontAtlas.width, fontAtlas.height],
+    size: [fontAtlas.width, fontAtlas.height, 1],
     // TODO(smolck): What format to use?
     format: 'rgba8unorm',
     // TODO(smolck)
@@ -296,7 +319,7 @@ export default async (canvas: HTMLCanvasElement) => {
         }),
       },
       // colorAtlasTexture
-      { binding: 2, resource: colorAtlasTexture },
+      { binding: 2, resource: colorAtlasTexture.createView() },
       // fontAtlasSampler
       // TODO(smolck): See if a new one needs to be created
       // or if the same one for the colorAtlas can be used here too
@@ -308,9 +331,12 @@ export default async (canvas: HTMLCanvasElement) => {
         }),
       },
       // fontAtlasTexture
-      { binding: 4, resource: fontAtlasTexture },
+      { binding: 4, resource: fontAtlasTexture.createView() },
       // cursor
-      { binding: 5, resource: cursorBuffer },
+      { binding: 5, resource: {
+          buffer: cursorBuffer
+        }
+      },
     ] as Iterable<GPUBindGroupEntry>, // TODO(smolck)
   })
 
@@ -346,7 +372,38 @@ export default async (canvas: HTMLCanvasElement) => {
   new Float32Array(quadBuffer.getMappedRange()).set(quads)
   quadBuffer.unmap()
 
-  const render = (buffer: Float32Array) => {
+  const readjustViewportMaybe = (
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    const bottom = (y + height) * window.devicePixelRatio
+    const yy = Math.round(canvas.height - bottom)
+    const xx = Math.round(x * window.devicePixelRatio)
+    const ww = Math.round(width * window.devicePixelRatio)
+    const hh = Math.round(height * window.devicePixelRatio)
+
+    const same =
+      viewport.width === ww &&
+      viewport.height === hh &&
+      viewport.x === xx &&
+      viewport.y === yy
+
+    if (same) return
+
+    Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
+    canvasRes = [width, height]
+  }
+
+  const render = (
+    buffer: Float32Array,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    readjustViewportMaybe(x, y, width, height)
     new Float32Array(uniformBuffer.getMappedRange()).set([
       // canvasResolution
       canvasRes[0],
@@ -368,8 +425,7 @@ export default async (canvas: HTMLCanvasElement) => {
 
     new Float32Array(cursorBuffer.getMappedRange()).set([
       // cursor visible
-      // @ts-ignore TODO(smolck)
-      true,
+      1,
       // cursor position
       cursorPos[0],
       cursorPos[1],
@@ -402,8 +458,20 @@ export default async (canvas: HTMLCanvasElement) => {
     // Also, should be roughly equivalent to the following I think?
     // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
     // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    passEncoder.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, 0, 1)
-    passEncoder.setScissorRect(viewport.x, viewport.y, viewport.width, viewport.height)
+    passEncoder.setViewport(
+      viewport.x,
+      viewport.y,
+      viewport.width,
+      viewport.height,
+      0,
+      1
+    )
+    passEncoder.setScissorRect(
+      viewport.x,
+      viewport.y,
+      viewport.width,
+      viewport.height
+    )
 
     passEncoder.setPipeline(foregroundPipeline)
 
@@ -417,28 +485,22 @@ export default async (canvas: HTMLCanvasElement) => {
     device.queue.submit([commandEncoder.finish()])
   }
 
-  const readjustViewportMaybe = (
-    x: number,
-    y: number,
-    width: number,
-    height: number
-  ) => {
-    const bottom = (y + height) * window.devicePixelRatio
-    const yy = Math.round(canvas.height - bottom)
-    const xx = Math.round(x * window.devicePixelRatio)
-    const ww = Math.round(width * window.devicePixelRatio)
-    const hh = Math.round(height * window.devicePixelRatio)
 
-    const same =
-      viewport.width === ww &&
-      viewport.height === hh &&
-      viewport.x === xx &&
-      viewport.y === yy
+  // TODO(smolck)
+  const setCursorVisible = (visible: boolean) => {}
+  const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {}
+  const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {}
 
-    if (same) return
+  const resize = (width: number, height: number) => {
+    const w = Math.round(width * window.devicePixelRatio)
+    const h = Math.round(height * window.devicePixelRatio)
 
-    Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
-    canvasRes = [width, height]
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+    }
   }
 
   const updateCursorPosition = (row: number, col: number) => {
@@ -483,5 +545,9 @@ export default async (canvas: HTMLCanvasElement) => {
     updateCursorShape,
     updateCursorColor,
     updateCellSize,
+    resize,
+    updateFontAtlas,
+    updateColorAtlas,
+    setCursorVisible,
   }
 }

@@ -2,6 +2,7 @@ import CreateWebGLBuffer from './grid-buffer'
 import CreateWebGL from './utils'
 import { cell } from '../../core/workspace'
 import TextFG from './text-fg'
+import WebGPU from '../webgpu'
 import TextBG from './text-bg'
 import { cursor as cursorState, CursorShape } from '../../core/cursor'
 import { getActiveGridId } from '../../windows/window-manager'
@@ -23,20 +24,24 @@ export interface WebGLView {
 }
 
 const nutella = () => {
-  const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
+  // const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
 
-  const textFGRenderer = TextFG(foregroundGL)
+  // const textFGRenderer = TextFG(foregroundGL)
   const textBGRenderer = TextBG(backgroundGL)
+  const canvasEl = document.createElement('canvas')
+  const fgRenderer = WebGPU(canvasEl)
 
   const resizeCanvas = (width: number, height: number) => {
     textBGRenderer.resize(width, height)
-    textFGRenderer.resize(width, height)
+    fgRenderer.then((val) => val!.resize(width, height))
+    // textFGRenderer.resize(width, height)
   }
 
   const showCursor = (enable: boolean) => {
     textBGRenderer.showCursor(enable)
-    textFGRenderer.showCursor(enable)
+    // textFGRenderer.showCursor(enable)
+    fgRenderer.then((val) => val!.setCursorVisible(enable))
   }
 
   const updateCursorShape = (shape: CursorShape) => {
@@ -44,36 +49,45 @@ const nutella = () => {
     // TODO(smolck): If cursor size changes need to update cells . . .
     textBGRenderer.updateCellSize(false, cursorState.size)
 
-    textFGRenderer.updateCursorShape(shape)
+    fgRenderer.then((val) => val!.updateCursorShape(shape))
+    // textFGRenderer.updateCursorShape(shape)
   }
 
   const updateCursorColor = (r: number, g: number, b: number) => {
     textBGRenderer.updateCursorColor([r, g, b])
-    textFGRenderer.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b])
+
+    fgRenderer.then((val) => val!.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b]))
+    // textFGRenderer.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b])
   }
 
   const updateCursorPosition = (row: number, col: number) => {
     textBGRenderer.updateCursorPosition(row, col)
-    textFGRenderer.updateCursorPosition(row, col)
+
+    fgRenderer.then((val) => val!.updateCursorPosition(row, col))
+    // textFGRenderer.updateCursorPosition(row, col)
   }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
-    textFGRenderer.updateFontAtlas(fontAtlas)
+    // textFGRenderer.updateFontAtlas(fontAtlas)
+    fgRenderer.then((val) => val!.updateFontAtlas(fontAtlas))
   }
 
   const updateCellSize = () => {
     textBGRenderer.updateCellSize()
-    textFGRenderer.updateCellSize()
+    fgRenderer.then((val) => val!.updateCellSize())
+    // textFGRenderer.updateCellSize()
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     textBGRenderer.updateColorAtlas(colorAtlas)
-    textFGRenderer.updateColorAtlas(colorAtlas)
+    fgRenderer.then((val) => val!.updateColorAtlas(colorAtlas))
+    // textFGRenderer.updateColorAtlas(colorAtlas)
   }
 
   const clearAll = () => {
     textBGRenderer.clearAll()
-    textFGRenderer.clearAll()
+    // textFGRenderer.clearAll()
+    // TODO(smolck): fgRenderer.then((val) => val!.clearAll())
   }
 
   const createView = (initialGridId: number): WebGLView => {
@@ -118,7 +132,8 @@ const nutella = () => {
       const doHacks = gridId !== getActiveGridId() && cursorState.visible
       if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      fgRenderer.then((val) => val!.render(buffer, x, y, width, height))
+      // textFGRenderer.render(buffer, x, y, width, height)
       if (doHacks) showCursor(true)
     }
 
@@ -129,14 +144,17 @@ const nutella = () => {
       const doHacks = gridId !== getActiveGridId() && cursorState.visible
       if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      // textFGRenderer.render(buffer, x, y, width, height)
+      fgRenderer.then((val) => val!.render(buffer, x, y, width, height))
       if (doHacks) showCursor(true)
     }
 
     const clear = () => {
       const { x, y, width, height } = viewport
       textBGRenderer.clear(x, y, width, height)
-      textFGRenderer.clear(x, y, width, height)
+
+      // TODO(smolck): fgRenderer.then((val) => val!.clear(x, y, width, height))
+      // textFGRenderer.clear(x, y, width, height)
     }
 
     const clearGridBuffer = () => gridBuffer.clear()
@@ -146,7 +164,8 @@ const nutella = () => {
       const buffer = gridBuffer.getBuffer()
       const { x, y, width, height } = viewport
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      fgRenderer.then((val) => val!.render(buffer, x, y, width, height))
+      // textFGRenderer.render(buffer, x, y, width, height)
     }
 
     const moveRegionDown = (lines: number, top: number, bottom: number) => {
@@ -154,7 +173,8 @@ const nutella = () => {
       const buffer = gridBuffer.getBuffer()
       const { x, y, width, height } = viewport
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      fgRenderer.then((val) => val!.render(buffer, x, y, width, height))
+      // textFGRenderer.render(buffer, x, y, width, height)
     }
 
     return {
@@ -185,7 +205,8 @@ const nutella = () => {
     updateCursorPosition,
     updateCursorColor,
     showCursor,
-    foregroundElement: foregroundGL.canvasElement,
+    foregroundElement: canvasEl,
+    // foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,
   }
 }
