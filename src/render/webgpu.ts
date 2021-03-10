@@ -231,7 +231,7 @@ export default async (canvas: HTMLCanvasElement) => {
     // 5 vec2<f32>'s
     size: 5 * 2 * 4,
     // TODO(smolck)
-    usage: GPUBufferUsage.UNIFORM,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   })
 
   const cursorBuffer = device.createBuffer({
@@ -241,7 +241,7 @@ export default async (canvas: HTMLCanvasElement) => {
       4 * 4 /* color : vec4<f32> */ +
       4 /* visible: i32 */,
     // TODO(smolck)
-    usage: GPUBufferUsage.UNIFORM,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   })
 
   const colorAtlas = getColorAtlas()
@@ -366,7 +366,7 @@ export default async (canvas: HTMLCanvasElement) => {
   ])
   const quadBuffer = device.createBuffer({
     size: quads.byteLength,
-    usage: GPUBufferUsage.VERTEX,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     mappedAtCreation: true,
   })
   new Float32Array(quadBuffer.getMappedRange()).set(quads)
@@ -379,7 +379,7 @@ export default async (canvas: HTMLCanvasElement) => {
     height: number
   ) => {
     const bottom = (y + height) * window.devicePixelRatio
-    const yy = Math.round(canvas.height - bottom)
+    const yy = Math.abs(Math.round(canvas.height - bottom))
     const xx = Math.round(x * window.devicePixelRatio)
     const ww = Math.round(width * window.devicePixelRatio)
     const hh = Math.round(height * window.devicePixelRatio)
@@ -467,12 +467,12 @@ export default async (canvas: HTMLCanvasElement) => {
       0,
       1
     )
-    passEncoder.setScissorRect(
+    /* passEncoder.setScissorRect(
       viewport.x,
       viewport.y,
       viewport.width,
       viewport.height
-    )
+    ) */
 
     passEncoder.setPipeline(foregroundPipeline)
 
