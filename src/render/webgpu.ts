@@ -232,7 +232,6 @@ export default async (canvas: HTMLCanvasElement) => {
     size: 5 * 2 * 4,
     // TODO(smolck)
     usage: GPUBufferUsage.UNIFORM,
-    mappedAtCreation: true,
   })
 
   const cursorBuffer = device.createBuffer({
@@ -243,7 +242,6 @@ export default async (canvas: HTMLCanvasElement) => {
       4 /* visible: i32 */,
     // TODO(smolck)
     usage: GPUBufferUsage.UNIFORM,
-    mappedAtCreation: true,
   })
 
   const colorAtlas = getColorAtlas()
@@ -406,7 +404,8 @@ export default async (canvas: HTMLCanvasElement) => {
     height: number
   ) => {
     readjustViewportMaybe(x, y, width, height)
-    new Float32Array(uniformBuffer.getMappedRange()).set([
+
+    const data = new Float32Array([
       // canvasResolution
       canvasRes[0],
       canvasRes[1],
@@ -423,9 +422,9 @@ export default async (canvas: HTMLCanvasElement) => {
       0,
       cell.padding,
     ])
-    uniformBuffer.unmap()
+    device.queue.writeBuffer(uniformBuffer, 0, data)
 
-    new Float32Array(cursorBuffer.getMappedRange()).set([
+    const cursorData = new Float32Array([
       // cursor visible
       1,
       // cursor position
@@ -436,7 +435,7 @@ export default async (canvas: HTMLCanvasElement) => {
       // cursor color,
       ...cursorColor,
     ])
-    cursorBuffer.unmap()
+    device.queue.writeBuffer(cursorBuffer, 0, cursorData)
 
     // TODO(smolck): Create every frame?
     const attributeBuffer = device.createBuffer({
@@ -518,7 +517,8 @@ export default async (canvas: HTMLCanvasElement) => {
   }
 
   const updateCellSize = () => {
-    new Float32Array(quadBuffer.getMappedRange()).set([
+    // TODO(smolck)
+    /*new Float32Array(quadBuffer.getMappedRange()).set([
       0,
       0,
       cell.width,
@@ -531,8 +531,7 @@ export default async (canvas: HTMLCanvasElement) => {
       cell.height,
       0,
       0,
-    ])
-    quadBuffer.unmap()
+    ])*/
 
     // TODO(smolck): Currently, the cellSize and cellPadding aren't stored in
     // state, just assigned every time from `cell` in `render`; should they be?
