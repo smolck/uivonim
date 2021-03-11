@@ -62,9 +62,6 @@ export default async (canvas: HTMLCanvasElement) => {
         };
         [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
 
-        [[binding(1), group(0)]] var<uniform> colorAtlasSampler : sampler;
-        [[binding(2), group(0)]] var<uniform> colorAtlasTexture : texture_2d<f32>;
-
         [[block]] struct CursorUniforms {
           [[offset(0)]] visible : i32;
           [[offset(4)]] position : vec2<f32>;
@@ -76,7 +73,7 @@ export default async (canvas: HTMLCanvasElement) => {
         [[builtin(position)]] var<out> Position : vec4<f32>;
 
         [[location(0)]] var<out> o_glyphPosition : vec2<f32>;
-        [[location(1)]] var<out> o_color : vec4<f32>;
+        [[location(1)]] var<out> o_colorPosition : vec2<f32>;
 
         [[stage(vertex)]]
         fn main() -> void {
@@ -96,13 +93,8 @@ export default async (canvas: HTMLCanvasElement) => {
           var texelSize : f32 = 2.0;
           var color_x : f32 = hlId * texelSize + 1.0;
           var color_y : f32 = 1.0 * texelSize + 1.0;
-          var colorPosition : vec2<f32> = vec2<f32>(color_x, color_y) / uniforms.colorAtlasResolution;
+          o_colorPosition = vec2<f32>(color_x, color_y) / uniforms.colorAtlasResolution;
 
-          // TODO(smolck): textureLoad or textureSample?
-          // TODO(smolck): LOD should be something else?
-          var textureColor : vec4<f32> = textureSampleLevel(colorAtlasTexture, colorAtlasSampler, colorPosition, 1.0);
-
-          o_color = textureColor;
           // if (isCursorCell && cursor.shape == 0) {
             // o_color = cursor.color;
           // } else {
@@ -118,8 +110,10 @@ export default async (canvas: HTMLCanvasElement) => {
       module: device.createShaderModule({
         code: `
         [[location(0)]] var<in> o_glyphPosition : vec2<f32>;
-        [[location(1)]] var<in> o_color : vec4<f32>;
+        [[location(1)]] var<in> o_colorPosition : vec2<f32>;
 
+        [[binding(1), group(0)]] var<uniform> colorAtlasSampler : sampler;
+        [[binding(2), group(0)]] var<uniform> colorAtlasTexture : texture_2d<f32>;
         [[binding(3), group(0)]] var<uniform> fontAtlasSampler : sampler;
         [[binding(4), group(0)]] var<uniform> fontAtlasTexture : texture_2d<f32>;
 
@@ -127,10 +121,9 @@ export default async (canvas: HTMLCanvasElement) => {
 
         [[stage(fragment)]]
         fn main() -> void {
-          // TODO(smolck): textureLoad or textureSample?
-          // TODO(smolck): LOD should be something else?
-          var glyphColor : vec4<f32> = textureSampleLevel(fontAtlasTexture, fontAtlasSampler, o_glyphPosition, 1.0);
-          outColor = glyphColor * o_color;
+          var glyphColor : vec4<f32> = textureSample(fontAtlasTexture, fontAtlasSampler, o_glyphPosition);
+          var o_color : vec4<f32> = textureSample(colorAtlasTexture, colorAtlasSampler, o_colorPosition);
+          outColor = vec4<f32>((glyphColor * o_color).xyz, 0.0);
           return;
         }
         `,
@@ -190,17 +183,15 @@ export default async (canvas: HTMLCanvasElement) => {
             // uniforms
             {
               binding: 0,
-              // TODO(smolck)
               visibility: GPUShaderStage.VERTEX,
               type: 'uniform-buffer',
-              // TODO(smolck): minBufferBindingSize = ?
             },
             // colorAtlasSampler
-            { binding: 1, visibility: GPUShaderStage.VERTEX, type: 'sampler' },
+            { binding: 1, visibility: GPUShaderStage.FRAGMENT, type: 'sampler' },
             // colorAtlasTexture
             {
               binding: 2,
-              visibility: GPUShaderStage.VERTEX,
+              visibility: GPUShaderStage.FRAGMENT,
               type: 'sampled-texture',
             },
             // fontAtlasSampler
@@ -369,6 +360,7 @@ export default async (canvas: HTMLCanvasElement) => {
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     mappedAtCreation: true,
   })
+  console.log(quads)
   new Float32Array(quadBuffer.getMappedRange()).set(quads)
   quadBuffer.unmap()
 
@@ -460,24 +452,21 @@ export default async (canvas: HTMLCanvasElement) => {
     // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
     // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
     passEncoder.setViewport(
-      viewport.x,
-      viewport.y,
+      0,
+      0,
       viewport.width,
       viewport.height,
       0,
       1
     )
-    /* passEncoder.setScissorRect(
-      viewport.x,
-      viewport.y,
+    passEncoder.setScissorRect(
+      0, 
+      0,
       viewport.width,
       viewport.height
-    ) */
+    )
 
     passEncoder.setPipeline(foregroundPipeline)
-
-    // TODO(smolck): Verify the first param to `setVertexBuffer`, `slot`, does
-    // what I think it does.
     passEncoder.setVertexBuffer(0, attributeBuffer)
     passEncoder.setVertexBuffer(1, quadBuffer)
     passEncoder.setBindGroup(0, bindGroup)
