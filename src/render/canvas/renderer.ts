@@ -1,8 +1,10 @@
-import { colors, getColorById, Color } from '../highlight-attributes'
+import { colors, getHighlight, Color } from '../highlight-attributes'
 import { cell as workspaceCell } from '../../core/workspace'
 import { createCanvas } from './utils'
 import { font } from '../../core/workspace'
 import { cursor, CursorShape } from '../../core/cursor'
+import CreateGridBuffer from '../webgl/grid-buffer'
+import { getCharFromIndex } from '../font-texture-atlas'
 
 type Cell = {
   text: string
@@ -44,35 +46,15 @@ const m = (initialGridId: number) => {
   if (!ctx) throw new Error("NEED A CONTEXT!!!!")
 
   const gridSize = { rows: 0, cols: 0 }
-  let lines: Array<Array<Cell>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
+  const gridBuffer = CreateGridBuffer()
+  // let lines: Array<Array<Cell>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
 
-  const moveRegionUp = (linesblah: number, _top: number, _bottom: number) => {
-    console.log("sup bro")
-
-    for (let i = 0; i < linesblah; i++) {
-      lines.shift()
-      lines.push((new Array(gridSize.cols)).fill({ text: ' ', highlight: 0 }))
-    }
-    // const scaledW = workspaceCell.width * window.devicePixelRatio
-    // const scaledH = workspaceCell.height * window.devicePixelRatio
-    // const height = (bottom - top) * scaledH
-
-    // ctx.save()
-
-    // ctx.fillStyle = 'white'
-    // ctx.fillRect(200, 200, canvas.width, canvas.height)
-
-    // const img = ctx.getImageData(0, top * scaledH, canvas.width, height)
-    //ctx.putImageData(img, (top * scaledH) - (lines * scaledH), 0)
-
-    // ctx.restore()
+  const moveRegionUp = (lines: number, top: number, bottom: number) => {
+    gridBuffer.moveRegionUp(lines, top, bottom)
   }
 
-  const moveRegionDown = (linesblah: number, _top: number, _bottom: number) => {
-    for (let i = 0; i < linesblah; i++) {
-      lines.pop()
-      lines.unshift((new Array(gridSize.cols)).fill({ text: ' ', highlight: 0 }))
-    }
+  const moveRegionDown = (lines: number, top: number, bottom: number) => {
+    gridBuffer.moveRegionDown(lines, top, bottom)
   }
 
   const renderCursor = () => {
@@ -96,7 +78,8 @@ const m = (initialGridId: number) => {
 
     if (cursor.shape === CursorShape.block) {
       ctx.fillStyle = colors.background
-      ctx.fillText(lines[cursor.row][cursor.col].text, x, (cursor.row + 1) * scaledH)
+      let cell = gridBuffer.getCell(cursor.row, cursor.col)
+      ctx.fillText(getCharFromIndex(cell[cell.length - 1]), x, (cursor.row + 1) * scaledH)
     }
     ctx.restore()
   }
@@ -111,63 +94,52 @@ const m = (initialGridId: number) => {
     const scaledW = workspaceCell.width * window.devicePixelRatio
     const scaledH = workspaceCell.height * window.devicePixelRatio
 
-    lines.forEach((line, idx) => {
-      // if (line[0].highlight) prevHighlight = line[0].highlight
+    let col = 0
+    let row = 0
+    let buffer = gridBuffer.getBuffer()
+    let width = gridBuffer.getWidth()
+    let size = buffer.length
+    for (let ix = 0; ix < size; ix += 4) {
+      const ix = col * 4 + width * row * 4
+      const hlid = buffer[ix + 2]
+      // TODO(smolck): Just store char directly in gridbuffer?
+      const char = getCharFromIndex(buffer[ix + 3])
 
-      line.forEach((cell, idx2) => {
-        if (cell.highlight) {
-          prevHighlight = cell.highlight
-        }
-        const bg = prevHighlight.background || colors.background
-        const fg = prevHighlight.foreground || colors.foreground
-
-        const x = idx2 * scaledW
-        const y = (idx + 1) * scaledH
-
-        ctx.fillStyle = bg
-        // TODO(smolck): This is just . . . no
-        ctx.fillRect(x + (workspaceCell.padding * 2.5), idx * scaledH + (workspaceCell.padding * 2), scaledW, scaledH)
-
-        ctx.save()
-
-        ctx.fillStyle = fg
-
-        // Glowing text
-        ctx.shadowColor = fg
-        ctx.shadowBlur = 10
-
-        ctx.fillText(cell.text, x, y)
-
-        ctx.restore()
-      })
-    })
-  }
-
-  const updateThingNess = (row: number, startCol: number, cells: any[]) => {
-    // Algorithm mostly from https://github.com/vhakulinen/gnvim/blob/284c3734a2da25663ce9a9258f8ac5e7f3ad2847/src/ui/grid/row.rs#L125-L134
-    let offset = startCol
-    cells.forEach((cell) => {
-      const [text, hlId, maybeRepeat] = cell
-      const repeat = maybeRepeat ? (maybeRepeat == 0 ? 1 : maybeRepeat) : 1
-      for (let r = 0; r < repeat; r++) {
-        lines[row][offset + r] = { text, highlight: hlId ? getColorById(hlId) : undefined }
+      const highlight = getHighlight(hlid)
+      if (highlight) {
+        prevHighlight = highlight
       }
+      const bg = prevHighlight.background || colors.background
+      const fg = prevHighlight.foreground || colors.foreground
 
-      offset += repeat
-    })
+      const x = col * scaledW
+      const y = (row + 1) * scaledH
+
+      ctx.fillStyle = bg
+      // TODO(smolck): This is just . . . no
+      ctx.fillRect(x + (workspaceCell.padding * 2.5), row * scaledH + (workspaceCell.padding * 2), scaledW, scaledH)
+
+      // ctx.save()
+      ctx.fillStyle = fg
+
+      // Glowing text
+      // ctx.shadowColor = fg
+      // ctx.shadowBlur = 10
+
+      ctx.fillText(char, x, y)
+
+      // ctx.restore()
+
+      col++
+      if (col >= width) {
+        row++
+        col = 0
+      }
+    }
   }
 
   const resizeGrid = (rows: number, cols: number) => {
-    const width = cols * workspaceCell.width
-    const height = rows * workspaceCell.height
-
-    const sameGridSize = gridSize.rows == rows && gridSize.cols == cols
-    const sameCanvasSize = canvas.height == height || canvas.width == width
-    if (sameGridSize && sameCanvasSize) return
-
-    Object.assign(gridSize, { rows, cols })
-    if (!sameGridSize) lines = resizeArray(lines, rows, cols)
-    if (!sameCanvasSize) canvas.resize(width, height)
+    gridBuffer.resize(rows, cols)
   }
 
   const resizeCanvas = (width: number, height: number) => {
@@ -188,14 +160,18 @@ const m = (initialGridId: number) => {
 
   const updateGridId = (newGridId: number) => gridId = newGridId
 
-  const getGridCell = (row: number, col: number) => lines[row][col]
+  // const getGridCell = (row: number, col: number) => lines[row][col]
+  // const getGridLine = (row: number) => lines[row].join('')
+  const getGridCell = gridBuffer.getCell
+  const getGridLine = gridBuffer.getLine
 
-  const getGridLine = (row: number) => lines[row].join('')
+  const getGridBuffer = gridBuffer.getBuffer
 
   const clearGrid = () => {
-    for (let i = 0; i < lines.length; i++) {
-      lines[i] = lines[i].fill({ text: ' '})
-    }
+    gridBuffer.clear()
+    // for (let i = 0; i < lines.length; i++) {
+      // lines[i] = lines[i].fill({ text: ' '})
+    // }
   }
 
   return {
@@ -206,13 +182,14 @@ const m = (initialGridId: number) => {
     getGridCell,
     getGridLine,
     updateGridId,
-    updateThingNess,
+    // updateThingNess,
     render,
     clearAll,
     clearArea,
     resizeCanvas,
     resizeGrid,
     canvasElement: canvas,
+    getGridBuffer,
   }
 }
 

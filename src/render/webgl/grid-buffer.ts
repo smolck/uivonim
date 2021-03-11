@@ -2,6 +2,8 @@ const finetti = () => {
   let buffer = new Float32Array()
   let width = 0
 
+  const getWidth = () => width
+
   const resize = (rows: number, cols: number) => {
     const prevBuffer = buffer
     const prevWidth = width
@@ -111,6 +113,7 @@ const finetti = () => {
     getLine,
     moveRegionUp,
     moveRegionDown,
+    getWidth,
     getBuffer: () => buffer,
   }
 }

@@ -8,6 +8,7 @@ import { hideCursor, showCursor, moveCursor } from '../core/cursor'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw, resizeGrid } from '../core/master-control'
 import * as renderEvents from '../render/events'
+import { getCharIndex, } from '../render/font-texture-atlas'
 
 let state_cursorVisible = true
 
@@ -100,14 +101,18 @@ const grid_scroll = ([
     : win.canvas.moveRegionDown(-amount, top, bottom)
 }
 
+let dummyData = new Float32Array()
 const grid_line = (e: any) => {
   const count = e.length
   const gridRenderIndexes: any = []
   const grids: any = []
+  let hlid = 0
   let activeGrid = 0
-  // let width = 1
-  // let col = 0
-  // let charIndex = 0
+  let buffer = dummyData
+  let gridBuffer = dummyData
+  let width = 1
+  let col = 0
+  let charIndex = 0
 
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
@@ -120,24 +125,55 @@ const grid_line = (e: any) => {
     if (gridId !== activeGrid) {
       activeGrid = gridId
       const win = windows.get(gridId)
-      // width = win.cols
+      width = win.cols
+
+      // buffer = win.canvas.getBuffer()
+      gridBuffer = win.canvas.getGridBuffer()
       if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
       grids.push(activeGrid)
     }
 
-    // hlid = 0
-    // col = startCol
-    windows.get(gridId).gridLine(row, startCol, charData)
+    hlid = 0
+    col = startCol
+    const charDataSize = charData.length
+
+    for (let cd = 0; cd < charDataSize; cd++) {
+      const data = charData[cd]
+      const char = data[0]
+      const repeats = data[2] || 1
+      hlid = typeof data[1] === 'number' ? data[1] : hlid
+
+      if (typeof char === 'string') {
+        const nextCD = charData[cd + 1]
+        const doubleWidth =
+          nextCD &&
+          typeof nextCD[0] === 'string' &&
+          nextCD[0].codePointAt(0) === undefined
+        charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
+      } else charIndex = char - 32
+
+      for (let r = 0; r < repeats; r++) {
+        // TODO: could maybe deffer this to next frame?
+        const bufix = col * 4 + width * row * 4
+        gridBuffer[bufix] = col
+        gridBuffer[bufix + 1] = row
+        gridBuffer[bufix + 2] = hlid
+        gridBuffer[bufix + 3] = charIndex
+
+        col++
+      }
+    }
   }
 
+  // const atlas = getUpdatedFontAtlasMaybe()
+  // if (atlas) windows.canvas.updateFontAtlas(atlas)
+
   const gridCount = grids.length
-  // windows.canvas.render()
   for (let ix = 0; ix < gridCount; ix++) {
     const gridId = grids[ix]
     const win = windows.get(gridId)
-    // const renderCount = gridRenderIndexes[gridId]
-    // win.redrawFromGridBuffer()
     win.canvas.render()
+    // const renderCount = gridRenderIndexes[gridId]
     // win.webgl.render(renderCount)
   }
 }
@@ -260,6 +296,20 @@ const win_float_pos = (e: any) => {
   }
 }
 
+let layoutTimeout: NodeJS.Timeout | undefined
+
+const refreshOrStartLayoutTimer = (winUpdates: boolean) => {
+  layoutTimeout = setTimeout(() => {
+    renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
+    state_cursorVisible ? showCursor() : hideCursor()
+    dispatch.pub('redraw')
+    if (!winUpdates) return
+
+    windows.disposeInvalidWindows()
+    windows.layout()
+  }, 10)
+}
+
 onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
@@ -324,11 +374,6 @@ onRedraw((redrawEvents) => {
     else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
   }
 
-  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-  state_cursorVisible ? showCursor() : hideCursor()
-  dispatch.pub('redraw')
-  if (!winUpdates) return
-
-  windows.disposeInvalidWindows()
-  windows.layout()
+  if (layoutTimeout) clearTimeout(layoutTimeout)
+  refreshOrStartLayoutTimer(winUpdates)
 })
