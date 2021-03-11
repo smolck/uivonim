@@ -134,9 +134,10 @@ export default async (canvas: HTMLCanvasElement) => {
     primitiveTopology: 'triangle-list',
     colorStates: [
       {
+        // @ts-ignore
         format: swapChainFormat,
       },
-    ],
+    ] as Iterable<GPUColorStateDescriptor>,
     vertexState: {
       vertexBuffers: [
         // Render buffer (cells)
@@ -174,7 +175,7 @@ export default async (canvas: HTMLCanvasElement) => {
             },
           ],
         },
-      ],
+      ] as Iterable<GPUVertexBufferLayoutDescriptor>,
     },
     layout: device.createPipelineLayout({
       bindGroupLayouts: [
@@ -336,7 +337,7 @@ export default async (canvas: HTMLCanvasElement) => {
     colorAttachments: [
       {
         attachment: textureView,
-        loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.5 },
       },
     ],
   }
