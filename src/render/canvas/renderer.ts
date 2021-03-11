@@ -5,49 +5,13 @@ import { font } from '../../core/workspace'
 import { cursor, CursorShape } from '../../core/cursor'
 import CreateGridBuffer from '../webgl/grid-buffer'
 import { getCharFromIndex } from '../font-texture-atlas'
-
-type Cell = {
-  text: string
-  highlight?: Color
-}
-
-const resizeArray = (inputArr: Array<Array<Cell>>, rows: number, cols: number) => {
-  if (inputArr.length < rows) {
-    const len = inputArr.length
-    for (let i = 0; i < rows - len; i++) {
-      let empty = new Array(cols)
-      empty = empty.fill({ text: ' ', highlight: 0 })
-      inputArr.push(empty)
-    }
-  } else if (inputArr.length > rows) {
-    inputArr = inputArr.slice(0, rows)
-  }
-
-  const lessThan = inputArr[0].length < cols
-  const greaterThan = inputArr[0].length > cols
-  for (let i = 0; i < inputArr.length; i++) {
-    if (lessThan) {
-      inputArr[i].push(...((new Array(cols)).fill({ text: ' ', highlight: 0 })))
-    } else if (greaterThan) {
-      inputArr[i] = inputArr[i].slice(0, cols)
-    }
-  }
-
-  console.assert(inputArr.length === rows, `inputArr.length == ${inputArr.length}, rows == ${rows}`)
-  console.assert(inputArr[0].length === cols)
-
-  return inputArr
-}
-
 const m = (initialGridId: number) => {
   let gridId = initialGridId
   const canvas = createCanvas()
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error("NEED A CONTEXT!!!!")
 
-  const gridSize = { rows: 0, cols: 0 }
   const gridBuffer = CreateGridBuffer()
-  // let lines: Array<Array<Cell>> = [] // initEmptyLines(gridSize.rows, gridSize.cols)
 
   const moveRegionUp = (lines: number, top: number, bottom: number) => {
     gridBuffer.moveRegionUp(lines, top, bottom)
@@ -160,8 +124,6 @@ const m = (initialGridId: number) => {
 
   const updateGridId = (newGridId: number) => gridId = newGridId
 
-  // const getGridCell = (row: number, col: number) => lines[row][col]
-  // const getGridLine = (row: number) => lines[row].join('')
   const getGridCell = gridBuffer.getCell
   const getGridLine = gridBuffer.getLine
 
@@ -169,9 +131,6 @@ const m = (initialGridId: number) => {
 
   const clearGrid = () => {
     gridBuffer.clear()
-    // for (let i = 0; i < lines.length; i++) {
-      // lines[i] = lines[i].fill({ text: ' '})
-    // }
   }
 
   return {
