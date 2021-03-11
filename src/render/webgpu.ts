@@ -188,7 +188,11 @@ export default async (canvas: HTMLCanvasElement) => {
               type: 'uniform-buffer',
             },
             // colorAtlasSampler
-            { binding: 1, visibility: GPUShaderStage.FRAGMENT, type: 'sampler' },
+            {
+              binding: 1,
+              visibility: GPUShaderStage.FRAGMENT,
+              type: 'sampler',
+            },
             // colorAtlasTexture
             {
               binding: 2,
@@ -325,9 +329,11 @@ export default async (canvas: HTMLCanvasElement) => {
       // fontAtlasTexture
       { binding: 4, resource: fontAtlasTexture.createView() },
       // cursor
-      { binding: 5, resource: {
-          buffer: cursorBuffer
-        }
+      {
+        binding: 5,
+        resource: {
+          buffer: cursorBuffer,
+        },
       },
     ] as Iterable<GPUBindGroupEntry>, // TODO(smolck)
   })
@@ -452,20 +458,8 @@ export default async (canvas: HTMLCanvasElement) => {
     // Also, should be roughly equivalent to the following I think?
     // webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
     // webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    passEncoder.setViewport(
-      0,
-      0,
-      viewport.width,
-      viewport.height,
-      0,
-      1
-    )
-    passEncoder.setScissorRect(
-      0, 
-      0,
-      viewport.width,
-      viewport.height
-    )
+    passEncoder.setViewport(0, 0, viewport.width, viewport.height, 0, 1)
+    passEncoder.setScissorRect(0, 0, viewport.width, viewport.height)
 
     passEncoder.setPipeline(foregroundPipeline)
     passEncoder.setVertexBuffer(0, attributeBuffer)
@@ -475,7 +469,6 @@ export default async (canvas: HTMLCanvasElement) => {
     passEncoder.endPass()
     device.queue.submit([commandEncoder.finish()])
   }
-
 
   // TODO(smolck)
   const setCursorVisible = (visible: boolean) => {}
@@ -522,7 +515,6 @@ export default async (canvas: HTMLCanvasElement) => {
       0,
       0,
     ])*/
-
     // TODO(smolck): Currently, the cellSize and cellPadding aren't stored in
     // state, just assigned every time from `cell` in `render`; should they be?
     // webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)

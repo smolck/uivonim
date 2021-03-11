@@ -56,7 +56,9 @@ const nutella = () => {
   const updateCursorColor = (r: number, g: number, b: number) => {
     textBGRenderer.updateCursorColor([r, g, b])
 
-    fgRenderer.then((val) => val!.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b]))
+    fgRenderer.then((val) =>
+      val!.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b])
+    )
     // textFGRenderer.updateCursorColor([1.0 - r, 1.0 - g, 1.0 - b])
   }
 
