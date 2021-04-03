@@ -10,7 +10,7 @@
     "start:release": "node tools/start-release.js",
     "build": "node tools/build.js",
     "check-types": "tsc -p src/tsconfig.json --noEmit",
-    "package": "node tools/package.js",
+    "package": "electron-builder",
     "test": "mocha test/unit",
     "test:e2e": "mocha test/e2e -t 0",
     "test:e2e:snapshot": "npm run test:e2e -- --snapshot",
