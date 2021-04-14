@@ -1,7 +1,7 @@
-import { merge, throttle } from '../support/utils'
-import robotoSizes from '../support/roboto-sizes'
+import { merge, throttle } from './support/utils'
+import robotoSizes from './support/roboto-sizes'
 import { EventEmitter } from 'events'
-import { setVar } from '../ui/css'
+import { setVar } from './ui/css'
 
 interface UpdateEditorFontParams {
   face?: string

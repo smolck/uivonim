@@ -1,4 +1,5 @@
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu, ipcMain } from 'electron'
+import Nvim from './core/master-control'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -8,7 +9,7 @@ if (process.platform === 'darwin') {
   process.env.PATH += ':/usr/local/bin'
 }
 
-let win: any
+let win: BrowserWindow
 app.setName('uivonim')
 
 const comscan = (() => {
@@ -118,4 +119,26 @@ app.on('ready', async () => {
     console.log(`uivonim started in develop mode.`)
     win.webContents.openDevTools()
   }
+
+  await afterReadyThings()
 })
+
+async function afterReadyThings() {
+  win.on('enter-full-screen',
+         () => win.webContents.send('fromMain', ['window-enter-full-screen']))
+  win.on('leave-full-screen',
+        () => win.webContents.send('fromMain', ['window-leave-full-screen']))
+
+  // TODO(smolck): cli args
+  const nvim = new Nvim({ useWsl: false, })
+  await nvim.init()
+
+  const handlers: any = {
+    'nvim.resize': nvim.resize,
+  }
+
+  ipcMain.on('toMain', (_event, args: any[]) => {
+    // TODO(smolck): use `_event`? what's the purpose of it?
+    handlers[args[0]](...args.slice(1))
+  })
+}
