@@ -34,7 +34,7 @@
     "highlight.js": "^10.7.2",
     "inferno": "^7.4.8",
     "marked": "^2.0.3",
-    "neovim": "^4.9.0",
+    "neovim": "^4.10.0",
     "ts-node": "^9.1.1"
   },
   "devDependencies": {
