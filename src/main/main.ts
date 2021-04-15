@@ -135,6 +135,11 @@ async function afterReadyThings() {
 
   const handlers: any = {
     'nvim.resize': nvim.resize,
+    'win.getAndSetSize': () => {
+      const [width, height] = win.getSize()
+      win.setSize(width + 1, height)
+      win.setSize(width, height)
+    }
   }
 
   ipcMain.on('toMain', (_event, args: any[]) => {

@@ -1,8 +1,5 @@
 import * as nvim from '../core/master-control'
 // import * as workspace from '../core/workspace'
-import { remote } from 'electron'
-import '../core/screen-events'
-import * as dispatch from '../messaging/dispatch'
 import api from '../core/instance-api'
 import * as windows from '../windows/window-manager'
 
@@ -14,7 +11,7 @@ import * as windows from '../windows/window-manager'
 // we can render anything to webgl, so we can probably grab the size then
 
 // TODO(smolck): Perhaps not the best way to do command-line arg parsing
-const args = remote.process.argv.slice(2)
+/*const args = remote.process.argv.slice(2)
 const wslIndex = args.findIndex((val) => val == '--wsl')
 let useWsl = false
 if (wslIndex != -1) useWsl = true
@@ -26,7 +23,7 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
   console.warn('No argument passed to --nvim, using default `nvim`')
 } else if (nvimIndex != -1) {
   nvimBinaryPath = args[nvimIndex + 1]
-}
+}*/
 
 // const win = remote.getCurrentWindow()
 

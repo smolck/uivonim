@@ -1,10 +1,25 @@
 import * as workspace from './workspace'
 import * as css from './ui/css' 
 import { specs as titleSpecs } from './title'
-
+import * as dispatch from './dispatch'
 // TODO(smolck): Remember, requireDir won't even be a thing probably, need to
 // remove it, since no require in render thread
-import { /*requireDir,*/ debounce, merge } from './support/utils'
+import { /*requireDir,*/ debounce, merge } from '../common/utils'
+import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
+import * as windows from './windows/window-manager'
+
+window
+.matchMedia('screen and (min-resolution: 2dppx)')
+.addEventListener('change', () => {
+  const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)
+  windows.webgl.updateCellSize()
+  workspace.resize()
+
+  // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
+  // TODO: idk why i have to do this but this works
+  window.api.send('toMain', ['win.getAndSetSize'])
+})
 
 
 let cursorVisible = true
@@ -77,13 +92,12 @@ merge(pluginsContainer.style, {
   height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
 })
 
-// TODO(smolck): Need to render process IPC stuff for this probably
-/*dispatch.sub('window.change', () => {
+dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
 // TODO(smolck): Put this somewhere else?
-api.onAction(
+/*api.onAction(
   'update-nameplates',
   () => (windows.refresh(), console.log('refresh'))
 )*/
