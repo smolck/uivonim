@@ -32,7 +32,8 @@ const clientSize = {
 
 let onExitFn: ExitFn = () => {}
 
-const spawnNvimInstance = ( pipeName: string,
+const spawnNvimInstance = (
+  pipeName: string,
   useWsl: boolean,
   nvimBinary?: string
 ) => {

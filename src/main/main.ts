@@ -135,12 +135,15 @@ async function afterReadyThings() {
 
   const handlers: any = {
     'nvim.resize': nvim.resize,
+    'nvim.resizeGrid': nvim.resizeGrid,
     'win.getAndSetSize': () => {
       const [width, height] = win.getSize()
       win.setSize(width + 1, height)
       win.setSize(width, height)
-    }
+    },
   }
+
+  nvim.onRedraw((args) => win.webContents.send('fromMain', ['nvim.onRedraw', args]))
 
   ipcMain.on('toMain', (_event, args: any[]) => {
     // TODO(smolck): use `_event`? what's the purpose of it?

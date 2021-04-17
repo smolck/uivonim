@@ -8,9 +8,8 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor } from '../core/cursor'
-import * as dispatch from '../messaging/dispatch'
-import { onRedraw, resizeGrid } from '../core/master-control'
+import { hideCursor, showCursor, moveCursor } from '../cursor'
+import * as dispatch from '../dispatch'
 import * as renderEvents from '../render/events'
 
 let dummyData = new Float32Array()
@@ -265,7 +264,7 @@ const win_float_pos = (e: any) => {
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         continue
-      else resizeGrid(gridId, clampedWidth, clampedHeight)
+      else window.api.call('nvim.resizeGrid', gridId, clampedWidth, clampedHeight)
 
       continue
     }
@@ -302,7 +301,7 @@ const win_float_pos = (e: any) => {
   }
 }
 
-onRedraw((redrawEvents) => {
+window.api.on('nvim.onRedraw', (redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms

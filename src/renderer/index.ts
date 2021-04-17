@@ -11,8 +11,10 @@ import * as windows from './windows/window-manager'
 declare global {
   interface Window { 
     api: {
-      send: (channel: string, data: any) => void,
-      receive: (channel: string, func: (args: any[]) => void) => void
+      // send: (channel: string, data: any) => void,
+      // receive: (channel: string, func: (args: any[]) => void) => void
+      call: (funcName: string, ...args: any[]) => void,
+      on: (event: string, func: (...args: any[]) => void) => void
     } 
   }
 }
@@ -27,7 +29,7 @@ window
 
   // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
   // TODO: idk why i have to do this but this works
-  window.api.send('toMain', ['win.getAndSetSize'])
+  window.api.call('win.getAndSetSize')
 })
 
 
@@ -45,20 +47,14 @@ const mouseTrap = () => {
   hideCursor()
 }
 
-const handlers: any = {
-  'setVar': css.setVar,
-  'window-enter-full-screen': () => window.addEventListener('mousemove', mouseTrap),
-  'window-leave-full-screen': () => window.removeEventListener('mousemove', mouseTrap),
-}
+window.api.on('setVar', css.setVar)
+window.api.on('window-enter-full-screen', (_) => window.addEventListener('mousemove', mouseTrap))
+window.api.on('window-leave-full-screen', (_) => window.removeEventListener('mousemove', mouseTrap))
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.onResize(({ rows, cols }) => window.api.send('toMain', ['nvim.resize', cols, rows]))
+workspace.onResize(({ rows, cols }) => window.api.call('nvim.resize', cols, rows))
 workspace.resize()
-
-window.api.receive('fromMain', ([event, ...args]: [string, ...any]) => {
-  handlers[event](...args)
-})
 
 // TODO(smolck): Need to re-architect all this because `require` won't be available 
 // from renderer thread . . .

@@ -1,4 +1,4 @@
-import { Watchers } from '../../common/utils'
+import { Watchers } from '../common/utils'
 
 const watchers = new Watchers()
 const cache = new Map<string, any[]>()
