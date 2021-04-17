@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
 const funcs: any = {}
 ipcRenderer.on('fromMain', (_, [event, ...args]) => {
@@ -13,5 +13,5 @@ contextBridge.exposeInMainWorld('api', {
   },
   on: (event: string, func: (...args: any[]) => void) => {
     funcs[event] = func
-  }
+  },
 })

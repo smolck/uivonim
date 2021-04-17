@@ -98,11 +98,14 @@ const createAndSetupNvimInstance = (useWsl: boolean, nvimBinary?: string) => {
 }
 
 const createNvim = async (
-    useWsl: boolean,
-    nvimBinaryPath?: string,
-    dir?: string
-  ) => {
-  const { instance: nvimInstance, api: nvimApi } = createAndSetupNvimInstance(useWsl, nvimBinaryPath)
+  useWsl: boolean,
+  nvimBinaryPath?: string,
+  dir?: string
+) => {
+  const { instance: nvimInstance, api: nvimApi } = createAndSetupNvimInstance(
+    useWsl,
+    nvimBinaryPath
+  )
   const { pipeName: path } = nvimInstance!
 
   const workerInstance = Worker('instance', {
@@ -118,12 +121,19 @@ export default class {
   private _nvimInstance?: NvimInstance
   private _nvimApi?: neovim.Neovim
   private _workerInstance?: any
-  private _opts: { useWsl: boolean, nvimBinaryPath?: string, dir?: string }
+  private _opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
 
   // TODO(smolck): Check initialized in getters?
-  private get nvimApi() { this.checkInitialized(); return this._nvimApi! }
+  private get nvimApi() {
+    this.checkInitialized()
+    return this._nvimApi!
+  }
 
-  constructor(opts: {useWsl: boolean, nvimBinaryPath?: string, dir?: string}) {
+  constructor(opts: {
+    useWsl: boolean
+    nvimBinaryPath?: string
+    dir?: string
+  }) {
     this._opts = opts
   }
 
@@ -134,22 +144,26 @@ export default class {
   }
 
   async init() {
-    const { nvimInstance, nvimApi, workerInstance } = 
-      await createNvim(this._opts.useWsl, this._opts.nvimBinaryPath, this._opts.dir)
+    const { nvimInstance, nvimApi, workerInstance } = await createNvim(
+      this._opts.useWsl,
+      this._opts.nvimBinaryPath,
+      this._opts.dir
+    )
     this._nvimInstance = nvimInstance
     this._workerInstance = workerInstance
     this._nvimApi = nvimApi
   }
 
   onRedraw(fn: RedrawFn) {
-    this.nvimApi.on('notification', (method: string, args: any) => 
-                    method === 'redraw' ? fn(args) : {})
+    this.nvimApi.on('notification', (method: string, args: any) =>
+      method === 'redraw' ? fn(args) : {}
+    )
   }
 
   input(keys: string) {
     this.nvimApi.input(keys)
     // TODO(smolck): Maybe need a ref to `win`; need to tell the render thread to do
-    // this . . . 
+    // this . . .
     /* if (document.activeElement === document.body) {
       document.getElementById('keycomp-textarea')?.focus()
     }*/

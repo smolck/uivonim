@@ -26,4 +26,3 @@ if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
 }*/
 
 // const win = remote.getCurrentWindow()
-

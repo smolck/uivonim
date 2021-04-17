@@ -264,7 +264,8 @@ const win_float_pos = (e: any) => {
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         continue
-      else window.api.call('nvim.resizeGrid', gridId, clampedWidth, clampedHeight)
+      else
+        window.api.call('nvim.resizeGrid', gridId, clampedWidth, clampedHeight)
 
       continue
     }

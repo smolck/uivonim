@@ -1,5 +1,5 @@
 import * as workspace from './workspace'
-import * as css from './ui/css' 
+import * as css from './ui/css'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 // TODO(smolck): Remember, requireDir won't even be a thing probably, need to
@@ -9,29 +9,28 @@ import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 
 declare global {
-  interface Window { 
+  interface Window {
     api: {
       // send: (channel: string, data: any) => void,
       // receive: (channel: string, func: (args: any[]) => void) => void
-      call: (funcName: string, ...args: any[]) => void,
+      call: (funcName: string, ...args: any[]) => void
       on: (event: string, func: (...args: any[]) => void) => void
-    } 
+    }
   }
 }
 
 window
-.matchMedia('screen and (min-resolution: 2dppx)')
-.addEventListener('change', () => {
-  const atlas = forceRegenerateFontAtlas()
-  windows.webgl.updateFontAtlas(atlas)
-  windows.webgl.updateCellSize()
-  workspace.resize()
+  .matchMedia('screen and (min-resolution: 2dppx)')
+  .addEventListener('change', () => {
+    const atlas = forceRegenerateFontAtlas()
+    windows.webgl.updateFontAtlas(atlas)
+    windows.webgl.updateCellSize()
+    workspace.resize()
 
-  // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
-  // TODO: idk why i have to do this but this works
-  window.api.call('win.getAndSetSize')
-})
-
+    // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
+    // TODO: idk why i have to do this but this works
+    window.api.call('win.getAndSetSize')
+  })
 
 let cursorVisible = true
 const hideCursor = debounce(() => {
@@ -48,15 +47,21 @@ const mouseTrap = () => {
 }
 
 window.api.on('setVar', css.setVar)
-window.api.on('window-enter-full-screen', (_) => window.addEventListener('mousemove', mouseTrap))
-window.api.on('window-leave-full-screen', (_) => window.removeEventListener('mousemove', mouseTrap))
+window.api.on('window-enter-full-screen', (_) =>
+  window.addEventListener('mousemove', mouseTrap)
+)
+window.api.on('window-leave-full-screen', (_) =>
+  window.removeEventListener('mousemove', mouseTrap)
+)
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.onResize(({ rows, cols }) => window.api.call('nvim.resize', cols, rows))
+workspace.onResize(({ rows, cols }) =>
+  window.api.call('nvim.resize', cols, rows)
+)
 workspace.resize()
 
-// TODO(smolck): Need to re-architect all this because `require` won't be available 
+// TODO(smolck): Need to re-architect all this because `require` won't be available
 // from renderer thread . . .
 /* requestAnimationFrame(() => {
   require('../render/redraw')

@@ -124,13 +124,15 @@ app.on('ready', async () => {
 })
 
 async function afterReadyThings() {
-  win.on('enter-full-screen',
-         () => win.webContents.send('fromMain', ['window-enter-full-screen']))
-  win.on('leave-full-screen',
-        () => win.webContents.send('fromMain', ['window-leave-full-screen']))
+  win.on('enter-full-screen', () =>
+    win.webContents.send('fromMain', ['window-enter-full-screen'])
+  )
+  win.on('leave-full-screen', () =>
+    win.webContents.send('fromMain', ['window-leave-full-screen'])
+  )
 
   // TODO(smolck): cli args
-  const nvim = new Nvim({ useWsl: false, })
+  const nvim = new Nvim({ useWsl: false })
   await nvim.init()
 
   const handlers: any = {
@@ -143,7 +145,9 @@ async function afterReadyThings() {
     },
   }
 
-  nvim.onRedraw((args) => win.webContents.send('fromMain', ['nvim.onRedraw', args]))
+  nvim.onRedraw((args) =>
+    win.webContents.send('fromMain', ['nvim.onRedraw', args])
+  )
 
   ipcMain.on('toMain', (_event, args: any[]) => {
     // TODO(smolck): use `_event`? what's the purpose of it?
