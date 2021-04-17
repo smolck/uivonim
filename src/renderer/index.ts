@@ -8,6 +8,15 @@ import { /*requireDir,*/ debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 
+declare global {
+  interface Window { 
+    api: {
+      send: (channel: string, data: any) => void,
+      receive: (channel: string, func: (args: any[]) => void) => void
+    } 
+  }
+}
+
 window
 .matchMedia('screen and (min-resolution: 2dppx)')
 .addEventListener('change', () => {
@@ -33,7 +42,6 @@ const mouseTrap = () => {
     cursorVisible = true
     document.body.style.cursor = 'default'
   }
-
   hideCursor()
 }
 

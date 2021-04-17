@@ -1,4 +1,4 @@
-import * as nvim from '../core/master-control'
+// import * as nvim from '../core/master-control'
 // import * as workspace from '../core/workspace'
 import api from '../core/instance-api'
 import * as windows from '../windows/window-manager'

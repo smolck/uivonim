@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer, } from 'electron'
-import { promisify } from 'util'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object

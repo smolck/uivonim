@@ -1,4 +1,4 @@
-import { asColor, merge, getPipeName } from '../support/utils'
+import { asColor, merge, getPipeName } from '../../common/utils'
 import Worker from '../messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
@@ -32,8 +32,7 @@ const clientSize = {
 
 let onExitFn: ExitFn = () => {}
 
-const spawnNvimInstance = (
-  pipeName: string,
+const spawnNvimInstance = ( pipeName: string,
   useWsl: boolean,
   nvimBinary?: string
 ) => {
