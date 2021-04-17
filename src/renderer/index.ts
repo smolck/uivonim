@@ -2,9 +2,8 @@ import * as workspace from './workspace'
 import * as css from './ui/css'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
-// TODO(smolck): Remember, requireDir won't even be a thing probably, need to
-// remove it, since no require in render thread
-import { /*requireDir,*/ debounce, merge } from '../common/utils'
+// TODO(smolck): I think webpack will fix all the require things?
+import { requireDir, debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 
@@ -63,32 +62,33 @@ workspace.resize()
 
 // TODO(smolck): Need to re-architect all this because `require` won't be available
 // from renderer thread . . .
-/* requestAnimationFrame(() => {
-  require('../render/redraw')
+requestAnimationFrame(() => {
+  require('./render/redraw')
 
   // high priority components
   requestAnimationFrame(() => {
     // Focus textarea at start of application to receive input right away.
     document.getElementById('keycomp-textarea')?.focus()
 
-    requireDir(`${__dirname}/../components/nvim`)
+    requireDir(`${__dirname}/components/nvim`)
   })
 
   setTimeout(() => {
-    requireDir(`${__dirname}/../components`)
-    requireDir(`${__dirname}/../components/extensions`)
-    requireDir(`${__dirname}/../components/memes`)
+    requireDir(`${__dirname}/components`)
+    requireDir(`${__dirname}/components/extensions`)
+    requireDir(`${__dirname}/components/memes`)
   }, 600)
 
   setTimeout(() => {
-    require('../services/app-info')
+    // TODO(smolck): Need to port app-info things
+    // require('../services/app-info')
 
     if (process.env.VEONIM_DEV) {
       // require('../dev/menu')
       // require('../dev/recorder')
     }
   }, 199)
-})*/
+})
 
 const pluginsContainer = document.getElementById('plugins') as HTMLElement
 merge(pluginsContainer.style, {

@@ -1,4 +1,4 @@
-import { throttle } from '../support/utils'
+import { throttle } from './utils'
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
 import { join } from 'path'

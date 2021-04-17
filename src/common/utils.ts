@@ -15,7 +15,7 @@ import { EventEmitter } from 'events'
 import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
 import { Transform } from 'stream'
-export { watchFile } from '../support/fs-watch'
+export { watchFile } from './fs-watch'
 
 export const spawnBinary = (
   command: string,
