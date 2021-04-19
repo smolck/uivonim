@@ -25,6 +25,7 @@ export interface WebGLView {
 const nutella = () => {
   const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
+  const amazingGL = CreateWebGL()
 
   const textFGRenderer = TextFG(foregroundGL)
   const textBGRenderer = TextBG(backgroundGL)
@@ -32,6 +33,7 @@ const nutella = () => {
   const resizeCanvas = (width: number, height: number) => {
     textBGRenderer.resize(width, height)
     textFGRenderer.resize(width, height)
+    amazingGL.resize(width, height)
   }
 
   const showCursor = (enable: boolean) => {
@@ -187,6 +189,7 @@ const nutella = () => {
     showCursor,
     foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,
+    amazingElement: amazingGL.canvasElement,
   }
 }
 
