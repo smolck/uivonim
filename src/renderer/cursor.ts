@@ -1,5 +1,5 @@
-import * as windows from '../windows/window-manager'
-import { hexToRGB } from '../ui/css'
+import * as windows from './windows/window-manager'
+import { hexToRGB } from './ui/css'
 
 export enum CursorShape {
   block = 0,

@@ -1,23 +1,31 @@
-import { getWorkerInstance } from '../core/master-control'
+// import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall } from '../../common/utils'
-import { colors } from '../render/highlight-attributes'
+// TODO(smolck)
+// import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
-import { WindowMetadata } from '../windows/metadata'
-import * as dispatch from '../messaging/dispatch'
-import { GitStatus } from '../support/git'
+// TODO(smolck): Don't import stuff from renderer/ in main/ probably, even if it
+// is just types like here.
+import { WindowMetadata } from '../../renderer/windows/metadata'
+// import * as dispatch from '../messaging/dispatch'
+import { GitStatus } from '../../common/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
 
+export default class {
+  ee: EventEmitter
+  nvimState: NeovimState
+
+  constructor() {
+    this.ee = new EventEmitter()
+    this.nvimState = new NeovimState('nvim-mirror')
+  }
+
+  setupNvimOnHandlers() {}
+}
+
 const ee = new EventEmitter()
-const {
-  state,
-  watchState,
-  onStateValue,
-  onStateChange,
-  untilStateValue,
-} = NeovimState('nvim-mirror')
 
 const actionRegistrations: string[] = []
 export const setupNvimOnHandlers = () => {
@@ -171,4 +179,4 @@ const api = {
   },
 }
 
-export default api
+// export default api
