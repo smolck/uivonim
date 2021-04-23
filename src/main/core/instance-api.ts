@@ -1,6 +1,8 @@
 // import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall } from '../../common/utils'
+import Worker from '../messaging/worker'
+import { BrowserWindow } from 'electron'
 // TODO(smolck)
 // import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
@@ -14,74 +16,81 @@ import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
 
 export default class {
-  ee: EventEmitter
-  nvimState: NeovimState
+  private actionRegistrations: string[]
+  private ee: EventEmitter
+  private nvimState: NeovimState
+  private workerInstanceRef: Worker
+  // TODO(smolck): Just keep ref to `winRef.webContents.send`?
+  private winRef: BrowserWindow
 
-  constructor() {
+  constructor(workerInstanceRef: Worker, winRef: BrowserWindow) {
     this.ee = new EventEmitter()
     this.nvimState = new NeovimState('nvim-mirror')
+    this.actionRegistrations = []
+    this.workerInstanceRef = workerInstanceRef
+    this.winRef = winRef
   }
 
-  setupNvimOnHandlers() {}
-}
+  setupNvimOnHandlers() {
+    if (this.actionRegistrations.length)
+      this.actionRegistrations.forEach((name) => this.workerInstanceRef.call.onAction(name))
+    this.workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
+      // TODO: do we need this to always be updated or can we query these values?
+      // this will trigger on every cursor move and take up time in the render cycle
+      Object.assign(this.nvimState, stateDiff)
+    })
 
-const ee = new EventEmitter()
+    // TODO(smolck): Async? Return promise?
+    // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {
+    this.workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
+      this.winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
+    })
 
-const actionRegistrations: string[] = []
-export const setupNvimOnHandlers = () => {
-  const workerInstance = getWorkerInstance()
-  if (actionRegistrations.length)
-    actionRegistrations.forEach((name) => workerInstance.call.onAction(name))
+    this.workerInstanceRef.on.showStatusBarMessage((message: string) => {
+      this.winRef.webContents.send('fromMain', ['nvim.message.status', message])
+    })
 
-  workerInstance.on.nvimStateUpdate((stateDiff: any) => {
-    // TODO: do we need this to always be updated or can we query these values?
-    // this will trigger on every cursor move and take up time in the render cycle
-    Object.assign(state, stateDiff)
-  })
+    this.workerInstanceRef.on.vimrcLoaded(() => this.ee.emit('nvim.load', false))
+    this.workerInstanceRef.on.gitStatus((status: GitStatus) =>
+      this.ee.emit('git.status', status)
+    )
+    this.workerInstanceRef.on.gitBranch((branch: string) => this.ee.emit('git.branch', branch))
+    this.workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
+      this.ee.emit(`action.${name}`, ...args)
+    )
 
-  workerInstance.on.showNeovimMessage(async (...a: any[]) => {
-    const msg = require('../components/nvim/messages').default.show(...a)
-    return msg.promise
-  })
-  workerInstance.on.showStatusBarMessage((message: string) => {
-    dispatch.pub('message.status', message)
-  })
-  workerInstance.on.vimrcLoaded(() => ee.emit('nvim.load', false))
-  workerInstance.on.gitStatus((status: GitStatus) =>
-    ee.emit('git.status', status)
-  )
-  workerInstance.on.gitBranch((branch: string) => ee.emit('git.branch', branch))
-  workerInstance.on.actionCalled((name: string, args: any[]) =>
-    ee.emit(`action.${name}`, ...args)
-  )
+    // TODO(smolck): What to do here . . .
+    /*this.workerInstanceRef.on.getDefaultColors(async () => ({
+      background: colors.background,
+      foreground: colors.foreground,
+      special: colors.special,
+    }))*/
 
-  workerInstance.on.getDefaultColors(async () => ({
-    background: colors.background,
-    foreground: colors.foreground,
-    special: colors.special,
-  }))
+    this.workerInstanceRef.on.getCursorPosition(async () => {
+      // TODO(smolck): What to do here exactly?
 
-  workerInstance.on.getCursorPosition(async () => {
-    const {
-      cursor: { row, col },
-    } = require('../core/cursor')
-    return { row, col }
-  })
+      /*const {
+        cursor: { row, col },
+      } = require('../core/cursor')
+      return { row, col }*/
+    })
 
-  workerInstance.on.clipboardRead(async () => clipboard.readText())
-  workerInstance.on.clipboardWrite((text: string) => clipboard.writeText(text))
-}
+    this.workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
+    this.workerInstanceRef.on.clipboardWrite((text: string) => clipboard.writeText(text))
+  }
 
-const getBufferInfo = (): Promise<BufferInfo[]> =>
-  getWorkerInstance().request.getBufferInfo()
+  getBufferInfo(): Promise<BufferInfo> {
+    return this.workerInstanceRef.request.getBufferInfo()
+  }
 
-const setMode = (mode: VimMode) => {
-  Object.assign(state, { mode })
-  getWorkerInstance().call.setNvimMode(mode)
-}
+  setMode(mode: VimMode) {
+    Object.assign(this.nvimState, { mode })
+    this.workerInstanceRef.call.setNvimMode(mode)
+  }
 
-const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
-  return getWorkerInstance().request.getWindowMetadata()
+  async getWindowMetadata(): Promise<WindowMetadata[]> {
+    return this.workerInstanceRef.request.getWindowMetadata()
+  }
 }
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {

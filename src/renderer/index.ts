@@ -105,6 +105,16 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
+window.api.on('nvim.showNeovimMessage', (args) => {
+  // TODO(smolck)
+  // const msg = require('../components/nvim/messages').default.show(...a)
+  // return msg.promise
+})
+
+window.api.on('nvim.message.status', ([message]) => {
+
+})
+
 // TODO(smolck): Put this somewhere else?
 /*api.onAction(
   'update-nameplates',
