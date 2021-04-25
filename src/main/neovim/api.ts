@@ -1,4 +1,4 @@
-import { simplifyPath, is } from '../support/utils'
+import { simplifyPath, is } from '../../common/utils'
 import { basename, dirname } from 'path'
 import {
   Keymap,
@@ -11,9 +11,9 @@ import {
   VimOption,
 } from '../neovim/types'
 import { Autocmds } from '../neovim/startup'
-import { normalizeVimMode } from '../support/neovim-utils'
+import { normalizeVimMode } from '../../common/neovim-utils'
 import { EventEmitter } from 'events'
-import CreateVimState from '../neovim/state'
+import NvimState from '../neovim/state'
 import * as neovim from 'neovim'
 import { workerData } from '../messaging/worker-client'
 
@@ -30,7 +30,7 @@ const {
   onStateChange,
   onStateValue,
   untilStateValue,
-} = CreateVimState('main')
+} = new NvimState('main')
 
 const watchers = {
   actions: new EventEmitter(),
