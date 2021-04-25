@@ -18,14 +18,18 @@ import { clipboard } from 'electron'
 export default class {
   private actionRegistrations: string[]
   private ee: EventEmitter
-  private nvimState: NeovimState
+  private _nvimState: NeovimState
   private workerInstanceRef: Worker
   // TODO(smolck): Just keep ref to `winRef.webContents.send`?
   private winRef: BrowserWindow
 
+  get nvimState() {
+    return this._nvimState
+  }
+
   constructor(workerInstanceRef: Worker, winRef: BrowserWindow) {
     this.ee = new EventEmitter()
-    this.nvimState = new NeovimState('nvim-mirror')
+    this._nvimState = new NeovimState('nvim-mirror')
     this.actionRegistrations = []
     this.workerInstanceRef = workerInstanceRef
     this.winRef = winRef
@@ -37,7 +41,7 @@ export default class {
     this.workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
       // TODO: do we need this to always be updated or can we query these values?
       // this will trigger on every cursor move and take up time in the render cycle
-      Object.assign(this.nvimState, stateDiff)
+      Object.assign(this._nvimState, stateDiff)
     })
 
     // TODO(smolck): Async? Return promise?
@@ -84,7 +88,7 @@ export default class {
   }
 
   setMode(mode: VimMode) {
-    Object.assign(this.nvimState, { mode })
+    Object.assign(this._nvimState, { mode })
     this.workerInstanceRef.call.setNvimMode(mode)
   }
 

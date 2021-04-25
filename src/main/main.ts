@@ -143,6 +143,12 @@ async function afterReadyThings() {
       win.setSize(width + 1, height)
       win.setSize(width, height)
     },
+    'nvim.watchState.file': (id: number) => {
+      nvim.instanceApi.nvimState.watchState.file((file) => win.webContents.send(
+        'fromMain',
+        ['nvim.watchState.file', id, file]
+      ))
+    }
   }
 
   nvim.onRedraw((args) =>

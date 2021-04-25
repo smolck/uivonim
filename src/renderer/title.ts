@@ -1,6 +1,5 @@
 import { merge, simplifyPath } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
-import api from '../core/instance-api'
 import * as workspace from './workspace'
 import { remote } from 'electron'
 
@@ -54,14 +53,16 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  api.nvim.watchState.file((file: string) => {
-    const path = simplifyPath(file, api.nvim.state.cwd)
-    ;(title as HTMLElement).innerText = `${path} - uivonim`
+  window.api.nvimState.watchStateFile((file: string) => {
+    // TODO(smolck): How to get api.nvim.state.cwd?
+    // const path = simplifyPath(file, api.nvim.state.cwd)
+    // ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
-  api.nvim.watchState.file((file: string) => {
-    const path = simplifyPath(file, api.nvim.state.cwd)
-    remote.getCurrentWindow().setTitle(`${path} - uivonim`)
+  window.api.nvimState.watchStateFile((file: string) => {
+    // TODO(smolck): How to get api.nvim.state.cwd?
+    // const path = simplifyPath(file, api.nvim.state.cwd)
+    // remote.getCurrentWindow().setTitle(`${path} - uivonim`)
   })
 
 export const specs = {
