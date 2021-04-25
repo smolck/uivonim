@@ -4,8 +4,8 @@ const { $, go, run, fromRoot } = require('./runner')
 const fs = require('fs-extra')
 
 const paths = {
-  index: 'src/bootstrap/index.html',
-  processExplorer: 'src/bootstrap/process-explorer.html',
+  index: 'src/main/index.html',
+  processExplorer: 'src/main/process-explorer.html',
 }
 
 const copy = {
@@ -13,14 +13,14 @@ const copy = {
     $`copying index html`
     return fs.copy(
       fromRoot(paths.index),
-      fromRoot('build/bootstrap/index.html')
+      fromRoot('build/main/index.html')
     )
   },
   processExplorer: () => {
     $`copying process-explorer html`
     return fs.copy(
       fromRoot(paths.processExplorer),
-      fromRoot('build/bootstrap/process-explorer.html')
+      fromRoot('build/main/process-explorer.html')
     )
   },
   assets: () => {

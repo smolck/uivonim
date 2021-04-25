@@ -1,4 +1,4 @@
-import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
+import { CmdGroup, FunctionGroup } from '../../common/neovim-utils'
 import { resolve } from 'path'
 
 const runtimeDir = resolve(__dirname, '..', 'runtime')

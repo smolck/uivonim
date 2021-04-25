@@ -27,8 +27,9 @@ const nvimOptions = {
 }
 
 const clientSize = {
-  width: 0,
-  height: 0,
+  // TODO(smolck): Better default than this? Shouldn't really matter I guess . . .
+  width: 80,
+  height: 80,
 }
 
 let onExitFn: ExitFn = () => {}

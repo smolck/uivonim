@@ -12,7 +12,7 @@ go(async () => {
   $`running babel stuff`
   await run('babel --extensions .ts,.tsx src -d build')
 
-  run('electron build/bootstrap/main.js', {
+  run('electron build/main/main.js', {
     args: process.argv.slice(2),
     env: {
       ...process.env,
