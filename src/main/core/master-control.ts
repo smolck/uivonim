@@ -109,10 +109,9 @@ const createNvim = async (
   )
   const { pipeName: path } = nvimInstance!
 
-  const workerInstance = Worker('instance', {
+  const workerInstance = new Worker('instance', {
     workerData: { nvimPath: path },
   })
-  setupNvimOnHandlers()
 
   dir && (await nvimApi!.command(`cd ${dir}`))
   return { workerInstance, nvimInstance, nvimApi }
@@ -124,9 +123,10 @@ export default class {
   private _workerInstance?: any
   private _opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
 
-  private _instanceApi: InstanceAPI
+  private _instanceApi?: InstanceAPI
   get instanceApi() {
-    return this._instanceApi
+    this.checkInitialized() // TODO(smolck)
+    return this._instanceApi!
   }
 
   // TODO(smolck): Check initialized in getters?
@@ -144,7 +144,7 @@ export default class {
   }
 
   private checkInitialized() {
-    if (!this._nvimInstance || !this._nvimApi || !this._workerInstance) {
+    if (!this._nvimInstance || !this._nvimApi || !this._workerInstance || !this._instanceApi) {
       console.error('Nvim not initalized! Need to call and await .init()')
     }
   }
@@ -160,6 +160,9 @@ export default class {
     this._nvimApi = nvimApi
 
     this._instanceApi = new InstanceAPI(workerInstance, winRef)
+    // TODO(smolck): Is the order here fine? Previously this was called from
+    // within `createNvim` right after creating the Worker . . .
+    this.instanceApi.setupNvimOnHandlers()
   }
 
   onRedraw(fn: RedrawFn) {

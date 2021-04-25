@@ -1,4 +1,4 @@
-import { onFnCall, proxyFn, uuid, CreateTask } from '../support/utils'
+import { onFnCall, proxyFn, uuid, CreateTask } from '../../common/utils'
 import { EventEmitter } from 'events'
 import { join } from 'path'
 import { platform } from 'os'
