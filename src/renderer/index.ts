@@ -132,4 +132,10 @@ document.onclick = (e) => {
   }
 }
 
+document.onkeydown = (e) => {
+  window.api.call('document.onkeydown', e)
+}
 
+document.oninput = (e) => {
+  window.api.call('document.oninput', e)
+}
