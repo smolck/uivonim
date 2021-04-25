@@ -61,7 +61,7 @@ export default class {
   watchState: WatchState
   onStateValue: OnStateValue
   untilStateValue: UntilStateValue
-  state: typeof Proxy
+  state: NeovimState
 
   // TODO(smolck): State name isn't used so why keep it?
   constructor(_stateName: string) {
@@ -111,7 +111,6 @@ export default class {
         }
     )
 
-    // @ts-ignore TODO(smolck): Figure out why an error happens here
     this.state = new Proxy(state, {
       get: (_, key: StateKeys) => Reflect.get(state, key),
       set: (_, key: string, val: any) => {

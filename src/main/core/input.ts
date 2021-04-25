@@ -166,9 +166,6 @@ export default class {
       this._windowHasFocus = false
 
       const lastEscapeFromNow = Date.now() - this._lastEscapeTimestamp
-      // TODO(smolck): Why does this._nvimStateRef.state.mode not want to type
-      // properly?
-      // @ts-ignore
       const isTerminalMode = this._nvimStateRef.state.mode === VimMode.Terminal
       const fixTermEscape = isTerminalMode && lastEscapeFromNow < 25
       if (fixTermEscape) this._shouldClearEscapeOnNextAppFocus = true
