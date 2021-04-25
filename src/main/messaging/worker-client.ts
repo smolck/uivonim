@@ -5,7 +5,7 @@ import {
   CreateTask,
   fromJSON,
   ID,
-} from '../support/utils'
+} from '../../common/utils'
 import { EventEmitter } from 'events'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
