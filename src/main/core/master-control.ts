@@ -3,8 +3,9 @@ import Worker from '../messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
-import { setupNvimOnHandlers } from '../core/instance-api'
+import InstanceAPI from '../core/instance-api'
 import * as neovim from 'neovim'
+import { BrowserWindow } from 'electron'
 
 type RedrawFn = (m: any[]) => void
 type ExitFn = (code: number) => void
@@ -123,6 +124,11 @@ export default class {
   private _workerInstance?: any
   private _opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
 
+  private _instanceApi: InstanceAPI
+  get instanceApi() {
+    return this._instanceApi
+  }
+
   // TODO(smolck): Check initialized in getters?
   private get nvimApi() {
     this.checkInitialized()
@@ -143,7 +149,7 @@ export default class {
     }
   }
 
-  async init() {
+  async init(winRef: BrowserWindow) {
     const { nvimInstance, nvimApi, workerInstance } = await createNvim(
       this._opts.useWsl,
       this._opts.nvimBinaryPath,
@@ -152,6 +158,8 @@ export default class {
     this._nvimInstance = nvimInstance
     this._workerInstance = workerInstance
     this._nvimApi = nvimApi
+
+    this._instanceApi = new InstanceAPI(workerInstance, winRef)
   }
 
   onRedraw(fn: RedrawFn) {

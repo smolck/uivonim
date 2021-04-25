@@ -133,7 +133,7 @@ async function afterReadyThings() {
 
   // TODO(smolck): cli args
   const nvim = new Nvim({ useWsl: false })
-  await nvim.init()
+  await nvim.init(win)
 
   const handlers: any = {
     'nvim.resize': nvim.resize,
