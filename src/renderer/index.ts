@@ -9,14 +9,15 @@ import * as windows from './windows/window-manager'
 
 declare global {
   interface Window {
-    api: {
-      // send: (channel: string, data: any) => void,
-      // receive: (channel: string, func: (args: any[]) => void) => void
-      call: (funcName: string, ...args: any[]) => void,
-      on: (event: string, func: (...args: any[]) => void) => void,
-      nvimState: {
-        watchStateFile: (fn: (file: string) => void) => {
-      },
+      api: {
+        // send: (channel: string, data: any) => void,
+        // receive: (channel: string, func: (args: any[]) => void) => void
+        call: (funcName: string, ...args: any[]) => void,
+        on: (event: string, func: (...args: any[]) => void) => void,
+        nvimState: {
+          watchStateFile: (fn: (file: string) => void) => {
+        },
+      }
     }
   }
 }
@@ -123,3 +124,12 @@ window.api.on('nvim.message.status', ([message]) => {
   'update-nameplates',
   () => (windows.refresh(), console.log('refresh'))
 )*/
+
+document.onclick = (e) => {
+  if (document.activeElement === document.body) {
+    e.preventDefault()
+    document.getElementById('keycomp-textarea')?.focus()
+  }
+}
+
+

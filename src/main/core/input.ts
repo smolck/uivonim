@@ -1,8 +1,8 @@
-import { input } from '../core/master-control'
+// import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
-import { $ } from '../support/utils'
-import api from '../core/instance-api'
-import { remote } from 'electron'
+import { $ } from '../../common/utils'
+import NvimState from '../neovim/state'
+import { ipcMain } from 'electron'
 
 export enum InputType {
   Down = 'down',
@@ -12,12 +12,6 @@ export enum InputType {
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
-let isCapturing = true
-let windowHasFocus = true
-let lastEscapeTimestamp = 0
-let shouldClearEscapeOnNextAppFocus = false
-let keyListener: OnKeyFn = () => {}
-let sendInputToVim = true
 
 const isStandardAscii = (key: string) =>
   key.charCodeAt(0) > 32 && key.charCodeAt(0) < 127
@@ -67,93 +61,6 @@ const joinModsWithDash = (mods: string[]) => mods.join('-')
 const mapMods = $<string>(handleMods, joinModsWithDash)
 const mapKey = $<string>(bypassEmptyMod, toVimKey)
 const formatInput = $<string>(combineModsWithKey, wrapKey)
-const globalShortcuts = new Map<string, () => void>()
-
-export const focus = () => {
-  isCapturing = true
-}
-
-export const blur = () => {
-  isCapturing = false
-}
-
-export const stealInput = (onKeyFn: OnKeyFn) => {
-  sendInputToVim = false
-  keyListener = onKeyFn
-  return () => (sendInputToVim = true)
-}
-
-const sendToVim = (inputKeys: string) => {
-  if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
-
-  // TODO: this might need more attention. i think s-space can be a valid
-  // vim keybind. s-space was causing issues in terminal mode, sending weird
-  // term esc char.
-  if (inputKeys === '<S-Space>') return input('<space>')
-  if (inputKeys.length > 1 && !inputKeys.startsWith('<')) {
-    return inputKeys.split('').forEach((k: string) => input(k))
-  }
-
-  // a fix for terminal. only happens on cmd-tab. see below for more info
-  if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
-  input(inputKeys)
-}
-
-export const registerOneTimeUseShortcuts = (
-  shortcuts: string[],
-  cb: (shortcut: string) => void
-) => {
-  const done = (shortcut: string) => {
-    shortcuts.forEach((s) => globalShortcuts.delete(s))
-    cb(shortcut)
-  }
-  shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
-}
-
-const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
-  const key = bypassEmptyMod(e.key)
-  if (!key) {
-    // @ts-ignore
-    const inputKey = e.data
-    if (!inputKey) return
-
-    if (sendInputToVim) return sendToVim(inputKey)
-    keyListener(inputKey, inputType)
-
-    return
-  }
-
-  const inputKeys = formatInput(mapMods(e), mapKey(e.key))
-
-  if (sendInputToVim) return sendToVim(inputKeys)
-  keyListener(inputKeys, inputType)
-}
-
-const keydownHandler = (e: KeyboardEvent) => {
-  if (!windowHasFocus || !isCapturing) return
-
-  sendKeys(e, InputType.Down)
-}
-
-// TODO(smolck): For macOS. See explanation below.
-let previousKeyWasDead = false
-let keyIsDead = false
-
-document.oninput =
-  remote.process.platform === 'linux' || remote.process.platform === 'win32'
-    ? // @ts-ignore
-      (e) => keydownHandler(e)
-    : (e) => {
-        // TODO(smolck): For macOS. See explanation below.
-        if (!previousKeyWasDead && keyIsDead) {
-          keyIsDead = false
-          previousKeyWasDead = true
-          return
-        }
-
-        // @ts-ignore
-        keydownHandler(e)
-      }
 
 const isNotChar = (e: KeyboardEvent): boolean => {
   // Chars are handled by `oninput` handler so we don't handle those.
@@ -172,74 +79,181 @@ const isNotChar = (e: KeyboardEvent): boolean => {
   return true
 }
 
-// TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it
-// isn't actually typed, it's received by the `oninput` handler, which causes an
-// issue where it's sent to Neovim when it shouldn't be. To fix that, we make
-// sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
-// which is the way it should be.
-const workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS = (
-  e: KeyboardEvent
-): boolean => {
-  if (e.key === 'Dead' && !previousKeyWasDead) {
-    keyIsDead = true
-    previousKeyWasDead = false
-    return false
+export default class {
+  private _isCapturing: boolean = false
+  private _windowHasFocus = true
+  private _lastEscapeTimestamp = 0
+  private _shouldClearEscapeOnNextAppFocus = false
+  private _keyListener: OnKeyFn = () => {}
+  private _sendInputToVim = true
+  private _globalShortcuts = new Map<string, () => void>()
+
+  private _nvimStateRef: NvimState
+  private _nvimInput: (keys: string) => void
+
+  // TODO(smolck): For macOS. See explanation below.
+  private _previousKeyWasDead = false
+  private _keyIsDead = false
+  private _onWinFocus: (fun: () => void) => void
+  private _onWinBlur: (fun: () => void) => void
+
+  constructor(nvimState: NvimState,
+              nvimInput: (keys: string) => void,
+              onWinFocus: (fun: () => void) => void,
+              onWinBlur: (fun: () => void) => void) {
+    this._nvimStateRef = nvimState
+    this._nvimInput = nvimInput
+    this._onWinBlur = onWinBlur
+    this._onWinFocus = onWinFocus
   }
-  if (previousKeyWasDead)
-    (previousKeyWasDead = false), (keyIsDead = e.key === 'Dead')
 
-  return true
-}
+  setup() {
+    ipcMain.on('toMain', (_event, [event, keyEvent]) => {
+      switch (event) {
+        case 'document.oninput':
+          if (process.platform === 'linux' || process.platform === 'win32') {
+            this.keydownHandler(keyEvent)
+          } else {
+            // TODO(smolck): For macOS. See explanation below.
+            if (!this._previousKeyWasDead && this._keyIsDead) {
+              this._keyIsDead = false
+              this._previousKeyWasDead = true
+              return
+            }
 
-document.onkeydown =
-  remote.process.platform === 'linux' || remote.process.platform === 'win32'
-    ? (e) => {
-        if (isNotChar(e)) {
-          keydownHandler(e)
-        }
+            this.keydownHandler(keyEvent)
+          }
+          break
+        case 'document.onkeydown':
+          if (process.platform === 'linux' || process.platform === 'win32') {
+            if (isNotChar(keyEvent)) {
+              this.keydownHandler(keyEvent)
+            }
+          } else {
+            if (
+              isNotChar(keyEvent) &&
+              this.workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(keyEvent)
+            ) {
+              this.keydownHandler(keyEvent)
+            }
+          }
+          break
       }
-    : (e) => {
-        if (
-          isNotChar(e) &&
-          workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(e)
-        ) {
-          keydownHandler(e)
-        }
-      }
+    })
 
-document.onclick = (e) => {
-  if (document.activeElement === document.body) {
-    e.preventDefault()
-    document.getElementById('keycomp-textarea')?.focus()
+    this._onWinFocus(() => {
+      this._windowHasFocus = true
+      if (this._shouldClearEscapeOnNextAppFocus) {
+        // so if i remap 'cmd' down+up -> 'esc' and then hit cmd+tab to switch apps
+        // while in a terminal buffer, the application captures the 'cmd' (xform to
+        // 'esc') but not the 'tab' key. because of the xform to 'esc' this sends
+        // an escape sequence to the terminal. once the app gains focus again, the
+        // first char in the terminal buffer will be "swallowed". very annoying if
+        // copypasta commands, the first char gets lost and have to re-pasta
+
+        // i couldn't figure out an elegant solution to this (tried native
+        // keylistening but too much effort/unreliable), and decided to check if an
+        // 'esc' key was sent immediately before the app lost focus && we were in
+        // terminal insert mode. when the app gains focus again, we can "clear" the
+        // previous erranous 'escape' key sent to the terminal. this might only
+        // happen on macos + my custom config of remapping cmd -> cmd/esc
+        this._nvimInput('<enter>')
+        this._shouldClearEscapeOnNextAppFocus = false
+      }
+    })
+
+    this._onWinBlur(() => {
+      this._windowHasFocus = false
+
+      const lastEscapeFromNow = Date.now() - this._lastEscapeTimestamp
+      // TODO(smolck): Why does this._nvimStateRef.state.mode not want to type
+      // properly?
+      // @ts-ignore
+      const isTerminalMode = this._nvimStateRef.state.mode === VimMode.Terminal
+      const fixTermEscape = isTerminalMode && lastEscapeFromNow < 25
+      if (fixTermEscape) this._shouldClearEscapeOnNextAppFocus = true
+    })
+  }
+
+  // TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it
+  // isn't actually typed, it's received by the `oninput` handler, which causes an
+  // issue where it's sent to Neovim when it shouldn't be. To fix that, we make
+  // sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
+  // which is the way it should be.
+  private workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(
+    e: KeyboardEvent
+  ): boolean {
+    if (e.key === 'Dead' && !this._previousKeyWasDead) {
+      this._keyIsDead = true
+      this._previousKeyWasDead = false
+      return false
+    }
+    if (this._previousKeyWasDead)
+      (this._previousKeyWasDead = false), (this._keyIsDead = e.key === 'Dead')
+
+    return true
+  }
+
+  focus() {
+    this._isCapturing = true
+  }
+
+  blur() {
+    this._isCapturing = false
+  }
+
+  stealInput(onKeyFn: OnKeyFn) {
+    this._sendInputToVim = false
+    this._keyListener = onKeyFn
+    return () => (this._sendInputToVim = true)
+  }
+
+  registerOneTimeUseShortcuts(shortcuts: string[], cb: (shortcut: string) => void) {
+    const done = (shortcut: string) => {
+      shortcuts.forEach((s) => this._globalShortcuts.delete(s))
+      cb(shortcut)
+    }
+    shortcuts.forEach((s) => this._globalShortcuts.set(s, () => done(s)))
+  }
+
+  private sendToVim(inputKeys: string) {
+    if (this._globalShortcuts.has(inputKeys)) return this._globalShortcuts.get(inputKeys)!()
+
+    // TODO: this might need more attention. i think s-space can be a valid
+    // vim keybind. s-space was causing issues in terminal mode, sending weird
+    // term esc char.
+    if (inputKeys === '<S-Space>') return this._nvimInput('<space>')
+    if (inputKeys.length > 1 && !inputKeys.startsWith('<')) {
+      return inputKeys.split('').forEach((k: string) => this._nvimInput(k))
+    }
+
+    // a fix for terminal. only happens on cmd-tab. see below for more info
+    if (inputKeys.toLowerCase() === '<esc>') this._lastEscapeTimestamp = Date.now()
+    this._nvimInput(inputKeys)
+  }
+
+  private async sendKeys(e: KeyboardEvent, inputType: InputType) {
+    const key = bypassEmptyMod(e.key)
+    if (!key) {
+      // @ts-ignore
+      const inputKey = e.data
+      if (!inputKey) return
+
+      if (this._sendInputToVim) return this.sendToVim(inputKey)
+      this._keyListener(inputKey, inputType)
+
+      return
+    }
+
+    const inputKeys = formatInput(mapMods(e), mapKey(e.key))
+
+    if (this._sendInputToVim) return this.sendToVim(inputKeys)
+    this._keyListener(inputKeys, inputType)
+  }
+
+  private keydownHandler(e: KeyboardEvent) {
+    if (!this._windowHasFocus || !this._isCapturing) return
+
+    this.sendKeys(e, InputType.Down)
   }
 }
-
-remote.getCurrentWindow().on('focus', () => {
-  windowHasFocus = true
-  if (shouldClearEscapeOnNextAppFocus) {
-    // so if i remap 'cmd' down+up -> 'esc' and then hit cmd+tab to switch apps
-    // while in a terminal buffer, the application captures the 'cmd' (xform to
-    // 'esc') but not the 'tab' key. because of the xform to 'esc' this sends
-    // an escape sequence to the terminal. once the app gains focus again, the
-    // first char in the terminal buffer will be "swallowed". very annoying if
-    // copypasta commands, the first char gets lost and have to re-pasta
-
-    // i couldn't figure out an elegant solution to this (tried native
-    // keylistening but too much effort/unreliable), and decided to check if an
-    // 'esc' key was sent immediately before the app lost focus && we were in
-    // terminal insert mode. when the app gains focus again, we can "clear" the
-    // previous erranous 'escape' key sent to the terminal. this might only
-    // happen on macos + my custom config of remapping cmd -> cmd/esc
-    input('<enter>')
-    shouldClearEscapeOnNextAppFocus = false
-  }
-})
-
-remote.getCurrentWindow().on('blur', async () => {
-  windowHasFocus = false
-
-  const lastEscapeFromNow = Date.now() - lastEscapeTimestamp
-  const isTerminalMode = api.nvim.state.mode === VimMode.Terminal
-  const fixTermEscape = isTerminalMode && lastEscapeFromNow < 25
-  if (fixTermEscape) shouldClearEscapeOnNextAppFocus = true
-})

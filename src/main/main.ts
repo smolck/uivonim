@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim from './core/master-control'
+import Input from './core/input'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -134,6 +135,12 @@ async function afterReadyThings() {
   // TODO(smolck): cli args
   const nvim = new Nvim({ useWsl: false })
   await nvim.init(win)
+  
+  const input = new Input(nvim.instanceApi.nvimState, 
+                          nvim.input,
+                          (fn) => win.on('focus', fn),
+                          (fn) => win.on('blur', fn))
+  input.setup()
 
   const handlers: any = {
     'nvim.resize': nvim.resize,
