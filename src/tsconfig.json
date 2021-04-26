@@ -10,7 +10,7 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "esnext",
-    "module": "commonjs",
+    "moduleResolution": "node",
     "outDir": "../build",
     "strict": true,
     "jsx": "preserve",
