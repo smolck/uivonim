@@ -1,7 +1,8 @@
-import { simplifyPath, pathReducer } from '../support/utils'
-import { BufferVar } from '../neovim/function-types'
-import { BufferOption } from '../neovim/types'
-import nvim from '../neovim/api'
+import { simplifyPath, pathReducer } from '../../common/utils'
+// TODO(smolck): Imports from the main side . . . yeah that's probably not
+// great, fix that?
+import { BufferVar } from '../../main/neovim/function-types'
+import { BufferOption } from '../../main/neovim/types'
 
 export interface WindowMetadata {
   id: number

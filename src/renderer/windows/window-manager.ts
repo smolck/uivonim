@@ -1,12 +1,10 @@
-import { getWorkerInstance } from '../core/master-control'
 import CreateWindow, { Window, paddingX } from '../windows/window'
-import { cursor, moveCursor } from '../core/cursor'
+import { cursor, moveCursor } from '../cursor'
 import CreateWebGLRenderer from '../render/webgl/renderer'
 import { onElementResize } from '../ui/vanilla'
-import * as workspace from '../core/workspace'
-import { throttle } from '../support/utils'
+import * as workspace from '../workspace'
+import { throttle } from '../../common/utils'
 import windowSizer from '../windows/sizer'
-import api from '../core/instance-api'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -17,7 +15,7 @@ const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const superid = (id: number) => `i${getWorkerInstance()}-${id}`
+const superid = (id: number) => `i${window.api.workerInstanceId()}-${id}`
 
 const getWindowById = (windowId: number) => {
   const win = windowsById.get(superid(windowId))
@@ -28,7 +26,7 @@ const getWindowById = (windowId: number) => {
   return win
 }
 
-const getInstanceWindows = (id = getWorkerInstance()) =>
+const getInstanceWindows = (id = window.api.workerInstanceId()) =>
   [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
 
 const refreshWebGLGrid = () => {
@@ -211,7 +209,7 @@ export const layout = () => {
 
 const updateWindowNameplates = () =>
   requestAnimationFrame(async () => {
-    const windowsWithMetadata = await api.getWindowMetadata()
+    const windowsWithMetadata = await window.api.getWindowMetadata()
     windowsWithMetadata.forEach((w) => getWindowById(w.id).updateNameplate(w))
   })
 
@@ -273,7 +271,7 @@ onElementResize(webglContainer, (w, h) => {
   })
 })
 
-api.nvim.watchState.colorscheme(() =>
+window.api.on('nvimState.colorscheme', () => 
   requestAnimationFrame(() => {
     webgl.clearAll()
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())

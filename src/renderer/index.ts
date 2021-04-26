@@ -6,6 +6,7 @@ import * as dispatch from './dispatch'
 import { requireDir, debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
+import { WindowMetadata } from './windows/metadata'
 
 declare global {
   interface Window {
@@ -15,12 +16,14 @@ declare global {
         call: (funcName: string, ...args: any[]) => void,
         on: (event: string, func: (...args: any[]) => void) => void,
         nvimState: {
-          watchStateFile: (fn: (file: string) => void) => {
+          state: () => any,
+          watchStateFile: (fn: (file: string) => void) => void,
         },
+        workerInstanceId: () => number,
+        getWindowMetadata: () => Promise<WindowMetadata[]>,
       }
     }
   }
-}
 
 window
   .matchMedia('screen and (min-resolution: 2dppx)')

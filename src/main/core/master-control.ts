@@ -166,6 +166,9 @@ export default class {
     this.instanceApi.setupNvimOnHandlers()
   }
 
+  // TODO(smolck): This right?
+  workerInstanceId() { return this._workerInstance as number }
+
   onRedraw(fn: RedrawFn) {
     this.nvimApi.on('notification', (method: string, args: any) =>
       method === 'redraw' ? fn(args) : {}

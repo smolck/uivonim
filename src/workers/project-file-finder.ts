@@ -1,7 +1,7 @@
-import { on, call } from '../messaging/worker-client'
-import { NewlineSplitter } from '../support/utils'
+import { on, call } from '../main/messaging/worker-client'
+import { NewlineSplitter } from '../common/utils'
 import { filter as fuzzy } from 'fuzzaldrin-plus'
-import { spawnBinary } from '../support/utils'
+import { spawnBinary } from '../common/utils'
 
 const INTERVAL = 250
 const AMOUNT = 10

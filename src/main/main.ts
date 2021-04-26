@@ -135,6 +135,11 @@ async function afterReadyThings() {
   // TODO(smolck): cli args
   const nvim = new Nvim({ useWsl: false })
   await nvim.init(win)
+
+  nvim.instanceApi.onAction('version', () =>
+    nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
+  )
+  nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
   
   const input = new Input(nvim.instanceApi.nvimState, 
                           nvim.input,
@@ -155,15 +160,33 @@ async function afterReadyThings() {
         'fromMain',
         ['nvim.watchState.file', id, file]
       ))
+    },
+    'nvim.instanceApi.getWindowMetadata': () => {
+      nvim.instanceApi.getWindowMetadata().then((metadata) => {
+        win.webContents.send('toMain', 
+                           [
+                             'nvim.instanceApi.getWindowMetdata',
+                             metadata
+                           ])
+      })
     }
   }
 
   nvim.onRedraw((args) =>
     win.webContents.send('fromMain', ['nvim.onRedraw', args])
   )
+  nvim.instanceApi.nvimState.watchState.colorscheme(() => {
+    win.webContents.send('fromMain', ['nvimState.colorscheme'])
+  })
 
   ipcMain.on('toMain', (_event, args: any[]) => {
     // TODO(smolck): use `_event`? what's the purpose of it?
     handlers[args[0]](...args.slice(1))
   })
+
+  // Initial state and send state every change (TODO(smolck): This work?)
+  win.webContents.send('fromMain', ['nvim.state', nvim.instanceApi.nvimState.state])
+  nvim.instanceApi.nvimState.onStateChange((nextState) => win.webContents.send('fromMain', ['nvim.state', nextState]))
+
+  win.webContents.send('fromMain', ['nvim.workerInstanceId', nvim.workerInstanceId()])
 }

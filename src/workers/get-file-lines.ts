@@ -1,5 +1,5 @@
-import { on } from '../messaging/worker-client'
-import { exists } from '../support/utils'
+import { on } from '../main/messaging/worker-client'
+import { exists } from '../common/utils'
 import { createReadStream } from 'fs'
 
 export interface LineContents {

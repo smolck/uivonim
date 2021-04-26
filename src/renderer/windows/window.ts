@@ -5,10 +5,9 @@ import {
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
-import { specs as titleSpecs } from '../core/title'
-import instanceAPI from '../core/instance-api'
+import { specs as titleSpecs } from '../title'
 import { WebGLView } from '../render/webgl/renderer'
-import { cell } from '../core/workspace'
+import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
 
 export interface WindowInfo {
@@ -367,7 +366,8 @@ export default () => {
     },
     positionToEditorPixels: (line, col, maybeOpts) => {
       const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
-      const row = line - instanceAPI.nvim.state.editorTopLine
+      // TODO(smolck): Make sure this and similar calls work . . .
+      const row = line - window.api.nvimState.state().editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)
 

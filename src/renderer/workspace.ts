@@ -1,5 +1,5 @@
-import { merge, throttle } from './support/utils'
-import robotoSizes from './support/roboto-sizes'
+import { merge, throttle } from '../common/utils'
+import robotoSizes from '../common/roboto-sizes'
 import { EventEmitter } from 'events'
 import { setVar } from './ui/css'
 
