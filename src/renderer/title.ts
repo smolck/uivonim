@@ -1,5 +1,5 @@
-import { merge, simplifyPath } from '../support/utils'
-import * as dispatch from '../messaging/dispatch'
+import { merge, simplifyPath } from '../common/utils'
+import * as dispatch from './dispatch'
 import * as workspace from './workspace'
 import { remote } from 'electron'
 
@@ -53,13 +53,13 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  window.api.nvimState.watchStateFile((file: string) => {
+  window.api.nvimWatchStateFile((_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
-  window.api.nvimState.watchStateFile((file: string) => {
+  window.api.nvimWatchStateFile((_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // remote.getCurrentWindow().setTitle(`${path} - uivonim`)

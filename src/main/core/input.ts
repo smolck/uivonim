@@ -3,6 +3,7 @@ import { VimMode } from '../neovim/types'
 import { $ } from '../../common/utils'
 import NvimState from '../neovim/state'
 import { ipcMain } from 'electron'
+import { Invokables } from '../../common/ipc'
 
 export enum InputType {
   Down = 'down',
@@ -107,37 +108,35 @@ export default class {
     this._onWinFocus = onWinFocus
   }
 
+  // TODO(smolck): Better name?
   setup() {
-    ipcMain.on('toMain', (_event, [event, keyEvent]) => {
-      switch (event) {
-        case 'document.oninput':
-          if (process.platform === 'linux' || process.platform === 'win32') {
-            this.keydownHandler(keyEvent)
-          } else {
-            // TODO(smolck): For macOS. See explanation below.
-            if (!this._previousKeyWasDead && this._keyIsDead) {
-              this._keyIsDead = false
-              this._previousKeyWasDead = true
-              return
-            }
+    ipcMain.handle(Invokables.documentOnInput, (_evt, keyEvent: KeyboardEvent) => {
+      if (process.platform === 'linux' || process.platform === 'win32') {
+        this.keydownHandler(keyEvent)
+      } else {
+        // TODO(smolck): For macOS. See explanation below.
+        if (!this._previousKeyWasDead && this._keyIsDead) {
+          this._keyIsDead = false
+          this._previousKeyWasDead = true
+          return
+        }
 
-            this.keydownHandler(keyEvent)
-          }
-          break
-        case 'document.onkeydown':
-          if (process.platform === 'linux' || process.platform === 'win32') {
-            if (isNotChar(keyEvent)) {
-              this.keydownHandler(keyEvent)
-            }
-          } else {
-            if (
-              isNotChar(keyEvent) &&
-              this.workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(keyEvent)
-            ) {
-              this.keydownHandler(keyEvent)
-            }
-          }
-          break
+        this.keydownHandler(keyEvent)
+      }
+    })
+
+    ipcMain.handle(Invokables.documentOnKeydown, (_evt, keyEvent: KeyboardEvent) => {
+      if (process.platform === 'linux' || process.platform === 'win32') {
+        if (isNotChar(keyEvent)) {
+          this.keydownHandler(keyEvent)
+        }
+      } else {
+        if (
+          isNotChar(keyEvent) &&
+          this.workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(keyEvent)
+        ) {
+          this.keydownHandler(keyEvent)
+        }
       }
     })
 

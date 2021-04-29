@@ -3,18 +3,7 @@ import { simplifyPath, pathReducer } from '../../common/utils'
 // great, fix that?
 import { BufferVar } from '../../main/neovim/function-types'
 import { BufferOption } from '../../main/neovim/types'
-
-export interface WindowMetadata {
-  id: number
-  dir: string
-  name: string
-  filetype: string
-  active: boolean
-  modified: boolean
-  terminal: boolean
-  termAttached: boolean
-  termFormat: string
-}
+import { WindowMetadata } from '../../common/types'
 
 const improvedWindowTitle = (
   name: string,

@@ -11,6 +11,7 @@ import * as windows from '../windows/window-manager'
 import { hideCursor, showCursor, moveCursor } from '../cursor'
 import * as dispatch from '../dispatch'
 import * as renderEvents from '../render/events'
+import { Events, Invokables } from '../../common/ipc'
 
 let dummyData = new Float32Array()
 let state_cursorVisible = true
@@ -265,7 +266,9 @@ const win_float_pos = (e: any) => {
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         continue
       else
-        window.api.call('nvim.resizeGrid', gridId, clampedWidth, clampedHeight)
+        // TODO(smolck): This may need to be `await`ed somehow since it's a
+        // promise, not sure if it needs to be done right away or . . .
+        window.api.invoke(Invokables.nvimResizeGrid, gridId, clampedWidth, clampedHeight)
 
       continue
     }
@@ -302,7 +305,7 @@ const win_float_pos = (e: any) => {
   }
 }
 
-window.api.on('nvim.onRedraw', (redrawEvents) => {
+window.api.on(Events.nvimRedraw, (redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms

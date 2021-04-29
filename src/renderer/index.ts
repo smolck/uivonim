@@ -1,29 +1,12 @@
 import * as workspace from './workspace'
-import * as css from './ui/css'
+// TODO(smolck): import * as css from './ui/css'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 // TODO(smolck): I think webpack will fix all the require things?
 import { requireDir, debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
-import { WindowMetadata } from './windows/metadata'
-
-declare global {
-  interface Window {
-      api: {
-        // send: (channel: string, data: any) => void,
-        // receive: (channel: string, func: (args: any[]) => void) => void
-        call: (funcName: string, ...args: any[]) => void,
-        on: (event: string, func: (...args: any[]) => void) => void,
-        nvimState: {
-          state: () => any,
-          watchStateFile: (fn: (file: string) => void) => void,
-        },
-        workerInstanceId: () => number,
-        getWindowMetadata: () => Promise<WindowMetadata[]>,
-      }
-    }
-  }
+import { Events, Invokables } from '../common/ipc'
 
 window
   .matchMedia('screen and (min-resolution: 2dppx)')
@@ -35,7 +18,7 @@ window
 
     // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
     // TODO: idk why i have to do this but this works
-    window.api.call('win.getAndSetSize')
+    window.api.invoke(Invokables.winGetAndSetSize)
   })
 
 let cursorVisible = true
@@ -52,19 +35,17 @@ const mouseTrap = () => {
   hideCursor()
 }
 
-window.api.on('setVar', css.setVar)
-window.api.on('window-enter-full-screen', (_) =>
+// TODO(smolck): window.api.on(Events.setVar, css.setVar)
+window.api.on(Events.windowEnterFullScreen, (_) =>
   window.addEventListener('mousemove', mouseTrap)
 )
-window.api.on('window-leave-full-screen', (_) =>
+window.api.on(Events.windowLeaveFullScreen, (_) =>
   window.removeEventListener('mousemove', mouseTrap)
 )
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.onResize(({ rows, cols }) =>
-  window.api.call('nvim.resize', cols, rows)
-)
+workspace.onResize(({ rows, cols }) => window.api.invoke(Invokables.nvimResize, cols, rows))
 workspace.resize()
 
 // TODO(smolck): Need to re-architect all this because `require` won't be available
@@ -112,15 +93,13 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
-window.api.on('nvim.showNeovimMessage', (args) => {
+window.api.on(Events.nvimShowMessage, (..._args) => {
   // TODO(smolck)
   // const msg = require('../components/nvim/messages').default.show(...a)
   // return msg.promise
 })
 
-window.api.on('nvim.message.status', ([message]) => {
-
-})
+window.api.on(Events.nvimMessageStatus, (..._args) => {})
 
 // TODO(smolck): Put this somewhere else?
 /*api.onAction(
@@ -135,10 +114,5 @@ document.onclick = (e) => {
   }
 }
 
-document.onkeydown = (e) => {
-  window.api.call('document.onkeydown', e)
-}
-
-document.oninput = (e) => {
-  window.api.call('document.oninput', e)
-}
+document.onkeydown = (e) => window.api.invoke(Invokables.documentOnKeydown, e)
+document.oninput = (e) => window.api.invoke(Invokables.documentOnInput, e)

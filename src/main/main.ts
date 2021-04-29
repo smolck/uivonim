@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim from './core/master-control'
 import Input from './core/input'
+import { Events, Invokables, InternalInvokables } from '../common/ipc'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -125,12 +126,8 @@ app.on('ready', async () => {
 })
 
 async function afterReadyThings() {
-  win.on('enter-full-screen', () =>
-    win.webContents.send('fromMain', ['window-enter-full-screen'])
-  )
-  win.on('leave-full-screen', () =>
-    win.webContents.send('fromMain', ['window-leave-full-screen'])
-  )
+  win.on('enter-full-screen', () => win.webContents.send(Events.windowEnterFullScreen))
+  win.on('leave-full-screen', () => win.webContents.send(Events.windowLeaveFullScreen))
 
   // TODO(smolck): cli args
   const nvim = new Nvim({ useWsl: false })
@@ -146,47 +143,47 @@ async function afterReadyThings() {
                           (fn) => win.on('focus', fn),
                           (fn) => win.on('blur', fn))
   input.setup()
+  setupInvokeHandlers(nvim)
 
-  const handlers: any = {
+  /*const handlers: any = {
     'nvim.resize': nvim.resize,
     'nvim.resizeGrid': nvim.resizeGrid,
-    'win.getAndSetSize': () => {
-      const [width, height] = win.getSize()
-      win.setSize(width + 1, height)
-      win.setSize(width, height)
-    },
-    'nvim.watchState.file': (id: number) => {
-      nvim.instanceApi.nvimState.watchState.file((file) => win.webContents.send(
-        'fromMain',
-        ['nvim.watchState.file', id, file]
-      ))
-    },
-    'nvim.instanceApi.getWindowMetadata': () => {
-      nvim.instanceApi.getWindowMetadata().then((metadata) => {
-        win.webContents.send('toMain', 
-                           [
-                             'nvim.instanceApi.getWindowMetdata',
-                             metadata
-                           ])
-      })
-    }
-  }
+    'win.getAndSetSize': 
 
-  nvim.onRedraw((args) =>
-    win.webContents.send('fromMain', ['nvim.onRedraw', args])
-  )
-  nvim.instanceApi.nvimState.watchState.colorscheme(() => {
-    win.webContents.send('fromMain', ['nvimState.colorscheme'])
+  }*/
+
+  nvim.onRedraw((redrawEvents) => win.webContents.send(Events.nvimRedraw, redrawEvents))
+  nvim.instanceApi.nvimState.watchState.colorscheme(() => win.webContents.send(Events.colorschemeStateUpdated))
+
+  // Initial state and send state every change 
+  // TODO(smolck): (Will) This work as I want it to?
+  win.webContents.send(Events.nvimState, nvim.instanceApi.nvimState.state)
+  nvim.instanceApi.nvimState.onStateChange((nextState) => win.webContents.send(Events.nvimState, nextState))
+
+  win.webContents.send(Events.workerInstanceId, nvim.workerInstanceId())
+}
+
+async function setupInvokeHandlers(nvim: Nvim) {
+  ipcMain.handle(Invokables.getWindowMetadata, async (_event, _args) => {
+    return await nvim.instanceApi.getWindowMetadata()
   })
 
-  ipcMain.on('toMain', (_event, args: any[]) => {
-    // TODO(smolck): use `_event`? what's the purpose of it?
-    handlers[args[0]](...args.slice(1))
+  ipcMain.handle(Invokables.winGetAndSetSize, async (_event, _args) => {
+    const [width, height] = win.getSize()
+    win.setSize(width + 1, height)
+    win.setSize(width, height)
   })
 
-  // Initial state and send state every change (TODO(smolck): This work?)
-  win.webContents.send('fromMain', ['nvim.state', nvim.instanceApi.nvimState.state])
-  nvim.instanceApi.nvimState.onStateChange((nextState) => win.webContents.send('fromMain', ['nvim.state', nextState]))
+  ipcMain.handle(Invokables.nvimResize, async (_event, width, height) => {
+    nvim.resize(width, height)
+  })
 
-  win.webContents.send('fromMain', ['nvim.workerInstanceId', nvim.workerInstanceId()])
+  ipcMain.handle(Invokables.nvimResizeGrid, async (_event, grid, width, height) => {
+    nvim.resizeGrid(grid, width, height)
+  })
+
+  ipcMain.handle(InternalInvokables.nvimWatchStateFile, (_event, _args) => {
+    // TODO(smolck)
+    return new Promise((resolve, _reject) => nvim.instanceApi.nvimState.watchState.file((file) => resolve(file)))
+  })
 }

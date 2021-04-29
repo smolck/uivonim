@@ -5,6 +5,7 @@ import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../workspace'
 import { throttle } from '../../common/utils'
 import windowSizer from '../windows/sizer'
+import { Events } from '../../common/ipc'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -271,7 +272,7 @@ onElementResize(webglContainer, (w, h) => {
   })
 })
 
-window.api.on('nvimState.colorscheme', () => 
+window.api.on(Events.colorschemeStateUpdated, () => 
   requestAnimationFrame(() => {
     webgl.clearAll()
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
