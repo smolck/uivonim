@@ -145,13 +145,6 @@ async function afterReadyThings() {
   input.setup()
   setupInvokeHandlers(nvim)
 
-  /*const handlers: any = {
-    'nvim.resize': nvim.resize,
-    'nvim.resizeGrid': nvim.resizeGrid,
-    'win.getAndSetSize': 
-
-  }*/
-
   nvim.onRedraw((redrawEvents) => win.webContents.send(Events.nvimRedraw, redrawEvents))
   nvim.instanceApi.nvimState.watchState.colorscheme(() => win.webContents.send(Events.colorschemeStateUpdated))
 
