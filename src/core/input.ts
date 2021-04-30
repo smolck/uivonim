@@ -84,6 +84,9 @@ export const stealInput = (onKeyFn: OnKeyFn) => {
 }
 
 const sendToVim = (inputKeys: string) => {
+  // Necessary because of "<" being "special," see `:help nvim_input()`
+  if (inputKeys.length === 1) inputKeys = inputKeys.replace('<', '<LT>')
+
   if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
 
   // TODO: this might need more attention. i think s-space can be a valid
