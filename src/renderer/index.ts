@@ -45,7 +45,9 @@ window.api.on(Events.windowLeaveFullScreen, (_) =>
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.onResize(({ rows, cols }) => window.api.invoke(Invokables.nvimResize, cols, rows))
+workspace.onResize(({ rows, cols }) =>
+  window.api.invoke(Invokables.nvimResize, cols, rows)
+)
 workspace.resize()
 
 // TODO(smolck): Need to re-architect all this because `require` won't be available

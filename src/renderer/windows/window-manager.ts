@@ -272,7 +272,7 @@ onElementResize(webglContainer, (w, h) => {
   })
 })
 
-window.api.on(Events.colorschemeStateUpdated, () => 
+window.api.on(Events.colorschemeStateUpdated, () =>
   requestAnimationFrame(() => {
     webgl.clearAll()
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())

@@ -44,9 +44,9 @@ export default class {
     this.sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
     this.sharedArray = new Int32Array(this.sharedBuffer)
 
-  this.worker.onmessage = async ({
-    data: [e, data, id, requestSync, func],
-  }: MessageEvent) => {
+    this.worker.onmessage = async ({
+      data: [e, data, id, requestSync, func],
+    }: MessageEvent) => {
       if (e === '@@request-sync-context') {
         const listener = this.ee.listeners('context-handler')[0]
         if (!listener)
@@ -112,8 +112,12 @@ export default class {
 
   // TODO(smolck): Does this create a new one of these per instance, as I want
   // it to/think it does?
-  call: EventFn = onFnCall((event: string, args: any[]) => this.worker.postMessage([event, args]))
-  on = proxyFn((event: string, cb: (data: any) => void) => this.ee.on(event, cb))
+  call: EventFn = onFnCall((event: string, args: any[]) =>
+    this.worker.postMessage([event, args])
+  )
+  on = proxyFn((event: string, cb: (data: any) => void) =>
+    this.ee.on(event, cb)
+  )
   request: RequestEventFn = onFnCall((event: string, args: any[]) => {
     const task = CreateTask()
     const id = uuid()

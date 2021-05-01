@@ -98,10 +98,12 @@ export default class {
   private _onWinFocus: (fun: () => void) => void
   private _onWinBlur: (fun: () => void) => void
 
-  constructor(nvimState: NvimState,
-              nvimInput: (keys: string) => void,
-              onWinFocus: (fun: () => void) => void,
-              onWinBlur: (fun: () => void) => void) {
+  constructor(
+    nvimState: NvimState,
+    nvimInput: (keys: string) => void,
+    onWinFocus: (fun: () => void) => void,
+    onWinBlur: (fun: () => void) => void
+  ) {
     this._nvimStateRef = nvimState
     this._nvimInput = nvimInput
     this._onWinBlur = onWinBlur
@@ -110,35 +112,41 @@ export default class {
 
   // TODO(smolck): Better name?
   setup() {
-    ipcMain.handle(Invokables.documentOnInput, (_evt, keyEvent: KeyboardEvent) => {
-      if (process.platform === 'linux' || process.platform === 'win32') {
-        this.keydownHandler(keyEvent)
-      } else {
-        // TODO(smolck): For macOS. See explanation below.
-        if (!this._previousKeyWasDead && this._keyIsDead) {
-          this._keyIsDead = false
-          this._previousKeyWasDead = true
-          return
-        }
-
-        this.keydownHandler(keyEvent)
-      }
-    })
-
-    ipcMain.handle(Invokables.documentOnKeydown, (_evt, keyEvent: KeyboardEvent) => {
-      if (process.platform === 'linux' || process.platform === 'win32') {
-        if (isNotChar(keyEvent)) {
+    ipcMain.handle(
+      Invokables.documentOnInput,
+      (_evt, keyEvent: KeyboardEvent) => {
+        if (process.platform === 'linux' || process.platform === 'win32') {
           this.keydownHandler(keyEvent)
-        }
-      } else {
-        if (
-          isNotChar(keyEvent) &&
-          this.workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(keyEvent)
-        ) {
+        } else {
+          // TODO(smolck): For macOS. See explanation below.
+          if (!this._previousKeyWasDead && this._keyIsDead) {
+            this._keyIsDead = false
+            this._previousKeyWasDead = true
+            return
+          }
+
           this.keydownHandler(keyEvent)
         }
       }
-    })
+    )
+
+    ipcMain.handle(
+      Invokables.documentOnKeydown,
+      (_evt, keyEvent: KeyboardEvent) => {
+        if (process.platform === 'linux' || process.platform === 'win32') {
+          if (isNotChar(keyEvent)) {
+            this.keydownHandler(keyEvent)
+          }
+        } else {
+          if (
+            isNotChar(keyEvent) &&
+            this.workaroundForDeadKeyBeingPressedTwiceInARowOnMacOS(keyEvent)
+          ) {
+            this.keydownHandler(keyEvent)
+          }
+        }
+      }
+    )
 
     this._onWinFocus(() => {
       this._windowHasFocus = true
@@ -204,7 +212,10 @@ export default class {
     return () => (this._sendInputToVim = true)
   }
 
-  registerOneTimeUseShortcuts(shortcuts: string[], cb: (shortcut: string) => void) {
+  registerOneTimeUseShortcuts(
+    shortcuts: string[],
+    cb: (shortcut: string) => void
+  ) {
     const done = (shortcut: string) => {
       shortcuts.forEach((s) => this._globalShortcuts.delete(s))
       cb(shortcut)
@@ -213,7 +224,8 @@ export default class {
   }
 
   private sendToVim(inputKeys: string) {
-    if (this._globalShortcuts.has(inputKeys)) return this._globalShortcuts.get(inputKeys)!()
+    if (this._globalShortcuts.has(inputKeys))
+      return this._globalShortcuts.get(inputKeys)!()
 
     // TODO: this might need more attention. i think s-space can be a valid
     // vim keybind. s-space was causing issues in terminal mode, sending weird
@@ -224,7 +236,8 @@ export default class {
     }
 
     // a fix for terminal. only happens on cmd-tab. see below for more info
-    if (inputKeys.toLowerCase() === '<esc>') this._lastEscapeTimestamp = Date.now()
+    if (inputKeys.toLowerCase() === '<esc>')
+      this._lastEscapeTimestamp = Date.now()
     this._nvimInput(inputKeys)
   }
 

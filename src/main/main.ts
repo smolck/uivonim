@@ -126,8 +126,12 @@ app.on('ready', async () => {
 })
 
 async function afterReadyThings() {
-  win.on('enter-full-screen', () => win.webContents.send(Events.windowEnterFullScreen))
-  win.on('leave-full-screen', () => win.webContents.send(Events.windowLeaveFullScreen))
+  win.on('enter-full-screen', () =>
+    win.webContents.send(Events.windowEnterFullScreen)
+  )
+  win.on('leave-full-screen', () =>
+    win.webContents.send(Events.windowLeaveFullScreen)
+  )
 
   // TODO(smolck): cli args
   const nvim = new Nvim({ useWsl: false })
@@ -137,21 +141,29 @@ async function afterReadyThings() {
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
   )
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
-  
-  const input = new Input(nvim.instanceApi.nvimState, 
-                          nvim.input,
-                          (fn) => win.on('focus', fn),
-                          (fn) => win.on('blur', fn))
+
+  const input = new Input(
+    nvim.instanceApi.nvimState,
+    nvim.input,
+    (fn) => win.on('focus', fn),
+    (fn) => win.on('blur', fn)
+  )
   input.setup()
   setupInvokeHandlers(nvim)
 
-  nvim.onRedraw((redrawEvents) => win.webContents.send(Events.nvimRedraw, redrawEvents))
-  nvim.instanceApi.nvimState.watchState.colorscheme(() => win.webContents.send(Events.colorschemeStateUpdated))
+  nvim.onRedraw((redrawEvents) =>
+    win.webContents.send(Events.nvimRedraw, redrawEvents)
+  )
+  nvim.instanceApi.nvimState.watchState.colorscheme(() =>
+    win.webContents.send(Events.colorschemeStateUpdated)
+  )
 
-  // Initial state and send state every change 
+  // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
   win.webContents.send(Events.nvimState, nvim.instanceApi.nvimState.state)
-  nvim.instanceApi.nvimState.onStateChange((nextState) => win.webContents.send(Events.nvimState, nextState))
+  nvim.instanceApi.nvimState.onStateChange((nextState) =>
+    win.webContents.send(Events.nvimState, nextState)
+  )
 
   win.webContents.send(Events.workerInstanceId, nvim.workerInstanceId())
 }
@@ -171,12 +183,17 @@ async function setupInvokeHandlers(nvim: Nvim) {
     nvim.resize(width, height)
   })
 
-  ipcMain.handle(Invokables.nvimResizeGrid, async (_event, grid, width, height) => {
-    nvim.resizeGrid(grid, width, height)
-  })
+  ipcMain.handle(
+    Invokables.nvimResizeGrid,
+    async (_event, grid, width, height) => {
+      nvim.resizeGrid(grid, width, height)
+    }
+  )
 
   ipcMain.handle(InternalInvokables.nvimWatchStateFile, (_event, _args) => {
     // TODO(smolck)
-    return new Promise((resolve, _reject) => nvim.instanceApi.nvimState.watchState.file((file) => resolve(file)))
+    return new Promise((resolve, _reject) =>
+      nvim.instanceApi.nvimState.watchState.file((file) => resolve(file))
+    )
   })
 }

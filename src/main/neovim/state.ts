@@ -87,29 +87,27 @@ export default class {
       },
     })
 
-    this.untilStateValue = new Proxy(
-      Object.create(null), {
-          get: (_, key: string) => ({
-            is: (matchValue: any, matchPreviousValue?: any) =>
-              new Promise((done) => {
-                const callback = (value: any, previousValue: any) => {
-                  const same = value === matchValue
-                  const prevSame =
-                    matchPreviousValue == null
-                      ? true
-                      : previousValue === matchPreviousValue
+    this.untilStateValue = new Proxy(Object.create(null), {
+      get: (_, key: string) => ({
+        is: (matchValue: any, matchPreviousValue?: any) =>
+          new Promise((done) => {
+            const callback = (value: any, previousValue: any) => {
+              const same = value === matchValue
+              const prevSame =
+                matchPreviousValue == null
+                  ? true
+                  : previousValue === matchPreviousValue
 
-                  if (same && prevSame) {
-                    done(value)
-                    this.watchers.removeListener(key, callback)
-                  }
-                }
+              if (same && prevSame) {
+                done(value)
+                this.watchers.removeListener(key, callback)
+              }
+            }
 
-                this.watchers.on(key, callback)
-              }),
+            this.watchers.on(key, callback)
           }),
-        }
-    )
+      }),
+    })
 
     this.state = new Proxy(state, {
       get: (_, key: StateKeys) => Reflect.get(state, key),
@@ -127,7 +125,14 @@ export default class {
     })
   }
 
-  onStateChange(fn: (nextState: NeovimState, key: string, value: any, previousValue: any) => void) {
+  onStateChange(
+    fn: (
+      nextState: NeovimState,
+      key: string,
+      value: any,
+      previousValue: any
+    ) => void
+  ) {
     this.stateChangeFns.add(fn)
   }
 
@@ -138,6 +143,8 @@ export default class {
     previousValue: any
   ) {
     this.watchers.emit(key, value, previousValue)
-    this.stateChangeFns.forEach((fn) => fn(nextState, key, value, previousValue))
+    this.stateChangeFns.forEach((fn) =>
+      fn(nextState, key, value, previousValue)
+    )
   }
 }

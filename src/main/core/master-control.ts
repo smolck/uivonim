@@ -145,7 +145,12 @@ export default class {
   }
 
   private checkInitialized() {
-    if (!this._nvimInstance || !this._nvimApi || !this._workerInstance || !this._instanceApi) {
+    if (
+      !this._nvimInstance ||
+      !this._nvimApi ||
+      !this._workerInstance ||
+      !this._instanceApi
+    ) {
       console.error('Nvim not initalized! Need to call and await .init()')
     }
   }
@@ -167,7 +172,9 @@ export default class {
   }
 
   // TODO(smolck): This right?
-  workerInstanceId() { return this._workerInstance as number }
+  workerInstanceId() {
+    return this._workerInstance as number
+  }
 
   onRedraw(fn: RedrawFn) {
     this.nvimApi.on('notification', (method: string, args: any) =>

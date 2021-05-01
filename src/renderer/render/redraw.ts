@@ -265,10 +265,15 @@ const win_float_pos = (e: any) => {
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         continue
+      // TODO(smolck): This may need to be `await`ed somehow since it's a
+      // promise, not sure if it needs to be done right away or . . .
       else
-        // TODO(smolck): This may need to be `await`ed somehow since it's a
-        // promise, not sure if it needs to be done right away or . . .
-        window.api.invoke(Invokables.nvimResizeGrid, gridId, clampedWidth, clampedHeight)
+        window.api.invoke(
+          Invokables.nvimResizeGrid,
+          gridId,
+          clampedWidth,
+          clampedHeight
+        )
 
       continue
     }

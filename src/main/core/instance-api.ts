@@ -37,7 +37,9 @@ export default class {
 
   setupNvimOnHandlers() {
     if (this._actionRegistrations.length)
-      this._actionRegistrations.forEach((name) => this._workerInstanceRef.call.onAction(name))
+      this._actionRegistrations.forEach((name) =>
+        this._workerInstanceRef.call.onAction(name)
+      )
     this._workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
       // TODO: do we need this to always be updated or can we query these values?
       // this will trigger on every cursor move and take up time in the render cycle
@@ -51,14 +53,21 @@ export default class {
     })
 
     this._workerInstanceRef.on.showStatusBarMessage((message: string) => {
-      this._winRef.webContents.send('fromMain', ['nvim.message.status', message])
+      this._winRef.webContents.send('fromMain', [
+        'nvim.message.status',
+        message,
+      ])
     })
 
-    this._workerInstanceRef.on.vimrcLoaded(() => this._ee.emit('nvim.load', false))
+    this._workerInstanceRef.on.vimrcLoaded(() =>
+      this._ee.emit('nvim.load', false)
+    )
     this._workerInstanceRef.on.gitStatus((status: GitStatus) =>
       this._ee.emit('git.status', status)
     )
-    this._workerInstanceRef.on.gitBranch((branch: string) => this._ee.emit('git.branch', branch))
+    this._workerInstanceRef.on.gitBranch((branch: string) =>
+      this._ee.emit('git.branch', branch)
+    )
     this._workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
       this._ee.emit(`action.${name}`, ...args)
     )
@@ -72,7 +81,6 @@ export default class {
 
     this._workerInstanceRef.on.getCursorPosition(async () => {
       // TODO(smolck): What to do here exactly?
-
       /*const {
         cursor: { row, col },
       } = require('../core/cursor')
@@ -80,7 +88,9 @@ export default class {
     })
 
     this._workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
-    this._workerInstanceRef.on.clipboardWrite((text: string) => clipboard.writeText(text))
+    this._workerInstanceRef.on.clipboardWrite((text: string) =>
+      clipboard.writeText(text)
+    )
   }
 
   getBufferInfo(): Promise<BufferInfo> {
@@ -106,12 +116,16 @@ export default class {
     try {
       this._workerInstanceRef.call.onAction(name)
     } catch (_) {
-    // not worried if no instance, we will register later in 'onCreateVim'
+      // not worried if no instance, we will register later in 'onCreateVim'
     }
   }
 
-  gitOnStatus(fn: (status: GitStatus) => void) { this._ee.on('git.status', fn) }
-  gitOnBranch(fn: (branch: string) => void) { this._ee.on('git.branch', fn) }
+  gitOnStatus(fn: (status: GitStatus) => void) {
+    this._ee.on('git.status', fn)
+  }
+  gitOnBranch(fn: (branch: string) => void) {
+    this._ee.on('git.branch', fn)
+  }
 
   bufferSearch(file: string, query: string) {
     return this._workerInstanceRef.request.bufferSearch(file, query)
@@ -142,7 +156,9 @@ export default class {
     return this._workerInstanceRef.request.nvimExpr(expr)
   }
 
-  nvimCall: Functions = onFnCall((name, a) => this._workerInstanceRef.request.nvimCall(name, a))
+  nvimCall: Functions = onFnCall((name, a) =>
+    this._workerInstanceRef.request.nvimCall(name, a)
+  )
 
   nvimJumpTo(coords: HyperspaceCoordinates) {
     this._workerInstanceRef.call.nvimJumpTo(coords)
@@ -160,15 +176,27 @@ export default class {
     // TODO(smolck): Is this const necessary?
     const instance = this._workerInstanceRef
     const pos = await this._workerInstanceRef.request.nvimSaveCursor()
-    return () => instance.call.nvimRestoreCursor(pos) 
+    return () => instance.call.nvimRestoreCursor(pos)
   }
 
-  async nvimHighlightSearchPattern(pattern: string, id?: number): Promise<number> {
-    return this._workerInstanceRef.request.nvimHighlightSearchPattern(pattern, id)
+  async nvimHighlightSearchPattern(
+    pattern: string,
+    id?: number
+  ): Promise<number> {
+    return this._workerInstanceRef.request.nvimHighlightSearchPattern(
+      pattern,
+      id
+    )
   }
 
-  async nvimRemoveHighlightSearch(id: number, pattern?: string): Promise<boolean> {
-    return this._workerInstanceRef.request.nvimRemoveHighlightSearch(id, pattern)
+  async nvimRemoveHighlightSearch(
+    id: number,
+    pattern?: string
+  ): Promise<boolean> {
+    return this._workerInstanceRef.request.nvimRemoveHighlightSearch(
+      id,
+      pattern
+    )
   }
 
   onInputRemapModifiersDidChange(fn: (modifiers: any[]) => void) {
