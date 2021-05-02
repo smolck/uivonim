@@ -141,13 +141,12 @@ async function afterReadyThings() {
   )
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
 
-  const input = new Input(
+  const _input = Input(
     nvim.instanceApi,
     nvim.input,
     (fn) => win.on('focus', fn),
     (fn) => win.on('blur', fn)
   )
-  input.setup()
   setupInvokeHandlers(nvim)
 
   nvim.onRedraw((redrawEvents) =>
