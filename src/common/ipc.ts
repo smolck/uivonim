@@ -1,7 +1,9 @@
 import { WindowMetadata } from './types'
 
 export const InternalInvokables = {
-  nvimWatchStateFile: 'nvim.watchState.file',
+  nvimWatchState: 'nvim.watchState',
+  gitOnStatus: 'gitOnStatus',
+  gitOnBranch: 'gitOnBranch',
 }
 
 export const Invokables = {
@@ -15,6 +17,9 @@ export const Invokables = {
 
   inputFocus: 'inputFocus',
   inputBlur: 'inputBlur',
+
+  getColorByName: 'getColorByName',
+  setMode: 'setMode',
 } as const
 
 export const Events = {
@@ -31,14 +36,14 @@ export const Events = {
 } as const
 
 export interface WindowApi {
-  // send: (channel: string, data: any) => void,
-  // receive: (channel: string, func: (args: any[]) => void) => void
-  // call: (funcName: string, ...args: any[]) => void,
+  gitOnBranch: (fn: (branch: any) => void) => void,
+  gitOnStatus: (fn: (status: any) => void) => void,
   on: (
     event: typeof Events[keyof typeof Events],
     func: (...args: any[]) => void
   ) => void
-  nvimWatchStateFile: (fn: (file: string) => void) => void
+  // TODO(smolck): Type here?
+  nvimWatchState: any,
   nvimState: {
     // TODO(smolck)
     state: () => any

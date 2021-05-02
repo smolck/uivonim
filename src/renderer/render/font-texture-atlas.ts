@@ -1,4 +1,4 @@
-import { cell, font } from '../core/workspace'
+import { cell, font } from '../workspace'
 
 interface UnicodeChar {
   index: number

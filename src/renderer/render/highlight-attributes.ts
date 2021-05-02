@@ -1,8 +1,7 @@
-import { getWorkerInstance } from '../core/master-control'
-import { asColor, MapMap, MapSet } from '../support/utils'
-import { pub } from '../messaging/dispatch'
-import api from '../core/instance-api'
+import { asColor, MapMap, MapSet } from '../../common/utils'
+import { pub } from '../dispatch'
 import { EventEmitter } from 'events'
+import { Invokables } from '../../common/ipc'
 
 const ee = new EventEmitter()
 
@@ -61,7 +60,7 @@ const defaultAppColors = {
 
 const defaultColorsMap = new Map<number, DefaultColors>()
 const getCurrentDefaultColors = () =>
-  defaultColorsMap.get(getWorkerInstance()) || defaultAppColors
+  defaultColorsMap.get(window.api.workerInstanceId()) || defaultAppColors
 
 export const colors: DefaultColors = new Proxy(Object.create(null), {
   get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
@@ -80,7 +79,7 @@ const highlights = MapMap<number, number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   const defaultColors =
-    defaultColorsMap.get(getWorkerInstance()) || ({} as DefaultColors)
+    defaultColorsMap.get(window.api.workerInstanceId()) || ({} as DefaultColors)
 
   const nextFG = fg >= 0 ? asColor(fg) : defaultColors.foreground
   const nextBG = bg >= 0 ? asColor(bg) : defaultColors.background
@@ -103,7 +102,7 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
     special: special || defaultAppColors.special,
   })
 
-  defaultColorsMap.set(getWorkerInstance(), defaultColors)
+  defaultColorsMap.set(window.api.workerInstanceId(), defaultColors)
 
   pub('colors-changed', {
     fg: defaultColors.foreground,
@@ -111,7 +110,7 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   })
 
   // hlid 0 -> default highlight group
-  highlights.set(getWorkerInstance(), 0, {
+  highlights.set(window.api.workerInstanceId(), 0, {
     foreground,
     background,
     special,
@@ -135,7 +134,7 @@ export const addHighlight = (
     ? asColor(attr.foreground)
     : asColor(attr.background)
 
-  highlights.set(getWorkerInstance(), id, {
+  highlights.set(window.api.workerInstanceId(), id, {
     foreground,
     background,
     special: asColor(attr.special),
@@ -147,7 +146,7 @@ export const addHighlight = (
     const name = sillyString(info.hi_name)
     const builtinName = sillyString(info.ui_name)
 
-    highlightInfo.set(getWorkerInstance(), sillyString(info.hi_name), {
+    highlightInfo.set(window.api.workerInstanceId(), sillyString(info.hi_name), {
       name,
       builtinName,
       hlid: id,
@@ -160,7 +159,7 @@ export const addHighlight = (
 }
 
 export const getColorByName = async (name: string): Promise<Color> => {
-  const { foreground, background } = await api.nvim.getColorByName(name)
+  const { foreground, background } = await window.api.invoke(Invokables.getColorByName, name)
   return {
     foreground: asColor(foreground),
     background: asColor(background),
@@ -169,7 +168,7 @@ export const getColorByName = async (name: string): Promise<Color> => {
 
 export const getColorById = (id: number): Color => {
   const hlgrp =
-    highlights.get(getWorkerInstance(), id) || ({} as HighlightGroup)
+    highlights.get(window.api.workerInstanceId(), id) || ({} as HighlightGroup)
   return {
     foreground: hlgrp.foreground,
     background: hlgrp.background,
@@ -177,17 +176,17 @@ export const getColorById = (id: number): Color => {
 }
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
-  const info = highlightInfo.get(getWorkerInstance(), name)
+  const info = highlightInfo.get(window.api.workerInstanceId(), name)
   if (!info)
     return console.error('highlight info does not exist for:', name), []
   return [...info]
 }
 export const getHighlight = (id: number) =>
-  highlights.get(getWorkerInstance(), id)
+  highlights.get(window.api.workerInstanceId(), id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  const max = Math.max(...highlights.keys(getWorkerInstance()))
+  const max = Math.max(...highlights.keys(window.api.workerInstanceId()))
   const texelSize = 2
   canvas.width = (max + 1) * texelSize
   canvas.height = 3 * texelSize
@@ -195,7 +194,7 @@ export const generateColorLookupAtlas = () => {
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  highlights.forEach(getWorkerInstance(), (hlgrp, id) => {
+  highlights.forEach(window.api.workerInstanceId(), (hlgrp, id) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background

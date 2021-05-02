@@ -1,9 +1,9 @@
 import CreateWebGLBuffer from './grid-buffer'
 import CreateWebGL from './utils'
-import { cell } from '../../core/workspace'
+import { cell } from '../../workspace'
 import TextFG from './text-fg'
 import TextBG from './text-bg'
-import { cursor as cursorState, CursorShape } from '../../core/cursor'
+import { cursor as cursorState, CursorShape } from '../../cursor'
 import { getActiveGridId } from '../../windows/window-manager'
 
 export interface WebGLView {

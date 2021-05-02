@@ -1,9 +1,8 @@
 import { getColorByName } from '../../render/highlight-attributes'
-import { sub, processAnyBuffered } from '../../messaging/dispatch'
+import { sub, processAnyBuffered } from '../../dispatch'
 import { darken, brighten, cvar } from '../../ui/css'
-import { ExtContainer } from '../../neovim/types'
+import { ExtContainer } from '../../../common/types'
 import Icon from '../icon'
-import api from '../../core/instance-api'
 import { colors } from '../../ui/styles'
 import { basename } from 'path'
 import { render } from 'inferno'
@@ -377,10 +376,11 @@ const Tab = ({ id, label, active }: TabView) => (
   </div>
 )
 
-api.nvim.watchState.filetype((filetype) => assignStateAndRender({ filetype }))
-api.nvim.watchState.line((line) => assignStateAndRender({ line }))
-api.nvim.watchState.column((column) => assignStateAndRender({ column }))
-api.nvim.watchState.cwd((cwd: string) => {
+const watchState = window.api.nvimWatchState
+watchState.filetype((filetype: string) => assignStateAndRender({ filetype }))
+watchState.line((line: number) => assignStateAndRender({ line }))
+watchState.column((column: number) => assignStateAndRender({ column }))
+watchState.cwd((cwd: string) => {
   const next = basename(cwd)
   assignStateAndRender({ cwd: next })
 })
@@ -392,8 +392,8 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
     : assignStateAndRender({ active: -1, tabs: [] })
 })
 
-api.git.onBranch((branch) => assignStateAndRender({ branch }))
-api.git.onStatus((status) =>
+window.api.gitOnBranch((branch) => assignStateAndRender({ branch }))
+window.api.gitOnStatus((status) =>
   assignStateAndRender({
     additions: status.additions,
     deletions: status.deletions,
@@ -404,7 +404,7 @@ api.git.onStatus((status) =>
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 
-api.nvim.watchState.colorscheme(async () => {
+watchState.colorscheme(async () => {
   const { background } = await getColorByName('StatusLine')
   if (background) assignStateAndRender({ baseColor: background })
 })

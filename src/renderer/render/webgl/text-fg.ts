@@ -1,8 +1,8 @@
 import { getColorAtlas } from '../highlight-attributes'
 import generateFontAtlas from '../font-texture-atlas'
 import { WebGL, VarKind } from './utils'
-import { cell } from '../../core/workspace'
-import { CursorShape } from '../../core/cursor'
+import { cell } from '../../workspace'
+import { CursorShape } from '../../cursor'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }

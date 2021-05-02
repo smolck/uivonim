@@ -1,6 +1,6 @@
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall } from '../../common/utils'
-import Worker from '../workers/messaging/worker'
+import { Worker } from '../workers/messaging/worker'
 import { BrowserWindow } from 'electron'
 // TODO(smolck)
 // import { colors } from '../render/highlight-attributes'

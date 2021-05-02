@@ -1,13 +1,13 @@
-import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
+import { CursorShape, setCursorColor, setCursorShape } from '../cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { showMessageHistory } from '../components/nvim/message-history'
 import messages, { MessageKind } from '../components/nvim/messages'
 import { getColorById } from '../render/highlight-attributes'
-import { normalizeVimMode } from '../support/neovim-utils'
+import { normalizeVimMode } from '../../common/neovim-utils'
 import * as windows from '../windows/window-manager'
-import * as dispatch from '../messaging/dispatch'
-import * as workspace from '../core/workspace'
-import api from '../core/instance-api'
+import * as dispatch from '../dispatch'
+import * as workspace from '../workspace'
+import { Invokables } from '../../common/ipc'
 
 interface Mode {
   shape: CursorShape
@@ -181,7 +181,8 @@ export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
 
 export const mode_change = ([, [m]]: [any, [string]]) => {
   const mode = sillyString(m)
-  api.nvim.setMode(normalizeVimMode(mode))
+  // TODO(smolck): Need to await this somehow or will this work fine?
+  window.api.invoke(Invokables.setMode, normalizeVimMode(mode))
   const info = modes.get(mode)
   if (!info) return
 

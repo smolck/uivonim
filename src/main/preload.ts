@@ -21,12 +21,20 @@ const api: WindowApi = {
   on: (event: string, func: (...args: any[]) => void) => {
     ipcRenderer.on(event, (_event, ...args) => func(...args))
   },
-  nvimWatchStateFile: (fn: (file: string) => void) => {
-    // TODO(smolck): This works, right?
-    ipcRenderer.invoke(InternalInvokables.nvimWatchStateFile).then((file) => {
-      fn(file)
-    })
-  },
+
+  gitOnBranch: (fn: (status: any) => void) => 
+    ipcRenderer.invoke(InternalInvokables.gitOnStatus).then((status) => fn(status)),
+  gitOnStatus: (fn: (branch: any) => void) =>
+    ipcRenderer.invoke(InternalInvokables.gitOnBranch).then((branch) => fn(branch)),
+
+  // TODO(smolck): Make sure this works
+  nvimWatchState: new Proxy(Object.create(null), {
+    get: (_, key: string) => (fn: (newStateThing: any) => void) =>
+      ipcRenderer.invoke(InternalInvokables.nvimWatchState, key).then((newStateThing) => fn(newStateThing))
+  }),
+  /*nvimWatchState: (stateThingToWatch, fn) => {
+    ipcRenderer.invoke(InternalInvokables.nvimWatchState, stateThingToWatch).then((newStateThing) => fn(newStateThing))
+  },*/
   nvimState: {
     // TODO(smolck)
     state: () => {

@@ -190,13 +190,26 @@ async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
     }
   )
 
-  ipcMain.handle(InternalInvokables.nvimWatchStateFile, (_event, _args) => {
+  ipcMain.handle(InternalInvokables.nvimWatchState, (_event, thing: string) => {
     // TODO(smolck)
     return new Promise((resolve, _reject) =>
-      nvim.instanceApi.watchState.file((file) => resolve(file))
+      // TODO(smolck): Type this?
+      // @ts-ignore
+      nvim.instanceApi.watchState[thing]((x) => resolve(x))
     )
+  })
+  ipcMain.handle(InternalInvokables.gitOnBranch, (_event, _args) => {
+    return new Promise((resolve, _reject) =>
+                      nvim.instanceApi.gitOnBranch((branch) => resolve(branch)))
+  })
+  ipcMain.handle(InternalInvokables.gitOnStatus, (_event, _args) => {
+    return new Promise((resolve, _reject) =>
+                      nvim.instanceApi.gitOnStatus((status) => resolve(status)))
   })
 
   ipcMain.handle(Invokables.inputBlur, (_event, _args) => input.blur())
   ipcMain.handle(Invokables.inputFocus, (_event, _args) => input.focus())
+
+  ipcMain.handle(Invokables.getColorByName, (_event, name) => nvim.instanceApi.nvimGetColorByName(name))
+  ipcMain.handle(Invokables.setMode, (_event, mode) => nvim.instanceApi.setMode(mode))
 }
