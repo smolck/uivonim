@@ -3,7 +3,7 @@ import Worker from '../workers/messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
-import InstanceAPI from '../core/instance-api'
+import InstanceApi, { InstanceApi as InstanceApiType } from '../core/instance-api'
 import * as neovim from 'neovim'
 import { BrowserWindow } from 'electron'
 
@@ -124,7 +124,7 @@ export default class {
   private _workerInstance?: any
   private _opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
 
-  private _instanceApi?: InstanceAPI
+  private _instanceApi?: InstanceApiType
   get instanceApi() {
     this.checkInitialized() // TODO(smolck)
     return this._instanceApi!
@@ -165,7 +165,7 @@ export default class {
     this._workerInstance = workerInstance
     this._nvimApi = nvimApi
 
-    this._instanceApi = new InstanceAPI(workerInstance, winRef)
+    this._instanceApi = InstanceApi(workerInstance, winRef)
     // TODO(smolck): Is the order here fine? Previously this was called from
     // within `createNvim` right after creating the Worker . . .
     this.instanceApi.setupNvimOnHandlers()

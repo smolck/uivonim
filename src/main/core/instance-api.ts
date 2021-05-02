@@ -1,4 +1,3 @@
-// import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall } from '../../common/utils'
 import Worker from '../workers/messaging/worker'
@@ -6,203 +5,194 @@ import { BrowserWindow } from 'electron'
 // TODO(smolck)
 // import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
-// TODO(smolck): Don't import stuff from renderer/ in main/ probably, even if it
-// is just types like here.
 import { WindowMetadata } from '../../common/types'
 // import * as dispatch from '../messaging/dispatch'
-import { GitStatus } from '../../common/git'
+
+// TODO(smolck)
+import { GitStatus } from '../workers/tbd-folder-name/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
 
-export default class {
-  private _actionRegistrations: string[]
-  private _ee: EventEmitter
-  private _nvimState: NeovimState
-  private _workerInstanceRef: Worker
-  // TODO(smolck): Just keep ref to `winRef.webContents.send`?
-  private _winRef: BrowserWindow
+const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
+  const ee = new EventEmitter()
+  const {
+    state,
+    watchState,
+    onStateValue,
+    onStateChange,
+    untilStateValue,
+  } = NeovimState('nvim-mirror')
 
-  get nvimState() {
-    return this._nvimState
-  }
-  constructor(workerInstanceRef: Worker, winRef: BrowserWindow) {
-    this._ee = new EventEmitter()
-    this._nvimState = new NeovimState('nvim-mirror')
-    this._actionRegistrations = []
-    this._workerInstanceRef = workerInstanceRef
-    this._winRef = winRef
-  }
+  const actionRegistrations: string[] = []
+  return {
+    state,
+    watchState,
+    onStateValue,
+    onStateChange,
+    untilStateValue,
 
-  setupNvimOnHandlers() {
-    if (this._actionRegistrations.length)
-      this._actionRegistrations.forEach((name) =>
-        this._workerInstanceRef.call.onAction(name)
+    setupNvimOnHandlers() {
+      if (actionRegistrations.length)
+        actionRegistrations.forEach((name) =>
+          workerInstanceRef.call.onAction(name)
+        )
+      workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
+        // TODO: do we need this to always be updated or can we query these values?
+        // this will trigger on every cursor move and take up time in the render cycle
+        Object.assign(state, stateDiff)
+      })
+
+      // TODO(smolck): Async? Return promise?
+      // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {}
+      workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
+        winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
+      })
+
+      workerInstanceRef.on.showStatusBarMessage((message: string) => {
+        winRef.webContents.send('fromMain', ['nvim.message.status', message])
+      })
+
+      workerInstanceRef.on.vimrcLoaded(() => ee.emit('nvim.load', false))
+      workerInstanceRef.on.gitStatus((status: GitStatus) =>
+        ee.emit('git.status', status)
       )
-    this._workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
-      // TODO: do we need this to always be updated or can we query these values?
-      // this will trigger on every cursor move and take up time in the render cycle
-      Object.assign(this._nvimState, stateDiff)
-    })
+      workerInstanceRef.on.gitBranch((branch: string) =>
+        ee.emit('git.branch', branch)
+      )
+      workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
+        ee.emit(`action.${name}`, ...args)
+      )
 
-    // TODO(smolck): Async? Return promise?
-    // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {
-    this._workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
-      this._winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
-    })
+      // TODO(smolck): What to do here . . .
+      /*this.workerInstanceRef.on.getDefaultColors(async () => ({
+        background: colors.background,
+        foreground: colors.foreground,
+        special: colors.special,
+      }))*/
 
-    this._workerInstanceRef.on.showStatusBarMessage((message: string) => {
-      this._winRef.webContents.send('fromMain', [
-        'nvim.message.status',
-        message,
-      ])
-    })
+      workerInstanceRef.on.getCursorPosition(async () => {
+        // TODO(smolck): What to do here exactly?
+        /*const {
+          cursor: { row, col },
+        } = require('../core/cursor')
+        return { row, col }*/
+      })
 
-    this._workerInstanceRef.on.vimrcLoaded(() =>
-      this._ee.emit('nvim.load', false)
-    )
-    this._workerInstanceRef.on.gitStatus((status: GitStatus) =>
-      this._ee.emit('git.status', status)
-    )
-    this._workerInstanceRef.on.gitBranch((branch: string) =>
-      this._ee.emit('git.branch', branch)
-    )
-    this._workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
-      this._ee.emit(`action.${name}`, ...args)
-    )
+      workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
+      workerInstanceRef.on.clipboardWrite((text: string) =>
+        clipboard.writeText(text)
+      )
+    },
 
-    // TODO(smolck): What to do here . . .
-    /*this.workerInstanceRef.on.getDefaultColors(async () => ({
-      background: colors.background,
-      foreground: colors.foreground,
-      special: colors.special,
-    }))*/
+    getBufferInfo(): Promise<BufferInfo> {
+      return workerInstanceRef.request.getBufferInfo()
+    },
 
-    this._workerInstanceRef.on.getCursorPosition(async () => {
-      // TODO(smolck): What to do here exactly?
-      /*const {
-        cursor: { row, col },
-      } = require('../core/cursor')
-      return { row, col }*/
-    })
+    setMode(mode: VimMode) {
+      Object.assign(state, { mode })
+      workerInstanceRef.call.setNvimMode(mode)
+    },
 
-    this._workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
-    this._workerInstanceRef.on.clipboardWrite((text: string) =>
-      clipboard.writeText(text)
-    )
-  }
+    async getWindowMetadata(): Promise<WindowMetadata[]> {
+      return workerInstanceRef.request.getWindowMetadata()
+    },
 
-  getBufferInfo(): Promise<BufferInfo> {
-    return this._workerInstanceRef.request.getBufferInfo()
-  }
+    onAction(name: string, fn: (...args: any[]) => void) {
+      if (typeof fn !== 'function')
+        throw new Error(`nvim.onAction needs a function for event ${name}`)
 
-  setMode(mode: VimMode) {
-    Object.assign(this._nvimState, { mode })
-    this._workerInstanceRef.call.setNvimMode(mode)
-  }
+      actionRegistrations.push(name)
+      ee.on(`action.${name}`, fn)
 
-  async getWindowMetadata(): Promise<WindowMetadata[]> {
-    return this._workerInstanceRef.request.getWindowMetadata()
-  }
+      try {
+        workerInstanceRef.call.onAction(name)
+      } catch (_) {
+        // not worried if no instance, we will register later in 'onCreateVim'
+      }
+    },
 
-  onAction(name: string, fn: (...args: any[]) => void) {
-    if (typeof fn !== 'function')
-      throw new Error(`nvim.onAction needs a function for event ${name}`)
+    gitOnStatus(fn: (status: GitStatus) => void) {
+      ee.on('git.status', fn)
+    },
+    gitOnBranch(fn: (branch: string) => void) {
+      ee.on('git.branch', fn)
+    },
 
-    this._actionRegistrations.push(name)
-    this._ee.on(`action.${name}`, fn)
+    bufferSearch(file: string, query: string) {
+      return workerInstanceRef.request.bufferSearch(file, query)
+    },
+    bufferSearchVisible(query: string) {
+      return workerInstanceRef.request.bufferSearchVisible(query)
+    },
 
-    try {
-      this._workerInstanceRef.call.onAction(name)
-    } catch (_) {
-      // not worried if no instance, we will register later in 'onCreateVim'
-    }
-  }
+    onNvimLoaded(fn: (switchInstance: boolean) => void) {
+      ee.on('nvim.load', fn)
+    },
 
-  gitOnStatus(fn: (status: GitStatus) => void) {
-    this._ee.on('git.status', fn)
-  }
-  gitOnBranch(fn: (branch: string) => void) {
-    this._ee.on('git.branch', fn)
-  }
+    nvimGetVar(key: string) {
+      return workerInstanceRef.request.nvimGetVar(key)
+    },
 
-  bufferSearch(file: string, query: string) {
-    return this._workerInstanceRef.request.bufferSearch(file, query)
-  }
+    nvimCommand(command: string) {
+      workerInstanceRef.call.nvimCommand(command)
+    },
 
-  bufferSearchVisible(query: string) {
-    return this._workerInstanceRef.request.bufferSearchVisible(query)
-  }
+    nvimFeedkeys(keys: string, mode = 'm') {
+      workerInstanceRef.call.nvimFeedkeys(keys, mode)
+    },
 
-  onNvimLoaded(fn: (switchInstance: boolean) => void) {
-    this._ee.on('nvim.load', fn)
-  }
+    nvimExpr(expr: string) {
+      // TODO(smolck): Return here necessary?
+      return workerInstanceRef.request.nvimExpr(expr)
+    },
 
-  nvimGetVar(key: string) {
-    return this._workerInstanceRef.request.nvimGetVar(key)
-  }
+    nvimCall: onFnCall((name, a) =>
+      workerInstanceRef.request.nvimCall(name, a)
+    ) as Functions,
 
-  nvimCommand(command: string) {
-    this._workerInstanceRef.call.nvimCommand(command)
-  }
+    nvimJumpTo(coords: HyperspaceCoordinates) {
+      workerInstanceRef.call.nvimJumpTo(coords)
+    },
 
-  nvimFeedkeys(keys: string, mode = 'm') {
-    this._workerInstanceRef.call.nvimFeedkeys(keys, mode)
-  }
+    nvimGetKeymap() {
+      return workerInstanceRef.request.nvimGetKeymap()
+    },
 
-  nvimExpr(expr: string) {
-    // TODO(smolck): Return here necessary?
-    return this._workerInstanceRef.request.nvimExpr(expr)
-  }
+    nvimGetColorByName(name: string) {
+      return workerInstanceRef.request.nvimGetColorByName(name)
+    },
 
-  nvimCall: Functions = onFnCall((name, a) =>
-    this._workerInstanceRef.request.nvimCall(name, a)
-  )
+    async nvimSaveCursor() {
+      // TODO(smolck): Is this const necessary?
+      const instance = workerInstanceRef
+      const pos = await workerInstanceRef.request.nvimSaveCursor()
+      return () => instance.call.nvimRestoreCursor(pos)
+    },
 
-  nvimJumpTo(coords: HyperspaceCoordinates) {
-    this._workerInstanceRef.call.nvimJumpTo(coords)
-  }
+    async nvimHighlightSearchPattern(
+      pattern: string,
+      id?: number
+    ): Promise<number> {
+      return workerInstanceRef.request.nvimHighlightSearchPattern(pattern, id)
+    },
 
-  nvimGetKeymap() {
-    return this._workerInstanceRef.request.nvimGetKeymap()
-  }
+    async nvimRemoveHighlightSearch(
+      id: number,
+      pattern?: string
+    ): Promise<boolean> {
+      return workerInstanceRef.request.nvimRemoveHighlightSearch(id, pattern)
+    },
 
-  nvimGetColorByName(name: string) {
-    return this._workerInstanceRef.request.nvimGetColorByName(name)
-  }
+    onInputRemapModifiersDidChange(fn: (modifiers: any[]) => void) {
+      ee.on('input.remap.modifiers', fn)
+    },
 
-  async nvimSaveCursor() {
-    // TODO(smolck): Is this const necessary?
-    const instance = this._workerInstanceRef
-    const pos = await this._workerInstanceRef.request.nvimSaveCursor()
-    return () => instance.call.nvimRestoreCursor(pos)
-  }
-
-  async nvimHighlightSearchPattern(
-    pattern: string,
-    id?: number
-  ): Promise<number> {
-    return this._workerInstanceRef.request.nvimHighlightSearchPattern(
-      pattern,
-      id
-    )
-  }
-
-  async nvimRemoveHighlightSearch(
-    id: number,
-    pattern?: string
-  ): Promise<boolean> {
-    return this._workerInstanceRef.request.nvimRemoveHighlightSearch(
-      id,
-      pattern
-    )
-  }
-
-  onInputRemapModifiersDidChange(fn: (modifiers: any[]) => void) {
-    this._ee.on('input.remap.modifiers', fn)
-  }
-
-  onInputKeyTransformsDidChange(fn: (transforms: any[]) => void) {
-    this._ee.on('input.key.transforms', fn)
+    onInputKeyTransformsDidChange(fn: (transforms: any[]) => void) {
+      ee.on('input.key.transforms', fn)
+    },
   }
 }
+
+export default InstanceApi
+export type InstanceApi = ReturnType<typeof InstanceApi>
