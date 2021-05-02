@@ -1,7 +1,7 @@
-import { onFnCall, proxyFn, uuid, CreateTask } from '../../common/utils'
+import { onFnCall, proxyFn, uuid, CreateTask } from '../../../common/utils'
 import { EventEmitter } from 'events'
 import { join } from 'path'
-import { platform } from 'os'
+import { Worker } from 'worker_threads'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
@@ -21,30 +21,17 @@ export default class {
   private sharedArray: Int32Array
 
   constructor(name: string, opts = {} as WorkerOptions) {
-    const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
+    const modulePath = join(__dirname, '..', `${name}.js`)
 
-    let loaderScript = `
-      global.workerData = JSON.parse('${JSON.stringify(opts.workerData || {})}')
-      require('${modulePath}')
-    `
-
-    if (platform() === 'win32') {
-      loaderScript = loaderScript.replace(/\\/g, '\\\\')
-    }
-
-    const scriptBlobbyBluberBlob = new Blob([loaderScript], {
-      type: 'application/javascript',
+    this.worker = new Worker(modulePath, {
+      workerData: opts.workerData
     })
-    const objectUrl = URL.createObjectURL(scriptBlobbyBluberBlob)
-    this.worker = new Worker(objectUrl)
-    URL.revokeObjectURL(objectUrl)
-
     this.ee = new EventEmitter()
     this.pendingRequests = new Map()
     this.sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
     this.sharedArray = new Int32Array(this.sharedBuffer)
 
-    this.worker.onmessage = async ({
+    this.worker.on('message', async ({
       data: [e, data, id, requestSync, func],
     }: MessageEvent) => {
       if (e === '@@request-sync-context') {
@@ -89,7 +76,7 @@ export default class {
       } catch (err) {
         console.error('worker request response listener failed:', err)
       }
-    }
+    })
     this.worker.postMessage(['@@sab', [this.sharedBuffer]])
   }
 

@@ -1,12 +1,13 @@
-import { VimMode, HyperspaceCoordinates } from '../main/neovim/types'
-import { call, on, request } from '../main/messaging/worker-client'
-import * as bufferSearch from '../main/services/buffer-search'
-import getWindowMetadata from '../renderer/windows/metadata'
-import { GitStatus } from '../common/git'
-import * as git from '../common/git'
-import nvim from '../main/neovim/api'
+import { VimMode, HyperspaceCoordinates } from '../neovim/types'
+import { call, on, request } from './messaging/worker-client'
+import * as bufferSearch from '../services/buffer-search'
+import getWindowMetadata from './tbd-folder-name/metadata'
+import { GitStatus } from './tbd-folder-name/git'
+import * as git from './tbd-folder-name/git'
+import nvim from './tbd-folder-name/neovim-api'
 import '../services/mru-buffers'
 import '../services/watch-reload'
+
 // TODO: not used:
 // require('../services/job-reader')
 

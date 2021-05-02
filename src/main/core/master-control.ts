@@ -1,5 +1,5 @@
 import { asColor, merge, getPipeName } from '../../common/utils'
-import Worker from '../messaging/worker'
+import Worker from '../workers/messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'

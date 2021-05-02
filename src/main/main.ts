@@ -161,6 +161,7 @@ async function afterReadyThings() {
   // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
   win.webContents.send(Events.nvimState, nvim.instanceApi.nvimState.state)
+
   nvim.instanceApi.nvimState.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
   )

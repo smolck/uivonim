@@ -11,7 +11,7 @@ import {
 let nvimState: any = undefined
 let workerInstanceId: number | undefined = undefined
 
-ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
+ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = JSON.parse(state)))
 ipcRenderer.on(Events.workerInstanceId, (_event, id) => (workerInstanceId = id))
 
 const api: WindowApi = {

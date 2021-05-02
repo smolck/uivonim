@@ -1,4 +1,4 @@
-import { simplifyPath, is } from '../../common/utils'
+import { simplifyPath, is } from '../../../common/utils'
 import { basename, dirname } from 'path'
 import {
   Keymap,
@@ -9,13 +9,13 @@ import {
   BufferEvent,
   GenericCallback,
   VimOption,
-} from '../neovim/types'
-import { Autocmds } from '../neovim/startup'
-import { normalizeVimMode } from '../../common/neovim-utils'
+} from '../../neovim/types'
+import { Autocmds } from '../../neovim/startup'
+import { normalizeVimMode } from '../../../common/neovim-utils'
 import { EventEmitter } from 'events'
-import NvimState from '../neovim/state'
+import NvimState from '../../neovim/state'
 import * as neovim from 'neovim'
-import { workerData } from '../messaging/worker-client'
+import { workerData } from 'worker_threads'
 
 if (!workerData || !workerData.nvimPath)
   throw new Error(
@@ -30,7 +30,7 @@ const {
   onStateChange,
   onStateValue,
   untilStateValue,
-} = new NvimState('main')
+} = NvimState('main')
 
 const watchers = {
   actions: new EventEmitter(),

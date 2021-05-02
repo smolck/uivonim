@@ -1,5 +1,5 @@
-import { exists, watchFile } from '../support/utils'
-import nvim from '../neovim/api'
+import { exists, watchFile } from '../../common/utils'
+import nvim from '../workers/tbd-folder-name/neovim-api'
 
 const watchers = new Map<string, any>()
 

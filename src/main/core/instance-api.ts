@@ -1,14 +1,14 @@
 // import { getWorkerInstance } from '../core/master-control'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { onFnCall } from '../../common/utils'
-import Worker from '../messaging/worker'
+import Worker from '../workers/messaging/worker'
 import { BrowserWindow } from 'electron'
 // TODO(smolck)
 // import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 // TODO(smolck): Don't import stuff from renderer/ in main/ probably, even if it
 // is just types like here.
-import { WindowMetadata } from '../../renderer/windows/metadata'
+import { WindowMetadata } from '../../common/types'
 // import * as dispatch from '../messaging/dispatch'
 import { GitStatus } from '../../common/git'
 import NeovimState from '../neovim/state'
@@ -26,7 +26,6 @@ export default class {
   get nvimState() {
     return this._nvimState
   }
-
   constructor(workerInstanceRef: Worker, winRef: BrowserWindow) {
     this._ee = new EventEmitter()
     this._nvimState = new NeovimState('nvim-mirror')

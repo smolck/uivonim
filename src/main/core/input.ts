@@ -1,7 +1,7 @@
 // import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
 import { $ } from '../../common/utils'
-import NvimState from '../neovim/state'
+import { State } from '../neovim/state'
 import { ipcMain } from 'electron'
 import { Invokables } from '../../common/ipc'
 
@@ -89,7 +89,7 @@ export default class {
   private _sendInputToVim = true
   private _globalShortcuts = new Map<string, () => void>()
 
-  private _nvimStateRef: NvimState
+  private _nvimStateRef: State
   private _nvimInput: (keys: string) => void
 
   // TODO(smolck): For macOS. See explanation below.
@@ -99,7 +99,7 @@ export default class {
   private _onWinBlur: (fun: () => void) => void
 
   constructor(
-    nvimState: NvimState,
+    nvimState: State,
     nvimInput: (keys: string) => void,
     onWinFocus: (fun: () => void) => void,
     onWinBlur: (fun: () => void) => void

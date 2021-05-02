@@ -1,6 +1,6 @@
 import { WindowInfo } from '../windows/window'
-import { within } from '../support/utils'
-import { size } from '../core/workspace'
+import { within } from '../../common/utils'
+import { size } from '../workspace'
 
 const getSplits = (wins: WindowInfo[]) => {
   const vertical = new Set<number>()

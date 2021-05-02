@@ -5,13 +5,14 @@ import {
   CreateTask,
   fromJSON,
   ID,
-} from '../../common/utils'
+} from '../../../common/utils'
 import { EventEmitter } from 'events'
+import { parentPort } from 'worker_threads'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
 
-const send = (data: any) => (postMessage as any)(data)
+const send = (data: any) => parentPort!!.postMessage(data)
 const internalEvents = new EventEmitter()
 internalEvents.setMaxListeners(200)
 const ee = new EventEmitter()
@@ -35,7 +36,8 @@ const readSharedArray = (id: number) => {
   return fromJSON(jsonString).or({})
 }
 
-onmessage = async ({ data: [e, data, id] }: MessageEvent) => {
+// TODO(smolck)
+/*onmessage = async ({ data: [e, data, id] }: MessageEvent) => {
   if (e === '@@sab') {
     sharedArray = new Int32Array(data[0])
     return
@@ -53,7 +55,7 @@ onmessage = async ({ data: [e, data, id] }: MessageEvent) => {
   if (!listener) return
   const result = await listener(...data)
   send([e, result, id])
-}
+}*/
 
 export const requestSyncWithContext = (func: string, args: any[]) => {
   const id = requestId.next()
@@ -69,7 +71,6 @@ export const requestSync = onFnCall((event: string, args: any[]) => {
   return readSharedArray(id)
 })
 
-export const workerData = (global as any).workerData
 export const call: EventFn = onFnCall((event: string, args: any[]) =>
   send([event, args])
 )

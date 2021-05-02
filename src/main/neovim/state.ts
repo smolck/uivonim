@@ -54,97 +54,97 @@ type UntilStateValue2 = {
 
 type UntilStateValue = UntilStateValue1 & UntilStateValue2
 
-export default class {
-  private watchers: EventEmitter
-  private stateChangeFns: Set<Function>
+const StateConstructor = (_stateName: string) => {
+  const watchers = new EventEmitter()
+  const stateChangeFns = new Set<Function>()
 
-  watchState: WatchState
-  onStateValue: OnStateValue
-  untilStateValue: UntilStateValue
-  state: NeovimState
+  const watchState: WatchState = new Proxy(Object.create(null), {
+    get: (_, key: string) => (fn: (value: any, previousValue: any) => void) =>
+      watchers.on(key, fn),
+  })
 
-  // TODO(smolck): State name isn't used so why keep it?
-  constructor(_stateName: string) {
-    this.watchers = new EventEmitter()
-    this.stateChangeFns = new Set<Function>()
-    this.watchState = new Proxy(Object.create(null), {
-      get: (_, key: string) => (fn: (value: any, previousValue: any) => void) =>
-        this.watchers.on(key, fn),
-    })
-    this.onStateValue = new Proxy(Object.create(null), {
-      get: (_, key: string) => (matchValue: any, ...args: any[]) => {
-        const matchPreviousValue = args.find((a) => typeof a === 'string')
-        const fn = args.find((a) => typeof a === 'function')
-
-        this.watchers.on(key, (value, previousValue) => {
-          const same = value === matchValue
-          const prevSame =
-            typeof matchPreviousValue == null
-              ? true
-              : previousValue === matchPreviousValue
-          if (same && prevSame) fn()
-        })
-      },
-    })
-
-    this.untilStateValue = new Proxy(Object.create(null), {
-      get: (_, key: string) => ({
-        is: (matchValue: any, matchPreviousValue?: any) =>
-          new Promise((done) => {
-            const callback = (value: any, previousValue: any) => {
-              const same = value === matchValue
-              const prevSame =
-                matchPreviousValue == null
-                  ? true
-                  : previousValue === matchPreviousValue
-
-              if (same && prevSame) {
-                done(value)
-                this.watchers.removeListener(key, callback)
-              }
-            }
-
-            this.watchers.on(key, callback)
-          }),
-      }),
-    })
-
-    this.state = new Proxy(state, {
-      get: (_, key: StateKeys) => Reflect.get(state, key),
-      set: (_, key: string, val: any) => {
-        const currentVal = Reflect.get(state, key)
-        if (currentVal === val) return true
-
-        const nextState = { ...state, [key]: val }
-
-        Reflect.set(state, key, val)
-        this.notifyStateChange(nextState, key, val, currentVal)
-
-        return true
-      },
-    })
-  }
-
-  onStateChange(
+  const onStateChange = (
     fn: (
       nextState: NeovimState,
       key: string,
       value: any,
       previousValue: any
     ) => void
-  ) {
-    this.stateChangeFns.add(fn)
+  ) => {
+    stateChangeFns.add(fn)
   }
 
-  notifyStateChange(
+  const onStateValue: OnStateValue = new Proxy(Object.create(null), {
+    get: (_, key: string) => (matchValue: any, ...args: any[]) => {
+      const matchPreviousValue = args.find((a) => typeof a === 'string')
+      const fn = args.find((a) => typeof a === 'function')
+
+      watchers.on(key, (value, previousValue) => {
+        const same = value === matchValue
+        const prevSame =
+          typeof matchPreviousValue == null
+            ? true
+            : previousValue === matchPreviousValue
+        if (same && prevSame) fn()
+      })
+    },
+  })
+
+  const untilStateValue: UntilStateValue = new Proxy(Object.create(null), {
+    get: (_, key: string) => ({
+      is: (matchValue: any, matchPreviousValue?: any) =>
+        new Promise((done) => {
+          const callback = (value: any, previousValue: any) => {
+            const same = value === matchValue
+            const prevSame =
+              matchPreviousValue == null
+                ? true
+                : previousValue === matchPreviousValue
+
+            if (same && prevSame) {
+              done(value)
+              watchers.removeListener(key, callback)
+            }
+          }
+
+          watchers.on(key, callback)
+        }),
+    }),
+  })
+
+  const notifyStateChange = (
     nextState: NeovimState,
     key: string,
     value: any,
     previousValue: any
-  ) {
-    this.watchers.emit(key, value, previousValue)
-    this.stateChangeFns.forEach((fn) =>
-      fn(nextState, key, value, previousValue)
-    )
+  ) => {
+    watchers.emit(key, value, previousValue)
+    stateChangeFns.forEach((fn) => fn(nextState, key, value, previousValue))
+  }
+
+  const stateProxy = new Proxy(state, {
+    get: (_, key: StateKeys) => Reflect.get(state, key),
+    set: (_, key: string, val: any) => {
+      const currentVal = Reflect.get(state, key)
+      if (currentVal === val) return true
+
+      const nextState = { ...state, [key]: val }
+
+      Reflect.set(state, key, val)
+      notifyStateChange(nextState, key, val, currentVal)
+
+      return true
+    },
+  })
+
+  return {
+    state: stateProxy,
+    watchState,
+    onStateChange,
+    onStateValue,
+    untilStateValue,
   }
 }
+
+export type State = ReturnType<typeof StateConstructor>
+export default StateConstructor
