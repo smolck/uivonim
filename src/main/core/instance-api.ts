@@ -25,56 +25,54 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
   } = NeovimState('nvim-mirror')
 
   const actionRegistrations: string[] = []
-      if (actionRegistrations.length)
-        actionRegistrations.forEach((name) =>
-          workerInstanceRef.call.onAction(name)
-        )
-      workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
-        // TODO: do we need this to always be updated or can we query these values?
-        // this will trigger on every cursor move and take up time in the render cycle
-        Object.assign(state, stateDiff)
-      })
+  if (actionRegistrations.length)
+    actionRegistrations.forEach((name) => workerInstanceRef.call.onAction(name))
+  workerInstanceRef.on.nvimStateUpdate((stateDiff: any) => {
+    // TODO: do we need this to always be updated or can we query these values?
+    // this will trigger on every cursor move and take up time in the render cycle
+    Object.assign(state, stateDiff)
+  })
 
-      // TODO(smolck): Async? Return promise?
-      // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {}
-      workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
-        winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
-      })
+  // TODO(smolck): Async? Return promise?
+  // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {}
+  workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
+    winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
+  })
 
-      workerInstanceRef.on.showStatusBarMessage((message: string) => {
-        winRef.webContents.send('fromMain', ['nvim.message.status', message])
-      })
+  workerInstanceRef.on.showStatusBarMessage((message: string) => {
+    winRef.webContents.send('fromMain', ['nvim.message.status', message])
+  })
 
-      workerInstanceRef.on.vimrcLoaded(() => ee.emit('nvim.load', false))
-      workerInstanceRef.on.gitStatus((status: GitStatus) =>
-        ee.emit('git.status', status)
-      )
-      workerInstanceRef.on.gitBranch((branch: string) =>
-        ee.emit('git.branch', branch)
-      )
-      workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
-        ee.emit(`action.${name}`, ...args)
-      )
+  workerInstanceRef.on.vimrcLoaded(() => ee.emit('nvim.load', false))
+  workerInstanceRef.on.gitStatus((status: GitStatus) =>
+    ee.emit('git.status', status)
+  )
+  workerInstanceRef.on.gitBranch((branch: string) =>
+    ee.emit('git.branch', branch)
+  )
+  workerInstanceRef.on.actionCalled((name: string, args: any[]) =>
+    ee.emit(`action.${name}`, ...args)
+  )
 
-      // TODO(smolck): What to do here . . .
-      /*this.workerInstanceRef.on.getDefaultColors(async () => ({
+  // TODO(smolck): What to do here . . .
+  /*this.workerInstanceRef.on.getDefaultColors(async () => ({
         background: colors.background,
         foreground: colors.foreground,
         special: colors.special,
       }))*/
 
-      workerInstanceRef.on.getCursorPosition(async () => {
-        // TODO(smolck): What to do here exactly?
-        /*const {
+  workerInstanceRef.on.getCursorPosition(async () => {
+    // TODO(smolck): What to do here exactly?
+    /*const {
           cursor: { row, col },
         } = require('../core/cursor')
         return { row, col }*/
-      })
+  })
 
-      workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
-      workerInstanceRef.on.clipboardWrite((text: string) =>
-        clipboard.writeText(text)
-      )
+  workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
+  workerInstanceRef.on.clipboardWrite((text: string) =>
+    clipboard.writeText(text)
+  )
 
   return {
     state,

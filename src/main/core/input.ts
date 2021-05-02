@@ -80,10 +80,10 @@ const isNotChar = (e: KeyboardEvent): boolean => {
 }
 
 const Input = (
-    nvimStateRef: State,
-    nvimInput: (keys: string) => void,
-    onWinFocus: (fun: () => void) => void,
-    onWinBlur: (fun: () => void) => void
+  nvimStateRef: State,
+  nvimInput: (keys: string) => void,
+  onWinFocus: (fun: () => void) => void,
+  onWinBlur: (fun: () => void) => void
 ) => {
   const globalShortcuts = new Map<string, () => void>()
 
@@ -119,8 +119,7 @@ const Input = (
     // Necessary because of "<" being "special," see `:help nvim_input()`
     if (inputKeys.length === 1) inputKeys = inputKeys.replace('<', '<LT>')
 
-    if (globalShortcuts.has(inputKeys))
-      return globalShortcuts.get(inputKeys)!()
+    if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
 
     // TODO: this might need more attention. i think s-space can be a valid
     // vim keybind. s-space was causing issues in terminal mode, sending weird
@@ -131,8 +130,7 @@ const Input = (
     }
 
     // a fix for terminal. only happens on cmd-tab. see below for more info
-    if (inputKeys.toLowerCase() === '<esc>')
-      lastEscapeTimestamp = Date.now()
+    if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
     nvimInput(inputKeys)
   }
 
@@ -250,7 +248,7 @@ const Input = (
         cb(shortcut)
       }
       shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
-    }
+    },
   }
 }
 

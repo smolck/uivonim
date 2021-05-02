@@ -119,9 +119,10 @@ const createNvim = async (
 }
 
 // TODO(smolck): Second arg type?
-const masterControlInternal =
-  (winRef: BrowserWindow, 
-   { nvimInstance, nvimApi, workerInstance }: any) => {
+const masterControlInternal = (
+  winRef: BrowserWindow,
+  { nvimInstance, nvimApi, workerInstance }: any
+) => {
   const instanceApi = InstanceApi(workerInstance, winRef)
 
   return {
@@ -132,8 +133,9 @@ const masterControlInternal =
     workerInstanceId: () => workerInstance as number,
 
     onRedraw: (fn: RedrawFn) =>
-      nvimApi.on('notification',
-                 (method: string, args: any) => method === 'redraw' ? fn(args) : {}),
+      nvimApi.on('notification', (method: string, args: any) =>
+        method === 'redraw' ? fn(args) : {}
+      ),
 
     // TODO(smolck): Need (?) to tell the render thread to do this when called
     /* if (document.activeElement === document.body) {
@@ -141,35 +143,40 @@ const masterControlInternal =
     }*/
     input: (keys: string) => nvimApi.input(keys),
     getMode: async () => {
-                    const mode = await nvimApi.mode
-                    console.log(`getmode: ${mode}`)
-                    return mode as { mode: string; blocking: boolean }
-                 },
-  resizeGrid: (grid: number, width: number, height: number) => {
-    nvimApi.uiTryResizeGrid(grid, width, height)
-  },
+      const mode = await nvimApi.mode
+      console.log(`getmode: ${mode}`)
+      return mode as { mode: string; blocking: boolean }
+    },
+    resizeGrid: (grid: number, width: number, height: number) => {
+      nvimApi.uiTryResizeGrid(grid, width, height)
+    },
 
-  resize: (width: number, height: number) => {
-    merge(clientSize, { width, height })
-    nvimApi.uiTryResize(width, height)
-  },
+    resize: (width: number, height: number) => {
+      merge(clientSize, { width, height })
+      nvimApi.uiTryResize(width, height)
+    },
 
-  getColor: async (id: number) => {
-    const { foreground, background } = (await nvimApi.getHighlightById(
-      id,
-      true
-    )) as Color
-    return {
-      fg: asColor(foreground),
-      bg: asColor(background),
-    }
-  },
+    getColor: async (id: number) => {
+      const { foreground, background } = (await nvimApi.getHighlightById(
+        id,
+        true
+      )) as Color
+      return {
+        fg: asColor(foreground),
+        bg: asColor(background),
+      }
+    },
   }
 }
 
-const MasterControl = async (winRef: BrowserWindow, opts: { useWsl: boolean, nvimBinaryPath?: string, dir?: string }) => {
-  return masterControlInternal(winRef, await createNvim(
-    opts.useWsl, opts.nvimBinaryPath, opts.dir))
+const MasterControl = async (
+  winRef: BrowserWindow,
+  opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
+) => {
+  return masterControlInternal(
+    winRef,
+    await createNvim(opts.useWsl, opts.nvimBinaryPath, opts.dir)
+  )
 }
 
 export default MasterControl
