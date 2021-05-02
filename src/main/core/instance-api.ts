@@ -25,14 +25,6 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
   } = NeovimState('nvim-mirror')
 
   const actionRegistrations: string[] = []
-  return {
-    state,
-    watchState,
-    onStateValue,
-    onStateChange,
-    untilStateValue,
-
-    setupNvimOnHandlers() {
       if (actionRegistrations.length)
         actionRegistrations.forEach((name) =>
           workerInstanceRef.call.onAction(name)
@@ -83,7 +75,13 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
       workerInstanceRef.on.clipboardWrite((text: string) =>
         clipboard.writeText(text)
       )
-    },
+
+  return {
+    state,
+    watchState,
+    onStateValue,
+    onStateChange,
+    untilStateValue,
 
     getBufferInfo(): Promise<BufferInfo> {
       return workerInstanceRef.request.getBufferInfo()

@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
-import Nvim from './core/master-control'
+import Nvim, { MasterControl as NvimType } from './core/master-control'
 import Input from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 
@@ -134,8 +134,7 @@ async function afterReadyThings() {
   )
 
   // TODO(smolck): cli args
-  const nvim = new Nvim({ useWsl: false })
-  await nvim.init(win)
+  const nvim = await Nvim(win, { useWsl: false })
 
   nvim.instanceApi.onAction('version', () =>
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
@@ -143,7 +142,7 @@ async function afterReadyThings() {
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
 
   const input = new Input(
-    nvim.instanceApi.nvimState,
+    nvim.instanceApi,
     nvim.input,
     (fn) => win.on('focus', fn),
     (fn) => win.on('blur', fn)
@@ -154,22 +153,22 @@ async function afterReadyThings() {
   nvim.onRedraw((redrawEvents) =>
     win.webContents.send(Events.nvimRedraw, redrawEvents)
   )
-  nvim.instanceApi.nvimState.watchState.colorscheme(() =>
+  nvim.instanceApi.watchState.colorscheme(() =>
     win.webContents.send(Events.colorschemeStateUpdated)
   )
 
   // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
-  win.webContents.send(Events.nvimState, nvim.instanceApi.nvimState.state)
+  win.webContents.send(Events.nvimState, nvim.instanceApi.state)
 
-  nvim.instanceApi.nvimState.onStateChange((nextState) =>
+  nvim.instanceApi.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
   )
 
   win.webContents.send(Events.workerInstanceId, nvim.workerInstanceId())
 }
 
-async function setupInvokeHandlers(nvim: Nvim) {
+async function setupInvokeHandlers(nvim: NvimType) {
   ipcMain.handle(Invokables.getWindowMetadata, async (_event, _args) => {
     return await nvim.instanceApi.getWindowMetadata()
   })
@@ -194,7 +193,7 @@ async function setupInvokeHandlers(nvim: Nvim) {
   ipcMain.handle(InternalInvokables.nvimWatchStateFile, (_event, _args) => {
     // TODO(smolck)
     return new Promise((resolve, _reject) =>
-      nvim.instanceApi.nvimState.watchState.file((file) => resolve(file))
+      nvim.instanceApi.watchState.file((file) => resolve(file))
     )
   })
 }

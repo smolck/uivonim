@@ -118,97 +118,44 @@ const createNvim = async (
   return { workerInstance, nvimInstance, nvimApi }
 }
 
-export default class {
-  private _nvimInstance?: NvimInstance
-  private _nvimApi?: neovim.Neovim
-  private _workerInstance?: any
-  private _opts: { useWsl: boolean; nvimBinaryPath?: string; dir?: string }
+// TODO(smolck): Second arg type?
+const masterControlInternal =
+  (winRef: BrowserWindow, 
+   { nvimInstance, nvimApi, workerInstance }: any) => {
+  const instanceApi = InstanceApi(workerInstance, winRef)
 
-  private _instanceApi?: InstanceApiType
-  get instanceApi() {
-    this.checkInitialized() // TODO(smolck)
-    return this._instanceApi!
-  }
+  return {
+    nvimInstance,
+    instanceApi,
+    // TODO(smolck): Does this cast work as I want it to?
+    // @ts-ignore
+    workerInstanceId: () => workerInstance as number,
 
-  // TODO(smolck): Check initialized in getters?
-  private get nvimApi() {
-    this.checkInitialized()
-    return this._nvimApi!
-  }
+    onRedraw: (fn: RedrawFn) =>
+      nvimApi.on('notification',
+                 (method: string, args: any) => method === 'redraw' ? fn(args) : {}),
 
-  constructor(opts: {
-    useWsl: boolean
-    nvimBinaryPath?: string
-    dir?: string
-  }) {
-    this._opts = opts
-  }
-
-  private checkInitialized() {
-    if (
-      !this._nvimInstance ||
-      !this._nvimApi ||
-      !this._workerInstance ||
-      !this._instanceApi
-    ) {
-      console.error('Nvim not initalized! Need to call and await .init()')
-    }
-  }
-
-  async init(winRef: BrowserWindow) {
-    const { nvimInstance, nvimApi, workerInstance } = await createNvim(
-      this._opts.useWsl,
-      this._opts.nvimBinaryPath,
-      this._opts.dir
-    )
-    this._nvimInstance = nvimInstance
-    this._workerInstance = workerInstance
-    this._nvimApi = nvimApi
-
-    this._instanceApi = InstanceApi(workerInstance, winRef)
-    // TODO(smolck): Is the order here fine? Previously this was called from
-    // within `createNvim` right after creating the Worker . . .
-    this.instanceApi.setupNvimOnHandlers()
-  }
-
-  // TODO(smolck): This right?
-  workerInstanceId() {
-    return this._workerInstance as number
-  }
-
-  onRedraw(fn: RedrawFn) {
-    this.nvimApi.on('notification', (method: string, args: any) =>
-      method === 'redraw' ? fn(args) : {}
-    )
-  }
-
-  input(keys: string) {
-    this.nvimApi.input(keys)
-    // TODO(smolck): Maybe need a ref to `win`; need to tell the render thread to do
-    // this . . .
+    // TODO(smolck): Need (?) to tell the render thread to do this when called
     /* if (document.activeElement === document.body) {
       document.getElementById('keycomp-textarea')?.focus()
     }*/
-  }
+    input: (keys: string) => nvimApi.input(keys),
+    getMode: async () => {
+                    const mode = await nvimApi.mode
+                    console.log(`getmode: ${mode}`)
+                    return mode as { mode: string; blocking: boolean }
+                 },
+  resizeGrid: (grid: number, width: number, height: number) => {
+    nvimApi.uiTryResizeGrid(grid, width, height)
+  },
 
-  async getMode() {
-    const mode = await this.nvimApi.mode
-    console.log(`getmode: ${mode}`)
-    return mode as { mode: string; blocking: boolean }
-    // (await nvimApi!.mode) as { mode: string; blocking: boolean }
-  }
-
-  resizeGrid(grid: number, width: number, height: number) {
-    this.nvimApi.uiTryResizeGrid(grid, width, height)
-  }
-
-  resize(width: number, height: number) {
+  resize: (width: number, height: number) => {
     merge(clientSize, { width, height })
-    this.nvimApi.uiTryResize(width, height)
-  }
+    nvimApi.uiTryResize(width, height)
+  },
 
-  async getColor(id: number) {
-    const { foreground, background } = (await this.nvimApi.getHighlightById(
+  getColor: async (id: number) => {
+    const { foreground, background } = (await nvimApi.getHighlightById(
       id,
       true
     )) as Color
@@ -216,5 +163,15 @@ export default class {
       fg: asColor(foreground),
       bg: asColor(background),
     }
+  },
   }
 }
+
+const MasterControl = async (winRef: BrowserWindow, opts: { useWsl: boolean, nvimBinaryPath?: string, dir?: string }) => {
+  return masterControlInternal(winRef, await createNvim(
+    opts.useWsl, opts.nvimBinaryPath, opts.dir))
+}
+
+export default MasterControl
+// `masterControlInternal` is used so that `MasterControl` isn't a Promise type.
+export type MasterControl = ReturnType<typeof masterControlInternal>
