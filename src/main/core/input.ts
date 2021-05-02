@@ -1,4 +1,3 @@
-// import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
 import { $ } from '../../common/utils'
 import { State } from '../neovim/state'
@@ -117,6 +116,9 @@ const Input = (
   }
 
   const sendToVim = (inputKeys: string) => {
+    // Necessary because of "<" being "special," see `:help nvim_input()`
+    if (inputKeys.length === 1) inputKeys = inputKeys.replace('<', '<LT>')
+
     if (globalShortcuts.has(inputKeys))
       return globalShortcuts.get(inputKeys)!()
 
