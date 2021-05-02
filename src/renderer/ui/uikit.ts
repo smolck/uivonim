@@ -1,6 +1,6 @@
-import { showCursor, hideCursor } from '../core/cursor'
-import { uuid } from '../support/utils'
-import * as viminput from '../core/input'
+import { showCursor, hideCursor } from '../cursor'
+import { Invokables } from '../../common/ipc'
+import { uuid } from '../../common/utils'
 
 export const css = (builder: (classname: string) => string[]): string => {
   const id = `sc-${uuid()}`
@@ -13,12 +13,13 @@ export const css = (builder: (classname: string) => string[]): string => {
 }
 
 export const vimFocus = () => {
-  setImmediate(() => viminput.focus())
+  setImmediate(async () => window.api.invoke(Invokables.inputFocus))
   document.getElementById('keycomp-textarea')?.focus()
   showCursor()
 }
 
 export const vimBlur = () => {
-  viminput.blur()
+  window.api.invoke(Invokables.inputBlur)
+  // TODO(smolck): Should be in a .then() since above is a promise?
   hideCursor()
 }

@@ -6,7 +6,7 @@ import {
   hexToRGB,
   hslToRGB,
 } from '../ui/css'
-import { minmax, throttle, merge } from '../support/utils'
+import { minmax, throttle, merge } from '../../common/utils'
 import { css } from '../ui/uikit'
 import Checkboard from '../ui/checkboard'
 import { render } from 'inferno'

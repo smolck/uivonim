@@ -15,7 +15,7 @@ ipcRenderer.on(
   Events.nvimState,
   (_event, state) => (nvimState = JSON.parse(state))
 )
-ipcRenderer.on(Events.workerInstanceId, (_event, id) => (workerInstanceId = id))
+ipcRenderer.on(Events.workerInstanceId, (_event, id) => (workerInstanceId = JSON.parse(id)))
 
 const api: WindowApi = {
   on: (event: string, func: (...args: any[]) => void) => {

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim, { MasterControl as NvimType } from './core/master-control'
-import Input from './core/input'
+import Input , { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 
 if (process.platform === 'darwin') {
@@ -141,13 +141,13 @@ async function afterReadyThings() {
   )
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
 
-  const _input = Input(
+  const input = Input(
     nvim.instanceApi,
     nvim.input,
     (fn) => win.on('focus', fn),
     (fn) => win.on('blur', fn)
   )
-  setupInvokeHandlers(nvim)
+  setupInvokeHandlers(nvim, input)
 
   nvim.onRedraw((redrawEvents) =>
     win.webContents.send(Events.nvimRedraw, redrawEvents)
@@ -158,16 +158,17 @@ async function afterReadyThings() {
 
   // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
-  win.webContents.send(Events.nvimState, nvim.instanceApi.state)
+  win.webContents.send(Events.nvimState, JSON.stringify(nvim.instanceApi.state))
 
   nvim.instanceApi.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
   )
 
-  win.webContents.send(Events.workerInstanceId, nvim.workerInstanceId())
+  // TODO(smolck): What's with the JSON.stringify & parse stuff?
+  win.webContents.send(Events.workerInstanceId, JSON.stringify(nvim.workerInstanceId()))
 }
 
-async function setupInvokeHandlers(nvim: NvimType) {
+async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
   ipcMain.handle(Invokables.getWindowMetadata, async (_event, _args) => {
     return await nvim.instanceApi.getWindowMetadata()
   })
@@ -195,4 +196,7 @@ async function setupInvokeHandlers(nvim: NvimType) {
       nvim.instanceApi.watchState.file((file) => resolve(file))
     )
   })
+
+  ipcMain.handle(Invokables.inputBlur, (_event, _args) => input.blur())
+  ipcMain.handle(Invokables.inputFocus, (_event, _args) => input.focus())
 }

@@ -12,10 +12,10 @@ import {
   colors as nvimColors,
   getColorByName,
 } from '../render/highlight-attributes'
-import { sub } from '../messaging/dispatch'
+import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
 // TODO(smolck): Fine to import this?
-import { setCursorColor } from '../core/cursor'
+import { setCursorColor } from '../cursor'
 
 // this will return a var like '244, 120, 042'
 // then we can use this var in rgba color styles

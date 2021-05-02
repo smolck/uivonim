@@ -1,4 +1,4 @@
-import { is, merge } from '../support/utils'
+import { is, merge } from '../../common/utils'
 
 type EL1 = (tagName: string, style: object) => HTMLElement
 type EL2 = (style: object) => HTMLElement

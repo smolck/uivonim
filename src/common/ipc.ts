@@ -12,6 +12,9 @@ export const Invokables = {
 
   documentOnInput: 'documentOnInput',
   documentOnKeydown: 'documentOnKeydown',
+
+  inputFocus: 'inputFocus',
+  inputBlur: 'inputBlur',
 } as const
 
 export const Events = {

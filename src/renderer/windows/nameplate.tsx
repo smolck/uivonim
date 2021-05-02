@@ -1,5 +1,5 @@
-import { size } from '../core/workspace'
-import { uuid } from '../support/utils'
+import { size } from '../workspace'
+import { uuid } from '../../common/utils'
 import { makel } from '../ui/vanilla'
 import { cvar } from '../ui/css'
 import Icon from '../components/icon'
