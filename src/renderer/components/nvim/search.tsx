@@ -3,14 +3,14 @@ import {
   showCursor,
   disableCursor,
   enableCursor,
-} from '../../core/cursor'
+} from '../../cursor'
 import { CommandType, CommandUpdate } from '../../render/events'
 import * as windows from '../../windows/window-manager'
 import { WindowOverlay } from '../../windows/window'
 import Input from '../text-input'
-import { sub } from '../../messaging/dispatch'
+import { sub } from '../../dispatch'
 import { rgba, paddingV } from '../../ui/css'
-import { is } from '../../support/utils'
+import { is } from '../../../common/utils'
 import { makel } from '../../ui/vanilla'
 import { render } from 'inferno'
 

@@ -1,7 +1,10 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { showMessageHistory } from '../components/nvim/message-history'
-import messages, { MessageKind } from '../components/nvim/messages'
+
+import { MessageKind } from '../../common/types'
+import messages from '../components/nvim/messages'
+
 import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../../common/neovim-utils'
 import * as windows from '../windows/window-manager'

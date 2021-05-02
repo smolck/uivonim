@@ -3,16 +3,13 @@ import {
   Message,
   MessageReturn,
   MessageStatusUpdate,
-} from '../../neovim/types'
-import { uuid, CreateTask, arrReplace } from '../../support/utils'
-import { registerOneTimeUseShortcuts } from '../../core/input'
+} from '../../../common/types'
+import { uuid, CreateTask, arrReplace } from '../../../common/utils'
 import { colors } from '../../ui/styles'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import Icon from '../icon'
-
-// TODO(smolck): Don't re-export this.
-export { MessageKind } from '../../neovim/types'
+import { Invokables } from '../../../common/ipc'
 
 interface MessageAction {
   label: string
@@ -239,8 +236,8 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
   if (!message || message.stealsFocus) return
 
   const shortcuts = message.actions.map((m) => m.shortcut)
-  console.log('shortcuts', shortcuts)
-  registerOneTimeUseShortcuts(shortcuts, (shortcut) => {
+
+  window.api.invoke(Invokables.registerOneTimeUseShortcuts, shortcuts).then((shortcut) => {
     const action = message.actions.find((m) => m.shortcut === shortcut)
     if (action) message.onAction(action.label)
   })

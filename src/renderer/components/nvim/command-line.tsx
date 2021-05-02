@@ -3,13 +3,13 @@ import {
   disableCursor,
   hideCursor,
   showCursor,
-} from '../../core/cursor'
+} from '../../cursor'
 import { CommandType, CommandUpdate } from '../../render/events'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
 import Input from '../text-input'
-import { sub } from '../../messaging/dispatch'
-import { is } from '../../support/utils'
+import { sub } from '../../dispatch'
+import { is } from '../../../common/utils'
 import { render } from 'inferno'
 
 const modeSwitch = new Map([

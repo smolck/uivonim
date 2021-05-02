@@ -3,11 +3,7 @@ import { $ } from '../../common/utils'
 import { State } from '../neovim/state'
 import { ipcMain } from 'electron'
 import { Invokables } from '../../common/ipc'
-
-export enum InputType {
-  Down = 'down',
-  Up = 'up',
-}
+import { InputType } from '../../common/types'
 
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
 
@@ -236,8 +232,8 @@ const Input = (
     stealInput: (onKeyFn: OnKeyFn) => {
       sendInputToVim = false
       keyListener = onKeyFn
-      return () => (sendInputToVim = true)
     },
+    restoreInput: () => sendInputToVim = true,
 
     registerOneTimeUseShortcuts: (
       shortcuts: string[],

@@ -166,6 +166,8 @@ async function afterReadyThings() {
 
   // TODO(smolck): What's with the JSON.stringify & parse stuff?
   win.webContents.send(Events.workerInstanceId, JSON.stringify(nvim.workerInstanceId()))
+
+  nvim.instanceApi.onAction('nc', () => win.webContents.send(Events.ncAction))
 }
 
 async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
@@ -212,4 +214,19 @@ async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
 
   ipcMain.handle(Invokables.getColorByName, (_event, name) => nvim.instanceApi.nvimGetColorByName(name))
   ipcMain.handle(Invokables.setMode, (_event, mode) => nvim.instanceApi.setMode(mode))
+
+  ipcMain.handle(Invokables.registerOneTimeUseShortcuts, (_event, shortcuts) => {
+    return new Promise((resolve, _reject) => input.registerOneTimeUseShortcuts(shortcuts, (shortcuts) => {
+      resolve(shortcuts)
+    }))
+  })
+
+  ipcMain.handle(InternalInvokables.stealInput, (_event, _args) => {
+    return new Promise((resolve, _reject) => {
+      input.stealInput((inputKeys, inputType) => {
+        resolve([inputKeys, inputType])
+      })
+    })
+  })
+  ipcMain.handle(InternalInvokables.restoreInput, (_event, _args) => input.restoreInput())
 }

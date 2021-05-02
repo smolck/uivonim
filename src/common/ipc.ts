@@ -1,9 +1,12 @@
-import { WindowMetadata } from './types'
+import { WindowMetadata, InputType } from './types'
 
 export const InternalInvokables = {
   nvimWatchState: 'nvim.watchState',
   gitOnStatus: 'gitOnStatus',
   gitOnBranch: 'gitOnBranch',
+
+  stealInput: 'stealInput',
+  restoreInput: 'restoreInput',
 }
 
 export const Invokables = {
@@ -20,6 +23,7 @@ export const Invokables = {
 
   getColorByName: 'getColorByName',
   setMode: 'setMode',
+  registerOneTimeUseShortcuts: 'registerOneTimeUseShortcuts',
 } as const
 
 export const Events = {
@@ -33,9 +37,14 @@ export const Events = {
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
   // TODO(smolck): setVar: 'setVar',
+  
+  ncAction: 'nyAction',
 } as const
 
 export interface WindowApi {
+  stealInput: (fn: ((() => void) | ((inputKeys: string) => void) | ((inputKeys: string, inputType: InputType) => void))) => void,
+  restoreInput: () => void,
+
   gitOnBranch: (fn: (branch: any) => void) => void,
   gitOnStatus: (fn: (status: any) => void) => void,
   on: (

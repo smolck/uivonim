@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { WindowMetadata } from '../common/types'
+import { WindowMetadata, InputType } from '../common/types'
 import {
   Events,
   Invokables,
@@ -22,7 +22,15 @@ const api: WindowApi = {
     ipcRenderer.on(event, (_event, ...args) => func(...args))
   },
 
-  gitOnBranch: (fn: (status: any) => void) => 
+  stealInput: (fn) => {
+    ipcRenderer.invoke(InternalInvokables.stealInput).then(([inputKeys, inputType]) => fn(inputKeys, inputType))
+  },
+
+  restoreInput: () => {
+    return ipcRenderer.invoke(InternalInvokables.restoreInput)
+  },
+
+  gitOnBranch: (fn: (status: any) => void) =>
     ipcRenderer.invoke(InternalInvokables.gitOnStatus).then((status) => fn(status)),
   gitOnStatus: (fn: (branch: any) => void) =>
     ipcRenderer.invoke(InternalInvokables.gitOnBranch).then((branch) => fn(branch)),

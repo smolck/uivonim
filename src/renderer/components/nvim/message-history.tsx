@@ -1,4 +1,4 @@
-import { MessageKind, Message } from '../../neovim/types'
+import { MessageKind, Message } from '../../../common/types'
 import { RowNormal } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import Input from '../text-input'
