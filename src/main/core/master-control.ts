@@ -3,7 +3,7 @@ import Worker from '../workers/messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
-import InstanceApi, { InstanceApi as InstanceApiType } from '../core/instance-api'
+import InstanceApi from '../core/instance-api'
 import * as neovim from 'neovim'
 import { BrowserWindow } from 'electron'
 
