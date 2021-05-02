@@ -1,15 +1,15 @@
 import { createVNode } from 'inferno'
 import * as windows from '../../windows/window-manager'
-import { ColorData } from '../../support/colorize-with-highlight'
-import { sub } from '../../messaging/dispatch'
-import { debounce } from '../../support/utils'
+import { ColorData } from '../../../common/colorize-with-highlight'
+import { sub } from '../../dispatch'
+import { debounce } from '../../../common/utils'
 import Overlay from '../overlay'
 import { docStyle } from '../../ui/styles'
-import { cursor } from '../../core/cursor'
+import { cursor } from '../../cursor'
 import { parse as stringToMarkdown, setOptions } from 'marked'
 import { render } from 'inferno'
-import api from '../../core/instance-api'
-import { cell, size as workspaceSize } from '../../core/workspace'
+import { cell, size as workspaceSize } from '../../workspace'
+import { Events } from '../../../common/ipc'
 
 setOptions({
   highlight: (code, lang, _) => {
@@ -95,7 +95,7 @@ const updatePosition = () => {
   render(<Hover {...state} />, container)
 }
 
-api.onAction('hover', (_, markdownLines) => {
+window.api.on(Events.hoverAction, (_, markdownLines) => {
   const doc = markdownLines.join('\n')
 
   const maxWidth =
@@ -109,7 +109,7 @@ api.onAction('hover', (_, markdownLines) => {
   show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 
-api.onAction('hover-close', hide)
+window.api.on(Events.hoverCloseAction, hide)
 
 sub('redraw', () => {
   if (state.visible) debounce(updatePosition, 50)

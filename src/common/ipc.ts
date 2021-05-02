@@ -43,6 +43,8 @@ export const Events = {
   buffersAction: 'buffersAction',
   referencesAction: 'referencesAction',
   codeActionAction: 'codeActionAction',
+  hoverAction: 'hoverAction',
+  hoverCloseAction: 'hoverCloseAction',
 } as const
 
 export interface WindowApi {

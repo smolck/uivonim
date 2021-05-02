@@ -177,6 +177,8 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   instanceApi.onAction('buffers', () => win.webContents.send(Events.buffersAction))
   instanceApi.onAction('references', () => win.webContents.send(Events.referencesAction))
   instanceApi.onAction('code-action', () => win.webContents.send(Events.codeActionAction))
+  instanceApi.onAction('hover', () => win.webContents.send(Events.hoverAction))
+  instanceApi.onAction('hover-close', () => win.webContents.send(Events.hoverCloseAction))
 }
 
 async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
