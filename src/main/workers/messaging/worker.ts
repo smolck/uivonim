@@ -13,7 +13,7 @@ interface WorkerOptions {
 }
 
 const Worker = (name: string, opts = {} as WorkerOptions) => {
-  const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
+  const modulePath = join(__dirname, '..', `${name}.js`)
 
   const worker = new NodeWorker(modulePath, {
     workerData: opts.workerData
