@@ -56,9 +56,7 @@ const Worker = (name: string, opts = {} as WorkerOptions) => {
   const onContextHandler: OnContextHandler = (fn) =>
     ee.on('context-handler', fn)
 
-  worker.on('message', async ({
-    data: [e, data, id, requestSync, func],
-  }: MessageEvent) => {
+  worker.on('message', async ([e, data, id, requestSync, func]) => {
     if (e === '@@request-sync-context') {
       const listener = ee.listeners('context-handler')[0]
       if (!listener)
