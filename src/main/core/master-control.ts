@@ -110,7 +110,7 @@ const createNvim = async (
   )
   const { pipeName: path } = nvimInstance!
 
-  const workerInstance = new Worker('instance', {
+  const workerInstance = Worker('instance', {
     workerData: { nvimPath: path },
   })
 
