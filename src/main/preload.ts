@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { WindowMetadata, InputType } from '../common/types'
+import { WindowMetadata } from '../common/types'
 import {
   Events,
   Invokables,
@@ -18,8 +18,17 @@ ipcRenderer.on(
 ipcRenderer.on(Events.workerInstanceId, (_event, id) => (workerInstanceId = JSON.parse(id)))
 
 const api: WindowApi = {
-  on: (event: string, func: (...args: any[]) => void) => {
-    ipcRenderer.on(event, (_event, ...args) => func(...args))
+  luaeval: (...args) => 
+    ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
+  on: (event, func: (...args: any[]) => void) => {
+    if (event in Events) {
+      ipcRenderer.on(event, (_event, ...args) => func(...args))
+    } else {
+      const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
+      // TODO(smolck): Doing both is probably overkill, yeah?
+      console.error(message)
+      throw new Error(message)
+    }
   },
 
   stealInput: (fn) => {

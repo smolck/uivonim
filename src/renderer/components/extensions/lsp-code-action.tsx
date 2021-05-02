@@ -5,8 +5,8 @@ import Input from '../text-input'
 import Overlay from '../overlay'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
-import api from '../../core/instance-api'
-import { cursor } from '../../core/cursor'
+import { Events, Invokables } from '../../../common/ipc'
+import { cursor } from '../../cursor'
 
 type CodeAction = {
   title: string
@@ -101,7 +101,7 @@ const select = () => {
 
     // roundtrip through vimscript since TS dict looks like a vimscript dict
     // TODO: see if action can be converted to a Lua table to allow direct call to lua
-    api.nvim.call.luaeval(
+    window.api.luaeval(
       "require'uivonim/lsp'.handle_chosen_code_action(_A)",
       action
     )
@@ -118,7 +118,7 @@ const prev = () =>
     index: state.index - 1 < 0 ? state.actions.length - 1 : state.index - 1,
   })
 
-api.onAction('code-action', (actions) => {
+window.api.on(Events.codeActionAction, (actions) => {
   const { x, y } = windows.pixelPosition(cursor.row + 1, cursor.col)
   show({
     x,

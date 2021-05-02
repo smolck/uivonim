@@ -3,8 +3,8 @@ import * as windows from '../../windows/window-manager'
 import Overlay from '../overlay'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
-import api from '../../core/instance-api'
 import { parse as stringToMarkdown } from 'marked'
+import { Events } from '../../../common/ipc'
 
 interface ShowParams {
   row: number
@@ -204,8 +204,8 @@ const show = ({
 }
 
 // See runtime/lua/uivonim.lua
-api.onAction('signature-help', (_, showParams) => {
+window.api.on(Events.signatureHelpAction, (_, showParams) => {
   show(showParams)
 })
 
-api.onAction('signature-help-close', hide)
+window.api.on(Events.signatureHelpCloseAction, hide)

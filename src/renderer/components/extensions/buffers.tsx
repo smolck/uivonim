@@ -2,11 +2,11 @@ import FiletypeIcon, { Terminal } from '../filetype-icon'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
-import { BufferInfo } from '../../neovim/types'
+import { BufferInfo } from '../../../common/types'
 import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
-import api from '../../core/instance-api'
+import { Events, Invokables } from '../../../common/ipc'
 
 let state = {
   value: '',
@@ -69,7 +69,7 @@ const select = () => {
   }
 
   const { name } = state.buffers[state.index]
-  if (name) api.nvim.cmd(`b ${name}`)
+  if (name) window.api.invoke(Invokables.nvimCmd, `b ${name}`)
   assignStateAndRender(resetState)
 }
 
@@ -112,4 +112,4 @@ const show = (buffers: BufferInfo[]) => (
   vimBlur(), assignStateAndRender({ buffers, cache: buffers, visible: true })
 )
 
-api.onAction('buffers', async () => show(await api.nvim.getBufferInfo()))
+window.api.on(Events.buffersAction, async () => show(await window.api.invoke(Invokables.getBufferInfo)))

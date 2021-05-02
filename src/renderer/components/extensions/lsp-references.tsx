@@ -1,12 +1,12 @@
 import { RowNormal, RowHeader } from '../row-container'
 import { PluginRight } from '../plugin-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
-import { simplifyPath } from '../../support/utils'
+import { simplifyPath } from '../../../common/utils'
 // TODO(smolck): import { showCursorline } from '../../core/cursor'
 import { badgeStyle } from '../../ui/styles'
 import { render } from 'inferno'
 import Input from '../text-input'
-import api from '../../core/instance-api'
+import { Events, Invokables } from '../../../common/ipc'
 
 type Reference = {
   lineNum: number
@@ -77,7 +77,7 @@ const selectResult = (references: Refs[], ix: number, subix: number) => {
   const [path, items] = references[ix]
   const { lineNum, column } = items[subix]
 
-  api.nvim.jumpTo({
+  window.api.invoke(Invokables.nvimJumpTo, {
     path,
     line: lineNum - 1,
     column: column - 1,
@@ -232,7 +232,7 @@ const References = ($: S) => (
           onComponentDidMount={(e: HTMLElement) => els.set(pos, e)}
         >
           <RowHeader active={pos === $.ix}>
-            <span>{simplifyPath(path, api.nvim.state.cwd)}</span>
+            <span>{simplifyPath(path, window.api.nvimState.state().cwd)}</span>
             <div style={{ ...badgeStyle, 'margin-left': '12px' }}>
               <span>{items.length}</span>
             </div>
@@ -275,7 +275,7 @@ const References = ($: S) => (
   </PluginRight>
 )
 
-api.onAction('references', (_, items) => {
+window.api.on(Events.referencesAction, (_, items) => {
   // TODO(smolck): Efficiency? This works but probably isn't the most
   // performant. Ideally could remove the intermediate map.
   //

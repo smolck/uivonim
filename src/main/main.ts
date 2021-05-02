@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim, { MasterControl as NvimType } from './core/master-control'
 import Input , { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
+import { InstanceApi } from './core/instance-api'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -148,6 +149,7 @@ async function afterReadyThings() {
     (fn) => win.on('blur', fn)
   )
   setupInvokeHandlers(nvim, input)
+  setupActionHandlers(nvim.instanceApi)
 
   nvim.onRedraw((redrawEvents) =>
     win.webContents.send(Events.nvimRedraw, redrawEvents)
@@ -166,8 +168,15 @@ async function afterReadyThings() {
 
   // TODO(smolck): What's with the JSON.stringify & parse stuff?
   win.webContents.send(Events.workerInstanceId, JSON.stringify(nvim.workerInstanceId()))
+}
 
-  nvim.instanceApi.onAction('nc', () => win.webContents.send(Events.ncAction))
+function setupActionHandlers(instanceApi: InstanceApi) {
+  instanceApi.onAction('nc', () => win.webContents.send(Events.ncAction))
+  instanceApi.onAction('signature-help', () => win.webContents.send(Events.signatureHelpAction))
+  instanceApi.onAction('signature-help-close', () => win.webContents.send(Events.signatureHelpAction))
+  instanceApi.onAction('buffers', () => win.webContents.send(Events.buffersAction))
+  instanceApi.onAction('references', () => win.webContents.send(Events.referencesAction))
+  instanceApi.onAction('code-action', () => win.webContents.send(Events.codeActionAction))
 }
 
 async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
@@ -228,5 +237,13 @@ async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
       })
     })
   })
+
   ipcMain.handle(InternalInvokables.restoreInput, (_event, _args) => input.restoreInput())
+  // TODO(smolck): Security of this?
+  ipcMain.handle(InternalInvokables.luaeval, (_event, ...args) => 
+                 // @ts-ignore
+                 nvim.instanceApi.nvimCall.luaeval(...args))
+
+  ipcMain.handle(Invokables.getBufferInfo, (_event, _args) => nvim.instanceApi.getBufferInfo())
+  ipcMain.handle(Invokables.nvimJumpTo, (_event, coords) => nvim.instanceApi.nvimJumpTo(coords))
 }

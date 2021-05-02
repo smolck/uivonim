@@ -53,3 +53,11 @@ export enum InputType {
   Up = 'up',
 }
 
+export interface BufferInfo {
+  dir: string
+  name: string
+  base: string
+  terminal: boolean
+  modified: boolean
+  duplicate: boolean
+}
