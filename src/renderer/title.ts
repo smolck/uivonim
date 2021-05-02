@@ -1,7 +1,7 @@
 import { merge, simplifyPath } from '../common/utils'
+import { Events } from '../common/ipc'
 import * as dispatch from './dispatch'
 import * as workspace from './workspace'
-import { remote } from 'electron'
 
 const macos = process.platform === 'darwin'
 let titleBarVisible = false
@@ -14,8 +14,6 @@ export const setTitleVisibility = (visible: boolean) => {
   titleBar.style.display = visible ? 'flex' : 'none'
   workspace.resize()
 }
-
-const typescriptSucks = (el: any, bar: any) => el.prepend(bar)
 
 if (macos) {
   merge((title as HTMLElement).style, {
@@ -40,26 +38,29 @@ if (macos) {
   })
   ;(title as HTMLElement).innerText = 'uivonim'
   ;(titleBar as HTMLElement).appendChild(title as HTMLElement)
-  typescriptSucks(document.body, titleBar)
+
+  // TODO(smolck): w-why?
+  // @ts-ignore
+  document.body.prepend(titleBar)
   titleBarVisible = true
 
-  remote.getCurrentWindow().on('enter-full-screen', () => {
+  window.api.on(Events.windowEnterFullScreen, () => {
     setTitleVisibility(false)
     dispatch.pub('window.change')
   })
 
-  remote.getCurrentWindow().on('leave-full-screen', () => {
+  window.api.on(Events.windowLeaveFullScreen, () => {
     setTitleVisibility(true)
     dispatch.pub('window.change')
   })
 
-  window.api.nvimWatchStateFile((_file: string) => {
+  window.api.nvimWatchState.file((_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
-  window.api.nvimWatchStateFile((_file: string) => {
+  window.api.nvimWatchState.file((_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // remote.getCurrentWindow().setTitle(`${path} - uivonim`)
