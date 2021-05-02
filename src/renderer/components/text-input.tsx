@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import Loading from './loading'
 import { paddingVH, cvar } from '../ui/css'
 import { FormEvent } from 'inferno'

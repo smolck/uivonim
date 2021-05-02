@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import { RowNormal } from '../row-container'
 import { resetMarkdownHTMLStyle } from '../../ui/styles'
 import * as windows from '../../windows/window-manager'

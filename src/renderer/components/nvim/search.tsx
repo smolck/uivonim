@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import {
   hideCursor,
   showCursor,

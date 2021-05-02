@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import * as windows from '../../windows/window-manager'
 import { ColorData } from '../../support/colorize-with-highlight'
 import { sub } from '../../messaging/dispatch'

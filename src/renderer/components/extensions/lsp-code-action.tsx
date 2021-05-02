@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import { RowNormal } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import * as windows from '../../windows/window-manager'

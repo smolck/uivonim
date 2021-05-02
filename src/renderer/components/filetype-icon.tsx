@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 import { basename, extname } from 'path'
 // TODO(smolck): import * as Icons from 'hyperapp-seti'
 import Icon from './icon'

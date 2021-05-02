@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 // TODO(smolck): Should this be used? Is it pointless now?
 // type PluginFnNormal = (visible: boolean, children: any[]) => any
 // type PluginFnWithStyles = (

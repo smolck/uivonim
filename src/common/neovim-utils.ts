@@ -1,6 +1,6 @@
 import { pascalCase, onProp } from './utils'
-import { VimMode } from '../main/neovim/types'
-import { Range } from '../main/neovim/types'
+// TODO(smolck): Don't import from main here
+import { VimMode, Range } from '../main/neovim/types'
 
 type DefineFunction = {
   [index: string]: (fnBody: TemplateStringsArray, ...vars: any[]) => void

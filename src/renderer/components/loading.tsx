@@ -1,4 +1,5 @@
-import * as workspace from '../core/workspace'
+import { createVNode } from 'inferno'
+import * as workspace from '../workspace'
 import Icon from './icon'
 
 interface LoaderParams {

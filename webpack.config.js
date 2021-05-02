@@ -3,36 +3,45 @@ const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
-  // target: "web", // Our app can run without electron
+  stats: {
+    errorDetails: true
+  },
+  target: "web", // Our app can run without electron
   entry: './src/renderer/index.ts',
   module: {
     rules: [
       // loads .ts/tsx files
       {
-        test: /\.tsx?$/,
+        test: [/\.tsx?$/],
         // include: [path.resolve(__dirname, "src/renderer")],
         use: 'ts-loader',
         exclude: /node_modules/,
       },
-      /*// loads .css files
+      // loads .js files
       {
-        test: /\.css$/,
-        include: [
-          path.resolve(__dirname, "app/src"),
-          path.resolve(__dirname, "node_modules/"),
-        ],
-        use: [
-          MiniCssExtractPlugin.loader,
-          "css-loader"
-        ],
+        test: /\.js$/,
+        include: [path.resolve(__dirname, 'node_modules/')],
         resolve: {
-          extensions: [".css"]
+          extensions: [".js", ".jsx", ".json"]
         }
-      }*/
+      },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts'],
+    extensions: ['.tsx', '.ts', '.js'],
+    fallback: {
+      // TODO(smolck): This'll probably break things in src/renderer, need an
+      // actual fix/polyfill/whatever
+      fs: false,
+      path: false,
+      util: false,
+      net: false,
+      child_process: false,
+      os: false,
+      stream: false,
+      dns: false,
+      'process/browser.js': false,
+    },
   },
   output: {
     path: path.resolve(__dirname, 'build/renderer'),

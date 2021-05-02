@@ -1,4 +1,4 @@
-import { fromJSON } from '../support/utils'
+import { fromJSON } from './utils'
 
 export const removeItem = (key: string) => localStorage.removeItem(key)
 export const setItem = (key: string, value: any) =>

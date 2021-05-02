@@ -1,4 +1,4 @@
-import { Range } from '../neovim/types'
+import { Range } from './types'
 
 interface Distance<T> {
   reference: T

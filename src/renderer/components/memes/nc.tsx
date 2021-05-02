@@ -1,3 +1,4 @@
+import { createVNode } from 'inferno'
 //import { stealInput } from '../../core/input'
 import { render } from 'inferno'
 import { Events } from '../../../common/ipc'
