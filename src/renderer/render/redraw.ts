@@ -310,7 +310,8 @@ const win_float_pos = (e: any) => {
   }
 }
 
-window.api.on(Events.nvimRedraw, (redrawEvents) => {
+window.api.on(Events.nvimRedraw, (redrawEventsStringified) => {
+  const redrawEvents = JSON.parse(redrawEventsStringified)
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms

@@ -171,10 +171,14 @@ async function afterReadyThings() {
   setupActionHandlers(nvim.instanceApi)
 
   nvim.onRedraw((redrawEvents) => {
-    // console.log(JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer())))
     win.webContents.send(
       Events.nvimRedraw,
-      JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer()))
+      // TODO(smolck): Perf of this? Without doing this and parsing on the other
+      // side, there are errors about the object being too nested sometimes;
+      // this seems to fix that, but not sure if there's a better way (e.g.
+      // parsing the redraw events here, on the main thread, and then sending
+      // over smaller events and such to the render thread)?
+      JSON.stringify(redrawEvents, getCircularReplacer())
     )
   })
   nvim.instanceApi.watchState.colorscheme(() =>
