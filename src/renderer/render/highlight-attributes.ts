@@ -1,4 +1,4 @@
-import { asColor, MapMap, MapSet } from '../../common/utils'
+import { asColor, MapSet } from '../../common/utils'
 import { pub } from '../dispatch'
 import { EventEmitter } from 'events'
 import { Invokables } from '../../common/ipc'
@@ -78,7 +78,7 @@ const sillyString = (s: any): string =>
 const highlightInfo = MapSet<number, string, HighlightInfo>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
-const highlights = MapMap<number, number, HighlightGroup>()
+const highlights = new Map<number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   const defaultColors = defaultColorsMap.get(0) || ({} as DefaultColors)
@@ -112,7 +112,7 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   })
 
   // hlid 0 -> default highlight group
-  highlights.set(0, 0, {
+  highlights.set(0, {
     foreground,
     background,
     special,
@@ -136,7 +136,7 @@ export const addHighlight = (
     ? asColor(attr.foreground)
     : asColor(attr.background)
 
-  highlights.set(0, id, {
+  highlights.set(id, {
     foreground,
     background,
     special: asColor(attr.special),
@@ -172,7 +172,7 @@ export const getColorByName = async (name: string): Promise<Color> => {
 }
 
 export const getColorById = (id: number): Color => {
-  const hlgrp = highlights.get(0, id) || ({} as HighlightGroup)
+  const hlgrp = highlights.get(id) || ({} as HighlightGroup)
   return {
     foreground: hlgrp.foreground,
     background: hlgrp.background,
@@ -185,11 +185,11 @@ export const highlightLookup = (name: string): HighlightInfo[] => {
     return console.error('highlight info does not exist for:', name), []
   return [...info]
 }
-export const getHighlight = (id: number) => highlights.get(0, id)
+export const getHighlight = (id: number) => highlights.get(id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  const max = Math.max(...highlights.keys(0))
+  const max = Math.max(...highlights.keys())
   const texelSize = 2
   canvas.width = (max + 1) * texelSize
   canvas.height = 3 * texelSize
@@ -197,7 +197,7 @@ export const generateColorLookupAtlas = () => {
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  highlights.forEach(0, (hlgrp, id) => {
+  highlights.forEach((hlgrp, id) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background
