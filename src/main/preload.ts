@@ -9,30 +9,30 @@ import {
 
 // TODO(smolck): Typing? Etc.?
 let nvimState: any = undefined
-let workerInstanceId: number | undefined = undefined
 
-ipcRenderer.on(
-  Events.nvimState,
-  (_event, state) => (nvimState = JSON.parse(state))
-)
-ipcRenderer.on(Events.workerInstanceId, (_event, id) => (workerInstanceId = JSON.parse(id)))
+ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 
 const api: WindowApi = {
-  luaeval: (...args) => 
-    ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
+  luaeval: (...args) => ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
   on: (event, func: (...args: any[]) => void) => {
-    if (event in Events) {
-      ipcRenderer.on(event, (_event, ...args) => func(...args))
-    } else {
-      const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
-      // TODO(smolck): Doing both is probably overkill, yeah?
-      console.error(message)
-      throw new Error(message)
-    }
+    console.log(event, func)
+    ipcRenderer.on(event, (_event, ...args) => {
+      console.log(...args)
+      func(...args)
+    })
+    // if (event in Object.values(Events)) {
+    /*} else {
+     const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
+     // TODO(smolck): Doing both is probably overkill, yeah?
+     console.error(message)
+     throw new Error(message)
+   }*/
   },
 
   stealInput: (fn) => {
-    ipcRenderer.invoke(InternalInvokables.stealInput).then(([inputKeys, inputType]) => fn(inputKeys, inputType))
+    ipcRenderer
+      .invoke(InternalInvokables.stealInput)
+      .then(([inputKeys, inputType]) => fn(inputKeys, inputType))
   },
 
   restoreInput: () => {
@@ -40,18 +40,19 @@ const api: WindowApi = {
   },
 
   gitOnBranch: (fn: (status: any) => void) =>
-    ipcRenderer.invoke(InternalInvokables.gitOnStatus).then((status) => fn(status)),
+    ipcRenderer
+      .invoke(InternalInvokables.gitOnStatus)
+      .then((status) => fn(status)),
   gitOnStatus: (fn: (branch: any) => void) =>
-    ipcRenderer.invoke(InternalInvokables.gitOnBranch).then((branch) => fn(branch)),
+    ipcRenderer
+      .invoke(InternalInvokables.gitOnBranch)
+      .then((branch) => fn(branch)),
 
-  // TODO(smolck): Make sure this works
-  nvimWatchState: new Proxy(Object.create(null), {
-    get: (_, key: string) => (fn: (newStateThing: any) => void) =>
-      ipcRenderer.invoke(InternalInvokables.nvimWatchState, key).then((newStateThing) => fn(newStateThing))
-  }),
-  /*nvimWatchState: (stateThingToWatch, fn) => {
-    ipcRenderer.invoke(InternalInvokables.nvimWatchState, stateThingToWatch).then((newStateThing) => fn(newStateThing))
-  },*/
+  nvimWatchState: (key: string, fn: any) =>
+    ipcRenderer
+      .invoke(InternalInvokables.nvimWatchState, key)
+      .then((newStateThing) => fn(newStateThing)),
+
   nvimState: {
     // TODO(smolck)
     state: () => {
@@ -63,14 +64,6 @@ const api: WindowApi = {
       return nvimState
     },
   },
-  workerInstanceId: () => {
-    if (workerInstanceId === undefined) {
-      throw new Error(
-        'Umm . . . yeah this should be defined, workerInstanceId, preload'
-      )
-    }
-    return workerInstanceId
-  },
   getWindowMetadata: async (): Promise<WindowMetadata[]> => {
     return await ipcRenderer.invoke(Invokables.getWindowMetadata)
   },
@@ -79,14 +72,14 @@ const api: WindowApi = {
   // at least as long as the callable invokables are safe to expose.
   invoke: async (invokable, ...args) => {
     // TODO(smolck): Perf of this?
-    if (invokable in Invokables) {
-      return await ipcRenderer.invoke(invokable, ...args)
-    } else {
-      const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
-      // TODO(smolck): Doing both is probably overkill, yeah?
-      console.error(message)
-      throw new Error(message)
-    }
+    // if (invokable in Invokables) {
+    return await ipcRenderer.invoke(invokable, ...args)
+    /*} else {
+     const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
+     // TODO(smolck): Doing both is probably overkill, yeah?
+     console.error(message)
+     throw new Error(message)
+   }*/
   },
 }
 

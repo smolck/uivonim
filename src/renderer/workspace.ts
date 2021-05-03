@@ -142,7 +142,7 @@ export const onResize = (fn: (size: { rows: number; cols: number }) => void) =>
   ee.on('resize', fn)
 
 setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, font.lineSpace)
-setImmediate(() => resize())
+setTimeout(() => resize(), 1)
 
 window.addEventListener(
   'resize',

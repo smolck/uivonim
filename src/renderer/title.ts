@@ -55,13 +55,13 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  window.api.nvimWatchState.file((_file: string) => {
+  window.api.nvimWatchState('file', (_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
-  window.api.nvimWatchState.file((_file: string) => {
+  window.api.nvimWatchState('file', (_file: string) => {
     // TODO(smolck): How to get api.nvim.state.cwd?
     // const path = simplifyPath(file, api.nvim.state.cwd)
     // remote.getCurrentWindow().setTitle(`${path} - uivonim`)

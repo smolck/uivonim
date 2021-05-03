@@ -3,6 +3,7 @@ import Nvim, { MasterControl as NvimType } from './core/master-control'
 import Input , { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
+import * as path from 'path'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -13,6 +14,8 @@ if (process.platform === 'darwin') {
 }
 
 let win: BrowserWindow
+let nvim: NvimType
+let input: InputType
 app.setName('uivonim')
 
 const comscan = (() => {
@@ -89,17 +92,18 @@ app.on('ready', async () => {
       // TODO(smolck): Long-term solution is to stop using `remote` entirely,
       // see https://github.com/electron/electron/issues/21408 and
       // https://medium.com/@nornagon/electrons-remote-module-considered-harmful-70d69500f31
-      enableRemoteModule: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
-      contextIsolation: false,
+      enableRemoteModule: false,
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
 
   win.loadURL(`file:///${__dirname}/index.html`)
   comscan.register((ch, msg) => win.webContents.send(ch, msg))
 
-  if (process.env.VEONIM_DEV) {
+  /*if (process.env.VEONIM_DEV) {
     function debounce(fn: Function, wait = 1) {
       let timeout: NodeJS.Timer
       return function (this: any, ...args: any[]) {
@@ -121,10 +125,34 @@ app.on('ready', async () => {
     watch(srcDir, { recursive: true }, debounce(reloader, 250))
     console.log(`uivonim started in develop mode.`)
     win.webContents.openDevTools()
-  }
+  }*/
+  win.webContents.openDevTools()
 
-  await afterReadyThings()
+  nvim = await Nvim(win, { useWsl: false })
+  nvim.onExit(app.quit)
+  input = Input(
+    nvim.instanceApi,
+    nvim.input,
+    (fn) => win.on('focus', fn),
+    (fn) => win.on('blur', fn)
+  )
+  setupInvokeHandlers()
+
+  win.webContents.on('did-finish-load', async () => await afterReadyThings())
 })
+
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (_key: any, value: any) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return
+      }
+      seen.add(value)
+    }
+    return value
+  }
+}
 
 async function afterReadyThings() {
   win.on('enter-full-screen', () =>
@@ -135,39 +163,29 @@ async function afterReadyThings() {
   )
 
   // TODO(smolck): cli args
-  const nvim = await Nvim(win, { useWsl: false })
-
   nvim.instanceApi.onAction('version', () =>
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
   )
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
 
-  const input = Input(
-    nvim.instanceApi,
-    nvim.input,
-    (fn) => win.on('focus', fn),
-    (fn) => win.on('blur', fn)
-  )
-  setupInvokeHandlers(nvim, input)
   setupActionHandlers(nvim.instanceApi)
 
-  nvim.onRedraw((redrawEvents) =>
-    win.webContents.send(Events.nvimRedraw, redrawEvents)
-  )
+  nvim.onRedraw((redrawEvents) => {
+    // console.log(JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer())))
+    win.webContents.send(Events.nvimRedraw, 
+                         JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer())))
+  })
   nvim.instanceApi.watchState.colorscheme(() =>
     win.webContents.send(Events.colorschemeStateUpdated)
   )
 
   // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
-  win.webContents.send(Events.nvimState, JSON.stringify(nvim.instanceApi.state))
+  win.webContents.send(Events.nvimState, JSON.parse(JSON.stringify(nvim.instanceApi.state)))
 
   nvim.instanceApi.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
   )
-
-  // TODO(smolck): What's with the JSON.stringify & parse stuff?
-  win.webContents.send(Events.workerInstanceId, JSON.stringify(nvim.workerInstanceId()))
 }
 
 function setupActionHandlers(instanceApi: InstanceApi) {
@@ -183,7 +201,7 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   instanceApi.onAction('explorer', () => win.webContents.send(Events.explorer))
 }
 
-async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
+async function setupInvokeHandlers() {
   ipcMain.handle(Invokables.getWindowMetadata, async (_event, _args) => {
     return await nvim.instanceApi.getWindowMetadata()
   })

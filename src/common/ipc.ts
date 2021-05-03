@@ -7,6 +7,7 @@ export const InternalInvokables = {
   stealInput: 'stealInput',
   restoreInput: 'restoreInput',
   luaeval: 'luaeval',
+  getWorkerInstanceId: 'getWorkerInstanceId',
 }
 
 export const Invokables = {
@@ -24,7 +25,7 @@ export const Invokables = {
   nvimCmd: 'nvimCmd',
   getBufferInfo: 'getBufferInfo',
   nvimJumpTo: 'nvimJumpTo',
-  expand: 'nvim.call.expand'
+  expand: 'nvim.call.expand',
 } as const
 
 export const Events = {
@@ -33,11 +34,10 @@ export const Events = {
   colorschemeStateUpdated: 'nvimState.colorscheme',
   nvimShowMessage: 'nvimShowMessage',
   nvimMessageStatus: 'nvimMessageStatus',
-  workerInstanceId: 'workerInstanceId',
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
   // TODO(smolck): setVar: 'setVar',
-  
+
   // TODO(smolck): Why did I put `action` on the end of all of this . . .
   ncAction: 'nyAction',
   signatureHelpAction: 'signatureHelpAction',
@@ -68,7 +68,6 @@ export interface WindowApi {
     // TODO(smolck)
     state: () => any
   }
-  workerInstanceId: () => number
   getWindowMetadata: () => Promise<WindowMetadata[]>
   invoke: (
     invokable: typeof Invokables[keyof typeof Invokables],

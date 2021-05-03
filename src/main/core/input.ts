@@ -87,7 +87,7 @@ const Input = (
   let lastEscapeTimestamp = 0
   let windowHasFocus = true
   let keyListener: OnKeyFn = () => {}
-  let isCapturing = false
+  let isCapturing = true
   let sendInputToVim = true
 
   // TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it

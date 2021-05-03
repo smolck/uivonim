@@ -16,7 +16,7 @@ const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const superid = (id: number) => `i${window.api.workerInstanceId()}-${id}`
+const superid = (id: number) => `i-${id}`
 
 const getWindowById = (windowId: number) => {
   const win = windowsById.get(superid(windowId))
@@ -27,8 +27,8 @@ const getWindowById = (windowId: number) => {
   return win
 }
 
-const getInstanceWindows = (id = window.api.workerInstanceId()) =>
-  [...windows.values()].filter((win) => win.id.startsWith(`i${id}`))
+// TODO(smolck): Id?
+const getInstanceWindows = () => [...windows.values()]
 
 const refreshWebGLGrid = () => {
   webgl.clearAll()

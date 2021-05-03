@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+import { h } from 'inferno-hyperscript'
 import {
   enableCursor,
   disableCursor,

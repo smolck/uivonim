@@ -14,7 +14,7 @@ import { promises as fs } from 'fs'
 import { EventEmitter } from 'events'
 import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
-import { Transform } from 'stream'
+// TODO(smolck): import { Transform } from 'stream'
 export { watchFile } from './fs-watch'
 
 export const spawnBinary = (
@@ -31,7 +31,8 @@ export interface Task<T> {
   promise: Promise<T>
 }
 
-process.on('unhandledRejection', (e) => console.error(e))
+// TODO(smolck): ?
+// process.on('unhandledRejection', (e) => console.error(e))
 
 type TypeChecker = (thing: any) => boolean
 interface Types {
@@ -47,11 +48,7 @@ interface Types {
   set: TypeChecker
 }
 
-export const $HOME = homedir()
-export const configPath =
-  process.env.XDG_CONFIG_HOME ||
-  (process.platform === 'win32' ? `${$HOME}/AppData/Local` : `${$HOME}/.config`)
-
+export const $HOME = homedir ? homedir() : 'TODO'
 const snakeCase = (m: string) =>
   m
     .split('')
@@ -595,7 +592,8 @@ export const Watcher = <T>() => {
   return { on, once, emit, remove }
 }
 
-export class NewlineSplitter extends Transform {
+// TODO(smolck)
+/*export class NewlineSplitter extends Transform {
   private buffer: string
 
   constructor() {
@@ -611,7 +609,7 @@ export class NewlineSplitter extends Transform {
     pieces.forEach((line) => this.push(line))
     done()
   }
-}
+}*/
 
 export const MapMap = <A, B, C>(initial?: any[]) => {
   const m = new Map<A, Map<B, C>>(initial)

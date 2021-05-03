@@ -378,13 +378,13 @@ const Tab = ({ id, label, active }: TabView) => (
 )
 
 const watchState = window.api.nvimWatchState
-watchState.filetype((filetype: string) => assignStateAndRender({ filetype }))
-watchState.line((line: number) => assignStateAndRender({ line }))
-watchState.column((column: number) => assignStateAndRender({ column }))
-watchState.cwd((cwd: string) => {
+watchState('filetype', ((filetype: string) => assignStateAndRender({ filetype })))
+watchState('line', ((line: number) => assignStateAndRender({ line })))
+watchState('column', ((column: number) => assignStateAndRender({ column })))
+watchState('cwd', ((cwd: string) => {
   const next = basename(cwd)
   assignStateAndRender({ cwd: next })
-})
+}))
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
   const mtabs: TabInfo[] = tabs.map((t) => ({ id: t.tab.id, name: t.name }))
@@ -405,13 +405,13 @@ window.api.gitOnStatus((status) =>
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 
-watchState.colorscheme(async () => {
+watchState('colorscheme', async () => {
   const { background } = await getColorByName('StatusLine')
   if (background) assignStateAndRender({ baseColor: background })
 })
 
-setImmediate(async () => {
+setTimeout(async () => {
   processAnyBuffered('tabs')
   const { background } = await getColorByName('StatusLine')
   if (background) assignStateAndRender({ baseColor: background })
-})
+}, 1)

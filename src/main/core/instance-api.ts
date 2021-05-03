@@ -14,6 +14,7 @@ import { GitStatus } from '../workers/tbd-folder-name/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
+import { Events } from '../../common/ipc'
 
 const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
   const ee = new EventEmitter()
@@ -37,11 +38,11 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
   // TODO(smolck): Async? Return promise?
   // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {}
   workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
-    winRef.webContents.send('fromMain', ['nvim.showNeovimMessage', a])
+    winRef.webContents.send(Events.nvimShowMessage, a)
   })
 
   workerInstanceRef.on.showStatusBarMessage((message: string) => {
-    winRef.webContents.send('fromMain', ['nvim.message.status', message])
+    winRef.webContents.send(Events.nvimMessageStatus, message)
   })
 
   workerInstanceRef.on.vimrcLoaded(() => ee.emit('nvim.load', false))

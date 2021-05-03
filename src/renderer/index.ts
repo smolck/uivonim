@@ -3,7 +3,7 @@ import * as workspace from './workspace'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 // TODO(smolck): I think webpack will fix all the require things?
-import { requireDir, debounce, merge } from '../common/utils'
+import { /*requireDir,*/ debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 import { Events, Invokables } from '../common/ipc'
@@ -60,23 +60,26 @@ requestAnimationFrame(() => {
     // Focus textarea at start of application to receive input right away.
     document.getElementById('keycomp-textarea')?.focus()
 
-    requireDir(`${__dirname}/components/nvim`)
+    require('./components/nvim/messages')
+    require('./components/nvim/message-history')
+    require('./components/nvim/command-line')
+    // requireDir(`${__dirname}/components/nvim`)
   })
 
   setTimeout(() => {
-    requireDir(`${__dirname}/components`)
-    requireDir(`${__dirname}/components/extensions`)
-    requireDir(`${__dirname}/components/memes`)
+    // requireDir(`${__dirname}/components`)
+    // requireDir(`${__dirname}/components/extensions`)
+    // requireDir(`${__dirname}/components/memes`)
   }, 600)
 
   setTimeout(() => {
     // TODO(smolck): Need to port app-info things
     // require('../services/app-info')
 
-    if (process.env.VEONIM_DEV) {
+    /*if (process.env.VEONIM_DEV) {
       // require('../dev/menu')
       // require('../dev/recorder')
-    }
+    }*/
   }, 199)
 })
 
@@ -116,5 +119,19 @@ document.onclick = (e) => {
   }
 }
 
-document.onkeydown = (e) => window.api.invoke(Invokables.documentOnKeydown, e)
-document.oninput = (e) => window.api.invoke(Invokables.documentOnInput, e)
+document.onkeydown = (e: KeyboardEvent) => {
+  window.api.invoke(Invokables.documentOnKeydown, {
+    key: e.key,
+    ctrlKey: e.ctrlKey,
+    metaKey: e.metaKey,
+    altKey: e.altKey,
+    shiftKey: e.shiftKey
+  })
+}
+// @ts-ignore
+document.oninput = (e: InputEvent) => {
+  window.api.invoke(Invokables.documentOnInput, {
+    data: e.data,
+    isComposing: e.isComposing,
+  })
+}

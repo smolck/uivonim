@@ -5,12 +5,12 @@ const { copyAll } = require('./build')
 const fs = require('fs-extra')
 
 go(async () => {
-  $`cleaning build folder`
-  await fs.emptyDir(fromRoot('build'))
-  await copyAll()
+  // $`cleaning build folder`
+  // await fs.emptyDir(fromRoot('build'))
+  // await copyAll()
 
-  $`running babel stuff`
-  await run('babel --extensions .ts,.tsx src -d build')
+  // $`running babel stuff`
+  // await run('babel --extensions .ts,.tsx src -d build')
 
   run('electron build/main/main.js', {
     args: process.argv.slice(2),

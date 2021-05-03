@@ -128,14 +128,16 @@ const masterControlInternal = (
   return {
     nvimInstance,
     instanceApi,
+
+    onExit: (fn: ExitFn) => onExitFn = fn,
     // TODO(smolck): Does this cast work as I want it to?
     // @ts-ignore
-    workerInstanceId: () => workerInstance as number,
+    workerInstanceId: () => workerInstance,
 
     onRedraw: (fn: RedrawFn) =>
-      nvimApi.on('notification', (method: string, args: any) =>
+      nvimApi.on('notification', (method: string, args: any) => {
         method === 'redraw' ? fn(args) : {}
-      ),
+      }),
 
     // TODO(smolck): Need (?) to tell the render thread to do this when called
     /* if (document.activeElement === document.body) {
