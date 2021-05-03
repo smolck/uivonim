@@ -2,8 +2,7 @@ import * as workspace from './workspace'
 // TODO(smolck): import * as css from './ui/css'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
-// TODO(smolck): I think webpack will fix all the require things?
-import { /*requireDir,*/ debounce, merge } from '../common/utils'
+import { debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 import { Events, Invokables } from '../common/ipc'
@@ -50,8 +49,6 @@ workspace.onResize(({ rows, cols }) =>
 )
 workspace.resize()
 
-// TODO(smolck): Need to re-architect all this because `require` won't be available
-// from renderer thread . . .
 requestAnimationFrame(() => {
   require('./render/redraw')
 
@@ -60,10 +57,12 @@ requestAnimationFrame(() => {
     // Focus textarea at start of application to receive input right away.
     document.getElementById('keycomp-textarea')?.focus()
 
+    require('./components/nvim/command-line')
+    require('./components/nvim/autocomplete')
     require('./components/nvim/messages')
     require('./components/nvim/message-history')
-    require('./components/nvim/command-line')
-    // requireDir(`${__dirname}/components/nvim`)
+    require('./components/nvim/search')
+    require('./components/nvim/statusline')
   })
 
   setTimeout(() => {
