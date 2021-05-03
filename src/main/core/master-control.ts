@@ -129,7 +129,7 @@ const masterControlInternal = (
     nvimInstance,
     instanceApi,
 
-    onExit: (fn: ExitFn) => onExitFn = fn,
+    onExit: (fn: ExitFn) => (onExitFn = fn),
     // TODO(smolck): Does this cast work as I want it to?
     // @ts-ignore
     workerInstanceId: () => workerInstance,

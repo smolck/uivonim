@@ -81,8 +81,7 @@ const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = MapMap<number, number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
-  const defaultColors =
-    defaultColorsMap.get(0) || ({} as DefaultColors)
+  const defaultColors = defaultColorsMap.get(0) || ({} as DefaultColors)
 
   const nextFG = fg >= 0 ? asColor(fg) : defaultColors.foreground
   const nextBG = bg >= 0 ? asColor(bg) : defaultColors.background
@@ -162,7 +161,10 @@ export const addHighlight = (
 }
 
 export const getColorByName = async (name: string): Promise<Color> => {
-  const { foreground, background } = await window.api.invoke(Invokables.getColorByName, name)
+  const { foreground, background } = await window.api.invoke(
+    Invokables.getColorByName,
+    name
+  )
   return {
     foreground: asColor(foreground),
     background: asColor(background),
@@ -170,8 +172,7 @@ export const getColorByName = async (name: string): Promise<Color> => {
 }
 
 export const getColorById = (id: number): Color => {
-  const hlgrp =
-    highlights.get(0, id) || ({} as HighlightGroup)
+  const hlgrp = highlights.get(0, id) || ({} as HighlightGroup)
   return {
     foreground: hlgrp.foreground,
     background: hlgrp.background,
@@ -184,8 +185,7 @@ export const highlightLookup = (name: string): HighlightInfo[] => {
     return console.error('highlight info does not exist for:', name), []
   return [...info]
 }
-export const getHighlight = (id: number) =>
-  highlights.get(0, id)
+export const getHighlight = (id: number) => highlights.get(0, id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1

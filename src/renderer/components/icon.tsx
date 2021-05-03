@@ -1,5 +1,3 @@
-
-
 const feather = require('feather-icons')
 
 type Props = {

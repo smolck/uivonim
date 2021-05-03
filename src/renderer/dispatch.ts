@@ -23,11 +23,10 @@ const dispatchConstructor = () => {
     unsub: (event: string, cb: Cb) => {
       if (event in listeners) {
         for (let i = 0; i < listeners.length; i++) {
-          if (listeners[i] === cb)
-            listeners.splice(i, 1)
+          if (listeners[i] === cb) listeners.splice(i, 1)
         }
       }
-    }
+    },
   }
 }
 

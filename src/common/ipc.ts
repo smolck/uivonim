@@ -53,17 +53,22 @@ export const Events = {
 } as const
 
 export interface WindowApi {
-  luaeval: (...args: any[]) => void,
-  stealInput: (fn: ((() => void) | ((inputKeys: string) => void) | ((inputKeys: string, inputType: InputType) => void))) => void,
-  restoreInput: () => void,
-  gitOnBranch: (fn: (branch: any) => void) => void,
-  gitOnStatus: (fn: (status: any) => void) => void,
+  luaeval: (...args: any[]) => void
+  stealInput: (
+    fn:
+      | (() => void)
+      | ((inputKeys: string) => void)
+      | ((inputKeys: string, inputType: InputType) => void)
+  ) => void
+  restoreInput: () => void
+  gitOnBranch: (fn: (branch: any) => void) => void
+  gitOnStatus: (fn: (status: any) => void) => void
   on: (
     event: typeof Events[keyof typeof Events],
     func: (...args: any[]) => void
   ) => void
   // TODO(smolck): Type here?
-  nvimWatchState: any,
+  nvimWatchState: any
   nvimState: {
     // TODO(smolck)
     state: () => any

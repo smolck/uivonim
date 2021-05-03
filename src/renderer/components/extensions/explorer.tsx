@@ -1,4 +1,3 @@
-
 import {
   getDirFiles,
   pathRelativeToHome,
@@ -223,7 +222,12 @@ state.inputCallbacks = {
 
     if (file) {
       // TODO(smolck): Make sure this works
-      window.api.invoke(Invokables.nvimCmd, `e ${pathRelativeToCwd(join(state.path, name), state.cwd)}`).then(() => assignStateAndRender(resetState))
+      window.api
+        .invoke(
+          Invokables.nvimCmd,
+          `e ${pathRelativeToCwd(join(state.path, name), state.cwd)}`
+        )
+        .then(() => assignStateAndRender(resetState))
       return
     }
 

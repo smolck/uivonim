@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim, { MasterControl as NvimType } from './core/master-control'
-import Input , { Input as InputType } from './core/input'
+import Input, { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
@@ -142,9 +142,9 @@ app.on('ready', async () => {
 })
 
 const getCircularReplacer = () => {
-  const seen = new WeakSet();
+  const seen = new WeakSet()
   return (_key: any, value: any) => {
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === 'object' && value !== null) {
       if (seen.has(value)) {
         return
       }
@@ -172,8 +172,10 @@ async function afterReadyThings() {
 
   nvim.onRedraw((redrawEvents) => {
     // console.log(JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer())))
-    win.webContents.send(Events.nvimRedraw, 
-                         JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer())))
+    win.webContents.send(
+      Events.nvimRedraw,
+      JSON.parse(JSON.stringify(redrawEvents, getCircularReplacer()))
+    )
   })
   nvim.instanceApi.watchState.colorscheme(() =>
     win.webContents.send(Events.colorschemeStateUpdated)
@@ -181,7 +183,10 @@ async function afterReadyThings() {
 
   // Initial state and send state every change
   // TODO(smolck): (Will) This work as I want it to?
-  win.webContents.send(Events.nvimState, JSON.parse(JSON.stringify(nvim.instanceApi.state)))
+  win.webContents.send(
+    Events.nvimState,
+    JSON.parse(JSON.stringify(nvim.instanceApi.state))
+  )
 
   nvim.instanceApi.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
@@ -190,14 +195,28 @@ async function afterReadyThings() {
 
 function setupActionHandlers(instanceApi: InstanceApi) {
   instanceApi.onAction('nc', () => win.webContents.send(Events.ncAction))
-  instanceApi.onAction('signature-help', () => win.webContents.send(Events.signatureHelpAction))
-  instanceApi.onAction('signature-help-close', () => win.webContents.send(Events.signatureHelpAction))
-  instanceApi.onAction('buffers', () => win.webContents.send(Events.buffersAction))
-  instanceApi.onAction('references', () => win.webContents.send(Events.referencesAction))
-  instanceApi.onAction('code-action', () => win.webContents.send(Events.codeActionAction))
+  instanceApi.onAction('signature-help', () =>
+    win.webContents.send(Events.signatureHelpAction)
+  )
+  instanceApi.onAction('signature-help-close', () =>
+    win.webContents.send(Events.signatureHelpAction)
+  )
+  instanceApi.onAction('buffers', () =>
+    win.webContents.send(Events.buffersAction)
+  )
+  instanceApi.onAction('references', () =>
+    win.webContents.send(Events.referencesAction)
+  )
+  instanceApi.onAction('code-action', () =>
+    win.webContents.send(Events.codeActionAction)
+  )
   instanceApi.onAction('hover', () => win.webContents.send(Events.hoverAction))
-  instanceApi.onAction('hover-close', () => win.webContents.send(Events.hoverCloseAction))
-  instanceApi.onAction('pick-color', () => win.webContents.send(Events.pickColor))
+  instanceApi.onAction('hover-close', () =>
+    win.webContents.send(Events.hoverCloseAction)
+  )
+  instanceApi.onAction('pick-color', () =>
+    win.webContents.send(Events.pickColor)
+  )
   instanceApi.onAction('explorer', () => win.webContents.send(Events.explorer))
 }
 
@@ -233,24 +252,35 @@ async function setupInvokeHandlers() {
   })
   ipcMain.handle(InternalInvokables.gitOnBranch, (_event, _args) => {
     return new Promise((resolve, _reject) =>
-                      nvim.instanceApi.gitOnBranch((branch) => resolve(branch)))
+      nvim.instanceApi.gitOnBranch((branch) => resolve(branch))
+    )
   })
   ipcMain.handle(InternalInvokables.gitOnStatus, (_event, _args) => {
     return new Promise((resolve, _reject) =>
-                      nvim.instanceApi.gitOnStatus((status) => resolve(status)))
+      nvim.instanceApi.gitOnStatus((status) => resolve(status))
+    )
   })
 
   ipcMain.handle(Invokables.inputBlur, (_event, _args) => input.blur())
   ipcMain.handle(Invokables.inputFocus, (_event, _args) => input.focus())
 
-  ipcMain.handle(Invokables.getColorByName, (_event, name) => nvim.instanceApi.nvimGetColorByName(name))
-  ipcMain.handle(Invokables.setMode, (_event, mode) => nvim.instanceApi.setMode(mode))
+  ipcMain.handle(Invokables.getColorByName, (_event, name) =>
+    nvim.instanceApi.nvimGetColorByName(name)
+  )
+  ipcMain.handle(Invokables.setMode, (_event, mode) =>
+    nvim.instanceApi.setMode(mode)
+  )
 
-  ipcMain.handle(Invokables.registerOneTimeUseShortcuts, (_event, shortcuts) => {
-    return new Promise((resolve, _reject) => input.registerOneTimeUseShortcuts(shortcuts, (shortcuts) => {
-      resolve(shortcuts)
-    }))
-  })
+  ipcMain.handle(
+    Invokables.registerOneTimeUseShortcuts,
+    (_event, shortcuts) => {
+      return new Promise((resolve, _reject) =>
+        input.registerOneTimeUseShortcuts(shortcuts, (shortcuts) => {
+          resolve(shortcuts)
+        })
+      )
+    }
+  )
 
   ipcMain.handle(InternalInvokables.stealInput, (_event, _args) => {
     return new Promise((resolve, _reject) => {
@@ -260,13 +290,22 @@ async function setupInvokeHandlers() {
     })
   })
 
-  ipcMain.handle(InternalInvokables.restoreInput, (_event, _args) => input.restoreInput())
+  ipcMain.handle(InternalInvokables.restoreInput, (_event, _args) =>
+    input.restoreInput()
+  )
   // TODO(smolck): Security of this?
-  ipcMain.handle(InternalInvokables.luaeval, (_event, ...args) => 
-                 // @ts-ignore
-                 nvim.instanceApi.nvimCall.luaeval(...args))
+  ipcMain.handle(InternalInvokables.luaeval, (_event, ...args) =>
+    // @ts-ignore
+    nvim.instanceApi.nvimCall.luaeval(...args)
+  )
 
-  ipcMain.handle(Invokables.getBufferInfo, (_event, _args) => nvim.instanceApi.getBufferInfo())
-  ipcMain.handle(Invokables.nvimJumpTo, (_event, coords) => nvim.instanceApi.nvimJumpTo(coords))
-  ipcMain.handle(Invokables.expand, (_event, thingToExpand) => nvim.instanceApi.nvimCall.expand(thingToExpand))
+  ipcMain.handle(Invokables.getBufferInfo, (_event, _args) =>
+    nvim.instanceApi.getBufferInfo()
+  )
+  ipcMain.handle(Invokables.nvimJumpTo, (_event, coords) =>
+    nvim.instanceApi.nvimJumpTo(coords)
+  )
+  ipcMain.handle(Invokables.expand, (_event, thingToExpand) =>
+    nvim.instanceApi.nvimCall.expand(thingToExpand)
+  )
 }

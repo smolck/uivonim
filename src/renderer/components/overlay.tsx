@@ -1,5 +1,3 @@
-
-
 interface Props {
   visible: boolean
   x: number

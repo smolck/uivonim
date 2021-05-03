@@ -5,9 +5,9 @@ const path = require('path')
 module.exports = {
   mode: 'development',
   stats: {
-    errorDetails: true
+    errorDetails: true,
   },
-  target: "web", // Our app can run without electron
+  target: 'web', // Our app can run without electron
   entry: './src/renderer/index.ts',
   module: {
     rules: [
@@ -16,18 +16,18 @@ module.exports = {
         test: [/\.tsx?$/],
         // include: [path.resolve(__dirname, "src/renderer")],
         use: [
-          { 
-            loader: 'babel-loader', 
+          {
+            loader: 'babel-loader',
             options: {
-              presets: ["@babel/preset-typescript"],
+              presets: ['@babel/preset-typescript'],
               plugins: [
-                ["babel-plugin-inferno", { "imports": true }],
-                "@babel/plugin-proposal-object-rest-spread",
-                "@babel/plugin-proposal-class-properties",
-                "@babel/plugin-transform-modules-commonjs"
+                ['babel-plugin-inferno', { imports: true }],
+                '@babel/plugin-proposal-object-rest-spread',
+                '@babel/plugin-proposal-class-properties',
+                '@babel/plugin-transform-modules-commonjs',
               ],
-              ignore: ["**/legacy/", "**/future/"],
-            }
+              ignore: ['**/legacy/', '**/future/'],
+            },
           },
           'ts-loader',
           // 'babel-loader',
@@ -39,8 +39,8 @@ module.exports = {
         test: /\.js$/,
         include: [path.resolve(__dirname, 'node_modules/')],
         resolve: {
-          extensions: [".js", ".jsx", ".json"]
-        }
+          extensions: ['.js', '.jsx', '.json'],
+        },
       },
     ],
   },

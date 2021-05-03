@@ -233,7 +233,7 @@ const Input = (
       sendInputToVim = false
       keyListener = onKeyFn
     },
-    restoreInput: () => sendInputToVim = true,
+    restoreInput: () => (sendInputToVim = true),
 
     registerOneTimeUseShortcuts: (
       shortcuts: string[],

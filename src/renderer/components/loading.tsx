@@ -1,4 +1,3 @@
-
 import * as workspace from '../workspace'
 import Icon from './icon'
 

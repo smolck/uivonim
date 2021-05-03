@@ -1,4 +1,3 @@
-
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'

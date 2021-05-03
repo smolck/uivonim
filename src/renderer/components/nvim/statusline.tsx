@@ -1,4 +1,3 @@
-
 import { getColorByName } from '../../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../../dispatch'
 import { darken, brighten, cvar } from '../../ui/css'
@@ -378,13 +377,13 @@ const Tab = ({ id, label, active }: TabView) => (
 )
 
 const watchState = window.api.nvimWatchState
-watchState('filetype', ((filetype: string) => assignStateAndRender({ filetype })))
-watchState('line', ((line: number) => assignStateAndRender({ line })))
-watchState('column', ((column: number) => assignStateAndRender({ column })))
-watchState('cwd', ((cwd: string) => {
+watchState('filetype', (filetype: string) => assignStateAndRender({ filetype }))
+watchState('line', (line: number) => assignStateAndRender({ line }))
+watchState('column', (column: number) => assignStateAndRender({ column }))
+watchState('cwd', (cwd: string) => {
   const next = basename(cwd)
   assignStateAndRender({ cwd: next })
-}))
+})
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
   const mtabs: TabInfo[] = tabs.map((t) => ({ id: t.tab.id, name: t.name }))

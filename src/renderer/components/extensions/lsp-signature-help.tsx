@@ -1,4 +1,3 @@
-
 import { docStyle, resetMarkdownHTMLStyle } from '../../ui/styles'
 import * as windows from '../../windows/window-manager'
 import Overlay from '../overlay'

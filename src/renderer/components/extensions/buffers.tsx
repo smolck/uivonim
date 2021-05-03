@@ -1,4 +1,3 @@
-
 import FiletypeIcon, { Terminal } from '../filetype-icon'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
@@ -113,4 +112,6 @@ const show = (buffers: BufferInfo[]) => (
   vimBlur(), assignStateAndRender({ buffers, cache: buffers, visible: true })
 )
 
-window.api.on(Events.buffersAction, async () => show(await window.api.invoke(Invokables.getBufferInfo)))
+window.api.on(Events.buffersAction, async () =>
+  show(await window.api.invoke(Invokables.getBufferInfo))
+)

@@ -75,7 +75,6 @@ requestAnimationFrame(() => {
   setTimeout(() => {
     // TODO(smolck): Need to port app-info things
     // require('../services/app-info')
-
     /*if (process.env.VEONIM_DEV) {
       // require('../dev/menu')
       // require('../dev/recorder')
@@ -125,7 +124,7 @@ document.onkeydown = (e: KeyboardEvent) => {
     ctrlKey: e.ctrlKey,
     metaKey: e.metaKey,
     altKey: e.altKey,
-    shiftKey: e.shiftKey
+    shiftKey: e.shiftKey,
   })
 }
 // @ts-ignore

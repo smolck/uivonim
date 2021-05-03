@@ -1,4 +1,3 @@
-
 import * as windows from '../../windows/window-manager'
 import * as dispatch from '../../dispatch'
 import ColorPicker from '../../ui/color-picker'
