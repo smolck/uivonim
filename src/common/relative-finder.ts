@@ -1,4 +1,5 @@
-import { Range } from './types'
+// TODO(smolck): Don't import from main
+import { Range } from '../main/neovim/types'
 
 interface Distance<T> {
   reference: T

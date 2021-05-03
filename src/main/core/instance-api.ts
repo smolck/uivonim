@@ -1,4 +1,5 @@
-import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
+import { VimMode, HyperspaceCoordinates } from '../neovim/types'
+import { BufferInfo } from '../../common/types'
 import { onFnCall } from '../../common/utils'
 import { Worker } from '../workers/messaging/worker'
 import { BrowserWindow } from 'electron'
