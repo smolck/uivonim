@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+
 
 interface Props {
   visible: boolean

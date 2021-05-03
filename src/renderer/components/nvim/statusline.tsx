@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+
 import { getColorByName } from '../../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../../dispatch'
 import { darken, brighten, cvar } from '../../ui/css'

@@ -5,7 +5,7 @@ import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
 import Icon from '../icon'
 import { colors } from '../../ui/styles'
-import { render, createVNode } from 'inferno'
+import { render } from 'inferno'
 
 let state = {
   query: '',

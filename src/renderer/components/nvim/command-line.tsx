@@ -1,4 +1,3 @@
-import { h } from 'inferno-hyperscript'
 import {
   enableCursor,
   disableCursor,

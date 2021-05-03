@@ -15,7 +15,23 @@ module.exports = {
       {
         test: [/\.tsx?$/],
         // include: [path.resolve(__dirname, "src/renderer")],
-        use: 'ts-loader',
+        use: [
+          { 
+            loader: 'babel-loader', 
+            options: {
+              presets: ["@babel/preset-typescript"],
+              plugins: [
+                ["babel-plugin-inferno", { "imports": true }],
+                "@babel/plugin-proposal-object-rest-spread",
+                "@babel/plugin-proposal-class-properties",
+                "@babel/plugin-transform-modules-commonjs"
+              ],
+              ignore: ["**/legacy/", "**/future/"],
+            }
+          },
+          'ts-loader',
+          // 'babel-loader',
+        ],
         exclude: /node_modules/,
       },
       // loads .js files

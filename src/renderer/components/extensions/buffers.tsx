@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+
 import FiletypeIcon, { Terminal } from '../filetype-icon'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'

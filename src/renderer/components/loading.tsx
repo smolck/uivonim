@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+
 import * as workspace from '../workspace'
 import Icon from './icon'
 

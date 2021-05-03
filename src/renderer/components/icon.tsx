@@ -1,4 +1,4 @@
-import { createVNode } from 'inferno'
+
 
 const feather = require('feather-icons')
 
