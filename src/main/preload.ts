@@ -15,18 +15,17 @@ ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 const api: WindowApi = {
   luaeval: (...args) => ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
   on: (event, func: (...args: any[]) => void) => {
-    console.log(event, func)
-    ipcRenderer.on(event, (_event, ...args) => {
-      console.log(...args)
-      func(...args)
-    })
-    // if (event in Object.values(Events)) {
-    /*} else {
+    // Derived from https://stackoverflow.com/a/35948779
+    if (Object.values(Events).indexOf(event) > -1) {
+      ipcRenderer.on(event, (_event, ...args) => {
+        func(...args)
+      })
+    } else {
      const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
      // TODO(smolck): Doing both is probably overkill, yeah?
      console.error(message)
      throw new Error(message)
-   }*/
+   }
   },
 
   stealInput: (fn) => {
@@ -72,14 +71,15 @@ const api: WindowApi = {
   // at least as long as the callable invokables are safe to expose.
   invoke: async (invokable, ...args) => {
     // TODO(smolck): Perf of this?
-    // if (invokable in Invokables) {
-    return await ipcRenderer.invoke(invokable, ...args)
-    /*} else {
-     const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
-     // TODO(smolck): Doing both is probably overkill, yeah?
-     console.error(message)
-     throw new Error(message)
-   }*/
+    // Derived from https://stackoverflow.com/a/35948779
+    if (Object.values(Invokables).indexOf(invokable) > -1) {
+      return await ipcRenderer.invoke(invokable, ...args)
+    } else {
+       const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
+       // TODO(smolck): Doing both is probably overkill, yeah?
+       console.error(message)
+       throw new Error(message)
+     }
   },
 }
 

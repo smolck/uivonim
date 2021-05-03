@@ -60,9 +60,6 @@ const defaultAppColors = {
 
 const defaultColorsMap = new Map<number, DefaultColors>()
 const getCurrentDefaultColors = () =>
-  // TODO(smolck): The colors map etc. stuff probably isn't necessary anymore;
-  // just using zero here where before the worker instance id was used, which
-  // isn't really a thing anymore so . . .
   defaultColorsMap.get(0) || defaultAppColors
 
 export const colors: DefaultColors = new Proxy(Object.create(null), {
