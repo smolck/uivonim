@@ -61,3 +61,13 @@ export interface BufferInfo {
   modified: boolean
   duplicate: boolean
 }
+
+export enum BufferType {
+  Normal = '',
+  Help = 'help',
+  NonFile = 'nofile',
+  Quickfix = 'quickfix',
+  Terminal = 'terminal',
+  NonWritable = 'nowrite',
+  OnlyWrittenWithAutocmd = 'acwrite',
+}

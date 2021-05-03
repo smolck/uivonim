@@ -27,16 +27,6 @@ export enum VimMode {
   SomeModeThatIProbablyDontCareAbout = 'whatever',
 }
 
-export enum BufferType {
-  Normal = '',
-  Help = 'help',
-  NonFile = 'nofile',
-  Quickfix = 'quickfix',
-  Terminal = 'terminal',
-  NonWritable = 'nowrite',
-  OnlyWrittenWithAutocmd = 'acwrite',
-}
-
 export enum BufferOption {
   FileFormat = 'fileformat',
   Modifiable = 'modifiable',

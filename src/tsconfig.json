@@ -5,6 +5,7 @@
     "xdg_config",
     "renderer/components/extensions/legacy",
     "renderer/components/extensions/future",
+    "main/workers/todo",
     "dev"
   ],
   "compilerOptions": {

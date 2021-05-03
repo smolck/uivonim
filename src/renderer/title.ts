@@ -1,4 +1,5 @@
-import { merge, simplifyPath } from '../common/utils'
+// TODO(smolck): import { merge, simplifyPath } from '../common/utils'
+import { merge } from '../common/utils'
 import { Events } from '../common/ipc'
 import * as dispatch from './dispatch'
 import * as workspace from './workspace'

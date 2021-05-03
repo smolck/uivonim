@@ -5,19 +5,19 @@ import {
   pathRelativeToCwd,
   getDirs,
   $HOME,
-} from '../../support/utils'
+} from '../../../common/utils'
 import { RowNormal, RowImportant } from '../row-container'
 import FiletypeIcon, { Folder } from '../filetype-icon'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import { Plugin } from '../plugin-container'
 import { join, sep, basename, dirname } from 'path'
 import Input from '../text-input'
-import { BufferType } from '../../neovim/types'
+import { BufferType } from '../../../common/types'
 import { filter } from 'fuzzaldrin-plus'
-import api from '../../core/instance-api'
 import { colors } from '../../ui/styles'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
+import { Invokables, Events } from '../../../common/ipc'
 
 interface FileDir {
   name: string
@@ -205,7 +205,7 @@ state.inputCallbacks = {
     assignStateAndRender({ pathMode: true, ix: 0, val: '', pathValue: '' }),
 
   ctrlH: async () => {
-    const { cwd } = api.nvim.state
+    const { cwd } = window.api.nvimState.state()
     const filedirs = await getDirFiles(cwd)
     const paths = sortDirFiles(filedirs)
     show({ paths, cwd, path: cwd })
@@ -222,8 +222,8 @@ state.inputCallbacks = {
     if (!name) return
 
     if (file) {
-      api.nvim.cmd(`e ${pathRelativeToCwd(join(state.path, name), state.cwd)}`)
-      assignStateAndRender(resetState)
+      // TODO(smolck): Make sure this works
+      window.api.invoke(Invokables.nvimCmd, `e ${pathRelativeToCwd(join(state.path, name), state.cwd)}`).then(() => assignStateAndRender(resetState))
       return
     }
 
@@ -283,10 +283,10 @@ state.inputCallbacks = {
     }),
 }
 
-api.onAction('explorer', async (customDir?: string) => {
-  const { cwd, bufferType } = api.nvim.state
+window.api.on(Events.explorer, async (customDir?: string) => {
+  const { cwd, bufferType } = window.api.nvimState.state()
   const isTerminal = bufferType === BufferType.Terminal
-  const currentDir = isTerminal ? cwd : api.nvim.state.dir
+  const currentDir = isTerminal ? cwd : window.api.nvimState.state().dir
   const path = customDir || currentDir
 
   const paths = sortDirFiles(await getDirFiles(path))

@@ -2,14 +2,13 @@ import { simplifyPath, is } from '../../../common/utils'
 import { basename, dirname } from 'path'
 import {
   Keymap,
-  BufferInfo,
   BufferOption,
-  BufferType,
   BufferHide,
   BufferEvent,
   GenericCallback,
   VimOption,
 } from '../../neovim/types'
+import { BufferInfo, BufferType } from '../../../common/types'
 import { Autocmds } from '../../neovim/startup'
 import { normalizeVimMode } from '../../../common/neovim-utils'
 import { EventEmitter } from 'events'

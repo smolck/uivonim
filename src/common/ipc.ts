@@ -49,6 +49,7 @@ export const Events = {
   hoverCloseAction: 'hoverCloseAction',
   pickColor: 'pickColor',
   modifyColorschemeLive: 'modifyColorschemeLive',
+  explorer: 'explorer',
 } as const
 
 export interface WindowApi {

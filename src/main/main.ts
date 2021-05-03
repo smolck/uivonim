@@ -180,6 +180,7 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   instanceApi.onAction('hover', () => win.webContents.send(Events.hoverAction))
   instanceApi.onAction('hover-close', () => win.webContents.send(Events.hoverCloseAction))
   instanceApi.onAction('pick-color', () => win.webContents.send(Events.pickColor))
+  instanceApi.onAction('explorer', () => win.webContents.send(Events.explorer))
 }
 
 async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
