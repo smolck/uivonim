@@ -89,13 +89,7 @@ app.on('ready', async () => {
     backgroundColor: '#222',
     autoHideMenuBar: true,
     webPreferences: {
-      // TODO(smolck): Long-term solution is to stop using `remote` entirely,
-      // see https://github.com/electron/electron/issues/21408 and
-      // https://medium.com/@nornagon/electrons-remote-module-considered-harmful-70d69500f31
-      enableRemoteModule: false,
-      nodeIntegration: false,
-      nodeIntegrationInWorker: false,
-      contextIsolation: true,
+      enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js'),
     },
   })
@@ -128,16 +122,7 @@ app.on('ready', async () => {
   }*/
   win.webContents.openDevTools()
 
-  nvim = await Nvim(win, { useWsl: false })
-  nvim.onExit(app.quit)
-  input = Input(
-    nvim.instanceApi,
-    nvim.input,
-    (fn) => win.on('focus', fn),
-    (fn) => win.on('blur', fn)
-  )
   setupInvokeHandlers()
-
   win.webContents.on('did-finish-load', async () => await afterReadyThings())
 })
 
@@ -160,6 +145,15 @@ async function afterReadyThings() {
   )
   win.on('leave-full-screen', () =>
     win.webContents.send(Events.windowLeaveFullScreen)
+  )
+
+  nvim = await Nvim(win, { useWsl: false })
+  nvim.onExit(app.quit)
+  input = Input(
+    nvim.instanceApi,
+    nvim.input,
+    (fn) => win.on('focus', fn),
+    (fn) => win.on('blur', fn)
   )
 
   // TODO(smolck): cli args
