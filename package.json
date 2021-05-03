@@ -6,6 +6,7 @@
   "description": "Extensible Neovim GUI forked from Veonim",
   "main": "build/bootstrap/main.js",
   "scripts": {
+    "run": "npm run build && npx webpack && npm run start",
     "start": "node tools/start.js",
     "start:release": "node tools/start-release.js",
     "build": "node tools/build.js",
