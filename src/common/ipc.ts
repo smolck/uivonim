@@ -24,6 +24,7 @@ export const Invokables = {
   nvimCmd: 'nvimCmd',
   getBufferInfo: 'getBufferInfo',
   nvimJumpTo: 'nvimJumpTo',
+  expand: 'nvim.call.expand'
 } as const
 
 export const Events = {
@@ -37,6 +38,7 @@ export const Events = {
   windowLeaveFullScreen: 'window-leave-full-screen',
   // TODO(smolck): setVar: 'setVar',
   
+  // TODO(smolck): Why did I put `action` on the end of all of this . . .
   ncAction: 'nyAction',
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
@@ -45,6 +47,8 @@ export const Events = {
   codeActionAction: 'codeActionAction',
   hoverAction: 'hoverAction',
   hoverCloseAction: 'hoverCloseAction',
+  pickColor: 'pickColor',
+  modifyColorschemeLive: 'modifyColorschemeLive',
 } as const
 
 export interface WindowApi {

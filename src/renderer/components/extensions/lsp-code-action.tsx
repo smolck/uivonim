@@ -6,7 +6,7 @@ import Input from '../text-input'
 import Overlay from '../overlay'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
-import { Events, Invokables } from '../../../common/ipc'
+import { Events } from '../../../common/ipc'
 import { cursor } from '../../cursor'
 
 type CodeAction = {

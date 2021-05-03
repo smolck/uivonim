@@ -1,15 +1,14 @@
 import { createVNode } from 'inferno'
 import * as windows from '../../windows/window-manager'
-import * as dispatch from '../../messaging/dispatch'
+import * as dispatch from '../../dispatch'
 import ColorPicker from '../../ui/color-picker'
 import Overlay from '../overlay'
-import { debounce } from '../../support/utils'
-import { stealInput } from '../../core/input'
+import { debounce } from '../../../common/utils'
 import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
-import { cursor } from '../../core/cursor'
+import { cursor } from '../../cursor'
 import { render } from 'inferno'
-import api from '../../core/instance-api'
+import { Invokables, Events } from '../../../common/ipc'
 
 let liveMode = false
 let restoreInput = () => {}
@@ -32,18 +31,19 @@ const colorPicker = ColorPicker()
 // specified hlgroup values
 const possiblyUpdateColorScheme = debounce(() => {
   if (!liveMode) return
-  if (!api.nvim.state.file.endsWith('.vim')) return
+  if (!window.api.nvimState.state().file.endsWith('.vim')) return
 
   const colorschemeBeingEdited = basename(
-    api.nvim.state.file,
-    extname(api.nvim.state.file)
+    window.api.nvimState.state().file,
+    extname(window.api.nvimState.state().file)
   )
-  const currentActiveColorscheme = api.nvim.state.colorscheme
+  const currentActiveColorscheme = window.api.nvimState.state().colorscheme
 
   if (currentActiveColorscheme !== colorschemeBeingEdited) return
 
-  api.nvim.cmd(`write`)
-  api.nvim.cmd(`colorscheme ${currentActiveColorscheme}`)
+  const cmd = (cmd: string) => window.api.invoke(Invokables.nvimCmd, cmd)
+  cmd(`write`)
+  cmd(`colorscheme ${currentActiveColorscheme}`)
   dispatch.pub('colorscheme.modified')
 }, 300)
 
@@ -105,9 +105,10 @@ const show = (color: string) => {
   // colorPicker.setHSL(h, s, l, a)
   uiShow()
 
-  restoreInput = stealInput((keys) => {
+  window.api.stealInput((keys: string) => {
     if (keys !== '<Esc>') return
-    restoreInput()
+    window.api.restoreInput()
+    // TODO(smolck): Needs to be in a .then() call because above is Promise?
     state.hideFunc()
   })
 }
@@ -115,18 +116,19 @@ const show = (color: string) => {
 colorPicker.onChange((color) => {
   // TODO: will also need to send what kind of color is updated, that way
   // we know which text edit to apply (rgba or hsla, etc.)
-  api.nvim.cmd(`exec "normal! ciw${color}"`)
+  window.api.invoke(Invokables.nvimCmd, `exec "normal! ciw${color}"`)
+  // TODO(smolck): Needs to be in a .then() call because above is Promise?
   possiblyUpdateColorScheme()
 })
 
-api.onAction('pick-color', async () => {
+window.api.on(Events.pickColor, async () => {
   liveMode = false
-  const word = await api.nvim.call.expand('<cword>')
+  const word = await window.api.invoke(Invokables.expand, '<cword>')
   show(word)
 })
 
-api.onAction('modify-colorscheme-live', async () => {
+window.api.on(Events.modifyColorschemeLive, async () => {
   liveMode = true
-  const word = await api.nvim.call.expand('<cword>')
+  const word = await window.api.invoke(Invokables.expand, '<cword>')
   show(word)
 })

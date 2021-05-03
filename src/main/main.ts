@@ -179,6 +179,7 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   instanceApi.onAction('code-action', () => win.webContents.send(Events.codeActionAction))
   instanceApi.onAction('hover', () => win.webContents.send(Events.hoverAction))
   instanceApi.onAction('hover-close', () => win.webContents.send(Events.hoverCloseAction))
+  instanceApi.onAction('pick-color', () => win.webContents.send(Events.pickColor))
 }
 
 async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
@@ -248,4 +249,5 @@ async function setupInvokeHandlers(nvim: NvimType, input: InputType) {
 
   ipcMain.handle(Invokables.getBufferInfo, (_event, _args) => nvim.instanceApi.getBufferInfo())
   ipcMain.handle(Invokables.nvimJumpTo, (_event, coords) => nvim.instanceApi.nvimJumpTo(coords))
+  ipcMain.handle(Invokables.expand, (_event, thingToExpand) => nvim.instanceApi.nvimCall.expand(thingToExpand))
 }
