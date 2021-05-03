@@ -13,7 +13,7 @@ export const css = (builder: (classname: string) => string[]): string => {
 }
 
 export const vimFocus = () => {
-  setImmediate(async () => window.api.invoke(Invokables.inputFocus))
+  setTimeout(async () => window.api.invoke(Invokables.inputFocus), 1)
   document.getElementById('keycomp-textarea')?.focus()
   showCursor()
 }

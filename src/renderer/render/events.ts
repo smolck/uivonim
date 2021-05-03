@@ -203,7 +203,6 @@ const updateFont = () => {
   const lineSpace = options.get('linespace')
   const guifont = options.get('guifont')
 
-  if (!guifont || !lineSpace) return
   const [font] = guifont.match(/(?:\\,|[^,])+/g) || ['']
   const [face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
@@ -220,6 +219,7 @@ const updateFont = () => {
 
 export const option_set = (e: any) => {
   e.slice(1).forEach(([k, value]: any) => options.set(sillyString(k), value))
+
   updateFont()
 }
 
