@@ -21,11 +21,11 @@ const api: WindowApi = {
         func(...args)
       })
     } else {
-     const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
-     // TODO(smolck): Doing both is probably overkill, yeah?
-     console.error(message)
-     throw new Error(message)
-   }
+      const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
+      // TODO(smolck): Doing both is probably overkill, yeah?
+      console.error(message)
+      throw new Error(message)
+    }
   },
 
   stealInput: (fn) => {
@@ -75,11 +75,11 @@ const api: WindowApi = {
     if (Object.values(Invokables).indexOf(invokable) > -1) {
       return await ipcRenderer.invoke(invokable, ...args)
     } else {
-       const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
-       // TODO(smolck): Doing both is probably overkill, yeah?
-       console.error(message)
-       throw new Error(message)
-     }
+      const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
+      // TODO(smolck): Doing both is probably overkill, yeah?
+      console.error(message)
+      throw new Error(message)
+    }
   },
 }
 
