@@ -1,4 +1,5 @@
-import { VimMode, BufferType } from '../neovim/types'
+import { VimMode } from '../neovim/types'
+import { BufferType } from '../../common/types'
 import { EventEmitter } from 'events'
 
 const state = {

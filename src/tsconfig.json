@@ -6,6 +6,7 @@
     "renderer/components/extensions/legacy",
     "renderer/components/extensions/future",
     "main/workers/todo",
+    "main/neovim/todo",
     "dev"
   ],
   "compilerOptions": {
