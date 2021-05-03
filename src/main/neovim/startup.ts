@@ -1,7 +1,7 @@
 import { CmdGroup, FunctionGroup } from '../../common/neovim-utils'
 import { resolve } from 'path'
 
-const runtimeDir = resolve(__dirname, '..', 'runtime')
+const runtimeDir = resolve(__dirname, '..', '..', '..', 'runtime')
 const startup = FunctionGroup()
 
 export const startupFuncs = () => startup.getFunctionsAsString()
