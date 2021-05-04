@@ -57,18 +57,10 @@ module.exports = {
       os: false,
       stream: false,
       dns: false,
-      'process/browser.js': false,
     },
   },
   output: {
     path: path.resolve(__dirname, 'build/renderer'),
     filename: 'bundle.js', // The name of the webpack bundle that's generated
   },
-  plugins: [
-    // fix "process is not defined" error;
-    // https://stackoverflow.com/a/64553486/1837080
-    new webpack.ProvidePlugin({
-      process: 'process/browser.js',
-    }),
-  ],
 }
