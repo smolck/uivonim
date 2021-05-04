@@ -104,19 +104,9 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
-window.api.on(Events.nvimShowMessage, (..._args) => {
-  // TODO(smolck)
-  // const msg = require('../components/nvim/messages').default.show(...a)
-  // return msg.promise
-})
-
+window.api.on(Events.nvimShowMessage, (...args) => require('./components/nvim/messages').default.show(...args))
 window.api.on(Events.nvimMessageStatus, (..._args) => {})
-
-// TODO(smolck): Put this somewhere else?
-/*api.onAction(
-  'update-nameplates',
-  () => (windows.refresh(), console.log('refresh'))
-)*/
+window.api.on(Events.updateNameplates, windows.refresh)
 
 document.onclick = (e) => {
   if (document.activeElement === document.body) {

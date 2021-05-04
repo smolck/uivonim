@@ -1,13 +1,11 @@
-// TODO(smolck): import { merge, simplifyPath } from '../common/utils'
-import { merge } from '../common/utils'
+import { merge, simplifyPath } from '../common/utils'
 import { Events } from '../common/ipc'
 import * as dispatch from './dispatch'
 import * as workspace from './workspace'
 
-const macos = process.platform === 'darwin'
 let titleBarVisible = false
-const titleBar = macos && document.createElement('div')
-const title = macos && document.createElement('div')
+const titleBar = window.api.isMacos && document.createElement('div')
+const title = window.api.isMacos && document.createElement('div')
 
 export const setTitleVisibility = (visible: boolean) => {
   if (!titleBar) return
@@ -16,7 +14,7 @@ export const setTitleVisibility = (visible: boolean) => {
   workspace.resize()
 }
 
-if (macos) {
+if (window.api.isMacos) {
   merge((title as HTMLElement).style, {
     fontSize: '14px',
     marginLeft: '20%',
@@ -55,16 +53,14 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  window.api.nvimWatchState('file', (_file: string) => {
-    // TODO(smolck): How to get api.nvim.state.cwd?
-    // const path = simplifyPath(file, api.nvim.state.cwd)
-    // ;(title as HTMLElement).innerText = `${path} - uivonim`
+  window.api.nvimWatchState('file', (file: string) => {
+    const path = simplifyPath(file, window.api.nvimState.state().cwd)
+    ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
-  window.api.nvimWatchState('file', (_file: string) => {
-    // TODO(smolck): How to get api.nvim.state.cwd?
-    // const path = simplifyPath(file, api.nvim.state.cwd)
-    // remote.getCurrentWindow().setTitle(`${path} - uivonim`)
+  window.api.nvimWatchState('file', (file: string) => {
+    const path = simplifyPath(file, window.api.nvimState.state().cwd)
+    window.api.setWinTitle(`${path} - uivonim`)
   })
 
 export const specs = {

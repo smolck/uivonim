@@ -211,6 +211,7 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   sendOn('hover-close', Events.hoverCloseAction)
   sendOn('pick-color', Events.pickColor)
   sendOn('explorer', Events.explorer)
+  sendOn('update-nameplates', Events.updateNameplates)
 }
 
 async function setupInvokeHandlers() {
@@ -302,6 +303,8 @@ async function setupInvokeHandlers() {
     nvim.instanceApi.nvimCall.expand(thingToExpand)
   )
   ipcMain.handle(Invokables.nvimCmd, (_event, cmd) => nvim.instanceApi.nvimCommand(cmd))
+
+  ipcMain.handle(InternalInvokables.setWinTitle, (_event, newTitle) => win.setTitle(newTitle))
 
   // TODO(smolck): Security of this? Fine for now, but if we are wanting to
   // browse the web in the same browser window (future feature idea) then this'll

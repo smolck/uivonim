@@ -48,7 +48,7 @@ interface Types {
   set: TypeChecker
 }
 
-export const $HOME = homedir ? homedir() : 'TODO'
+export const $HOME = homedir ? homedir() : 'Why are you using this from the frontend? Stop it.'
 const snakeCase = (m: string) =>
   m
     .split('')
@@ -159,11 +159,11 @@ export const resolvePath = (path: string, dir: string) => {
   if (path.startsWith('./') || path.startsWith('../')) return join(dir, path)
 }
 
-export const simplifyPath = (fullpath: string, cwd: string) =>
+export const simplifyPath = (fullpath: string, cwd: string, homeDirIfUsingFromWeb?: string) =>
   fullpath.includes(cwd)
     ? fullpath.split(cwd + '/')[1]
-    : fullpath.includes($HOME)
-    ? fullpath.replace($HOME, '~')
+    : fullpath.includes(homeDirIfUsingFromWeb ?? $HOME)
+    ? fullpath.replace(homeDirIfUsingFromWeb ?? $HOME, '~')
     : fullpath
 
 export const pathReducer = (p = '') =>

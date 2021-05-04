@@ -8,6 +8,7 @@ export const InternalInvokables = {
   restoreInput: 'restoreInput',
   luaeval: 'luaeval',
   getWorkerInstanceId: 'getWorkerInstanceId',
+  setWinTitle: 'setWinTitle',
 }
 
 export const Invokables = {
@@ -53,10 +54,13 @@ export const Events = {
   pickColor: 'pickColor',
   modifyColorschemeLive: 'modifyColorschemeLive',
   explorer: 'explorer',
+  updateNameplates: 'window.refresh'
 } as const
 
 export interface WindowApi {
+  isMacos: boolean,
   homeDir: string,
+  setWinTitle: (newTitle: string) => void,
   luaeval: (...args: any[]) => void
   stealInput: (
     fn:
