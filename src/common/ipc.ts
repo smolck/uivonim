@@ -54,13 +54,13 @@ export const Events = {
   pickColor: 'pickColor',
   modifyColorschemeLive: 'modifyColorschemeLive',
   explorer: 'explorer',
-  updateNameplates: 'window.refresh'
+  updateNameplates: 'window.refresh',
 } as const
 
 export interface WindowApi {
-  isMacos: boolean,
-  homeDir: string,
-  setWinTitle: (newTitle: string) => void,
+  isMacos: boolean
+  homeDir: string
+  setWinTitle: (newTitle: string) => void
   luaeval: (...args: any[]) => void
   stealInput: (
     fn:

@@ -48,7 +48,9 @@ interface Types {
   set: TypeChecker
 }
 
-export const $HOME = homedir ? homedir() : 'Why are you using this from the frontend? Stop it.'
+export const $HOME = homedir
+  ? homedir()
+  : 'Why are you using this from the frontend? Stop it.'
 const snakeCase = (m: string) =>
   m
     .split('')
@@ -146,7 +148,9 @@ export const minmax = (min: number, max: number) => (...numbers: number[]) => {
 }
 
 export const pathRelativeTo = (path: string, otherPath: string) =>
-  path.includes(otherPath) ? path.replace(otherPath, '').replace(/^\//, '') : path
+  path.includes(otherPath)
+    ? path.replace(otherPath, '').replace(/^\//, '')
+    : path
 
 // TODO: i don't think this does what you think it does. try giving ./relative/path
 export const absolutePath = (path: string) =>
@@ -159,7 +163,11 @@ export const resolvePath = (path: string, dir: string) => {
   if (path.startsWith('./') || path.startsWith('../')) return join(dir, path)
 }
 
-export const simplifyPath = (fullpath: string, cwd: string, homeDirIfUsingFromWeb?: string) =>
+export const simplifyPath = (
+  fullpath: string,
+  cwd: string,
+  homeDirIfUsingFromWeb?: string
+) =>
   fullpath.includes(cwd)
     ? fullpath.split(cwd + '/')[1]
     : fullpath.includes(homeDirIfUsingFromWeb ?? $HOME)

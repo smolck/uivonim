@@ -66,7 +66,6 @@ requestAnimationFrame(() => {
   })
 
   setTimeout(() => {
-
     require('./components/extensions/buffers')
     require('./components/extensions/color-picker')
     require('./components/extensions/explorer')
@@ -104,7 +103,9 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
-window.api.on(Events.nvimShowMessage, (...args) => require('./components/nvim/messages').default.show(...args))
+window.api.on(Events.nvimShowMessage, (...args) =>
+  require('./components/nvim/messages').default.show(...args)
+)
 window.api.on(Events.nvimMessageStatus, (..._args) => {})
 window.api.on(Events.updateNameplates, windows.refresh)
 

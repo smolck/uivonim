@@ -18,7 +18,8 @@ const api: WindowApi = {
   // TODO(smolck): Security of this if we ever add a web browsing feature
   isMacos: process.platform === 'darwin',
   homeDir,
-  setWinTitle: (newTitle) => ipcRenderer.invoke(InternalInvokables.setWinTitle, newTitle),
+  setWinTitle: (newTitle) =>
+    ipcRenderer.invoke(InternalInvokables.setWinTitle, newTitle),
   luaeval: (...args) => ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
   on: (event, func: (...args: any[]) => void) => {
     // Derived from https://stackoverflow.com/a/35948779

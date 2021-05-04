@@ -38,10 +38,12 @@ const sortDirFiles = (filedirs: FileDir[]) => {
   return [...dirs, ...files]
 }
 
-const absolutePath = (path: string) => path.replace(/^~\//, `${window.api.homeDir}/`)
+const absolutePath = (path: string) =>
+  path.replace(/^~\//, `${window.api.homeDir}/`)
 
 const getDirs = (path: string) => window.api.invoke(Invokables.getDirs, path)
-const getDirFiles = (path: string) => window.api.invoke(Invokables.getDirFiles, path)
+const getDirFiles = (path: string) =>
+  window.api.invoke(Invokables.getDirFiles, path)
 
 const pathExplore = async (path: string) => {
   const fullpath = absolutePath(path)
