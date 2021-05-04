@@ -1,5 +1,3 @@
-// import { Watchers } from '../common/utils'
-
 type Cb = (...args: any[]) => void
 
 const dispatchConstructor = () => {

@@ -16,7 +16,7 @@ export interface WindowMetadata {
 export interface ExtContainer {
   extContainer: boolean
   kind: number
-  id: any
+  data: any
 }
 
 export enum MessageKind {
