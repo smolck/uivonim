@@ -5,6 +5,7 @@ import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
 import { getDirFiles, getDirs, $HOME } from '../common/utils'
+import { GenericCallback } from '../common/types'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -123,7 +124,6 @@ app.on('ready', async () => {
   }*/
   win.webContents.openDevTools()
 
-  setupInvokeHandlers()
   win.webContents.on('did-finish-load', async () => await afterReadyThings())
 })
 
@@ -164,8 +164,6 @@ async function afterReadyThings() {
   )
   nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
 
-  setupActionHandlers(nvim.instanceApi)
-
   nvim.onRedraw((redrawEvents) => {
     win.webContents.send(
       Events.nvimRedraw,
@@ -177,6 +175,11 @@ async function afterReadyThings() {
       JSON.stringify(redrawEvents, getCircularReplacer())
     )
   })
+
+  setupActionHandlers(nvim.instanceApi)
+  await setupInvokeHandlers()
+  win.webContents.send(Events.invokeHandlersReady)
+
   nvim.instanceApi.watchState.colorscheme(() =>
     win.webContents.send(Events.colorschemeStateUpdated)
   )
@@ -213,100 +216,87 @@ function setupActionHandlers(instanceApi: InstanceApi) {
 }
 
 async function setupInvokeHandlers() {
-  ipcMain.handle(Invokables.getWindowMetadata, async (_event, _args) => {
-    return await nvim.instanceApi.getWindowMetadata()
+  // @ts-ignore
+  const handle: {
+    [Key in keyof typeof Invokables]: (fn: GenericCallback) => void
+  } = new Proxy(Invokables, {
+    get: (target, key) => (fn: GenericCallback) => {
+      ipcMain.handle(Reflect.get(target, key), (_event, ...args) => fn(...args))
+    },
   })
 
-  ipcMain.handle(Invokables.winGetAndSetSize, async (_event, _args) => {
+  // @ts-ignore
+  const handleInternal: {
+    [Key in keyof typeof InternalInvokables]: (fn: GenericCallback) => void
+  } = new Proxy(InternalInvokables, {
+    get: (target, key) => (fn: GenericCallback) => {
+      ipcMain.handle(Reflect.get(target, key), (_event, ...args) => fn(...args))
+    },
+  })
+
+  handleInternal.nvimWatchState(
+    (thing: any) =>
+      new Promise((resolve, _) =>
+        // @ts-ignore
+        nvim.instanceApi.watchState[thing]((x) => resolve(x))
+      )
+  )
+  handleInternal.gitOnBranch(
+    () =>
+      new Promise((resolve, _) =>
+        nvim.instanceApi.gitOnBranch((branch) => resolve(branch))
+      )
+  )
+
+  handleInternal.gitOnStatus(
+    () =>
+      new Promise((resolve, _) =>
+        nvim.instanceApi.gitOnStatus((status) => resolve(status))
+      )
+  )
+  handleInternal.stealInput(
+    () =>
+      new Promise((resolve, _) =>
+        input.stealInput((inputKeys, inputType) =>
+          resolve([inputKeys, inputType])
+        )
+      )
+  )
+  handleInternal.restoreInput(() => input.restoreInput())
+  // TODO(smolck): Security if we add web browsing feature
+  handleInternal.luaeval(() =>
+    // @ts-ignore
+    nvim.instanceApi.nvimCall.luaeval()
+  )
+  handleInternal.setWinTitle(win.setTitle)
+
+  handle.getWindowMetadata(() => nvim.instanceApi.getWindowMetadata())
+  handle.winGetAndSetSize(() => {
     const [width, height] = win.getSize()
     win.setSize(width + 1, height)
     win.setSize(width, height)
   })
-
-  ipcMain.handle(Invokables.nvimResize, async (_event, width, height) => {
-    nvim.resize(width, height)
-  })
-
-  ipcMain.handle(
-    Invokables.nvimResizeGrid,
-    async (_event, grid, width, height) => {
-      nvim.resizeGrid(grid, width, height)
-    }
+  handle.nvimResize((width, height) => nvim.resize(width, height))
+  handle.nvimResizeGrid((grid, width, height) =>
+    nvim.resizeGrid(grid, width, height)
   )
-
-  ipcMain.handle(InternalInvokables.nvimWatchState, (_event, thing: string) => {
-    // TODO(smolck)
-    return new Promise((resolve, _reject) =>
-      // TODO(smolck): Type this?
-      // @ts-ignore
-      nvim.instanceApi.watchState[thing]((x) => resolve(x))
-    )
-  })
-  ipcMain.handle(InternalInvokables.gitOnBranch, (_event, _args) => {
-    return new Promise((resolve, _reject) =>
-      nvim.instanceApi.gitOnBranch((branch) => resolve(branch))
-    )
-  })
-  ipcMain.handle(InternalInvokables.gitOnStatus, (_event, _args) => {
-    return new Promise((resolve, _reject) =>
-      nvim.instanceApi.gitOnStatus((status) => resolve(status))
-    )
-  })
-
-  ipcMain.handle(Invokables.inputBlur, (_event, _args) => input.blur())
-  ipcMain.handle(Invokables.inputFocus, (_event, _args) => input.focus())
-
-  ipcMain.handle(Invokables.getColorByName, (_event, name) =>
-    nvim.instanceApi.nvimGetColorByName(name)
-  )
-  ipcMain.handle(Invokables.setMode, (_event, mode) =>
-    nvim.instanceApi.setMode(mode)
-  )
-
-  ipcMain.handle(
-    Invokables.registerOneTimeUseShortcuts,
-    (_event, shortcuts) => {
-      return new Promise((resolve, _reject) =>
-        input.registerOneTimeUseShortcuts(shortcuts, (shortcuts) => {
-          resolve(shortcuts)
-        })
+  handle.inputBlur(() => input.blur())
+  handle.inputFocus(() => input.focus())
+  handle.getColorByName((name) => nvim.instanceApi.nvimGetColorByName(name))
+  handle.setMode((mode) => nvim.instanceApi.setMode(mode))
+  handle.registerOneTimeUseShortcuts(
+    (shortcuts: any) =>
+      new Promise((resolve, _) =>
+        input.registerOneTimeUseShortcuts(shortcuts, (shorts) =>
+          resolve(shorts)
+        )
       )
-    }
   )
 
-  ipcMain.handle(InternalInvokables.stealInput, (_event, _args) => {
-    return new Promise((resolve, _reject) => {
-      input.stealInput((inputKeys, inputType) => {
-        resolve([inputKeys, inputType])
-      })
-    })
-  })
-
-  ipcMain.handle(InternalInvokables.restoreInput, (_event, _args) =>
-    input.restoreInput()
-  )
-  // TODO(smolck): Security of this?
-  ipcMain.handle(InternalInvokables.luaeval, (_event, ...args) =>
-    // @ts-ignore
-    nvim.instanceApi.nvimCall.luaeval(...args)
-  )
-
-  ipcMain.handle(Invokables.getBufferInfo, (_event, _args) =>
-    nvim.instanceApi.getBufferInfo()
-  )
-  ipcMain.handle(Invokables.nvimJumpTo, (_event, coords) =>
-    nvim.instanceApi.nvimJumpTo(coords)
-  )
-  ipcMain.handle(Invokables.expand, (_event, thingToExpand) =>
-    nvim.instanceApi.nvimCall.expand(thingToExpand)
-  )
-  ipcMain.handle(Invokables.nvimCmd, (_event, cmd) =>
-    nvim.instanceApi.nvimCommand(cmd)
-  )
-
-  ipcMain.handle(InternalInvokables.setWinTitle, (_event, newTitle) =>
-    win.setTitle(newTitle)
-  )
+  handle.getBufferInfo(() => nvim.instanceApi.getBufferInfo())
+  handle.nvimJumpTo((coords) => nvim.instanceApi.nvimJumpTo(coords))
+  handle.expand((thing) => nvim.instanceApi.nvimCall.expand(thing))
+  handle.nvimCmd((cmd) => nvim.instanceApi.nvimCommand(cmd))
 
   // TODO(smolck): Security of this? Fine for now, but if we are wanting to
   // browse the web in the same browser window (future feature idea) then this'll
@@ -315,6 +305,6 @@ async function setupInvokeHandlers() {
   // feels like a bad idea.
   //
   // Note that this is all really just so that `src/renderer/components/extensions/explorer.tsx` can work.
-  ipcMain.handle(Invokables.getDirs, (_event, path) => getDirs(path))
-  ipcMain.handle(Invokables.getDirFiles, (_event, path) => getDirFiles(path))
+  handle.getDirs(getDirs)
+  handle.getDirFiles(getDirFiles)
 }

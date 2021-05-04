@@ -1,4 +1,3 @@
-export type GenericCallback = (...args: any[]) => void
 export type VimOption = { [index: string]: Promise<any> }
 export type Keymap = Map<string, KeymapObject>
 

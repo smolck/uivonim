@@ -32,6 +32,8 @@ export const Invokables = {
 } as const
 
 export const Events = {
+  invokeHandlersReady: 'invokeHandlersReady',
+
   homeDir: 'homeDir',
   nvimState: 'nvim.state',
   nvimRedraw: 'nvim.redraw',

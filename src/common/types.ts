@@ -1,3 +1,5 @@
+export type GenericCallback = (...args: any[]) => void
+
 export interface WindowMetadata {
   id: number
   dir: string

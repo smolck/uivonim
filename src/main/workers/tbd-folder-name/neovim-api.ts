@@ -5,10 +5,9 @@ import {
   BufferOption,
   BufferHide,
   BufferEvent,
-  GenericCallback,
   VimOption,
 } from '../../neovim/types'
-import { BufferInfo, BufferType } from '../../../common/types'
+import { BufferInfo, BufferType, GenericCallback } from '../../../common/types'
 import { Autocmds } from '../../neovim/startup'
 import { normalizeVimMode } from '../../../common/neovim-utils'
 import { EventEmitter } from 'events'

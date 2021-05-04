@@ -10,6 +10,9 @@ import {
 // TODO(smolck): Typing? Etc.?
 let nvimState: any = undefined
 let homeDir = ''
+let onReady = new Promise((resolve, _) =>
+  ipcRenderer.on(Events.invokeHandlersReady, () => resolve(null))
+)
 
 ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 ipcRenderer.on(Events.homeDir, (_event, dir) => (homeDir = dir))
@@ -20,7 +23,10 @@ const api: WindowApi = {
   homeDir,
   setWinTitle: (newTitle) =>
     ipcRenderer.invoke(InternalInvokables.setWinTitle, newTitle),
-  luaeval: (...args) => ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
+  luaeval: async (...args) => {
+    await onReady
+    return ipcRenderer.invoke(InternalInvokables.luaeval, ...args)
+  },
   on: (event, func: (...args: any[]) => void) => {
     // Derived from https://stackoverflow.com/a/35948779
     if (Object.values(Events).indexOf(event) > -1) {
@@ -46,18 +52,20 @@ const api: WindowApi = {
   },
 
   gitOnBranch: (fn: (status: any) => void) =>
-    ipcRenderer
-      .invoke(InternalInvokables.gitOnStatus)
-      .then((status) => fn(status)),
+    onReady.then(() =>
+      ipcRenderer.invoke(InternalInvokables.gitOnStatus).then(fn)
+    ),
   gitOnStatus: (fn: (branch: any) => void) =>
-    ipcRenderer
-      .invoke(InternalInvokables.gitOnBranch)
-      .then((branch) => fn(branch)),
+    onReady.then(() =>
+      ipcRenderer.invoke(InternalInvokables.gitOnBranch).then(fn)
+    ),
 
   nvimWatchState: (key: string, fn: any) =>
-    ipcRenderer
-      .invoke(InternalInvokables.nvimWatchState, key)
-      .then((newStateThing) => fn(newStateThing)),
+    onReady.then(() =>
+      ipcRenderer
+        .invoke(InternalInvokables.nvimWatchState, key)
+        .then((newStateThing) => fn(newStateThing))
+    ),
 
   nvimState: {
     // TODO(smolck)
@@ -71,12 +79,14 @@ const api: WindowApi = {
     },
   },
   getWindowMetadata: async (): Promise<WindowMetadata[]> => {
+    await onReady
     return await ipcRenderer.invoke(Invokables.getWindowMetadata)
   },
 
   // TODO(smolck): This should be safe I think . . .
   // at least as long as the callable invokables are safe to expose.
   invoke: async (invokable, ...args) => {
+    await onReady
     // TODO(smolck): Perf of this?
     // Derived from https://stackoverflow.com/a/35948779
     if (Object.values(Invokables).indexOf(invokable) > -1) {
