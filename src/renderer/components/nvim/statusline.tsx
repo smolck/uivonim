@@ -399,8 +399,7 @@ window.api.gitOnStatus((status) =>
     deletions: status.deletions,
   })
 )
-// sub('ai.diagnostics.count', (count) => ui.setDiagnostics(count))
-// sub('ai.start', (opts) => ui.aiStart(opts))
+
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 
