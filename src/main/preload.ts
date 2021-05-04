@@ -53,11 +53,11 @@ const api: WindowApi = {
 
   gitOnBranch: (fn: (status: any) => void) =>
     onReady.then(() =>
-      ipcRenderer.invoke(InternalInvokables.gitOnStatus).then(fn)
+      ipcRenderer.invoke(InternalInvokables.gitOnBranch).then(fn)
     ),
   gitOnStatus: (fn: (branch: any) => void) =>
     onReady.then(() =>
-      ipcRenderer.invoke(InternalInvokables.gitOnBranch).then(fn)
+      ipcRenderer.invoke(InternalInvokables.gitOnStatus).then(fn)
     ),
 
   nvimWatchState: (key: string, fn: any) =>
