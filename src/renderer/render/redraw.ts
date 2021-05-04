@@ -48,7 +48,7 @@ const win_pos = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [gridId, { id: windowId }, row, col, width, height] = e[ix]
+    const [gridId, { data: windowId }, row, col, width, height] = e[ix]
     windows.set(windowId, gridId, row, col, width, height)
   }
 }
