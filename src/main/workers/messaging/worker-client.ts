@@ -36,8 +36,7 @@ const readSharedArray = (id: number) => {
   return fromJSON(jsonString).or({})
 }
 
-// TODO(smolck)
-/*onmessage = async ({ data: [e, data, id] }: MessageEvent) => {
+parentPort!!.on('message', async ([e, data, id]) => {
   if (e === '@@sab') {
     sharedArray = new Int32Array(data[0])
     return
@@ -55,7 +54,7 @@ const readSharedArray = (id: number) => {
   if (!listener) return
   const result = await listener(...data)
   send([e, result, id])
-}*/
+})
 
 export const requestSyncWithContext = (func: string, args: any[]) => {
   const id = requestId.next()

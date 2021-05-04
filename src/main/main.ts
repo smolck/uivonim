@@ -192,30 +192,19 @@ async function afterReadyThings() {
 }
 
 function setupActionHandlers(instanceApi: InstanceApi) {
-  instanceApi.onAction('nc', () => win.webContents.send(Events.ncAction))
-  instanceApi.onAction('signature-help', () =>
-    win.webContents.send(Events.signatureHelpAction)
-  )
-  instanceApi.onAction('signature-help-close', () =>
-    win.webContents.send(Events.signatureHelpAction)
-  )
-  instanceApi.onAction('buffers', () =>
-    win.webContents.send(Events.buffersAction)
-  )
-  instanceApi.onAction('references', () =>
-    win.webContents.send(Events.referencesAction)
-  )
-  instanceApi.onAction('code-action', () =>
-    win.webContents.send(Events.codeActionAction)
-  )
-  instanceApi.onAction('hover', () => win.webContents.send(Events.hoverAction))
-  instanceApi.onAction('hover-close', () =>
-    win.webContents.send(Events.hoverCloseAction)
-  )
-  instanceApi.onAction('pick-color', () =>
-    win.webContents.send(Events.pickColor)
-  )
-  instanceApi.onAction('explorer', () => win.webContents.send(Events.explorer))
+  const sendOn = (action: string, evt: typeof Events[keyof typeof Events]) => 
+    instanceApi.onAction(action, (...args) => win.webContents.send(evt, ...args))
+
+  sendOn('nc', Events.ncAction)
+  sendOn('signature-help', Events.signatureHelpAction)
+  sendOn('signature-help-close', Events.signatureHelpCloseAction)
+  sendOn('buffers', Events.buffersAction)
+  sendOn('references', Events.referencesAction)
+  sendOn('code-action', Events.codeActionAction)
+  sendOn('hover', Events.hoverAction)
+  sendOn('hover-close', Events.hoverCloseAction)
+  sendOn('pick-color', Events.pickColor)
+  sendOn('explorer', Events.explorer)
 }
 
 async function setupInvokeHandlers() {
