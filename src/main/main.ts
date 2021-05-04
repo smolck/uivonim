@@ -4,6 +4,11 @@ import Input, { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
+import {
+  getDirFiles,
+  getDirs,
+  $HOME,
+} from '../common/utils'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -140,6 +145,7 @@ const getCircularReplacer = () => {
 }
 
 async function afterReadyThings() {
+  win.webContents.send(Events.homeDir, $HOME)
   win.on('enter-full-screen', () =>
     win.webContents.send(Events.windowEnterFullScreen)
   )
@@ -295,4 +301,15 @@ async function setupInvokeHandlers() {
   ipcMain.handle(Invokables.expand, (_event, thingToExpand) =>
     nvim.instanceApi.nvimCall.expand(thingToExpand)
   )
+  ipcMain.handle(Invokables.nvimCmd, (_event, cmd) => nvim.instanceApi.nvimCommand(cmd))
+
+  // TODO(smolck): Security of this? Fine for now, but if we are wanting to
+  // browse the web in the same browser window (future feature idea) then this'll
+  // probably need to change, since exposing this to the outside world
+  // (specifically the homeDir event used at the start of `afterReadyThings` above) 
+  // feels like a bad idea.
+  //
+  // Note that this is all really just so that `src/renderer/components/extensions/explorer.tsx` can work.
+  ipcMain.handle(Invokables.getDirs, (_event, path) => getDirs(path))
+  ipcMain.handle(Invokables.getDirFiles, (_event, path) => getDirFiles(path))
 }

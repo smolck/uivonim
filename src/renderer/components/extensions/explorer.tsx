@@ -1,10 +1,3 @@
-import {
-  getDirFiles,
-  pathRelativeToHome,
-  pathRelativeToCwd,
-  getDirs,
-  $HOME,
-} from '../../../common/utils'
 import { RowNormal, RowImportant } from '../row-container'
 import FiletypeIcon, { Folder } from '../filetype-icon'
 import { vimBlur, vimFocus } from '../../ui/uikit'
@@ -17,6 +10,7 @@ import { colors } from '../../ui/styles'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import { Invokables, Events } from '../../../common/ipc'
+import { pathRelativeTo } from '../../../common/utils'
 
 interface FileDir {
   name: string
@@ -44,7 +38,10 @@ const sortDirFiles = (filedirs: FileDir[]) => {
   return [...dirs, ...files]
 }
 
-const absolutePath = (path: string) => path.replace(/^~\//, `${$HOME}/`)
+const absolutePath = (path: string) => path.replace(/^~\//, `${window.api.homeDir}/`)
+
+const getDirs = (path: string) => window.api.invoke(Invokables.getDirs, path)
+const getDirFiles = (path: string) => window.api.invoke(Invokables.getDirFiles, path)
 
 const pathExplore = async (path: string) => {
   const fullpath = absolutePath(path)
@@ -86,7 +83,7 @@ const Explorer = ({
 
     {!pathMode && (
       <RowImportant active={/* TODO(smolck): Is this right? */ false}>
-        <span>{pathRelativeToHome(path)}</span>
+        <span>{pathRelativeTo(path, window.api.homeDir)}</span>
       </RowImportant>
     )}
 
@@ -94,7 +91,7 @@ const Explorer = ({
       <Input
         {...pathModeInputCallbacks}
         id={'explorer-path-mode-input'}
-        value={pathRelativeToHome(pathValue)}
+        value={pathRelativeTo(pathValue, window.api.homeDir)}
         color={colors.important}
         icon={'search'}
         desc={'open path'}
@@ -221,11 +218,10 @@ state.inputCallbacks = {
     if (!name) return
 
     if (file) {
-      // TODO(smolck): Make sure this works
       window.api
         .invoke(
           Invokables.nvimCmd,
-          `e ${pathRelativeToCwd(join(state.path, name), state.cwd)}`
+          `e ${pathRelativeTo(join(state.path, name), state.cwd)}`
         )
         .then(() => assignStateAndRender(resetState))
       return

@@ -50,7 +50,7 @@ module.exports = {
       // TODO(smolck): This'll probably break things in src/renderer, need an
       // actual fix/polyfill/whatever
       fs: false,
-      path: false,
+      path: require.resolve('path-browserify'),
       util: false,
       net: false,
       child_process: false,

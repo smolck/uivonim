@@ -26,9 +26,12 @@ export const Invokables = {
   getBufferInfo: 'getBufferInfo',
   nvimJumpTo: 'nvimJumpTo',
   expand: 'nvim.call.expand',
+  getDirFiles: 'getDirFiles',
+  getDirs: 'getDirs',
 } as const
 
 export const Events = {
+  homeDir: 'homeDir',
   nvimState: 'nvim.state',
   nvimRedraw: 'nvim.redraw',
   colorschemeStateUpdated: 'nvimState.colorscheme',
@@ -53,6 +56,7 @@ export const Events = {
 } as const
 
 export interface WindowApi {
+  homeDir: string,
   luaeval: (...args: any[]) => void
   stealInput: (
     fn:

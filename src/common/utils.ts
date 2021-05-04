@@ -145,11 +145,8 @@ export const minmax = (min: number, max: number) => (...numbers: number[]) => {
   return Math.min(max, Math.max(min, ...numbers))
 }
 
-export const pathRelativeToHome = (path: string) =>
-  path.includes($HOME) ? path.replace($HOME, '~') : path
-
-export const pathRelativeToCwd = (path: string, cwd: string) =>
-  path.includes(cwd) ? path.replace(cwd, '').replace(/^\//, '') : path
+export const pathRelativeTo = (path: string, otherPath: string) =>
+  path.includes(otherPath) ? path.replace(otherPath, '').replace(/^\//, '') : path
 
 // TODO: i don't think this does what you think it does. try giving ./relative/path
 export const absolutePath = (path: string) =>

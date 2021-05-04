@@ -9,10 +9,13 @@ import {
 
 // TODO(smolck): Typing? Etc.?
 let nvimState: any = undefined
+let homeDir = ''
 
 ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
+ipcRenderer.on(Events.homeDir, (_event, dir) => (homeDir = dir))
 
 const api: WindowApi = {
+  homeDir,
   luaeval: (...args) => ipcRenderer.invoke(InternalInvokables.luaeval, ...args),
   on: (event, func: (...args: any[]) => void) => {
     // Derived from https://stackoverflow.com/a/35948779
