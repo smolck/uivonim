@@ -7,14 +7,12 @@ module.exports = {
   stats: {
     errorDetails: true,
   },
-  target: 'web', // Our app can run without electron
+  target: 'web',
   entry: './src/renderer/index.ts',
   module: {
     rules: [
-      // loads .ts/tsx files
       {
         test: [/\.tsx?$/],
-        // include: [path.resolve(__dirname, "src/renderer")],
         use: [
           {
             loader: 'babel-loader',
@@ -30,11 +28,9 @@ module.exports = {
             },
           },
           'ts-loader',
-          // 'babel-loader',
         ],
         exclude: /node_modules/,
       },
-      // loads .js files
       {
         test: /\.js$/,
         include: [path.resolve(__dirname, 'node_modules/')],
