@@ -43,6 +43,7 @@ export const Events = {
   nvimMessageStatus: 'nvimMessageStatus',
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
+  ncAction: 'ncAction',
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
   buffersAction: 'buffersAction',
