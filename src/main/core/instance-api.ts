@@ -51,21 +51,6 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
     ee.emit(`action.${name}`, ...args)
   )
 
-  // TODO(smolck): What to do here . . .
-  /*this.workerInstanceRef.on.getDefaultColors(async () => ({
-        background: colors.background,
-        foreground: colors.foreground,
-        special: colors.special,
-      }))*/
-
-  workerInstanceRef.on.getCursorPosition(async () => {
-    // TODO(smolck): What to do here exactly?
-    /*const {
-          cursor: { row, col },
-        } = require('../core/cursor')
-        return { row, col }*/
-  })
-
   workerInstanceRef.on.clipboardRead(async () => clipboard.readText())
   workerInstanceRef.on.clipboardWrite((text: string) =>
     clipboard.writeText(text)
