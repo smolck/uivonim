@@ -43,7 +43,12 @@ require.main === module &&
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
     await copyAll()
+
+    $`Running babel`
     await run('babel --extensions .ts,.tsx src -d build')
+
+    $`Running webpack`
+    await run('npx webpack --config ./webpack.dev.js')
   })
 
 module.exports = { paths, copy, copyAll }

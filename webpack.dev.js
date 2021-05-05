@@ -1,9 +1,9 @@
-// const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
   mode: 'development',
+  devtool: "source-map",
   stats: {
     errorDetails: true,
   },
