@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src *; img-src blob: data: *; script-src blob: data
+               'self' 'unsafe-inline'; worker-src blob: data 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: *; connect-src http://localhost:22444"
+    />
+    <title>uivonim</title>
+    <style>
+      @font-face {
+        font-family: 'Roboto Mono Veonim';
+        src: url('../assets/roboto-mono.ttf');
+      }
+
+      /* TODO(smolck): HACK that breaks stuff maybe potentially */
+      #plugins > div {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        /* Don't want these divs to obstruct clicking components/extensions, so
+         make them not visible. */
+        visibility: hidden;
+      }
+
+      #plugins > div > div {
+        /* Do want the actual components to be visible and thus clickable. */
+        visibility: visible;
+      }
+
+      html {
+        --font: 'Roboto Mono Veonim';
+        --font-size: 14;
+        --line-height: 1.5;
+        font-family: var(--font);
+        font-size: calc(var(--font-size) * 1px);
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+        font-size: 14px;
+      }
+
+      .hljs-keyword {
+        color: var(--keyword);
+      }
+
+      .hljs-built_in {
+        color: var(--builtin);
+      }
+
+      .hljs-function {
+        color: var(--function);
+      }
+
+      .hljs-number {
+        color: var(--preproc);
+      }
+
+      a {
+        color: var(--linkcolor);
+        text-decoration: none;
+      }
+
+      code {
+        font-family: var(--font);
+        color: var(--foreground);
+      }
+
+      pre {
+        font-family: var(--font);
+        color: var(--foreground);
+
+        /* Word-wrapping */
+        white-space: pre-wrap;
+      }
+
+      /* Without this, there's extra margin on the top and bottom of the
+         hover (src/components/extensions/lsp-hover.ts) */
+      p,
+      pre {
+        margin: 0;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #222;
+        color: #ddd;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-flow: column;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        outline: none;
+        border: none;
+        background: none;
+        line-height: var(--line-height);
+        padding: 0;
+        color: var(--foreground-b60);
+      }
+
+      input::placeholder {
+        color: var(--foreground-70);
+      }
+
+      .show-cursor * {
+        cursor: default;
+      }
+
+      #start {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-flow: column;
+        height: 100%;
+        width: 100%;
+        z-index: 420;
+        background: #29272d;
+      }
+
+      #start .logo {
+        margin-top: 100px;
+        flex: 1;
+        height: 100%;
+        width: 100%;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position-x: center;
+      }
+
+      #start .detail {
+        padding-top: 10px;
+        font-size: 18px;
+        font-family: Helvetica, Arial, sans-serif;
+        color: #555;
+        flex: 2;
+      }
+
+      #statusline,
+      div[wat='nameplate'] {
+        user-select: none;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div style="overflow: hidden; height: 0; position: absolute">
+      <textarea id="keycomp-textarea"></textarea>
+    </div>
+
+    <div id="notifications"></div>
+
+    <div id="workspace">
+      <div id="webgl"></div>
+      <div id="windows"></div>
+      <div id="debugline"></div>
+      <div id="plugins"></div>
+    </div>
+
+    <div id="statusline"></div>
+
+    <script type="text/javascript" src="../renderer/bundle.js"></script>
+  </body>
+</html>

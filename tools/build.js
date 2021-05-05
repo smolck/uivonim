@@ -4,23 +4,20 @@ const { $, go, run, fromRoot } = require('./runner')
 const fs = require('fs-extra')
 
 const paths = {
-  index: 'src/bootstrap/index.html',
-  processExplorer: 'src/bootstrap/process-explorer.html',
+  index: 'src/main/index.html',
+  processExplorer: 'src/main/process-explorer.html',
 }
 
 const copy = {
   index: () => {
     $`copying index html`
-    return fs.copy(
-      fromRoot(paths.index),
-      fromRoot('build/bootstrap/index.html')
-    )
+    return fs.copy(fromRoot(paths.index), fromRoot('build/main/index.html'))
   },
   processExplorer: () => {
     $`copying process-explorer html`
     return fs.copy(
       fromRoot(paths.processExplorer),
-      fromRoot('build/bootstrap/process-explorer.html')
+      fromRoot('build/main/process-explorer.html')
     )
   },
   assets: () => {
@@ -46,7 +43,12 @@ require.main === module &&
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
     await copyAll()
+
+    $`Running babel`
     await run('babel --extensions .ts,.tsx src -d build')
+
+    $`Running webpack`
+    await run('npx webpack --config ./webpack.dev.js')
   })
 
 module.exports = { paths, copy, copyAll }

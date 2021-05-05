@@ -1,5 +1,5 @@
 const { src, same } = require('../util')
-const m = src('support/colorize-with-highlight').default
+const m = src('common/colorize-with-highlight').default
 
 describe('colorize with highlight', () => {
   it('highlight same word as hlgroup word - no change to colorData structure', () => {
