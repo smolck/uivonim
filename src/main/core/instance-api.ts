@@ -30,11 +30,9 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
     Object.assign(state, stateDiff)
   })
 
-  // TODO(smolck): Async? Return promise?
-  // this.workerInstanceRef.on.showNeovimMessage(async (...a: any[]) => {}
-  workerInstanceRef.on.showNeovimMessage((...a: any[]) => {
-    winRef.webContents.send(Events.nvimShowMessage, a)
-  })
+  // TODO(smolck): Used to return promise here, probably fine now but just a
+  // note.
+  workerInstanceRef.on.showNeovimMessage((...a: any[]) => winRef.webContents.send(Events.nvimShowMessage, a))
 
   workerInstanceRef.on.showStatusBarMessage((message: string) => {
     winRef.webContents.send(Events.nvimMessageStatus, message)

@@ -1,5 +1,4 @@
 import { pascalCase, onProp } from './utils'
-// TODO(smolck): Don't import from main here
 import { VimMode, Range } from '../main/neovim/types'
 
 type DefineFunction = {

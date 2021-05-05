@@ -14,7 +14,6 @@ import { promises as fs } from 'fs'
 import { EventEmitter } from 'events'
 import { exec, SpawnOptions, ChildProcess, spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
-// TODO(smolck): import { Transform } from 'stream'
 export { watchFile } from './fs-watch'
 
 export const spawnBinary = (
@@ -30,9 +29,6 @@ export interface Task<T> {
   done: (value: T) => void
   promise: Promise<T>
 }
-
-// TODO(smolck): ?
-// process.on('unhandledRejection', (e) => console.error(e))
 
 type TypeChecker = (thing: any) => boolean
 interface Types {
@@ -597,7 +593,8 @@ export const Watcher = <T>() => {
   return { on, once, emit, remove }
 }
 
-// TODO(smolck)
+// TODO(smolck): Used in src/main/workers/todo/*.ts
+// import { Transform } from 'stream'
 /*export class NewlineSplitter extends Transform {
   private buffer: string
 
