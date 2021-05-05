@@ -1,6 +1,6 @@
 const { src, same } = require('../util')
-const { append, replace, remove } = src('neovim/text-edit-patch')
-const { Position } = src('neovim/types')
+const { append, replace, remove } = src('main/neovim/text-edit-patch')
+const { Position } = src('main/neovim/types')
 
 describe('text edit patch', () => {
   it('append', () => {
