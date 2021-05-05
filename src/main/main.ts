@@ -149,7 +149,19 @@ async function afterReadyThings() {
     win.webContents.send(Events.windowLeaveFullScreen)
   )
 
-  nvim = await Nvim(win, { useWsl: false })
+  // TODO(smolck): Perhaps not the best way to do command-line arg parsing
+  const args = process.argv.slice(2)
+  let useWsl = args.find((val) => val === '--wsl') ? true : false
+
+  const nvimIndex = args.findIndex((val) => val == '--nvim')
+  let nvimBinaryPath: string | undefined = undefined
+  if (args[nvimIndex + 1] == undefined || args[nvimIndex + 1].includes('--')) {
+    console.warn('No argument passed to --nvim, using default `nvim`')
+  } else if (nvimIndex != -1) {
+    nvimBinaryPath = args[nvimIndex + 1]
+  }
+
+  nvim = await Nvim(win, { useWsl, nvimBinaryPath })
   nvim.onExit(app.quit)
   input = Input(
     nvim.instanceApi,
