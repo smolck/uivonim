@@ -91,7 +91,12 @@ app.on('ready', async () => {
     backgroundColor: '#222',
     autoHideMenuBar: true,
     webPreferences: {
-      enableRemoteModule: true,
+      // See https://github.com/reZach/secure-electron-template/blob/21eeb45cbafc7542b417e2dc58734ae158c7b3f1/app/electron/main.js#L63-L67
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      nodeIntegrationInSubFrames: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   })
