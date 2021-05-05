@@ -21,6 +21,7 @@ export const Invokables = {
   inputFocus: 'inputFocus',
   inputBlur: 'inputBlur',
   getColorByName: 'getColorByName',
+  getHighlightByName: 'getHighlightByName',
   setMode: 'setMode',
   registerOneTimeUseShortcuts: 'registerOneTimeUseShortcuts',
   nvimCmd: 'nvimCmd',
@@ -42,7 +43,6 @@ export const Events = {
   nvimMessageStatus: 'nvimMessageStatus',
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
-  // TODO(smolck): setVar: 'setVar',
 
   // TODO(smolck): Why did I put `action` on the end of all of this . . .
   ncAction: 'nyAction',

@@ -168,6 +168,10 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
       return () => instance.call.nvimRestoreCursor(pos)
     },
 
+    async getHighlightByName(name: string, isRgb?: boolean): Promise<{ foreground?: number, background?: number, reverse?: boolean }> {
+      return workerInstanceRef.request.nvimGetHighlightByName(name, isRgb)
+    },
+
     async nvimHighlightSearchPattern(
       pattern: string,
       id?: number

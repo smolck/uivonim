@@ -14,7 +14,7 @@ import {
 } from '../render/highlight-attributes'
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
-// TODO(smolck): Fine to import this?
+import { Invokables } from '../../common/ipc'
 import { setCursorColor } from '../cursor'
 
 // this will return a var like '244, 120, 042'
@@ -64,10 +64,10 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
 
   const getColorAndSetVar = (colorName: string, varName: string) =>
     getColorByName(colorName)
-      .then(({ foreground }) =>
+      .then(({ foreground, }) => {
         foreground ? setVar(varName, foreground) : null
-      )
-      .catch((_err) => {}) // TODO(smolck): Maybe handle? Not really necessary probably . . .
+      })
+      .catch(console.error)
 
   getColorAndSetVar('uvnKeyword', 'keyword')
   getColorAndSetVar('uvnBuiltin', 'builtin')
@@ -76,13 +76,21 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   getColorAndSetVar('uvnLink', 'linkcolor')
 
   getColorByName('uvnCursor')
-    .then(({ background }) =>
-      background ? setCursorColor(background) : undefined
+    .then(({ background, reverse }) =>
+      background ? setCursorColor(background) :
+      reverse ? setCursorColor(nvimColors.foreground) : {}
     )
     .catch((_err) => {})
 }
 
-sub('colors-changed', refreshColors)
+// TODO(smolck): This is . . . pretty hacky. For some reason
+// `UivonimCreateHighlights()` needs to be called whenever the colorscheme
+// changes so the `uvn*` highlight groups used above are defined . . . it's
+// called on startup, see startup.ts in src/main/neovim.ts
+// and src/main/core/master-control.ts, but that doesn't seem to work . . .
+sub('colors-changed', (x) => 
+    window.api.invoke(Invokables.nvimCmd, 'call UivonimCreateHighlights()')
+    .then(() => refreshColors(x)))
 
 requestAnimationFrame(() =>
   refreshColors({

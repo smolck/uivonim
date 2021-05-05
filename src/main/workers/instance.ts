@@ -24,6 +24,7 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 // TODO: need another way to fix this
 // nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
+on.nvimGetHighlightByName((name: string, isRgb?: boolean) => nvim.getHighlightByName(name, isRgb))
 on.showNeovimMessage(request.showNeovimMessage)
 on.showStatusBarMessage(call.showStatusBarMessage)
 on.instanceActiveStatus((instanceIsActive: boolean) =>
@@ -53,8 +54,6 @@ on.getGitInfo(async () => git.getGitInfo())
 on.getState(async () => ({ ...nvim.state }))
 on.getWindowMetadata(async () => getWindowMetadata())
 on.nvimSaveCursor(async () => (await nvim.window).cursor)
-
-// TODO(smolck): This wasn't async before, make sure still works
 on.nvimRestoreCursor(
   async (position: number[]) =>
     ((await nvim.window).cursor = [position[0], position[1]])

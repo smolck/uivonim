@@ -21,6 +21,7 @@ export interface Attrs {
 interface Color {
   foreground?: string
   background?: string
+  reverse?: boolean
 }
 
 interface HighlightGroup {
@@ -157,14 +158,17 @@ export const addHighlight = (
   ee.emit('highlight-info.added')
 }
 
+// TODO(smolck): Is this name misleading?
 export const getColorByName = async (name: string): Promise<Color> => {
-  const { foreground, background } = await window.api.invoke(
-    Invokables.getColorByName,
-    name
+  const { foreground, background, reverse } = await window.api.invoke(
+    Invokables.getHighlightByName,
+    name,
+    true
   )
   return {
     foreground: asColor(foreground),
     background: asColor(background),
+    reverse
   }
 }
 

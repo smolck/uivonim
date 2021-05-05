@@ -15,7 +15,7 @@ setOptions({
     const hljs = require('highlight.js/lib/core')
     hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}`))
 
-    const highlightedCode = hljs.highlight(lang, code).value
+    const highlightedCode = hljs.highlight(code, { language: lang }).value
     return highlightedCode
   },
 })
