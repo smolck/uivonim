@@ -64,7 +64,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
 
   const getColorAndSetVar = (colorName: string, varName: string) =>
     getColorByName(colorName)
-      .then(({ foreground, }) => {
+      .then(({ foreground }) => {
         foreground ? setVar(varName, foreground) : null
       })
       .catch(console.error)
@@ -77,8 +77,11 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
 
   getColorByName('uvnCursor')
     .then(({ background, reverse }) =>
-      background ? setCursorColor(background) :
-      reverse ? setCursorColor(nvimColors.foreground) : {}
+      background
+        ? setCursorColor(background)
+        : reverse
+        ? setCursorColor(nvimColors.foreground)
+        : {}
     )
     .catch((_err) => {})
 }
@@ -88,9 +91,11 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
 // changes so the `uvn*` highlight groups used above are defined . . . it's
 // called on startup, see startup.ts in src/main/neovim.ts
 // and src/main/core/master-control.ts, but that doesn't seem to work . . .
-sub('colors-changed', (x) => 
-    window.api.invoke(Invokables.nvimCmd, 'call UivonimCreateHighlights()')
-    .then(() => refreshColors(x)))
+sub('colors-changed', (x) =>
+  window.api
+    .invoke(Invokables.nvimCmd, 'call UivonimCreateHighlights()')
+    .then(() => refreshColors(x))
+)
 
 requestAnimationFrame(() =>
   refreshColors({

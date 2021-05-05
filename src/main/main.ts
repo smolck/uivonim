@@ -298,7 +298,9 @@ async function setupInvokeHandlers() {
   handle.expand((thing) => nvim.instanceApi.nvimCall.expand(thing))
   handle.nvimCmd((cmd) => nvim.instanceApi.nvimCommand(cmd))
 
-  handle.getHighlightByName((name, isRgb?) => nvim.instanceApi.getHighlightByName(name, isRgb))
+  handle.getHighlightByName((name, isRgb?) =>
+    nvim.instanceApi.getHighlightByName(name, isRgb)
+  )
 
   // TODO(smolck): Security of this? Fine for now, but if we are wanting to
   // browse the web in the same browser window (future feature idea) then this'll

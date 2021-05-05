@@ -168,7 +168,7 @@ export const getColorByName = async (name: string): Promise<Color> => {
   return {
     foreground: asColor(foreground),
     background: asColor(background),
-    reverse
+    reverse,
   }
 }
 
