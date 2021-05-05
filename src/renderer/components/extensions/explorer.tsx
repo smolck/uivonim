@@ -203,7 +203,7 @@ state.inputCallbacks = {
     assignStateAndRender({ pathMode: true, ix: 0, val: '', pathValue: '' }),
 
   ctrlH: async () => {
-    const { cwd } = window.api.nvimState.state()
+    const { cwd } = window.api.nvimState()
     const filedirs = await getDirFiles(cwd)
     const paths = sortDirFiles(filedirs)
     show({ paths, cwd, path: cwd })
@@ -286,9 +286,9 @@ state.inputCallbacks = {
 }
 
 window.api.on(Events.explorer, async (customDir?: string) => {
-  const { cwd, bufferType } = window.api.nvimState.state()
+  const { cwd, bufferType } = window.api.nvimState()
   const isTerminal = bufferType === BufferType.Terminal
-  const currentDir = isTerminal ? cwd : window.api.nvimState.state().dir
+  const currentDir = isTerminal ? cwd : window.api.nvimState().dir
   const path = customDir || currentDir
 
   const paths = sortDirFiles(await getDirFiles(path))

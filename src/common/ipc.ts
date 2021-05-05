@@ -1,4 +1,5 @@
 import { WindowMetadata, InputType } from './types'
+import { NeovimState } from '../main/neovim/state'
 
 export const InternalInvokables = {
   nvimWatchState: 'nvim.watchState',
@@ -77,12 +78,8 @@ export interface WindowApi {
     event: typeof Events[keyof typeof Events],
     func: (...args: any[]) => void
   ) => void
-  // TODO(smolck): Type here?
-  nvimWatchState: any
-  nvimState: {
-    // TODO(smolck)
-    state: () => any
-  }
+  nvimWatchState: (key: string, fn: (stateThing: any) => void) => void
+  nvimState: () => NeovimState
   getWindowMetadata: () => Promise<WindowMetadata[]>
   invoke: (
     invokable: typeof Invokables[keyof typeof Invokables],
@@ -90,7 +87,6 @@ export interface WindowApi {
   ) => Promise<any>
 }
 
-// TODO(smolck): Make sure this all works
 declare global {
   interface Window {
     api: WindowApi

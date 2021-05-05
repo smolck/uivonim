@@ -30,13 +30,13 @@ const colorPicker = ColorPicker()
 // specified hlgroup values
 const possiblyUpdateColorScheme = debounce(() => {
   if (!liveMode) return
-  if (!window.api.nvimState.state().file.endsWith('.vim')) return
+  if (!window.api.nvimState().file.endsWith('.vim')) return
 
   const colorschemeBeingEdited = basename(
-    window.api.nvimState.state().file,
-    extname(window.api.nvimState.state().file)
+    window.api.nvimState().file,
+    extname(window.api.nvimState().file)
   )
-  const currentActiveColorscheme = window.api.nvimState.state().colorscheme
+  const currentActiveColorscheme = window.api.nvimState().colorscheme
 
   if (currentActiveColorscheme !== colorschemeBeingEdited) return
 

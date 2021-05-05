@@ -6,9 +6,9 @@ import {
   InternalInvokables,
   WindowApi,
 } from '../common/ipc'
+import { NeovimState } from '../main/neovim/state'
 
-// TODO(smolck): Typing? Etc.?
-let nvimState: any = undefined
+let nvimState: NeovimState | undefined = undefined
 let homeDir = ''
 let onReady = new Promise((resolve, _) =>
   ipcRenderer.on(Events.invokeHandlersReady, () => resolve(null))
@@ -35,8 +35,6 @@ const api: WindowApi = {
       })
     } else {
       const message = `Tried to handle event ${event} that isn't a valid event: this should NOT happen`
-      // TODO(smolck): Doing both is probably overkill, yeah?
-      console.error(message)
       throw new Error(message)
     }
   },
@@ -60,31 +58,26 @@ const api: WindowApi = {
       ipcRenderer.invoke(InternalInvokables.gitOnStatus).then(fn)
     ),
 
-  nvimWatchState: (key: string, fn: any) =>
+  nvimWatchState: (key, fn) =>
     onReady.then(() =>
       ipcRenderer
         .invoke(InternalInvokables.nvimWatchState, key)
         .then((newStateThing) => fn(newStateThing))
     ),
 
-  nvimState: {
-    // TODO(smolck)
-    state: () => {
-      if (nvimState === undefined) {
-        throw new Error(
-          'Umm . . . yeah this should be defined, nvimState, preload'
-        )
-      }
-      return nvimState
-    },
+  nvimState: () => {
+    if (!nvimState) {
+      throw new Error(
+        'Umm . . . yeah this should be defined, nvimState, preload'
+      )
+    }
+    return nvimState
   },
   getWindowMetadata: async (): Promise<WindowMetadata[]> => {
     await onReady
     return await ipcRenderer.invoke(Invokables.getWindowMetadata)
   },
 
-  // TODO(smolck): This should be safe I think . . .
-  // at least as long as the callable invokables are safe to expose.
   invoke: async (invokable, ...args) => {
     await onReady
     // TODO(smolck): Perf of this?
@@ -93,8 +86,6 @@ const api: WindowApi = {
       return await ipcRenderer.invoke(invokable, ...args)
     } else {
       const message = `Tried to call invokable ${invokable} that isn't valid: this should NOT happen`
-      // TODO(smolck): Doing both is probably overkill, yeah?
-      console.error(message)
       throw new Error(message)
     }
   },

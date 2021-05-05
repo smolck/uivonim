@@ -54,12 +54,12 @@ if (window.api.isMacos) {
   })
 
   window.api.nvimWatchState('file', (file: string) => {
-    const path = simplifyPath(file, window.api.nvimState.state().cwd)
+    const path = simplifyPath(file, window.api.nvimState().cwd)
     ;(title as HTMLElement).innerText = `${path} - uivonim`
   })
 } else
   window.api.nvimWatchState('file', (file: string) => {
-    const path = simplifyPath(file, window.api.nvimState.state().cwd)
+    const path = simplifyPath(file, window.api.nvimState().cwd)
     window.api.setWinTitle(`${path} - uivonim`)
   })
 

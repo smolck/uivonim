@@ -232,7 +232,7 @@ const References = ($: S) => (
           onComponentDidMount={(e: HTMLElement) => els.set(pos, e)}
         >
           <RowHeader active={pos === $.ix}>
-            <span>{simplifyPath(path, window.api.nvimState.state().cwd)}</span>
+            <span>{simplifyPath(path, window.api.nvimState().cwd)}</span>
             <div style={{ ...badgeStyle, 'margin-left': '12px' }}>
               <span>{items.length}</span>
             </div>
