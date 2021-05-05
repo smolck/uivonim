@@ -10,10 +10,8 @@
     "prod": "npm run build:prod && NODE_ENV=production electron build/main/main.js",
     "build": "node tools/build.js",
     "build:prod": "node tools/build-prod.js",
-
     "check-types": "tsc -p src/tsconfig.json --noEmit",
     "package": "npm run build:prod && electron-builder",
-
     "test": "mocha test/unit",
     "test:e2e": "mocha test/e2e -t 0",
     "test:e2e:snapshot": "npm run test:e2e -- --snapshot",

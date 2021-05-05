@@ -1,3 +1,4 @@
+// See webpack confs in https://github.com/reZach/secure-electron-template
 const webpack = require('webpack')
 const path = require('path')
 

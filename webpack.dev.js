@@ -1,9 +1,10 @@
+// See webpack confs in https://github.com/reZach/secure-electron-template
 const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
   mode: 'development',
-  devtool: "source-map",
+  devtool: 'source-map',
   stats: {
     errorDetails: true,
   },
@@ -57,6 +58,6 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'build/renderer'),
-    filename: 'bundle.js', // The name of the webpack bundle that's generated
+    filename: 'bundle.js',
   },
 }
