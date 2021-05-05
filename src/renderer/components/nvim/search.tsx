@@ -86,9 +86,9 @@ const updateQuery = ({ cmd, kind, position }: CommandUpdate) => {
   disableCursor()
 
   !state.visible &&
-    setImmediate(() => {
+    setTimeout(() => {
       winOverlay = windows.getActive().addOverlayElement(container)
-    })
+    }, 1)
 
   assignStateAndRender({
     position,
