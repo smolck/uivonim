@@ -49,8 +49,8 @@ Binaries available in `dist`.
 
 ### Development
 
-- `npm ci` as above
-- `npm run dev` for dev build
+- `npm ci` - install deps as mentioned above
+- `npm run dev` - run dev build
 
 If you have any questions about Uivonim's code, making a change, etc., feel free to ping me (@smolck)
 [on Gitter](https://gitter.im/uivonim/community).
