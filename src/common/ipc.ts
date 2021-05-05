@@ -68,7 +68,7 @@ export interface WindowApi {
       | ((inputKeys: string) => void)
       | ((inputKeys: string, inputType: InputType) => void)
   ) => void
-  restoreInput: () => void
+  restoreInput: () => Promise<void>
   gitOnBranch: (fn: (branch: any) => void) => void
   gitOnStatus: (fn: (status: any) => void) => void
   on: (

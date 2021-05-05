@@ -45,9 +45,7 @@ const api: WindowApi = {
       .then(([inputKeys, inputType]) => fn(inputKeys, inputType))
   },
 
-  restoreInput: () => {
-    return ipcRenderer.invoke(InternalInvokables.restoreInput)
-  },
+  restoreInput: () => ipcRenderer.invoke(InternalInvokables.restoreInput),
 
   gitOnBranch: (fn: (status: any) => void) =>
     onReady.then(() =>

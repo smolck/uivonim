@@ -27,7 +27,6 @@ const getWindowById = (windowId: number) => {
   return win
 }
 
-// TODO(smolck): Id?
 const getInstanceWindows = () => [...windows.values()]
 
 const refreshWebGLGrid = () => {
@@ -36,7 +35,6 @@ const refreshWebGLGrid = () => {
 }
 
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
-  // TODO(smolck): Throw error?
   if (!anchorWin.element.style.gridArea)
     throw new Error("Anchor doesn't have grid-area css")
   if (!float.element.style.top)

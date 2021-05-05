@@ -1,7 +1,5 @@
-//import { stealInput } from '../../core/input'
 import { render } from 'inferno'
 import { Events } from '../../../common/ipc'
-// import api from '../../core/instance-api'
 
 let state = {
   visible: false,
@@ -39,7 +37,6 @@ const hide = () => {
 
 window.api.on(Events.ncAction, () => {
   show()
-  // TODO(smolck): Need to `await` any of this?
   window.api.stealInput(() => {
     window.api.restoreInput()
     hide()

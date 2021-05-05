@@ -170,12 +170,6 @@ async function afterReadyThings() {
     (fn) => win.on('blur', fn)
   )
 
-  // TODO(smolck): cli args
-  nvim.instanceApi.onAction('version', () =>
-    nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
-  )
-  nvim.instanceApi.onAction('devtools', win.webContents.toggleDevTools)
-
   nvim.onRedraw((redrawEvents) => {
     win.webContents.send(
       Events.nvimRedraw,
@@ -224,6 +218,11 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   sendOn('pick-color', Events.pickColor)
   sendOn('explorer', Events.explorer)
   sendOn('update-nameplates', Events.updateNameplates)
+
+  nvim.instanceApi.onAction('version', () =>
+    nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
+  )
+  nvim.instanceApi.onAction('devtools', () => win.webContents.toggleDevTools())
 }
 
 async function setupInvokeHandlers() {

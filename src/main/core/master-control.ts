@@ -1,5 +1,5 @@
 import { asColor, merge, getPipeName } from '../../common/utils'
-import Worker from '../workers/messaging/worker'
+import Worker, { Worker as WorkerType } from '../workers/messaging/worker'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
@@ -27,7 +27,7 @@ const nvimOptions = {
 }
 
 const clientSize = {
-  // TODO(smolck): Better default than this? Shouldn't really matter I guess . . .
+  // Arbitrary default width & height
   width: 80,
   height: 80,
 }
@@ -89,7 +89,10 @@ const createAndSetupNvimInstance = (useWsl: boolean, nvimBinary?: string) => {
   proc.on('exit', (c: any) => onExitFn(c))
 
   const nvimApi = attachNvim(nvimInstance)
-  // TODO(smolck): if (!nvimApi) ???
+  if (!nvimApi)
+    throw new Error(
+      "Couldn't attach to neovim instance; this shouldn't happen."
+    )
   const { attached } = nvimInstance
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen
@@ -118,10 +121,17 @@ const createNvim = async (
   return { workerInstance, nvimInstance, nvimApi }
 }
 
-// TODO(smolck): Second arg type?
 const masterControlInternal = (
   winRef: BrowserWindow,
-  { nvimInstance, nvimApi, workerInstance }: any
+  {
+    nvimInstance,
+    nvimApi,
+    workerInstance,
+  }: {
+    nvimInstance: NvimInstance
+    nvimApi: neovim.Neovim
+    workerInstance: WorkerType
+  }
 ) => {
   const instanceApi = InstanceApi(workerInstance, winRef)
 
@@ -130,19 +140,11 @@ const masterControlInternal = (
     instanceApi,
 
     onExit: (fn: ExitFn) => (onExitFn = fn),
-    // TODO(smolck): Does this cast work as I want it to?
-    // @ts-ignore
-    workerInstanceId: () => workerInstance,
-
     onRedraw: (fn: RedrawFn) =>
       nvimApi.on('notification', (method: string, args: any) => {
         method === 'redraw' ? fn(args) : {}
       }),
 
-    // TODO(smolck): Need (?) to tell the render thread to do this when called
-    /* if (document.activeElement === document.body) {
-      document.getElementById('keycomp-textarea')?.focus()
-    }*/
     input: (keys: string) => nvimApi.input(keys),
     getMode: async () => {
       const mode = await nvimApi.mode
@@ -182,5 +184,5 @@ const MasterControl = async (
 }
 
 export default MasterControl
-// `masterControlInternal` is used so that `MasterControl` isn't a Promise type.
+// `masterControlInternal` is used so that this isn't a Promise type.
 export type MasterControl = ReturnType<typeof masterControlInternal>

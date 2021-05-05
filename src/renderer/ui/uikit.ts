@@ -19,7 +19,5 @@ export const vimFocus = () => {
 }
 
 export const vimBlur = () => {
-  window.api.invoke(Invokables.inputBlur)
-  // TODO(smolck): Should be in a .then() since above is a promise?
-  hideCursor()
+  window.api.invoke(Invokables.inputBlur).then(() => hideCursor())
 }

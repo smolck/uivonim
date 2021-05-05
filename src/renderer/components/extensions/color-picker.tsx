@@ -106,18 +106,16 @@ const show = (color: string) => {
 
   window.api.stealInput((keys: string) => {
     if (keys !== '<Esc>') return
-    window.api.restoreInput()
-    // TODO(smolck): Needs to be in a .then() call because above is Promise?
-    state.hideFunc()
+    window.api.restoreInput().then(() => state.hideFunc())
   })
 }
 
 colorPicker.onChange((color) => {
   // TODO: will also need to send what kind of color is updated, that way
   // we know which text edit to apply (rgba or hsla, etc.)
-  window.api.invoke(Invokables.nvimCmd, `exec "normal! ciw${color}"`)
-  // TODO(smolck): Needs to be in a .then() call because above is Promise?
-  possiblyUpdateColorScheme()
+  window.api
+    .invoke(Invokables.nvimCmd, `exec "normal! ciw${color}"`)
+    .then(() => possiblyUpdateColorScheme())
 })
 
 window.api.on(Events.pickColor, async () => {

@@ -1,5 +1,4 @@
 import * as workspace from './workspace'
-// TODO(smolck): import * as css from './ui/css'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 import { debounce, merge } from '../common/utils'
@@ -34,7 +33,6 @@ const mouseTrap = () => {
   hideCursor()
 }
 
-// TODO(smolck): window.api.on(Events.setVar, css.setVar)
 window.api.on(Events.windowEnterFullScreen, (_) =>
   window.addEventListener('mousemove', mouseTrap)
 )
@@ -77,15 +75,6 @@ requestAnimationFrame(() => {
 
     require('./components/memes/nc')
   }, 600)
-
-  setTimeout(() => {
-    // TODO(smolck): Need to port app-info things
-    // require('../services/app-info')
-    /*if (process.env.VEONIM_DEV) {
-      // require('../dev/menu')
-      // require('../dev/recorder')
-    }*/
-  }, 199)
 })
 
 const pluginsContainer = document.getElementById('plugins') as HTMLElement

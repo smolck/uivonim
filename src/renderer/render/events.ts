@@ -184,7 +184,6 @@ export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
 
 export const mode_change = ([, [m]]: [any, [string]]) => {
   const mode = sillyString(m)
-  // TODO(smolck): Need to await this somehow or will this work fine?
   window.api.invoke(Invokables.setMode, normalizeVimMode(mode))
   const info = modes.get(mode)
   if (!info) return

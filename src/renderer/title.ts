@@ -38,9 +38,7 @@ if (window.api.isMacos) {
   ;(title as HTMLElement).innerText = 'uivonim'
   ;(titleBar as HTMLElement).appendChild(title as HTMLElement)
 
-  // TODO(smolck): w-why?
-  // @ts-ignore
-  document.body.prepend(titleBar)
+  document.body.prepend(titleBar as Node)
   titleBarVisible = true
 
   window.api.on(Events.windowEnterFullScreen, () => {

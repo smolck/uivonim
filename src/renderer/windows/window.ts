@@ -366,7 +366,6 @@ export default () => {
     },
     positionToEditorPixels: (line, col, maybeOpts) => {
       const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
-      // TODO(smolck): Make sure this and similar calls work . . .
       const row = line - window.api.nvimState().editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)
