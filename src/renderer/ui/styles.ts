@@ -83,7 +83,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
         ? setCursorColor(nvimColors.foreground)
         : {}
     )
-    .catch((_err) => {})
+    .catch(console.error)
 }
 
 // TODO(smolck): This is . . . pretty hacky. For some reason
