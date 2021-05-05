@@ -145,6 +145,7 @@ const Input = (
     }
 
     const inputKeys = formatInput(mapMods(e), mapKey(e.key))
+    console.log("INPUT KEYS", inputKeys)
 
     if (sendInputToVim) return sendToVim(inputKeys)
     keyListener(inputKeys, inputType)
