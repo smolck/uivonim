@@ -218,12 +218,12 @@ const Messages = ({ messages }: S) => (
 
 // will there be more than 6 message actions?
 const availableShortcuts = [
-  { shortcutLabel: 'C S Y', shortcut: '<S-C-y>' },
-  { shortcutLabel: 'C S T', shortcut: '<S-C-t>' },
-  { shortcutLabel: 'C S U', shortcut: '<S-C-u>' },
-  { shortcutLabel: 'C S R', shortcut: '<S-C-r>' },
-  { shortcutLabel: 'C S E', shortcut: '<S-C-e>' },
-  { shortcutLabel: 'C S W', shortcut: '<S-C-e>' },
+  { shortcutLabel: 'C S Y', shortcut: '<C-S-Y>' },
+  { shortcutLabel: 'C S T', shortcut: '<C-S-T>' },
+  { shortcutLabel: 'C S U', shortcut: '<C-S-U>' },
+  { shortcutLabel: 'C S R', shortcut: '<C-S-R>' },
+  { shortcutLabel: 'C S E', shortcut: '<C-S-E>' },
+  { shortcutLabel: 'C S W', shortcut: '<C-S-E>' },
 ]
 
 const getShortcut = (index: number) =>
@@ -252,7 +252,7 @@ const addDefaultDismissAction = (msg: IMessage | Message) =>
         {
           label: 'Dismiss',
           shortcutLabel: 'C S N',
-          shortcut: '<S-C-n>',
+          shortcut: '<C-S-N>',
         },
       ]
     : []
@@ -324,7 +324,7 @@ const showMessage = (message: Message): MessageReturn => {
     actions.push({
       label: 'Cancel',
       shortcutLabel: 'C S C',
-      shortcut: '<S-C-c>',
+      shortcut: '<C-S-C>',
     })
 
   const callback = (action: string) => {
