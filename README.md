@@ -42,17 +42,15 @@ Install the following things:
 Then run:
 
 - `npm ci` - standard issue download 5 million node_modules
-- `npm run build` - release build of the code
-- `npm run start:release` (optional) - run the release code without packaging
+- `npm run prod` (optional) - run release build w/out packaging
 - `npm run package` - use electron-builder to create a binary package
 
 Binaries available in `dist`.
 
 ### Development
 
-For development, follow the above steps, but replace `npm run start:release` with
-`npm run start`. Note that since `npm run start` also builds the code, there is no need to
-run `npm run build` before running it.
+- `npm ci` as above
+- `npm run dev` for dev build
 
 If you have any questions about Uivonim's code, making a change, etc., feel free to ping me (@smolck)
 [on Gitter](https://gitter.im/uivonim/community).
