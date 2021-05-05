@@ -1,4 +1,4 @@
-import { simplifyPath, is } from '../../../common/utils'
+import { simplifyPath, is } from '../../common/utils'
 import { basename, dirname } from 'path'
 import {
   Keymap,
@@ -6,12 +6,12 @@ import {
   BufferHide,
   BufferEvent,
   VimOption,
-} from '../../neovim/types'
-import { BufferInfo, BufferType, GenericCallback } from '../../../common/types'
-import { Autocmds } from '../../neovim/startup'
-import { normalizeVimMode } from '../../../common/neovim-utils'
+} from '../neovim/types'
+import { BufferInfo, BufferType, GenericCallback } from '../../common/types'
+import { Autocmds } from '../neovim/startup'
+import { normalizeVimMode } from '../../common/neovim-utils'
 import { EventEmitter } from 'events'
-import NvimState from '../../neovim/state'
+import NvimState from '../neovim/state'
 import * as neovim from 'neovim'
 import { workerData } from 'worker_threads'
 

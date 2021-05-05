@@ -1,4 +1,4 @@
-import nvim from '../workers/tbd-folder-name/neovim-api'
+import nvim from '../workers/neovim-api'
 
 interface BufferStack {
   /** offset from right (last item in stack). tracks position in the stack as

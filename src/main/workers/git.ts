@@ -1,4 +1,4 @@
-import { shell, exists, watchFile } from '../../../common/utils'
+import { shell, exists, watchFile } from '../../common/utils'
 import { EventEmitter } from 'events'
 import nvim from './neovim-api'
 import * as path from 'path'

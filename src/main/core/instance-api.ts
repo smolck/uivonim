@@ -3,14 +3,9 @@ import { BufferInfo } from '../../common/types'
 import { onFnCall } from '../../common/utils'
 import { Worker } from '../workers/messaging/worker'
 import { BrowserWindow } from 'electron'
-// TODO(smolck)
-// import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../../common/types'
-// import * as dispatch from '../messaging/dispatch'
-
-// TODO(smolck)
-import { GitStatus } from '../workers/tbd-folder-name/git'
+import { GitStatus } from '../workers/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
