@@ -223,7 +223,7 @@ const availableShortcuts = [
   { shortcutLabel: 'C S U', shortcut: '<C-S-U>' },
   { shortcutLabel: 'C S R', shortcut: '<C-S-R>' },
   { shortcutLabel: 'C S E', shortcut: '<C-S-E>' },
-  { shortcutLabel: 'C S W', shortcut: '<C-S-E>' },
+  { shortcutLabel: 'C S W', shortcut: '<C-S-W>' },
 ]
 
 const getShortcut = (index: number) =>
