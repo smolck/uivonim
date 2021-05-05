@@ -180,6 +180,9 @@ async function afterReadyThings() {
   nvim.instanceApi.onStateChange((nextState) =>
     win.webContents.send(Events.nvimState, nextState)
   )
+
+  nvim.instanceApi.gitOnBranch((branch) => win.webContents.send(Events.gitOnBranch, branch))
+  nvim.instanceApi.gitOnStatus((status) => win.webContents.send(Events.gitOnStatus, status))
 }
 
 function setupActionHandlers(instanceApi: InstanceApi) {
@@ -225,26 +228,6 @@ async function setupInvokeHandlers() {
     },
   })
 
-  handleInternal.nvimWatchState(
-    (thing: any) =>
-      new Promise((resolve, _) =>
-        // @ts-ignore
-        nvim.instanceApi.watchState[thing]((x) => resolve(x))
-      )
-  )
-  handleInternal.gitOnBranch(
-    () =>
-      new Promise((resolve, _) =>
-        nvim.instanceApi.gitOnBranch((branch) => resolve(branch))
-      )
-  )
-
-  handleInternal.gitOnStatus(
-    () =>
-      new Promise((resolve, _) =>
-        nvim.instanceApi.gitOnStatus((status) => resolve(status))
-      )
-  )
   handleInternal.stealInput(
     () =>
       new Promise((resolve, _) =>

@@ -47,22 +47,11 @@ const api: WindowApi = {
 
   restoreInput: () => ipcRenderer.invoke(InternalInvokables.restoreInput),
 
-  gitOnBranch: (fn: (status: any) => void) =>
-    onReady.then(() =>
-      ipcRenderer.invoke(InternalInvokables.gitOnBranch).then(fn)
-    ),
-  gitOnStatus: (fn: (branch: any) => void) =>
-    onReady.then(() =>
-      ipcRenderer.invoke(InternalInvokables.gitOnStatus).then(fn)
-    ),
+  gitOnBranch: (fn: (branch: any) => void) =>
+    ipcRenderer.on(Events.gitOnBranch, (_, b) => fn(b)),
+  gitOnStatus: (fn: (status: any) => void) => ipcRenderer.on(Events.gitOnStatus, (_, s) => fn(s)),
 
-  nvimWatchState: (key, fn) =>
-    onReady.then(() =>
-      ipcRenderer
-        .invoke(InternalInvokables.nvimWatchState, key)
-        .then((newStateThing) => fn(newStateThing))
-    ),
-
+  nvimWatchState: (key, fn) => ipcRenderer.on(Events.nvimState, (_event, newState) => fn(newState[key])),
   nvimState: () => {
     if (!nvimState) {
       throw new Error(

@@ -2,9 +2,6 @@ import { WindowMetadata, InputType } from './types'
 import { NeovimState } from '../main/neovim/state'
 
 export const InternalInvokables = {
-  nvimWatchState: 'nvim.watchState',
-  gitOnStatus: 'gitOnStatus',
-  gitOnBranch: 'gitOnBranch',
   stealInput: 'stealInput',
   restoreInput: 'restoreInput',
   luaeval: 'luaeval',
@@ -34,6 +31,8 @@ export const Invokables = {
 } as const
 
 export const Events = {
+  gitOnStatus: 'gitOnStatus',
+  gitOnBranch: 'gitOnBranch',
   invokeHandlersReady: 'invokeHandlersReady',
   homeDir: 'homeDir',
   nvimState: 'nvim.state',
