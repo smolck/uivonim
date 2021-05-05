@@ -35,7 +35,6 @@ export const Invokables = {
 
 export const Events = {
   invokeHandlersReady: 'invokeHandlersReady',
-
   homeDir: 'homeDir',
   nvimState: 'nvim.state',
   nvimRedraw: 'nvim.redraw',
@@ -44,9 +43,6 @@ export const Events = {
   nvimMessageStatus: 'nvimMessageStatus',
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
-
-  // TODO(smolck): Why did I put `action` on the end of all of this . . .
-  ncAction: 'nyAction',
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
   buffersAction: 'buffersAction',
