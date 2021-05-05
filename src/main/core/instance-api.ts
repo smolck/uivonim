@@ -123,7 +123,6 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
       workerInstanceRef.request.nvimGetColorByName(name),
 
     nvimSaveCursor: async () => {
-      // TODO(smolck): Is this const necessary?
       const instance = workerInstanceRef
       const pos = await workerInstanceRef.request.nvimSaveCursor()
       return () => instance.call.nvimRestoreCursor(pos)
