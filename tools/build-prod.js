@@ -7,9 +7,15 @@ go(async () => {
   await fs.emptyDir(fromRoot('build'))
   await copyAll()
 
-  $`Running babel`
-  await run('babel --extensions .ts,.tsx src -d build')
+  $`Compiling src/main`
+  await run('babel --extensions .ts,.tsx src/main -d build/main')
+  $``
 
-  $`Running webpack`
+  $`Compiling src/common`
+  await run('babel --extensions .ts,.tsx src/common -d build/common')
+  $``
+
+  $`Compiling src/render`
   await run('npx webpack --config ./webpack.prod.js')
+  $``
 })
