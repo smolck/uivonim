@@ -247,17 +247,14 @@ const Input = (
     },
 
     registerGlobalShortcuts: (
-      shortcuts: [ shortcut: string, cb: () => void ][],
-
+      shortcuts: [shortcut: string, cb: () => void][]
     ) => {
       shortcuts.forEach(([s, cb]) => globalShortcuts.set(s, cb))
     },
 
-    unregisterGlobalShortcuts: (
-      shortcuts: string[],
-    ) => {
+    unregisterGlobalShortcuts: (shortcuts: string[]) => {
       shortcuts.forEach((s) => globalShortcuts.delete(s))
-    }
+    },
   }
 }
 
