@@ -1,4 +1,4 @@
-const { src, same } = require('../util')
+const { src, same } = require('../../util')
 const m = src('common/colorize-with-highlight').default
 
 describe('colorize with highlight', () => {

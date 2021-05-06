@@ -154,6 +154,9 @@ const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
 
     onInputKeyTransformsDidChange: (fn: (transforms: any[]) => void) =>
       ee.on('input.key.transforms', fn),
+
+    nvimOption: (opt: string): Promise<any> =>
+      workerInstanceRef.request.nvimOption(opt)
   }
 }
 

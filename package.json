@@ -12,7 +12,7 @@
     "build:prod": "node tools/build-prod.js",
     "check-types": "tsc -p src/tsconfig.json --noEmit",
     "package": "npm run build:prod && electron-builder",
-    "test": "mocha test/unit",
+    "test": "mocha \"test/unit/**/*.js\"",
     "test:e2e": "mocha test/e2e -t 0",
     "test:e2e:snapshot": "npm run test:e2e -- --snapshot",
     "test:integration": "mocha test/integration -t 10000",

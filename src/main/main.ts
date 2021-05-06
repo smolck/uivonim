@@ -4,7 +4,7 @@ import Input, { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
-import { getDirFiles, getDirs, $HOME } from '../common/utils'
+import { getDirFiles, getDirs, $HOME, parseGuifont } from '../common/utils'
 import { GenericCallback } from '../common/types'
 
 if (process.platform === 'darwin') {
@@ -121,6 +121,29 @@ const getCircularReplacer = () => {
   }
 }
 
+const defaultGlobalShortcuts: [string, () => void][] = [
+  [
+    '<C-S-=>',
+    async () => {
+      const guifont: string = await nvim.instanceApi.nvimOption('guifont')
+      const { size } = parseGuifont(guifont)
+      nvim.instanceApi.nvimCommand(
+        `:set guifont=${guifont.replace(`h${size}`, `h${size + 2}`)}`
+      )
+    },
+  ],
+  [
+    '<C-S-_>',
+    async () => {
+      const guifont: string = await nvim.instanceApi.nvimOption('guifont')
+      const { size } = parseGuifont(guifont)
+      nvim.instanceApi.nvimCommand(
+        `:set guifont=${guifont.replace(`h${size}`, `h${size - 2}`)}`
+      )
+    },
+  ],
+]
+
 async function afterReadyThings() {
   win.webContents.send(Events.homeDir, $HOME)
   win.on('enter-full-screen', () =>
@@ -150,6 +173,8 @@ async function afterReadyThings() {
     (fn) => win.on('focus', fn),
     (fn) => win.on('blur', fn)
   )
+
+  input.registerGlobalShortcuts(defaultGlobalShortcuts)
 
   nvim.onRedraw((redrawEvents) => {
     win.webContents.send(
@@ -181,8 +206,12 @@ async function afterReadyThings() {
     win.webContents.send(Events.nvimState, nextState)
   )
 
-  nvim.instanceApi.gitOnBranch((branch) => win.webContents.send(Events.gitOnBranch, branch))
-  nvim.instanceApi.gitOnStatus((status) => win.webContents.send(Events.gitOnStatus, status))
+  nvim.instanceApi.gitOnBranch((branch) =>
+    win.webContents.send(Events.gitOnBranch, branch)
+  )
+  nvim.instanceApi.gitOnStatus((status) =>
+    win.webContents.send(Events.gitOnStatus, status)
+  )
 }
 
 function setupActionHandlers(instanceApi: InstanceApi) {
@@ -207,6 +236,26 @@ function setupActionHandlers(instanceApi: InstanceApi) {
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
   )
   nvim.instanceApi.onAction('devtools', () => win.webContents.toggleDevTools())
+
+  nvim.instanceApi.onAction('register-default-shortcuts', () =>
+    input.registerGlobalShortcuts(defaultGlobalShortcuts)
+  )
+  nvim.instanceApi.onAction('unregister-default-shortcuts', () =>
+    input.unregisterGlobalShortcuts(defaultGlobalShortcuts.map((s) => s[0]))
+  )
+  nvim.instanceApi.onAction('unregister-shortcuts', (shortcuts) =>
+    input.unregisterGlobalShortcuts(shortcuts)
+  )
+  nvim.instanceApi.onAction(
+    'register-shortcuts',
+    (shortcuts: [string, string][]) =>
+      input.registerGlobalShortcuts(
+        shortcuts.map(([s, command]) => [
+          s,
+          () => nvim.instanceApi.nvimCommand(command),
+        ])
+      )
+  )
 }
 
 async function setupInvokeHandlers() {

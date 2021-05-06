@@ -1,16 +1,15 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { showMessageHistory } from '../components/nvim/message-history'
-
 import { MessageKind } from '../../common/types'
 import messages from '../components/nvim/messages'
-
 import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../../common/neovim-utils'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../dispatch'
 import * as workspace from '../workspace'
 import { Invokables } from '../../common/ipc'
+import { parseGuifont } from '../../common/utils'
 
 interface Mode {
   shape: CursorShape
@@ -202,11 +201,7 @@ const updateFont = () => {
   const lineSpace = options.get('linespace')
   const guifont = options.get('guifont')
 
-  const [font] = guifont.match(/(?:\\,|[^,])+/g) || ['']
-  const [face, ...settings] = font.split(':')
-  const height = settings.find((s: string) => s.startsWith('h'))
-  const size = Math.round(<any>(height || '').slice(1) - 0)
-
+  const { face, size } = parseGuifont(guifont)
   const changed = workspace.updateEditorFont({ face, size, lineSpace })
   if (!changed) return
 
