@@ -24,6 +24,8 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 // TODO: need another way to fix this
 // nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
+on.nvimOption((opt: string) => nvim.readonlyOptions[opt])
+
 on.nvimGetHighlightByName((name: string, isRgb?: boolean) =>
   nvim.getHighlightByName(name, isRgb)
 )

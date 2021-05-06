@@ -44,6 +44,20 @@ interface Types {
   set: TypeChecker
 }
 
+// TODO: this parsing logic needs to be revisited
+// needs to handle all nvim formatting options
+export const parseGuifont = (guifont: string) => {
+  const [font] = guifont.match(/(?:\\,|[^,])+/g) || ['']
+  const [face, ...settings] = font.split(':')
+  const height = settings.find((s: string) => s.startsWith('h'))
+  const size = Math.round(<any>(height || '').slice(1) - 0)
+
+  return {
+    face,
+    size
+  }
+}
+
 export const $HOME = homedir
   ? homedir()
   : 'Why are you using this from the frontend? Stop it.'

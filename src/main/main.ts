@@ -4,7 +4,7 @@ import Input, { Input as InputType } from './core/input'
 import { Events, Invokables, InternalInvokables } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
-import { getDirFiles, getDirs, $HOME } from '../common/utils'
+import { getDirFiles, getDirs, $HOME, parseGuifont } from '../common/utils'
 import { GenericCallback } from '../common/types'
 
 if (process.platform === 'darwin') {
@@ -150,6 +150,19 @@ async function afterReadyThings() {
     (fn) => win.on('focus', fn),
     (fn) => win.on('blur', fn)
   )
+
+  input.registerGlobalShortcuts([
+    ['<C-S-=>', async () => {
+      const guifont: string = await nvim.instanceApi.nvimOption('guifont')
+      const { size } = parseGuifont(guifont)
+      nvim.instanceApi.nvimCommand(`:set guifont=${guifont.replace(`h${size}`, `h${size + 2}`)}`)
+    }],
+    ['<C-S-_>', async () => {
+      const guifont: string = await nvim.instanceApi.nvimOption('guifont')
+      const { size } = parseGuifont(guifont)
+      nvim.instanceApi.nvimCommand(`:set guifont=${guifont.replace(`h${size}`, `h${size - 2}`)}`)
+    }]
+  ])
 
   nvim.onRedraw((redrawEvents) => {
     win.webContents.send(
