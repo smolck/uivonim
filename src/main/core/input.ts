@@ -23,7 +23,7 @@ const handleMods = ({
   const notCmdOrCtrl = !metaKey && !ctrlKey
   const macOSUnicode =
     (process.platform === 'darwin' && altKey && notCmdOrCtrl) ||
-    (altKey && shiftKey && notCmdOrCtrl)
+    (process.platform === 'darwin' && altKey && shiftKey && notCmdOrCtrl)
 
   if (onlyShift && isStandardAscii(key) && key.length === 1) return mods
   if (macOSUnicode) return mods
@@ -68,7 +68,19 @@ const isNotChar = (e: KeyboardEvent): boolean => {
     !e.shiftKey
   )
     return false
-  // Also pass on modified keys (like alt-7, but not ctrl, which is used in mappings
+
+  // If on Linux/Windows, and the key sequence is typed with alt-shift or alt
+  // (and no other modifers), send to Neovim (for alt-shift and alt mappings).
+  if (
+    process.platform !== 'darwin' &&
+    ((e.shiftKey && e.altKey) || e.altKey) &&
+    e.key.length === 1 &&
+    !e.ctrlKey &&
+    !e.metaKey
+  )
+    return true
+
+  // Pass on modified keys (like alt-7, but not ctrl, which is used in mappings
   if ((e.shiftKey || e.metaKey || e.altKey) && !e.ctrlKey && e.key.length === 1)
     return false
 
