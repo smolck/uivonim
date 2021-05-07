@@ -23,7 +23,7 @@ const handleMods = ({
   const notCmdOrCtrl = !metaKey && !ctrlKey
   const macOSUnicode =
     (process.platform === 'darwin' && altKey && notCmdOrCtrl) ||
-    (altKey && shiftKey && notCmdOrCtrl)
+    (process.platform === 'darwin' && altKey && shiftKey && notCmdOrCtrl)
 
   if (onlyShift && isStandardAscii(key) && key.length === 1) return mods
   if (macOSUnicode) return mods
@@ -31,6 +31,7 @@ const handleMods = ({
   if (shiftKey) mods.push('S')
   if (metaKey) mods.push('D')
   if (altKey) mods.push('A')
+
   return mods
 }
 
@@ -68,6 +69,16 @@ const isNotChar = (e: KeyboardEvent): boolean => {
     !e.shiftKey
   )
     return false
+
+  if (
+    process.platform !== 'darwin' &&
+    ((e.shiftKey && e.altKey) || e.altKey) &&
+    e.key.length === 1 &&
+    !e.ctrlKey &&
+    !e.metaKey
+  )
+    return true
+
   // Also pass on modified keys (like alt-7, but not ctrl, which is used in mappings
   if ((e.shiftKey || e.metaKey || e.altKey) && !e.ctrlKey && e.key.length === 1)
     return false
@@ -115,7 +126,6 @@ const Input = (
     // Necessary because of "<" being "special," see `:help nvim_input()`
     if (inputKeys.length === 1) inputKeys = inputKeys.replace('<', '<LT>')
 
-    console.log(inputKeys)
     if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
 
     // TODO: this might need more attention. i think s-space can be a valid
@@ -145,7 +155,6 @@ const Input = (
     }
 
     const inputKeys = formatInput(mapMods(e), mapKey(e.key))
-    console.log("INPUT KEYS", inputKeys)
 
     if (sendInputToVim) return sendToVim(inputKeys)
     keyListener(inputKeys, inputType)
