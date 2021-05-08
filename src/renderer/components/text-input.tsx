@@ -77,6 +77,7 @@ const textInput = (
     loading = false,
     pathMode = false,
     id,
+    change
   }: TextInputProps,
   $: Props
 ) => (
@@ -116,30 +117,25 @@ const textInput = (
     >
       <WhyInput
         id={id}
-        value={value}
         style={{ color, 'font-size': small ? '1rem' : '1.4rem' }}
         type='text'
         spellcheck='false'
         placeholder={desc}
-        // TODO(smolck): Use linkEvent() for things?
-        //
-        // TODO: hack to get hack to get dead keys working working
-        // TODO(smolck): Did use this, but changed to use `onComponentDidUpdate`
-        // because this sometimes made the text input not focus with message-history?
-        // onBlur={(e: HTMLInputElement) => {
-        //   document.getElementById('keycomp-textarea')?.focus()
-        // }}
-        // onComponentDidUpdate={(_: any, nextProps: any) =>
-        //   nextProps.visible
-        //     ? document.getElementById('hacky-textarea')?.focus()
-        //     : undefined
-        // }
+        // Would use the `value` prop instead of setting the value of the input
+        // in the handlers below, but that breaks dead keys.
         onComponentDidUpdate={(_lastProps: any, _nextProps: any) => {
           const e = document.getElementById(id)! as HTMLInputElement
+          // TODO(smolck): This assumes that the `change` function re-renders,
+          // which is more convention with all the components that use this
+          // rather than a requirement.
+          if (!change && e) e.value = value
+
           setFocus(e, focus)
           setPosition(e, position)
         }}
         onComponentDidMount={(e: HTMLInputElement) => {
+          e.value = value
+
           setFocus(e, focus)
           setPosition(e, position)
         }}
@@ -148,6 +144,8 @@ const textInput = (
           setPosition(e.currentTarget, position)
         }}
         onKeyDown={(e: KeyboardEvent) => {
+          ;(document.getElementById(id)! as HTMLInputElement).value = value
+
           const { ctrlKey: ctrl, metaKey: meta, key } = e
           const cm = ctrl || meta
 
@@ -155,6 +153,7 @@ const textInput = (
             e.preventDefault()
             return $.tab()
           }
+          if (key === 'Dead') return
 
           if (key === 'Escape') return $.hide()
           if (key === 'Enter') return $.select(value)
@@ -182,7 +181,9 @@ const textInput = (
           if (cm && e.shiftKey && key === 'U') return $.top()
 
           const nextVal = value + (key.length > 1 ? '' : key)
-          if (nextVal !== value) $.change(nextVal)
+          if (nextVal !== value) {
+            $.change(nextVal)
+          }
         }}
       />
     </div>
