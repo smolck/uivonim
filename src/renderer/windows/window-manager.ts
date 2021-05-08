@@ -34,6 +34,25 @@ const refreshWebGLGrid = () => {
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }
 
+webgl.foregroundElement.addEventListener('webglcontextlost', (e) => {
+  console.log('lost webgl foreground context, preventing default', e)
+  e.preventDefault()
+})
+webgl.foregroundElement.addEventListener('webglcontextrestored', (_e) => {
+  console.log('webgl foreground context restored! re-initializing')
+  webgl.reInit({ bg: false, fg: true })
+  refreshWebGLGrid()
+})
+webgl.backgroundElement.addEventListener('webglcontextlost', (e) => {
+  console.log('lost webgl background context, preventing default', e)
+  e.preventDefault()
+})
+webgl.backgroundElement.addEventListener('webglcontextrestored', (_e) => {
+  console.log('webgl foreground context restored! re-initializing')
+  webgl.reInit({ bg: true, fg: false })
+  refreshWebGLGrid()
+})
+
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   if (!anchorWin.element.style.gridArea)
     throw new Error("Anchor doesn't have grid-area css")

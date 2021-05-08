@@ -11,7 +11,7 @@ export const cursor = {
   visible: false,
   row: 0,
   col: 0,
-  color: [0, 0, 0],
+  color: [0, 0, 0] as [number, number, number],
   shape: CursorShape.block,
   size: 20,
 }

@@ -26,8 +26,10 @@ const nutella = () => {
   const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
 
-  const textFGRenderer = TextFG(foregroundGL)
-  const textBGRenderer = TextBG(backgroundGL)
+  let fontAtlasCache: HTMLCanvasElement
+
+  let textFGRenderer = TextFG(foregroundGL)
+  let textBGRenderer = TextBG(backgroundGL)
 
   const resizeCanvas = (width: number, height: number) => {
     textBGRenderer.resize(width, height)
@@ -59,6 +61,7 @@ const nutella = () => {
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
     textFGRenderer.updateFontAtlas(fontAtlas)
+    fontAtlasCache = fontAtlas
   }
 
   const updateCellSize = () => {
@@ -187,6 +190,22 @@ const nutella = () => {
     showCursor,
     foregroundElement: foregroundGL.canvasElement,
     backgroundElement: backgroundGL.canvasElement,
+    reInit: ({ fg, bg }: { fg: boolean; bg: boolean }) => {
+      if (fg) {
+        textFGRenderer = TextFG(foregroundGL)
+        updateFontAtlas(fontAtlasCache)
+      }
+      if (bg) textBGRenderer = TextBG(backgroundGL)
+
+      showCursor(cursorState.visible)
+      updateCursorPosition(cursorState.row, cursorState.col)
+      updateCursorShape(cursorState.shape)
+      updateCursorColor(
+        cursorState.color[0],
+        cursorState.color[1],
+        cursorState.color[2]
+      )
+    },
   }
 }
 
