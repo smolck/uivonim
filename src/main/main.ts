@@ -287,9 +287,9 @@ async function setupInvokeHandlers() {
   )
   handleInternal.restoreInput(() => input.restoreInput())
   // TODO(smolck): Security if we add web browsing feature
-  handleInternal.luaeval(() =>
+  handleInternal.luaeval((...args) =>
     // @ts-ignore
-    nvim.instanceApi.nvimCall.luaeval()
+    nvim.instanceApi.nvimCall.luaeval(...args)
   )
   handleInternal.setWinTitle(win.setTitle)
 
