@@ -55,6 +55,33 @@ Binaries available in `dist`.
 If you have any questions about Uivonim's code, making a change, etc., feel free to ping me (@smolck)
 [on Gitter](https://gitter.im/uivonim/community).
 
+## Feature Showcase
+
+See [the wiki](https://github.com/smolck/uivonim/wiki/Builtin-LSP) for setup for
+the signature help, float, etc. features.
+
+### Signature Help
+
+![](screenshots/signature_help.png)
+
+### Hover
+
+![](screenshots/hover.png)
+
+### Code Actions
+
+![](screenshots/code_action.png)
+
+### References
+
+![](screenshots/references.png)
+
+### Nyancat
+
+`:Uivonim nc`
+
+![](screenshots/nyancat.png)
+
 ## Other Cool Projects
 
 - [Oni2](https://github.com/onivim/oni2)
