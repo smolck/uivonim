@@ -6,6 +6,7 @@ import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
 import { getDirFiles, getDirs, $HOME, parseGuifont } from '../common/utils'
 import { GenericCallback } from '../common/types'
+import { handleRedraw } from './core/redraw'
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -176,17 +177,7 @@ async function afterReadyThings() {
 
   input.registerGlobalShortcuts(defaultGlobalShortcuts)
 
-  nvim.onRedraw((redrawEvents) => {
-    win.webContents.send(
-      Events.nvimRedraw,
-      // TODO(smolck): Perf of this? Without doing this and parsing on the other
-      // side, there are errors about the object being too nested sometimes;
-      // this seems to fix that, but not sure if there's a better way (e.g.
-      // parsing the redraw events here, on the main thread, and then sending
-      // over smaller events and such to the render thread)?
-      JSON.stringify(redrawEvents, getCircularReplacer())
-    )
-  })
+  nvim.onRedraw((redrawEvents) => handleRedraw(nvim, win.webContents.send, redrawEvents))
 
   setupActionHandlers(nvim.instanceApi)
   await setupInvokeHandlers()

@@ -32,8 +32,6 @@ interface ModeInfo {
   short_name: string
 }
 
-type CmdContent = [any, string]
-
 interface PMenuItem {
   /** The text that will be inserted */
   word: string
@@ -52,32 +50,6 @@ export interface PopupMenu {
   index: number
   items: PMenuItem[]
 }
-
-interface CommandLineCache {
-  cmd?: string
-  active: boolean
-  position: number
-}
-
-export enum CommandType {
-  Ex,
-  Prompt,
-  SearchForward,
-  SearchBackward,
-}
-
-export interface CommandUpdate {
-  cmd: string
-  prompt?: string
-  kind: CommandType
-  position: number
-}
-
-// because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
-// string it might be a code point number - need to turn it back into a string. see
-// msgpack-decoder for more info on how this works.
-const sillyString = (s: any): string =>
-  typeof s === 'number' ? String.fromCodePoint(s) : s
 
 const modes = new Map<string, Mode>()
 const options = new Map<string, any>()
@@ -253,81 +225,4 @@ export const wildmenu_select = ([, [selected]]: [any, [number]]) => {
   dispatch.pub('wildmenu.select', selected)
 }
 
-const cmdlineIsSame = (...args: any[]) =>
-  cmdcache.active && cmdcache.position === args[1]
 
-export const doNotUpdateCmdlineIfSame = (args: any[]) => {
-  if (!args || !Array.isArray(args)) return false
-  const [cmd, data] = args
-  if (cmd !== 'cmdline_show') return false
-  return cmdlineIsSame(...data)
-}
-
-let currentCommandMode: CommandType
-const cmdcache: CommandLineCache = {
-  active: false,
-  position: -999,
-}
-
-type CmdlineShow = [CmdContent[], number, string, string, number, number]
-export const cmdline_show = ([
-  ,
-  [content, position, str1, str2, indent, level],
-]: [any, CmdlineShow]) => {
-  const opChar = sillyString(str1)
-  const prompt = sillyString(str2)
-  cmdcache.active = true
-  cmdcache.position = position
-
-  // TODO: process attributes!
-  const cmd = content.reduce((str, [_, item]) => str + sillyString(item), '')
-  if (cmdcache.cmd === cmd) return
-  cmdcache.cmd = cmd
-
-  const kind: CommandType =
-    Reflect.get(
-      {
-        ':': CommandType.Ex,
-        '/': CommandType.SearchForward,
-        '?': CommandType.SearchBackward,
-      },
-      opChar
-    ) || CommandType.Ex
-
-  currentCommandMode = kind
-
-  const cmdPrompt = kind === CommandType.Ex
-  const searchPrompt =
-    kind === CommandType.SearchForward || kind === CommandType.SearchBackward
-
-  if (cmdPrompt)
-    dispatch.pub('cmd.update', {
-      cmd,
-      prompt,
-      kind: prompt ? CommandType.Prompt : kind,
-      position,
-    } as CommandUpdate)
-  else if (searchPrompt)
-    dispatch.pub('search.update', {
-      cmd,
-      prompt,
-      kind: prompt ? CommandType.Prompt : kind,
-      position,
-    } as CommandUpdate)
-
-  // TODO: do the indentings thingies
-  indent && console.log('indent:', indent)
-  level > 1 && console.log('level:', level)
-}
-
-export const cmdline_hide = () => {
-  Object.assign(cmdcache, { active: false, position: -999, cmd: undefined })
-  dispatch.pub('cmd.hide')
-  dispatch.pub('search.hide')
-}
-
-export const cmdline_pos = ([, [position]]: [any, [number]]) => {
-  if (currentCommandMode === CommandType.Ex)
-    dispatch.pub('cmd.update', { position })
-  else dispatch.pub('search.update', { position })
-}

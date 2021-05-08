@@ -18,6 +18,10 @@ ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 ipcRenderer.on(Events.homeDir, (_event, dir) => (homeDir = dir))
 
 const api: WindowApi = {
+  onRedrawEvent: (evt, fn) => {
+    ipcRenderer.on(evt, (_evt, ...args) => fn(...args))
+  },
+
   // TODO(smolck): Security of this if we ever add a web browsing feature
   isMacos: process.platform === 'darwin',
   homeDir,

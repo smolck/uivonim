@@ -1,5 +1,23 @@
 export type GenericCallback = (...args: any[]) => void
 
+export interface WinPosWinInfo {
+  gridId: number,
+  winId: number,
+  row: number,
+  col: number,
+  width: number,
+  height: number,
+}
+
+export interface WinFloatPosWinInfo {
+  gridId: number,
+  winId: number,
+  anchor: string,
+  anchorGrid: number,
+  anchorRow: number,
+  anchorCol: number,
+}
+
 export interface WindowMetadata {
   id: number
   dir: string

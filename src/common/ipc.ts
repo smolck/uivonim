@@ -56,7 +56,27 @@ export const Events = {
   updateNameplates: 'window.refresh',
 } as const
 
+export const RedrawEvents = {
+  cmdUpdate: 'cmd.update',
+  cmdHide: 'cmd.hide',
+
+  gridLine: 'grid_line',
+  gridScroll: 'grid_scroll',
+  gridCursorGoto: 'grid_cursor_goto',
+  gridResize: 'grid_resize',
+  gridClear: 'grid_clear',
+  gridDestroy: 'grid_destroy',
+
+  winPos: 'win_pos',
+  winFloatPos: 'win_float_pos',
+  winClose: 'win_close',
+  winHide: 'win_hide',
+
+  searchUpdate: 'search.update',
+}
+
 export interface WindowApi {
+  onRedrawEvent: (evt: typeof RedrawEvents[keyof typeof RedrawEvents], fn: (...args: any[]) => void) => void
   isMacos: boolean
   homeDir: string
   setWinTitle: (newTitle: string) => void
