@@ -104,7 +104,7 @@ app.on('ready', async () => {
   win.loadURL(`file:///${__dirname}/index.html`)
   comscan.register((ch, msg) => win.webContents.send(ch, msg))
 
-  win.webContents.openDevTools()
+  if (process.env.NODE_ENV !== 'production') win.webContents.openDevTools()
   win.webContents.on('did-finish-load', async () => await afterReadyThings())
 })
 
