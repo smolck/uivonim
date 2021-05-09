@@ -1,5 +1,5 @@
 import { MessageKind, Message } from '../../../common/types'
-import { RowNormal } from '../row-container'
+import { RowDesc } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
@@ -77,7 +77,7 @@ const MessageHistory = ({
       style={{ overflow: 'hidden' }}
     >
       {messages.map(({ kind, message }, pos) => (
-        <RowNormal active={pos === index}>
+        <RowDesc active={pos === index}>
           <div
             style={{
               display: 'flex',
@@ -97,7 +97,7 @@ const MessageHistory = ({
           >
             {message}
           </div>
-        </RowNormal>
+        </RowDesc>
       ))}
     </WhyDiv>
   </div>
