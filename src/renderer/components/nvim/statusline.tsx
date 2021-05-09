@@ -6,6 +6,7 @@ import Icon from '../icon'
 import { colors } from '../../ui/styles'
 import { basename } from 'path'
 import { render } from 'inferno'
+import { Events } from '../../../common/ipc'
 
 interface Tab {
   tab: ExtContainer
@@ -402,6 +403,13 @@ window.api.gitOnStatus((status) =>
 
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
+
+window.api.on(Events.lspDiagnostics, (diagnostics) => {
+  let errors = 0
+  let warnings = 0
+  diagnostics.forEach((d: any) => d.severity === 1 ? errors += 1 : d.severity === 2 ? warnings += 1 : {})
+  assignStateAndRender({ errors, warnings })
+})
 
 watchState('colorscheme', async () => {
   const { background } = await getColorByName('StatusLine')

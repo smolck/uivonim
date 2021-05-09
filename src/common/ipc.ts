@@ -54,6 +54,7 @@ export const Events = {
   modifyColorschemeLive: 'modifyColorschemeLive',
   explorer: 'explorer',
   updateNameplates: 'window.refresh',
+  lspDiagnostics: 'lspDiagnostics'
 } as const
 
 export interface WindowApi {
