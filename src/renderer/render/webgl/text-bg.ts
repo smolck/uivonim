@@ -45,8 +45,8 @@ export default (webgl: WebGL) => {
 
     void main() {
       bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${
-      v.shouldShowCursor
-    };
+        v.shouldShowCursor
+      };
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
@@ -112,8 +112,7 @@ export default (webgl: WebGL) => {
   )
   webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
   webgl.gl.uniform4fv(program.vars.cursorColor, [1, 1, 1, 1])
-  // @ts-ignore
-  webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor)
+  webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -310,9 +309,8 @@ export default (webgl: WebGL) => {
   }
 
   const showCursor = (enable: boolean) => (
-    (shouldShowCursor = enable),
-    // @ts-ignore
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+    shouldShowCursor = enable,
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
   )
 
   const updateCursorColor = (color: [number, number, number]) => {

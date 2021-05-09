@@ -8,7 +8,7 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor } from '../cursor'
+import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor } from '../cursor'
 import * as dispatch from '../dispatch'
 import * as renderEvents from '../render/events'
 import { Events, Invokables } from '../../common/ipc'
@@ -352,6 +352,8 @@ window.api.on(Events.nvimRedraw, (redrawEventsStringified) => {
     else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
     else if (e.startsWith('msg_')) messageEvents.push(ev)
     else if (e === 'set_title') renderEvents.set_title(ev)
+    else if (e === 'busy_start') (hideCursor(), disableCursor())
+    else if (e === 'busy_stop') (enableCursor(), showCursor())
   }
 
   // we queue the message events because we are interested to know
