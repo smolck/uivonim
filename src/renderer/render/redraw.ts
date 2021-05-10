@@ -1,49 +1,51 @@
-import {
+/*import {
   addHighlight,
   generateColorLookupAtlas,
   setDefaultColors,
-} from '../render/highlight-attributes'
+} from '../render/highlight-attributes'*/
 import {
   getCharIndex,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor } from '../cursor'
+import { hideCursor, showCursor, moveCursor, setCursorShape, setCursorColor, enableCursor, disableCursor } from '../cursor'
 import * as dispatch from '../dispatch'
-import * as renderEvents from '../render/events'
+import { getColorById } from '../render/highlight-attributes'
 import { RedrawEvents, Invokables } from '../../common/ipc'
-import { WinPosWinInfo, WinFloatPosWinInfo } from '../../common/types'
+import { WinPosWinInfo, WinFloatPosWinInfo, Mode, PopupMenu } from '../../common/types'
+
+import messages from '../components/nvim/messages'
+import { showMessageHistory } from '../components/nvim/message-history'
 
 let dummyData = new Float32Array()
-let state_cursorVisible = true
 
-const default_colors_set = (e: any) => {
-  const count = e.length
-  let defaultColorsChanged = false
-
-  for (let ix = 1; ix < count; ix++) {
-    const [fg, bg, sp] = e[ix]
-    if (fg < 0 && bg < 0 && sp < 0) continue
-    defaultColorsChanged = setDefaultColors(fg, bg, sp)
-  }
-
-  if (!defaultColorsChanged) return
-
-  const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
-}
-
-const hl_attr_define = (e: any) => {
-  const count = e.length
-
-  for (let ix = 1; ix < count; ix++) {
-    const [id, attr /*cterm_attr*/, , info] = e[ix]
-    addHighlight(id, attr, info)
-  }
-
-  const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
-}
+// const default_colors_set = (e: any) => {
+//   const count = e.length
+//   let defaultColorsChanged = false
+// 
+//   for (let ix = 1; ix < count; ix++) {
+//     const [fg, bg, sp] = e[ix]
+//     if (fg < 0 && bg < 0 && sp < 0) continue
+//     defaultColorsChanged = setDefaultColors(fg, bg, sp)
+//   }
+// 
+//   if (!defaultColorsChanged) return
+// 
+//   const colorAtlas = generateColorLookupAtlas()
+//   windows.webgl.updateColorAtlas(colorAtlas)
+// }
+// 
+// const hl_attr_define = (e: any) => {
+//   const count = e.length
+// 
+//   for (let ix = 1; ix < count; ix++) {
+//     const [id, attr /*cterm_attr*/, , info] = e[ix]
+//     addHighlight(id, attr, info)
+//   }
+// 
+//   const colorAtlas = generateColorLookupAtlas()
+//   windows.webgl.updateColorAtlas(colorAtlas)
+// }
 
 const win_pos = (wins: WinPosWinInfo[]) => {
   wins.forEach(({ winId, gridId, row, col, width, height }) => 
@@ -78,13 +80,6 @@ const grid_resize = (e: any) => {
     if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
     windows.get(gridId).resizeWindow(width, height)
   }
-}
-
-const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
-  state_cursorVisible = gridId !== 1
-  if (gridId === 1) return
-  windows.setActiveGrid(gridId)
-  moveCursor(row, col)
 }
 
 const grid_scroll = ([
@@ -181,10 +176,6 @@ const grid_line = (e: any) => {
   }
 }
 
-const tabline_update = ([, [curtab, tabs]]: any) => {
-  requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
-}
-
 const win_close = (id: number) => {
   windows.remove(id)
 }
@@ -250,7 +241,7 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
       )
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
-        continue
+        return
       else
         window.api.invoke(
           Invokables.nvimResizeGrid,
@@ -259,7 +250,7 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
           clampedHeight
         )
 
-      continue
+      return
     }
 
     const grid = windows.get(win.gridId)
@@ -304,7 +295,10 @@ const handle: {
 })
 
 handle.gridLine(grid_line)
-handle.gridCursorGoto(grid_cursor_goto)
+handle.gridCursorGoto((gridId, row, col) => {
+  windows.setActiveGrid(gridId)
+  moveCursor(row, col)
+})
 handle.gridScroll(grid_scroll)
 handle.gridClear(grid_clear)
 handle.gridDestroy(grid_destroy)
@@ -313,81 +307,38 @@ handle.gridResize(grid_resize)
 handle.winPos(win_pos)
 handle.winFloatPos(win_float_pos)
 handle.winClose(win_close)
+handle.winHide(win_hide)
+
+handle.tablineUpdate(({ curtab, tabs }) =>
+                     requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs })))
+handle.modeChange((mode: Mode) => {
+  if (mode.hlid) {
+    const { background } = getColorById(mode.hlid)
+    if (background) setCursorColor(background)
+  }
+
+  setCursorShape(mode.shape, mode.size)
+})
+handle.pmenuHide(() => dispatch.pub('pmenu.hide'))
+handle.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
+handle.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
+
+handle.msgShow((message) => messages.show(message))
+handle.msgStatus((status) => dispatch.pub('message.status', status))
+handle.msgAppend((message) => messages.append(message))
+handle.msgShowHistory((messages) => showMessageHistory(messages))
+handle.msgControl((text) => dispatch.pub('message.control', text))
+handle.msgClear((maybeMatcherKey) => 
+                maybeMatcherKey ? messages.clear((message) => Reflect.get(message, maybeMatcherKey)) :
+                                  messages.clear())
+handle.showCursor(() => showCursor())
+handle.hideCursor(() => hideCursor())
+handle.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
+handle.enableThenShowCursor(() => (enableCursor(), showCursor()))
+handle.pubRedraw(() => dispatch.pub('redraw'))
+
+handle.disposeInvalidWinsThenLayout(() => (windows.disposeInvalidWindows(), windows.layout()))
 
 handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
 handle.cmdHide(() => dispatch.pub('cmd.hide'))
 handle.searchUpdate((update) => dispatch.pub('search.update', update))
-
-// window.api.on(Events.nvimRedraw, (redrawEvent) => {
-  /*const redrawEvents = JSON.parse(redrawEventsStringified)
-  // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
-  // a change in the cmdline, nvim sends redraw again. we cut that stuff out
-  // with coding and algorithms
-  // TODO: but y tho
-  if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
-  let winUpdates = false
-  const messageEvents: any = []
-
-  const eventCount = redrawEvents.length
-  for (let ix = 0; ix < eventCount; ix++) {
-    const ev = redrawEvents[ix]
-    const e = ev[0]
-
-    // if statements ordered in wrender priority
-    if (e === 'grid_line') grid_line(ev)
-    else if (e === 'flush') winUpdates = true
-    else if (e === 'grid_scroll') grid_scroll(ev)
-    else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
-    else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
-    else if (e === 'win_float_pos') (winUpdates = true), win_float_pos(ev)
-    else if (e === 'win_close') win_close(ev)
-    else if (e === 'win_hide') win_hide(ev)
-    else if (e === 'grid_resize') (winUpdates = true), grid_resize(ev)
-    else if (e === 'grid_clear') grid_clear(ev)
-    else if (e === 'grid_destroy') grid_destroy(ev)
-    else if (e === 'tabline_update') tabline_update(ev)
-    else if (e === 'mode_change') renderEvents.mode_change(ev)
-    else if (e === 'popupmenu_hide') renderEvents.popupmenu_hide()
-    else if (e === 'popupmenu_select') renderEvents.popupmenu_select(ev)
-    else if (e === 'popupmenu_show') renderEvents.popupmenu_show(ev)
-    else if (e === 'cmdline_show') renderEvents.cmdline_show(ev)
-    else if (e === 'cmdline_pos') renderEvents.cmdline_pos(ev)
-    else if (e === 'cmdline_hide') renderEvents.cmdline_hide()
-    else if (e === 'hl_attr_define') hl_attr_define(ev)
-    else if (e === 'default_colors_set') default_colors_set(ev)
-    else if (e === 'option_set') renderEvents.option_set(ev)
-    else if (e === 'mode_info_set') renderEvents.mode_info_set(ev)
-    else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
-    else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
-    else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
-    else if (e.startsWith('msg_')) messageEvents.push(ev)
-    else if (e === 'set_title') renderEvents.set_title(ev)
-  }
-
-  // we queue the message events because we are interested to know
-  // if the cursor is visible or not when the message will be displayed.
-  // this is kind of a hack - we do this because certain messages will
-  // steal input (like spell window/inputlist()) and we want the message
-  // UI to indicate that focus has been changed. ideally nvim would
-  // send some sort of message kind ("return_prompt" maybe?)
-  const messageEventsCount = messageEvents.length
-  for (let ix = 0; ix < messageEventsCount; ix++) {
-    const ev = messageEvents[ix]
-    const e = ev[0]
-
-    if (e === 'msg_show') renderEvents.msg_show(ev, state_cursorVisible)
-    else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
-    else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
-    else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
-    else if (e === 'msg_clear') renderEvents.msg_clear(ev)
-    else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
-  }
-
-  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-  state_cursorVisible ? showCursor() : hideCursor()
-  dispatch.pub('redraw')
-  if (!winUpdates) return
-
-  windows.disposeInvalidWindows()
-  windows.layout()*/
-// })

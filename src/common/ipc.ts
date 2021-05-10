@@ -71,6 +71,29 @@ export const RedrawEvents = {
   winFloatPos: 'win_float_pos',
   winClose: 'win_close',
   winHide: 'win_hide',
+  tablineUpdate: 'tabline_update',
+
+  modeChange: 'mode_change',
+
+  pmenuHide: 'pmenu.hide',
+  pmenuSelect: 'pmenu.select',
+  pmenuShow: 'pmenu.show',
+
+  msgShow: 'messages.show',
+  msgStatus: 'message.status',
+  msgAppend: 'messages.append',
+  msgShowHistory: 'messages.showMessageHistory',
+  msgControl: 'message.control',
+  msgClear: 'messages.clear',
+
+  showCursor: 'showCursor',
+  hideCursor: 'hideCursor',
+  enableThenShowCursor: 'enableThenShowCursor',
+  hideThenDisableCursor: 'hideThenDisableCursor',
+
+  pubRedraw: 'pubRedraw',
+
+  disposeInvalidWinsThenLayout: 'disposeInvalidWinsThenLayout',
 
   searchUpdate: 'search.update',
 }

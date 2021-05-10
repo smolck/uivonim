@@ -1,6 +1,8 @@
 import { MasterControl as Nvim } from './master-control'
 import { RedrawEvents } from '../../common/ipc'
-import { WinPosWinInfo, WinFloatPosWinInfo } from '../../common/types'
+import { WinPosWinInfo, WinFloatPosWinInfo, CursorShape, Mode, PopupMenu, MessageKind, CommandType, CommandUpdate } from '../../common/types'
+import { normalizeVimMode } from '../../common/neovim-utils'
+import { BrowserWindow } from 'electron'
 
 type SendFunc = (event: typeof RedrawEvents[keyof typeof RedrawEvents],
                  ...args: any[]) => void
@@ -34,25 +36,11 @@ const doNotUpdateCmdlineIfSame = (args: any[]) => {
 // typeof s === 'number' ? String.fromCodePoint(s) : s
 
 // {{{ Command-line
-enum CommandType {
-  Ex,
-  Prompt,
-  SearchForward,
-  SearchBackward,
-}
-
-interface CommandUpdate {
-  cmd: string
-  prompt?: string
-  kind: CommandType
-  position: number
-}
-
 type CmdContent = [any, string]
 type CmdlineShow = [CmdContent[], number, string, string, number, number]
 type CmdlineShowEvent = [any, CmdlineShow]
 let currentCommandMode: CommandType
-export const cmdline_show = ([ , [content, position, str1, str2, indent, level], ] : CmdlineShowEvent, 
+const cmdline_show = ([ , [content, position, str1, str2, indent, level], ] : CmdlineShowEvent,
                              send: SendFunc) => {
   const opChar = str1
   const prompt = str2
@@ -100,18 +88,19 @@ export const cmdline_show = ([ , [content, position, str1, str2, indent, level],
   level > 1 && console.log('level:', level)
 }
 
-export const cmdline_hide = (send: SendFunc) => {
+const cmdline_hide = (send: SendFunc) => {
   Object.assign(cmdcache, { active: false, position: -999, cmd: undefined })
   send(RedrawEvents.cmdHide)
 }
 
-export const cmdline_pos = ([, [position]]: [any, [number]], send: SendFunc) => {
+const cmdline_pos = ([, [position]]: [any, [number]], send: SendFunc) => {
   if (currentCommandMode === CommandType.Ex)
     send(RedrawEvents.cmdUpdate, { position })
   else send(RedrawEvents.searchUpdate, { position })
 }
 // }}}
 
+// Win-related {{{
 const win_pos = (e: any, send: SendFunc) => {
   const count = e.length
 
@@ -143,8 +132,173 @@ const win_float_pos = (e: any, send: SendFunc) => {
 
   send(RedrawEvents.winFloatPos, windows)
 }
+// }}}
 
-export const handleRedraw = (nvim: Nvim, sendToRenderer: SendFunc, redrawEvents: any[]) => {
+const tabline_update = ([, [curtab, tabs]]: any, send: SendFunc) => {
+  send(RedrawEvents.tablineUpdate, { 
+    curtab: { data: curtab.data, name: curtab.name },
+    tabs: tabs.map((tab: any) => ({ data: tab.data, name: tab.name })) })
+}
+
+// Mode-related {{{
+const modes = new Map<string, Mode>()
+const mode_change = ([, [m]]: [any, [string]], nvim: Nvim, send: SendFunc) => {
+  nvim.instanceApi.setMode(normalizeVimMode(m))
+  const info = modes.get(m)
+  if (info) {
+    send(RedrawEvents.modeChange, info)
+  }
+}
+
+interface ModeInfo {
+  blinkoff?: number
+  blinkon?: number
+  blinkwait?: number
+  cell_percentage?: number
+  cursor_shape?: string
+  attr_id?: number
+  attr_id_lm?: number
+  hl_id?: number
+  id_lm?: number
+  mouse_shape?: number
+  name: string
+  short_name: string
+}
+
+const cursorShapeType = (shape?: string) => {
+  if (shape === 'block') return CursorShape.block
+  if (shape === 'horizontal') return CursorShape.underline
+  if (shape === 'vertical') return CursorShape.line
+  else return CursorShape.block
+}
+
+const mode_info_set = ([, [, infos]]: any) =>
+  infos.forEach((m: ModeInfo) => {
+    const info = {
+      shape: cursorShapeType(m.cursor_shape),
+      size: m.cell_percentage,
+      hlid: m.attr_id,
+    }
+
+    modes.set(m.name, info)
+  })
+// }}}
+
+const popupmenu_show = ([, [itemz, index, row, col, grid]]: [
+  any,
+  [string[], number, number, number, number]
+], send: SendFunc) => {
+  const items = itemz.map((m) => {
+    const [word, kind, menu, info] = m
+    return { word, kind, menu, info }
+  })
+  const data: PopupMenu = { row, col, grid, index, items }
+  send(RedrawEvents.pmenuShow, data)
+}
+
+// Messages {{{
+const messageNotifyKindMappings = new Map([
+  ['echo', MessageKind.Info],
+  ['emsg', MessageKind.Error],
+  ['echoerr', MessageKind.Error],
+  ['echomsg', MessageKind.Info],
+  ['quickfix', MessageKind.System],
+  // TODO: handle prompts
+  ['return_prompt', MessageKind.System],
+])
+
+const showStatusMessage = (message: string, send: SendFunc) => {
+  // TODO: \n on all platforms?
+  const newlineCount = (message.match(/\n/g) || []).length
+  if (newlineCount) return send(RedrawEvents.msgShow, { message, kind: MessageKind.Info })
+  send(RedrawEvents.msgStatus, message)
+}
+
+const state = {
+  messagePromptVisible: false,
+  lastMessageTime: Date.now(),
+}
+
+type MessageEvent = [number, string]
+const msg_show = (
+  [, [messageKind, msgs, replaceLast]]: [any, [string, MessageEvent[], boolean]],
+  cursorVisible: boolean,
+  send: SendFunc
+) => {
+  const lastMessageTime = state.lastMessageTime
+  state.lastMessageTime = Date.now()
+  const kind = messageNotifyKindMappings.get(messageKind)
+  state.messagePromptVisible = !cursorVisible
+  const message = msgs.reduce(
+    (res, [, /*hlid*/ text]) => res += text,
+    ''
+  )
+
+  if (!kind) {
+    const timeDiff = Date.now() - lastMessageTime
+    const probablyNeedsToBeAppended = !replaceLast && timeDiff < 100
+    if (!probablyNeedsToBeAppended) return showStatusMessage(message, send)
+  }
+
+  const msginfo = {
+    message,
+    kind: kind || MessageKind.System,
+    stealsFocus: !cursorVisible,
+  }
+
+  replaceLast ? send(RedrawEvents.msgShow, msginfo) : send(RedrawEvents.msgAppend, msginfo)
+}
+
+type MessageHistory = [string, [number, string][]]
+const msg_history_show = ([, [messages]]: [any, [MessageHistory[]]], send: SendFunc) => {
+  const mappedMessages = messages.map(([messageKind, msgs]) => {
+    const kind = messageNotifyKindMappings.get(messageKind)
+    const message = msgs.reduce(
+      (res, [, /*hlid*/ text]) => res += text,
+      ''
+    )
+    return { message, kind: kind || MessageKind.Info }
+  })
+
+  send(RedrawEvents.msgShowHistory, mappedMessages)
+}
+
+const msg_showmode = ([, [msgs]]: [any, [MessageEvent[]]], send: SendFunc) => {
+  if (!msgs.length) return send(RedrawEvents.msgControl, '')
+  msgs.forEach(([, /*hlid*/ text]) => send(RedrawEvents.msgControl, text))
+}
+
+const msg_showcmd = ([, [msgs]]: [any, [MessageEvent[]]], send: SendFunc) => {
+  if (!msgs.length) return send(RedrawEvents.msgControl, '')
+  msgs.forEach(([, /*hlid*/ text]) => send(RedrawEvents.msgControl, text))
+}
+
+const msg_clear = ([, [content]]: [any, [string]], send: SendFunc) => {
+  send(RedrawEvents.msgClear)
+  send(RedrawEvents.msgStatus, content)
+}
+
+// we display our own ruler based on cursor position. why use this?  i think
+// maybe we could use 'set noruler' or 'set ruler' to determine if we show the
+// ruler block in the statusline (with these msg_ruler events)
+const msg_ruler = (_: any) => {}
+
+// ideally nvim would tell us when to clear message prompts like spell window and inputlist()
+const messageClearPromptsMaybeHack = (cursorVisible: boolean, send: SendFunc) => {
+  if (!state.messagePromptVisible) return
+  if (cursorVisible) send(RedrawEvents.msgClear, 'stealsFocus')
+}
+// }}}
+
+const grid_cursor_goto = ([, [gridId, row, col]]: any, send: SendFunc) => {
+  state_cursorVisible = gridId !== 1
+  if (gridId === 1) return
+  send(RedrawEvents.gridCursorGoto, gridId, row, col)
+}
+
+let state_cursorVisible = true
+export const handleRedraw = (nvim: Nvim, win: BrowserWindow, redrawEvents: any[]) => {
+  const sendToRenderer = (channel: string, ...args: any[]) => win.webContents.send(channel, ...args)
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
@@ -159,39 +313,35 @@ export const handleRedraw = (nvim: Nvim, sendToRenderer: SendFunc, redrawEvents:
     const e = ev[0]
 
     // if statements ordered in wrender priority
-    
-    // TODO(smolck): Really hope this doesn't need to be handled here
-    if (e === 'grid_line') sendToRenderer(RedrawEvents.gridLine, ev)
 
+    if (e === 'grid_line') sendToRenderer(RedrawEvents.gridLine, ev) // TODO(smolck): Really hope this doesn't need to be handled here
     else if (e === 'flush') winUpdates = true
     else if (e === 'grid_scroll') sendToRenderer(RedrawEvents.gridScroll, ev)
-    else if (e === 'grid_cursor_goto') sendToRenderer(RedrawEvents.gridCursorGoto, ev)
-
+    else if (e === 'grid_cursor_goto') grid_cursor_goto(ev, sendToRenderer)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev, sendToRenderer)
     else if (e === 'win_float_pos') (winUpdates = true), win_float_pos(ev, sendToRenderer)
     else if (e === 'win_close') sendToRenderer(RedrawEvents.winClose, ev[1])
     else if (e === 'win_hide') sendToRenderer(RedrawEvents.winHide, ev)
-    
-    else if (e === 'grid_resize') (winUpdates = true), sendToRenderer(RedrawEvents.gridDestroy, ev)
+    else if (e === 'grid_resize') (winUpdates = true), sendToRenderer(RedrawEvents.gridResize, ev)
     else if (e === 'grid_clear') sendToRenderer(RedrawEvents.gridClear, ev)
     else if (e === 'grid_destroy') sendToRenderer(RedrawEvents.gridDestroy, ev)
-    // else if (e === 'tabline_update') tabline_update(ev)
-    // else if (e === 'mode_change') renderEvents.mode_change(ev)
-    // else if (e === 'popupmenu_hide') renderEvents.popupmenu_hide()
-    // else if (e === 'popupmenu_select') renderEvents.popupmenu_select(ev)
-    // else if (e === 'popupmenu_show') renderEvents.popupmenu_show(ev)
+    else if (e === 'tabline_update') tabline_update(ev, sendToRenderer)
+    else if (e === 'mode_change') mode_change(ev, nvim, sendToRenderer)
+    else if (e === 'popupmenu_hide') sendToRenderer(RedrawEvents.pmenuHide)
+    else if (e === 'popupmenu_select') sendToRenderer(RedrawEvents.pmenuSelect, ev[1][0])
+    else if (e === 'popupmenu_show') popupmenu_show(ev, sendToRenderer)
     else if (e === 'cmdline_show') cmdline_show(ev, sendToRenderer)
     else if (e === 'cmdline_pos') cmdline_pos(ev, sendToRenderer)
     else if (e === 'cmdline_hide') cmdline_hide(sendToRenderer)
-    /*else if (e === 'hl_attr_define') hl_attr_define(ev)
-    else if (e === 'default_colors_set') default_colors_set(ev)
-    else if (e === 'option_set') renderEvents.option_set(ev)
-    else if (e === 'mode_info_set') renderEvents.mode_info_set(ev)
-    else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
-    else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
-    else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
+    // else if (e === 'hl_attr_define') hl_attr_define(ev)
+    // else if (e === 'default_colors_set') default_colors_set(ev)
+    // else if (e === 'option_set') renderEvents.option_set(ev)
+    else if (e === 'mode_info_set') mode_info_set(ev)
+    // else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
+    // else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
+    // else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
     else if (e.startsWith('msg_')) messageEvents.push(ev)
-    else if (e === 'set_title') renderEvents.set_title(ev)*/
+    // else if (e === 'set_title') renderEvents.set_title(ev)
   }
 
   // we queue the message events because we are interested to know
@@ -205,19 +355,18 @@ export const handleRedraw = (nvim: Nvim, sendToRenderer: SendFunc, redrawEvents:
     const ev = messageEvents[ix]
     const e = ev[0]
 
-    if (e === 'msg_show') renderEvents.msg_show(ev, state_cursorVisible)
-    else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
-    else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
-    else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
-    else if (e === 'msg_clear') renderEvents.msg_clear(ev)
-    else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
+    if (e === 'msg_show') msg_show(ev, state_cursorVisible, sendToRenderer)
+    else if (e === 'msg_showmode') msg_showmode(ev, sendToRenderer)
+    else if (e === 'msg_showcmd') msg_showcmd(ev, sendToRenderer)
+    else if (e === 'msg_history_show') msg_history_show(ev, sendToRenderer)
+    else if (e === 'msg_clear') msg_clear(ev, sendToRenderer)
+    else if (e === 'msg_ruler') msg_ruler(ev)
   }
 
-  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-  state_cursorVisible ? showCursor() : hideCursor()
-  dispatch.pub('redraw')
+  messageClearPromptsMaybeHack(state_cursorVisible, sendToRenderer)
+  state_cursorVisible ? sendToRenderer(RedrawEvents.showCursor) : sendToRenderer(RedrawEvents.hideCursor)
+  sendToRenderer(RedrawEvents.pubRedraw)
   if (!winUpdates) return
 
-  windows.disposeInvalidWindows()
-  windows.layout()
+  sendToRenderer(RedrawEvents.disposeInvalidWinsThenLayout)
 }

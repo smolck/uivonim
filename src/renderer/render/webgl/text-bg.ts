@@ -2,7 +2,7 @@ import { getColorAtlas, colors } from '../highlight-attributes'
 import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { hexToRGB } from '../../ui/css'
-import { CursorShape } from '../../cursor'
+import { CursorShape } from '../../../common/types'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }

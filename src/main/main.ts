@@ -16,6 +16,8 @@ if (process.platform === 'darwin') {
   process.env.PATH += ':/usr/local/bin'
 }
 
+if (process.env.NODE_ENV !== 'production') process.traceProcessWarnings = true
+
 let win: BrowserWindow
 let nvim: NvimType
 let input: InputType
@@ -109,19 +111,6 @@ app.on('ready', async () => {
   win.webContents.on('did-finish-load', async () => await afterReadyThings())
 })
 
-const getCircularReplacer = () => {
-  const seen = new WeakSet()
-  return (_key: any, value: any) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return
-      }
-      seen.add(value)
-    }
-    return value
-  }
-}
-
 const defaultGlobalShortcuts: [string, () => void][] = [
   [
     '<C-S-=>',
@@ -177,7 +166,7 @@ async function afterReadyThings() {
 
   input.registerGlobalShortcuts(defaultGlobalShortcuts)
 
-  nvim.onRedraw((redrawEvents) => handleRedraw(nvim, win.webContents.send, redrawEvents))
+  nvim.onRedraw((redrawEvents) => handleRedraw(nvim, win, redrawEvents))
 
   setupActionHandlers(nvim.instanceApi)
   await setupInvokeHandlers()

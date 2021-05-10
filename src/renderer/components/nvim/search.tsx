@@ -4,7 +4,7 @@ import {
   disableCursor,
   enableCursor,
 } from '../../cursor'
-import { CommandType, CommandUpdate } from '../../render/events'
+import { CommandType, CommandUpdate } from '../../../common/types'
 import * as windows from '../../windows/window-manager'
 import { WindowOverlay } from '../../windows/window'
 import Input from '../text-input'

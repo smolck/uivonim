@@ -8,7 +8,7 @@ import { basename } from 'path'
 import { render } from 'inferno'
 
 interface Tab {
-  tab: ExtContainer
+  data: number
   name: string
 }
 
@@ -386,7 +386,7 @@ watchState('cwd', (cwd: string) => {
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
-  const mtabs = tabs.map((t) => ({ id: t.tab.data, name: t.name }))
+  const mtabs = tabs.map((t) => ({ id: t.data, name: t.name }))
   mtabs.length > 1
     ? assignStateAndRender({ active: curtab.data, tabs: mtabs })
     : assignStateAndRender({ active: -1, tabs: [] })

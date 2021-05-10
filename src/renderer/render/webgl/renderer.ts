@@ -3,7 +3,8 @@ import CreateWebGL from './utils'
 import { cell } from '../../workspace'
 import TextFG from './text-fg'
 import TextBG from './text-bg'
-import { cursor as cursorState, CursorShape } from '../../cursor'
+import { cursor as cursorState } from '../../cursor'
+import { CursorShape } from '../../../common/types'
 import { getActiveGridId } from '../../windows/window-manager'
 
 export interface WebGLView {
