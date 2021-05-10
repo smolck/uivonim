@@ -342,8 +342,8 @@ export const handleRedraw = (
     const ev = redrawEvents[ix]
     const e = ev[0]
 
-    // if statements ordered in wrender priority
-
+    // TODO(smolck): Is this still the case? "if statements ordered in wrender priority"
+    // Done a lot here since then perhaps . . .
     if (e === 'grid_line') sendToRenderer(RedrawEvents.gridLine, ev)
     // TODO(smolck): Really hope this doesn't need to be handled here
     else if (e === 'flush') winUpdates = true
