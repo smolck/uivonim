@@ -164,12 +164,38 @@ function M.handle_chosen_code_action(action_chosen)
   end
 end
 
+function M.on_publish_diagnostics(thing1, thing2, params, client_id, thing5, config)
+  -- Let nvim do it's stuff
+  vim.lsp.diagnostic.on_publish_diagnostics(thing1, thing2, params, client_id, thing5, config)
+
+  -- See https://github.com/neovim/neovim/blob/f8173df4d7ecec239629921736340d3f4d1dcfd4/runtime/lua/vim/lsp/diagnostic.lua#L1000-L1031
+  local uri = params.uri
+  local bufnr = vim.uri_to_bufnr(uri)
+
+  if not bufnr then
+    return
+  end
+
+  -- Unloaded buffers should not handle diagnostics.
+  --    When the buffer is loaded, we'll call on_attach, which sends textDocument/didOpen.
+  --    This should trigger another publish of the diagnostics.
+  --
+  -- In particular, this stops a ton of spam when first starting a server for current
+  -- unloaded buffers.
+  if not vim.api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+
+  notify_uivonim('diagnostics', params.diagnostics)
+end
+
 M.callbacks = {
   ['textDocument/signatureHelp'] = M.signature_help;
   ['textDocument/hover'] = M.hover;
   ['textDocument/references'] = M.references;
   ['textDocument/codeAction'] = M.code_action;
   ['textDocument/documentSymbol'] = M.symbols;
+  ['textDocument/publishDiagnostics'] = M.on_publish_diagnostics;
   ['workspace/symbol'] = M.symbols;
 }
 

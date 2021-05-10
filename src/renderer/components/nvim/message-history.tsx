@@ -1,5 +1,5 @@
 import { MessageKind, Message } from '../../../common/types'
-import { RowNormal } from '../row-container'
+import { RowDesc } from '../row-container'
 import { vimBlur, vimFocus } from '../../ui/uikit'
 import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
@@ -13,7 +13,6 @@ let state = {
   cache: [] as Message[],
   vis: false,
   ix: 0,
-  inputCallbacks: {},
 }
 
 type S = typeof state
@@ -47,7 +46,6 @@ const MessageHistory = ({
   vis: visible,
   messages,
   ix: index,
-  inputCallbacks,
   query,
 }: S) => (
   <div
@@ -64,7 +62,12 @@ const MessageHistory = ({
   >
     <Input
       id={'message-history-input'}
-      {...inputCallbacks}
+      hide={hide}
+      next={next}
+      prev={prev}
+      down={down}
+      up={up}
+      change={change}
       icon={'filter'}
       value={query}
       desc={'filter messages'}
@@ -77,7 +80,7 @@ const MessageHistory = ({
       style={{ overflow: 'hidden' }}
     >
       {messages.map(({ kind, message }, pos) => (
-        <RowNormal active={pos === index}>
+        <RowDesc active={pos === index}>
           <div
             style={{
               display: 'flex',
@@ -97,7 +100,7 @@ const MessageHistory = ({
           >
             {message}
           </div>
-        </RowNormal>
+        </RowDesc>
       ))}
     </WhyDiv>
   </div>
@@ -116,31 +119,34 @@ const show = (messages: Message[]) => (
   vimBlur(), assignStateAndRender({ messages, cache: messages, vis: true })
 )
 
-const hide = () => (
-  vimFocus(), assignStateAndRender({ vis: false, query: '', ix: 0 })
-)
+function hide() {
+  vimFocus()
+  assignStateAndRender({ vis: false, query: '', ix: 0 })
+}
 
-const next = () =>
+function next() {
   assignStateAndRender({
     ix: state.ix + 1 >= state.messages.length ? 0 : state.ix + 1,
   })
+}
 
-const prev = () =>
+function prev() {
   assignStateAndRender({
     ix: state.ix - 1 < 0 ? state.messages.length - 1 : state.ix - 1,
   })
+}
 
-const down = () => {
+function down() {
   const { height } = elref.getBoundingClientRect()
   elref.scrollTop += Math.floor(height * SCROLL_AMOUNT)
 }
 
-const up = () => {
+function up() {
   const { height } = elref.getBoundingClientRect()
   elref.scrollTop -= Math.floor(height * SCROLL_AMOUNT)
 }
 
-const change = (query: string) =>
+function change(query: string) {
   assignStateAndRender({
     query,
     ix: 0,
@@ -148,14 +154,6 @@ const change = (query: string) =>
       ? filter(state.messages, query, { key: 'message' })
       : state.cache,
   })
-
-state.inputCallbacks = {
-  hide,
-  next,
-  prev,
-  down,
-  up,
-  change,
 }
 
 export const showMessageHistory = (messages: Message[]) => show(messages)

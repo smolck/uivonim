@@ -211,6 +211,7 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   sendOn('pick-color', Events.pickColor)
   sendOn('explorer', Events.explorer)
   sendOn('update-nameplates', Events.updateNameplates)
+  sendOn('diagnostics', Events.lspDiagnostics)
 
   nvim.instanceApi.onAction('version', () =>
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)

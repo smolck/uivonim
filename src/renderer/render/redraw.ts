@@ -8,15 +8,7 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import {
-  hideCursor,
-  showCursor,
-  moveCursor,
-  setCursorShape,
-  setCursorColor,
-  enableCursor,
-  disableCursor,
-} from '../cursor'
+import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor } from '../cursor'
 import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
 import { RedrawEvents, Invokables } from '../../common/ipc'

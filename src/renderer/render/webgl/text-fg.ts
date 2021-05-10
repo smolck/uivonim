@@ -126,8 +126,7 @@ export default (webgl: WebGL) => {
   webgl.gl.uniform4fv(program.vars.cursorColor, [0, 0, 0, 1])
   webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
   webgl.gl.uniform1i(program.vars.cursorShape, 0) // CursorShape.block = 0
-  // @ts-ignore
-  webgl.gl.uniform1i(program.vars.shouldShowCursor, true)
+  webgl.gl.uniform1i(program.vars.shouldShowCursor, 1 /* true */)
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
@@ -256,9 +255,7 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
   }
 
-  const showCursor = (enable: boolean) =>
-    // @ts-ignore
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable)
+  const showCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
