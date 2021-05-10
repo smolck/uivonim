@@ -371,3 +371,9 @@ handle.optionSet((e: any) => {
 
   updateFont()
 })
+
+handle.setTitle((title) => dispatch.pub('vim:title', title))
+
+handle.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
+handle.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
+handle.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))

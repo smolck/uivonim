@@ -41,7 +41,7 @@ type CmdlineShow = [CmdContent[], number, string, string, number, number]
 type CmdlineShowEvent = [any, CmdlineShow]
 let currentCommandMode: CommandType
 const cmdline_show = ([ , [content, position, str1, str2, indent, level], ] : CmdlineShowEvent,
-                             send: SendFunc) => {
+                      send: SendFunc) => {
   const opChar = str1
   const prompt = str2
   cmdcache.active = true
@@ -338,11 +338,11 @@ export const handleRedraw = (nvim: Nvim, win: BrowserWindow, redrawEvents: any[]
     else if (e === 'default_colors_set') sendToRenderer(RedrawEvents.defaultColorsSet, ev)
     else if (e === 'option_set') sendToRenderer(RedrawEvents.optionSet, ev)
     else if (e === 'mode_info_set') mode_info_set(ev)
-    // else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
-    // else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
-    // else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
+    else if (e === 'wildmenu_show') sendToRenderer(RedrawEvents.wildmenuShow, ev[1][0])
+    else if (e === 'wildmenu_select') sendToRenderer(RedrawEvents.wildmenuSelect, ev[1][0])
+    else if (e === 'wildmenu_hide') sendToRenderer(RedrawEvents.wildmenuHide)
     else if (e.startsWith('msg_')) messageEvents.push(ev)
-    // else if (e === 'set_title') renderEvents.set_title(ev)
+    else if (e === 'set_title') sendToRenderer(RedrawEvents.setTitle, ev[1][0])
   }
 
   // we queue the message events because we are interested to know
