@@ -95,6 +95,11 @@ export const RedrawEvents = {
 
   disposeInvalidWinsThenLayout: 'disposeInvalidWinsThenLayout',
 
+  hlAttrDefine: 'hl_attr_define',
+  defaultColorsSet: 'defaultColorsSet',
+
+  optionSet: 'option_set',
+
   searchUpdate: 'search.update',
 }
 

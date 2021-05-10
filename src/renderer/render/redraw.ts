@@ -1,8 +1,8 @@
-/*import {
+import {
   addHighlight,
   generateColorLookupAtlas,
   setDefaultColors,
-} from '../render/highlight-attributes'*/
+} from '../render/highlight-attributes'
 import {
   getCharIndex,
   getUpdatedFontAtlasMaybe,
@@ -13,39 +13,41 @@ import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
 import { RedrawEvents, Invokables } from '../../common/ipc'
 import { WinPosWinInfo, WinFloatPosWinInfo, Mode, PopupMenu } from '../../common/types'
-
+import * as workspace from '../workspace'
+import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
+import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 
 let dummyData = new Float32Array()
 
-// const default_colors_set = (e: any) => {
-//   const count = e.length
-//   let defaultColorsChanged = false
-// 
-//   for (let ix = 1; ix < count; ix++) {
-//     const [fg, bg, sp] = e[ix]
-//     if (fg < 0 && bg < 0 && sp < 0) continue
-//     defaultColorsChanged = setDefaultColors(fg, bg, sp)
-//   }
-// 
-//   if (!defaultColorsChanged) return
-// 
-//   const colorAtlas = generateColorLookupAtlas()
-//   windows.webgl.updateColorAtlas(colorAtlas)
-// }
-// 
-// const hl_attr_define = (e: any) => {
-//   const count = e.length
-// 
-//   for (let ix = 1; ix < count; ix++) {
-//     const [id, attr /*cterm_attr*/, , info] = e[ix]
-//     addHighlight(id, attr, info)
-//   }
-// 
-//   const colorAtlas = generateColorLookupAtlas()
-//   windows.webgl.updateColorAtlas(colorAtlas)
-// }
+const default_colors_set = (e: any) => {
+  const count = e.length
+  let defaultColorsChanged = false
+
+  for (let ix = 1; ix < count; ix++) {
+    const [fg, bg, sp] = e[ix]
+    if (fg < 0 && bg < 0 && sp < 0) continue
+    defaultColorsChanged = setDefaultColors(fg, bg, sp)
+  }
+
+  if (!defaultColorsChanged) return
+
+  const colorAtlas = generateColorLookupAtlas()
+  windows.webgl.updateColorAtlas(colorAtlas)
+}
+
+const hl_attr_define = (e: any) => {
+  const count = e.length
+
+  for (let ix = 1; ix < count; ix++) {
+    const [id, attr /*cterm_attr*/, , info] = e[ix]
+    addHighlight(id, attr, info)
+  }
+
+  const colorAtlas = generateColorLookupAtlas()
+  windows.webgl.updateColorAtlas(colorAtlas)
+}
 
 const win_pos = (wins: WinPosWinInfo[]) => {
   wins.forEach(({ winId, gridId, row, col, width, height }) => 
@@ -342,3 +344,30 @@ handle.disposeInvalidWinsThenLayout(() => (windows.disposeInvalidWindows(), wind
 handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
 handle.cmdHide(() => dispatch.pub('cmd.hide'))
 handle.searchUpdate((update) => dispatch.pub('search.update', update))
+
+handle.hlAttrDefine(hl_attr_define)
+handle.defaultColorsSet(default_colors_set)
+
+const options = new Map<string, any>()
+
+// TODO: this parsing logic needs to be revisited
+// needs to handle all nvim formatting options
+const updateFont = () => {
+  const lineSpace = options.get('linespace')
+  const guifont = options.get('guifont')
+
+  const { face, size } = parseGuifont(guifont)
+  const changed = workspace.updateEditorFont({ face, size, lineSpace })
+  if (!changed) return
+
+  const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)
+  windows.webgl.updateCellSize()
+  workspace.resize()
+}
+
+handle.optionSet((e: any) => {
+  e.slice(1).forEach(([k, value]: any) => options.set(k, value))
+
+  updateFont()
+})

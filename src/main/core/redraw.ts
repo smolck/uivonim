@@ -298,7 +298,8 @@ const grid_cursor_goto = ([, [gridId, row, col]]: any, send: SendFunc) => {
 
 let state_cursorVisible = true
 export const handleRedraw = (nvim: Nvim, win: BrowserWindow, redrawEvents: any[]) => {
-  const sendToRenderer = (channel: string, ...args: any[]) => win.webContents.send(channel, ...args)
+  const sendToRenderer = (channel: typeof RedrawEvents[keyof typeof RedrawEvents],
+                          ...args: any[]) => win.webContents.send(channel, ...args)
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
@@ -333,9 +334,9 @@ export const handleRedraw = (nvim: Nvim, win: BrowserWindow, redrawEvents: any[]
     else if (e === 'cmdline_show') cmdline_show(ev, sendToRenderer)
     else if (e === 'cmdline_pos') cmdline_pos(ev, sendToRenderer)
     else if (e === 'cmdline_hide') cmdline_hide(sendToRenderer)
-    // else if (e === 'hl_attr_define') hl_attr_define(ev)
-    // else if (e === 'default_colors_set') default_colors_set(ev)
-    // else if (e === 'option_set') renderEvents.option_set(ev)
+    else if (e === 'hl_attr_define') sendToRenderer(RedrawEvents.hlAttrDefine, ev)
+    else if (e === 'default_colors_set') sendToRenderer(RedrawEvents.defaultColorsSet, ev)
+    else if (e === 'option_set') sendToRenderer(RedrawEvents.optionSet, ev)
     else if (e === 'mode_info_set') mode_info_set(ev)
     // else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
     // else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
