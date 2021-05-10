@@ -4,7 +4,7 @@ import {
   hideCursor,
   showCursor,
 } from '../../cursor'
-import { CommandType, CommandUpdate } from '../../render/events'
+import { CommandType, CommandUpdate } from '../../../common/types'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
 import Input from '../text-input'

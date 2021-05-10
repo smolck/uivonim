@@ -2,7 +2,7 @@ import { getColorAtlas } from '../highlight-attributes'
 import generateFontAtlas from '../font-texture-atlas'
 import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
-import { CursorShape } from '../../cursor'
+import { CursorShape } from '../../../common/types'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }

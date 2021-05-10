@@ -18,6 +18,10 @@ ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 ipcRenderer.on(Events.homeDir, (_event, dir) => (homeDir = dir))
 
 const api: WindowApi = {
+  onRedrawEvent: (evt, fn) => {
+    ipcRenderer.on(evt, (_evt, ...args) => fn(...args))
+  },
+
   // TODO(smolck): Security of this if we ever add a web browsing feature
   isMacos: process.platform === 'darwin',
   homeDir,
@@ -49,9 +53,11 @@ const api: WindowApi = {
 
   gitOnBranch: (fn: (branch: any) => void) =>
     ipcRenderer.on(Events.gitOnBranch, (_, b) => fn(b)),
-  gitOnStatus: (fn: (status: any) => void) => ipcRenderer.on(Events.gitOnStatus, (_, s) => fn(s)),
+  gitOnStatus: (fn: (status: any) => void) =>
+    ipcRenderer.on(Events.gitOnStatus, (_, s) => fn(s)),
 
-  nvimWatchState: (key, fn) => ipcRenderer.on(Events.nvimState, (_event, newState) => fn(newState[key])),
+  nvimWatchState: (key, fn) =>
+    ipcRenderer.on(Events.nvimState, (_event, newState) => fn(newState[key])),
   nvimState: () => {
     if (!nvimState) {
       throw new Error(

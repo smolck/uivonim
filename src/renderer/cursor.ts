@@ -1,11 +1,6 @@
 import * as windows from './windows/window-manager'
 import { hexToRGB } from './ui/css'
-
-export enum CursorShape {
-  block = 0,
-  line = 1,
-  underline = 2,
-}
+import { CursorShape } from '../common/types'
 
 export const cursor = {
   visible: false,

@@ -8,13 +8,23 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor } from '../cursor'
+import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor, setCursorShape, setCursorColor } from '../cursor'
 import * as dispatch from '../dispatch'
-import * as renderEvents from '../render/events'
-import { Events, Invokables } from '../../common/ipc'
+import { getColorById } from '../render/highlight-attributes'
+import { RedrawEvents, Invokables } from '../../common/ipc'
+import {
+  WinPosWinInfo,
+  WinFloatPosWinInfo,
+  Mode,
+  PopupMenu,
+} from '../../common/types'
+import * as workspace from '../workspace'
+import { parseGuifont } from '../../common/utils'
+import messages from '../components/nvim/messages'
+import { showMessageHistory } from '../components/nvim/message-history'
+import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 
 let dummyData = new Float32Array()
-let state_cursorVisible = true
 
 const default_colors_set = (e: any) => {
   const count = e.length
@@ -44,13 +54,10 @@ const hl_attr_define = (e: any) => {
   windows.webgl.updateColorAtlas(colorAtlas)
 }
 
-const win_pos = (e: any) => {
-  const count = e.length
-
-  for (let ix = 1; ix < count; ix++) {
-    const [gridId, { data: windowId }, row, col, width, height] = e[ix]
-    windows.set(windowId, gridId, row, col, width, height)
-  }
+const win_pos = (wins: WinPosWinInfo[]) => {
+  wins.forEach(({ winId, gridId, row, col, width, height }) =>
+    windows.set(winId, gridId, row, col, width, height)
+  )
 }
 
 const win_hide = (e: any) => {
@@ -81,13 +88,6 @@ const grid_resize = (e: any) => {
     if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
     windows.get(gridId).resizeWindow(width, height)
   }
-}
-
-const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
-  state_cursorVisible = gridId !== 1
-  if (gridId === 1) return
-  windows.setActiveGrid(gridId)
-  moveCursor(row, col)
 }
 
 const grid_scroll = ([
@@ -184,37 +184,22 @@ const grid_line = (e: any) => {
   }
 }
 
-const tabline_update = ([, [curtab, tabs]]: any) => {
-  requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
+const win_close = (id: number) => {
+  windows.remove(id)
 }
 
-const win_close = (e: any) => {
-  windows.remove(e[1])
-}
-
-const win_float_pos = (e: any) => {
-  const count = e.length
-
-  for (let ix = 1; ix < count; ix++) {
-    const [
-      gridId,
-      { id: windowId },
-      anchor,
-      anchor_grid,
-      anchor_row,
-      anchor_col,
-    ] = e[ix]
-
+const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
+  wins.forEach((win) => {
     // TODO(smolck): How to handle windows positioned outside editor window?
     // Clamp it to the editor width & height, or let it go outside the editor window
     // (as it does now)? TUI clamps it, so that's probably safest bet.
 
     // Handle floats not relative to editor.
-    if (anchor_grid !== 1) {
-      const gridInfo = windows.get(gridId).getWindowInfo()
+    if (win.anchorGrid !== 1) {
+      const gridInfo = windows.get(win.gridId).getWindowInfo()
 
       // Position relative to anchor window
-      const anchorGrid = windows.get(anchor_grid)
+      const anchorGrid = windows.get(win.anchorGrid)
 
       let row, col
 
@@ -223,34 +208,34 @@ const win_float_pos = (e: any) => {
       rowOffset = anchorGrid.row + 1
       colOffset = anchorGrid.col
 
-      if (anchor === 'NE')
-        (row = anchor_row + rowOffset),
-          (col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'NW')
-        (row = anchor_row + rowOffset), (col = anchor_col + colOffset)
-      else if (anchor === 'SE')
-        (row = anchor_row + rowOffset - gridInfo.height),
-          (col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'SW')
-        (row = anchor_row + rowOffset - gridInfo.height),
-          (col = anchor_col + colOffset)
+      if (win.anchor === 'NE')
+        (row = win.anchorRow + rowOffset),
+          (col = win.anchorCol + colOffset - gridInfo.width)
+      else if (win.anchor === 'NW')
+        (row = win.anchorRow + rowOffset), (col = win.anchorCol + colOffset)
+      else if (win.anchor === 'SE')
+        (row = win.anchorRow + rowOffset - gridInfo.height),
+          (col = win.anchorCol + colOffset - gridInfo.width)
+      else if (win.anchor === 'SW')
+        (row = win.anchorRow + rowOffset - gridInfo.height),
+          (col = win.anchorCol + colOffset)
       else
         throw new Error(
           'Anchor was not one of the four possible values, this should not be possible.'
         )
 
       windows.set(
-        windowId,
-        gridId,
+        win.winId,
+        win.gridId,
         row,
         col,
         gridInfo.width,
         gridInfo.height,
         true,
-        anchor
+        win.anchor
       )
 
-      windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
+      windows.calculateGlobalOffset(anchorGrid, windows.get(win.gridId))
 
       const anchorGridInfo = anchorGrid.getWindowInfo()
 
@@ -264,122 +249,143 @@ const win_float_pos = (e: any) => {
       )
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
-        continue
+        return
       else
         window.api.invoke(
           Invokables.nvimResizeGrid,
-          gridId,
+          win.gridId,
           clampedWidth,
           clampedHeight
         )
 
-      continue
+      return
     }
 
-    const grid = windows.get(gridId)
+    const grid = windows.get(win.gridId)
     const gridInfo = grid.getWindowInfo()
 
     let row, col
 
     // Vim lines are zero-indexed, so . . . add 1 to the rows
-    if (anchor === 'NE')
-      (row = 1 + anchor_row), (col = anchor_col - gridInfo.width)
-    else if (anchor === 'NW') (row = 1 + anchor_row), (col = anchor_col)
-    else if (anchor === 'SE')
-      (row = 1 + anchor_row - gridInfo.height),
-        (col = anchor_col - gridInfo.width)
-    else if (anchor === 'SW')
-      (row = 1 + anchor_row - gridInfo.height), (col = anchor_col)
+    if (win.anchor === 'NE')
+      (row = 1 + win.anchorRow), (col = win.anchorCol - gridInfo.width)
+    else if (win.anchor === 'NW')
+      (row = 1 + win.anchorRow), (col = win.anchorCol)
+    else if (win.anchor === 'SE')
+      (row = 1 + win.anchorRow - gridInfo.height),
+        (col = win.anchorCol - gridInfo.width)
+    else if (win.anchor === 'SW')
+      (row = 1 + win.anchorRow - gridInfo.height), (col = win.anchorCol)
     else
       throw new Error(
         'Anchor was not one of the four possible values, this should not be possible.'
       )
 
     windows.set(
-      windowId,
-      gridId,
+      win.winId,
+      win.gridId,
       row,
       col,
       gridInfo.width,
       gridInfo.height,
       true,
-      anchor
+      win.anchor
     )
-  }
+  })
 }
 
-window.api.on(Events.nvimRedraw, (redrawEventsStringified) => {
-  const redrawEvents = JSON.parse(redrawEventsStringified)
-  // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
-  // a change in the cmdline, nvim sends redraw again. we cut that stuff out
-  // with coding and algorithms
-  // TODO: but y tho
-  if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
-  let winUpdates = false
-  const messageEvents: any = []
-
-  const eventCount = redrawEvents.length
-  for (let ix = 0; ix < eventCount; ix++) {
-    const ev = redrawEvents[ix]
-    const e = ev[0]
-
-    // if statements ordered in wrender priority
-    if (e === 'grid_line') grid_line(ev)
-    else if (e === 'flush') winUpdates = true
-    else if (e === 'grid_scroll') grid_scroll(ev)
-    else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
-    else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
-    else if (e === 'win_float_pos') (winUpdates = true), win_float_pos(ev)
-    else if (e === 'win_close') win_close(ev)
-    else if (e === 'win_hide') win_hide(ev)
-    else if (e === 'grid_resize') (winUpdates = true), grid_resize(ev)
-    else if (e === 'grid_clear') grid_clear(ev)
-    else if (e === 'grid_destroy') grid_destroy(ev)
-    else if (e === 'tabline_update') tabline_update(ev)
-    else if (e === 'mode_change') renderEvents.mode_change(ev)
-    else if (e === 'popupmenu_hide') renderEvents.popupmenu_hide()
-    else if (e === 'popupmenu_select') renderEvents.popupmenu_select(ev)
-    else if (e === 'popupmenu_show') renderEvents.popupmenu_show(ev)
-    else if (e === 'cmdline_show') renderEvents.cmdline_show(ev)
-    else if (e === 'cmdline_pos') renderEvents.cmdline_pos(ev)
-    else if (e === 'cmdline_hide') renderEvents.cmdline_hide()
-    else if (e === 'hl_attr_define') hl_attr_define(ev)
-    else if (e === 'default_colors_set') default_colors_set(ev)
-    else if (e === 'option_set') renderEvents.option_set(ev)
-    else if (e === 'mode_info_set') renderEvents.mode_info_set(ev)
-    else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
-    else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
-    else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
-    else if (e.startsWith('msg_')) messageEvents.push(ev)
-    else if (e === 'set_title') renderEvents.set_title(ev)
-    else if (e === 'busy_start') (hideCursor(), disableCursor())
-    else if (e === 'busy_stop') (enableCursor(), showCursor())
-  }
-
-  // we queue the message events because we are interested to know
-  // if the cursor is visible or not when the message will be displayed.
-  // this is kind of a hack - we do this because certain messages will
-  // steal input (like spell window/inputlist()) and we want the message
-  // UI to indicate that focus has been changed. ideally nvim would
-  // send some sort of message kind ("return_prompt" maybe?)
-  const messageEventsCount = messageEvents.length
-  for (let ix = 0; ix < messageEventsCount; ix++) {
-    const ev = messageEvents[ix]
-    const e = ev[0]
-
-    if (e === 'msg_show') renderEvents.msg_show(ev, state_cursorVisible)
-    else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
-    else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
-    else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
-    else if (e === 'msg_clear') renderEvents.msg_clear(ev)
-    else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
-  }
-
-  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
-  state_cursorVisible ? showCursor() : hideCursor()
-  dispatch.pub('redraw')
-  if (!winUpdates) return
-
-  windows.disposeInvalidWindows()
-  windows.layout()
+// @ts-ignore
+const handle: {
+  [Key in keyof typeof RedrawEvents]: (fn: (...args: any[]) => void) => void
+} = new Proxy(RedrawEvents, {
+  get: (redrawEvents, key) => (fn: (...args: any[]) => void) => {
+    window.api.onRedrawEvent(Reflect.get(redrawEvents, key), fn)
+  },
 })
+
+handle.gridLine(grid_line)
+handle.gridCursorGoto((gridId, row, col) => {
+  windows.setActiveGrid(gridId)
+  moveCursor(row, col)
+})
+handle.gridScroll(grid_scroll)
+handle.gridClear(grid_clear)
+handle.gridDestroy(grid_destroy)
+handle.gridResize(grid_resize)
+
+handle.winPos(win_pos)
+handle.winFloatPos(win_float_pos)
+handle.winClose(win_close)
+handle.winHide(win_hide)
+
+handle.tablineUpdate(({ curtab, tabs }) =>
+  requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
+)
+handle.modeChange((mode: Mode) => {
+  if (mode.hlid) {
+    const { background } = getColorById(mode.hlid)
+    if (background) setCursorColor(background)
+  }
+
+  setCursorShape(mode.shape, mode.size)
+})
+handle.pmenuHide(() => dispatch.pub('pmenu.hide'))
+handle.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
+handle.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
+
+handle.msgShow((message) => messages.show(message))
+handle.msgStatus((status) => dispatch.pub('message.status', status))
+handle.msgAppend((message) => messages.append(message))
+handle.msgShowHistory((messages) => showMessageHistory(messages))
+handle.msgControl((text) => dispatch.pub('message.control', text))
+handle.msgClear((maybeMatcherKey) =>
+  maybeMatcherKey
+    ? messages.clear((message) => Reflect.get(message, maybeMatcherKey))
+    : messages.clear()
+)
+handle.showCursor(() => showCursor())
+handle.hideCursor(() => hideCursor())
+handle.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
+handle.enableThenShowCursor(() => (enableCursor(), showCursor()))
+handle.pubRedraw(() => dispatch.pub('redraw'))
+
+handle.disposeInvalidWinsThenLayout(
+  () => (windows.disposeInvalidWindows(), windows.layout())
+)
+
+handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
+handle.cmdHide(() => dispatch.pub('cmd.hide'))
+handle.searchUpdate((update) => dispatch.pub('search.update', update))
+
+handle.hlAttrDefine(hl_attr_define)
+handle.defaultColorsSet(default_colors_set)
+
+const options = new Map<string, any>()
+
+// TODO: this parsing logic needs to be revisited
+// needs to handle all nvim formatting options
+const updateFont = () => {
+  const lineSpace = options.get('linespace')
+  const guifont = options.get('guifont')
+
+  const { face, size } = parseGuifont(guifont)
+  const changed = workspace.updateEditorFont({ face, size, lineSpace })
+  if (!changed) return
+
+  const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)
+  windows.webgl.updateCellSize()
+  workspace.resize()
+}
+
+handle.optionSet((e: any) => {
+  e.slice(1).forEach(([k, value]: any) => options.set(k, value))
+
+  updateFont()
+})
+
+handle.setTitle((title) => dispatch.pub('vim:title', title))
+
+handle.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
+handle.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
+handle.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))
