@@ -97,7 +97,10 @@ export const RedrawEvents = {
 }
 
 export interface WindowApi {
-  onRedrawEvent: (evt: typeof RedrawEvents[keyof typeof RedrawEvents], fn: (...args: any[]) => void) => void
+  onRedrawEvent: (
+    evt: typeof RedrawEvents[keyof typeof RedrawEvents],
+    fn: (...args: any[]) => void
+  ) => void
   isMacos: boolean
   homeDir: string
   setWinTitle: (newTitle: string) => void

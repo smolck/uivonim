@@ -77,7 +77,7 @@ const textInput = (
     loading = false,
     pathMode = false,
     id,
-    change
+    change,
   }: TextInputProps,
   $: Props
 ) => (

@@ -54,7 +54,7 @@ export const parseGuifont = (guifont: string) => {
 
   return {
     face,
-    size
+    size,
   }
 }
 

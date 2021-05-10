@@ -53,9 +53,11 @@ const api: WindowApi = {
 
   gitOnBranch: (fn: (branch: any) => void) =>
     ipcRenderer.on(Events.gitOnBranch, (_, b) => fn(b)),
-  gitOnStatus: (fn: (status: any) => void) => ipcRenderer.on(Events.gitOnStatus, (_, s) => fn(s)),
+  gitOnStatus: (fn: (status: any) => void) =>
+    ipcRenderer.on(Events.gitOnStatus, (_, s) => fn(s)),
 
-  nvimWatchState: (key, fn) => ipcRenderer.on(Events.nvimState, (_event, newState) => fn(newState[key])),
+  nvimWatchState: (key, fn) =>
+    ipcRenderer.on(Events.nvimState, (_event, newState) => fn(newState[key])),
   nvimState: () => {
     if (!nvimState) {
       throw new Error(

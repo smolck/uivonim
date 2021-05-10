@@ -8,11 +8,24 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor, setCursorShape, setCursorColor, enableCursor, disableCursor } from '../cursor'
+import {
+  hideCursor,
+  showCursor,
+  moveCursor,
+  setCursorShape,
+  setCursorColor,
+  enableCursor,
+  disableCursor,
+} from '../cursor'
 import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
 import { RedrawEvents, Invokables } from '../../common/ipc'
-import { WinPosWinInfo, WinFloatPosWinInfo, Mode, PopupMenu } from '../../common/types'
+import {
+  WinPosWinInfo,
+  WinFloatPosWinInfo,
+  Mode,
+  PopupMenu,
+} from '../../common/types'
 import * as workspace from '../workspace'
 import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
@@ -50,8 +63,9 @@ const hl_attr_define = (e: any) => {
 }
 
 const win_pos = (wins: WinPosWinInfo[]) => {
-  wins.forEach(({ winId, gridId, row, col, width, height }) => 
-    windows.set(winId, gridId, row, col, width, height))
+  wins.forEach(({ winId, gridId, row, col, width, height }) =>
+    windows.set(winId, gridId, row, col, width, height)
+  )
 }
 
 const win_hide = (e: any) => {
@@ -263,7 +277,8 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
     // Vim lines are zero-indexed, so . . . add 1 to the rows
     if (win.anchor === 'NE')
       (row = 1 + win.anchorRow), (col = win.anchorCol - gridInfo.width)
-    else if (win.anchor === 'NW') (row = 1 + win.anchorRow), (col = win.anchorCol)
+    else if (win.anchor === 'NW')
+      (row = 1 + win.anchorRow), (col = win.anchorCol)
     else if (win.anchor === 'SE')
       (row = 1 + win.anchorRow - gridInfo.height),
         (col = win.anchorCol - gridInfo.width)
@@ -312,7 +327,8 @@ handle.winClose(win_close)
 handle.winHide(win_hide)
 
 handle.tablineUpdate(({ curtab, tabs }) =>
-                     requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs })))
+  requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
+)
 handle.modeChange((mode: Mode) => {
   if (mode.hlid) {
     const { background } = getColorById(mode.hlid)
@@ -330,16 +346,20 @@ handle.msgStatus((status) => dispatch.pub('message.status', status))
 handle.msgAppend((message) => messages.append(message))
 handle.msgShowHistory((messages) => showMessageHistory(messages))
 handle.msgControl((text) => dispatch.pub('message.control', text))
-handle.msgClear((maybeMatcherKey) => 
-                maybeMatcherKey ? messages.clear((message) => Reflect.get(message, maybeMatcherKey)) :
-                                  messages.clear())
+handle.msgClear((maybeMatcherKey) =>
+  maybeMatcherKey
+    ? messages.clear((message) => Reflect.get(message, maybeMatcherKey))
+    : messages.clear()
+)
 handle.showCursor(() => showCursor())
 handle.hideCursor(() => hideCursor())
 handle.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
 handle.enableThenShowCursor(() => (enableCursor(), showCursor()))
 handle.pubRedraw(() => dispatch.pub('redraw'))
 
-handle.disposeInvalidWinsThenLayout(() => (windows.disposeInvalidWindows(), windows.layout()))
+handle.disposeInvalidWinsThenLayout(
+  () => (windows.disposeInvalidWindows(), windows.layout())
+)
 
 handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
 handle.cmdHide(() => dispatch.pub('cmd.hide'))

@@ -14,7 +14,6 @@ export interface CommandUpdate {
   position: number
 }
 
-
 interface PMenuItem {
   /** The text that will be inserted */
   word: string
@@ -47,21 +46,21 @@ export enum CursorShape {
 }
 
 export interface WinPosWinInfo {
-  gridId: number,
-  winId: number,
-  row: number,
-  col: number,
-  width: number,
-  height: number,
+  gridId: number
+  winId: number
+  row: number
+  col: number
+  width: number
+  height: number
 }
 
 export interface WinFloatPosWinInfo {
-  gridId: number,
-  winId: number,
-  anchor: string,
-  anchorGrid: number,
-  anchorRow: number,
-  anchorCol: number,
+  gridId: number
+  winId: number
+  anchor: string
+  anchorGrid: number
+  anchorRow: number
+  anchorCol: number
 }
 
 export interface WindowMetadata {
