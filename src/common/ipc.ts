@@ -54,7 +54,8 @@ export const Events = {
   modifyColorschemeLive: 'modifyColorschemeLive',
   explorer: 'explorer',
   updateNameplates: 'window.refresh',
-  lspDiagnostics: 'lspDiagnostics'
+  lspDiagnostics: 'lspDiagnostics',
+  minimap: 'minimap',
 } as const
 
 export const RedrawEvents = {

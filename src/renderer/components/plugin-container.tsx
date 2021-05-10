@@ -35,6 +35,8 @@ type PluginProps = {
   extraStyle?: any
   children?: any
   id?: string
+  setBackground?: boolean
+  width?: string
 }
 
 // TODO(smolck): Consolidate all of these.
@@ -100,15 +102,17 @@ export const PluginRight = ({
   visible,
   id,
   extraStyle,
+  width = '500px',
+  setBackground = false,
   children,
 }: PluginProps) => (
   <div id={id} style={right as CSSProperties}>
     <div
       style={{
         ...dialog,
-        width: '500px',
+        width,
         height: '100%',
-        background: 'var(--background-40)',
+        background: setBackground ? 'var(--background-40)' : undefined,
         display: visible ? 'flex' : 'none',
         'flex-flow': 'column',
         'margin-top': 0,
