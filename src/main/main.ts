@@ -16,8 +16,6 @@ if (process.platform === 'darwin') {
   process.env.PATH += ':/usr/local/bin'
 }
 
-if (process.env.NODE_ENV !== 'production') process.traceProcessWarnings = true
-
 let win: BrowserWindow
 let nvim: NvimType
 let input: InputType
