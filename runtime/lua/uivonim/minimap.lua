@@ -92,6 +92,7 @@ function M.enable()
   vim.cmd [[
     augroup UivonimMinimap
       autocmd WinScrolled * silent lua if require'uivonim/minimap'.is_visible() then require'uivonim/minimap'.update() else require'uivonim/minimap'.show() end
+      autocmd BufEnter * silent lua require'uivonim/minimap'.show()
     augroup end
   ]]
 end
