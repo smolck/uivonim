@@ -42,7 +42,7 @@ const Minimap = ({ visible }: { visible: boolean }) => {
       extraStyle={{ background: colors.background }}
       width={'150px'}
     >
-      <canvas id="minimap-canvas" style="height: 100%;"/>
+      <canvas id='minimap-canvas' style='height: 100%;' />
     </PluginRight>
   )
 }
@@ -64,7 +64,9 @@ const onClick = (event: MouseEvent) => {
   const y = event.clientY - rect.top
 
   const height = canvas.height / maxLines
-  const row = Math.floor(y / height) + (viewportCache.botline > maxLines ? viewportCache.botline - maxLines : 0)
+  const row =
+    Math.floor(y / height) +
+    (viewportCache.botline > maxLines ? viewportCache.botline - maxLines : 0)
   window.api.invoke(Invokables.nvimJumpTo, { line: row })
 }
 
@@ -74,13 +76,13 @@ const update = (viewport: any, linesAndHighlights?: any[]) => {
 
   if (!isVisible) render(<Minimap visible={true} />, container)
   if (!ctx || !canvas) {
-    canvas = (document.getElementById('minimap-canvas') as HTMLCanvasElement)
+    canvas = document.getElementById('minimap-canvas') as HTMLCanvasElement
     ctx = canvas.getContext('2d')!!
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
     // https://stackoverflow.com/a/48309022
-    canvas.width = canvas.getBoundingClientRect().width;
-    canvas.height = canvas.getBoundingClientRect().height;
+    canvas.width = canvas.getBoundingClientRect().width
+    canvas.height = canvas.getBoundingClientRect().height
 
     canvas.addEventListener('click', onClick)
   }
@@ -97,22 +99,34 @@ const update = (viewport: any, linesAndHighlights?: any[]) => {
   ctx.beginPath()
   ctx.fillStyle = lightenOrDarkenColor(colors.background, 30)
   const needsAName = viewport.botline - maxLines
-  const y = viewport.botline > maxLines ? (viewport.topline - needsAName) * height : viewport.topline * height
-  ctx.fillRect(0, y, canvas.width, (viewport.botline * height) - (viewport.topline * height))
+  const y =
+    viewport.botline > maxLines
+      ? (viewport.topline - needsAName) * height
+      : viewport.topline * height
+  ctx.fillRect(
+    0,
+    y,
+    canvas.width,
+    viewport.botline * height - viewport.topline * height
+  )
 
   ctx.beginPath()
   const start = viewport.botline > maxLines ? viewport.botline - maxLines : 0
   const end = viewport.botline > maxLines ? viewport.botline : maxLines
   linesAndHighlightsCache.slice(start, end).forEach((line: any[], row) => {
     line.forEach((char, col) => {
-      ctx.fillStyle = (char.hl ? asColor(char.hl.foreground) : colors.background)!!
+      ctx.fillStyle = (
+        char.hl ? asColor(char.hl.foreground) : colors.background
+      )!!
       ctx.font = `2px ${font.face}`
       ctx.fillText(char, col * width, row * height, width)
     })
   })
 }
 
-window.api.on(Events.minimap, (linesAndHighlights: any[], viewport) => update(viewport, linesAndHighlights))
+window.api.on(Events.minimap, (linesAndHighlights: any[], viewport) =>
+  update(viewport, linesAndHighlights)
+)
 window.api.on(Events.minimapUpdate, (viewport) => update(viewport))
 
 window.api.on(Events.minimapHide, () =>
