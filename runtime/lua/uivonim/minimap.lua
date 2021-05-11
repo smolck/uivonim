@@ -7,8 +7,9 @@ local function get_lines_and_highlights(bufnr)
   local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
   filetype = require'nvim-treesitter.parsers'.ft_to_lang(filetype)
 
-  local parser = vim.treesitter.get_parser(bufnr, filetype)
-  local query = vim.treesitter.get_query(filetype, 'highlights')
+  local parser_ok, parser = pcall(vim.treesitter.get_parser, bufnr, filetype)
+  local query_ok, query = pcall(vim.treesitter.get_query, filetype, 'highlights')
+  if (not parser_ok) or (not query_ok) then return end
 
   local line_highlights = setmetatable({}, {
     __index = function(t, k)
@@ -77,9 +78,35 @@ local function get_lines_and_highlights(bufnr)
   return new_lines
 end
 
+local enabled = false
+
+function M.disable()
+  enabled = false
+  vim.cmd [[ autocmd! UivonimMinimap ]]
+end
+
+function M.enable()
+  enabled = true
+  vim.cmd [[
+    augroup UivonimMinimap
+      autocmd WinScrolled * silent lua require'uivonim/minimap'.show()
+    augroup end
+  ]]
+end
+
 function M.show()
-  local lines_and_hls = get_lines_and_highlights(0)
-  notify_uivonim('minimap', lines_and_hls)
+  if enabled then
+    local lines_and_hls = get_lines_and_highlights(0)
+    if lines_and_hls then
+      notify_uivonim('minimap', lines_and_hls)
+    end
+  end
+end
+
+function M.hide()
+  if enabled then
+    notify_uivonim('minimap-hide')
+  end
 end
 
 return M

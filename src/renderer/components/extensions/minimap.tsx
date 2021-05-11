@@ -32,7 +32,7 @@ const lightenOrDarkenColor = (col: string, amt: number) => {
   return (usePound ? '#' : '') + (g | (b << 8) | (r << 16)).toString(16)
 }
 
-const Minimap = ({ linesAndHighlights }: { linesAndHighlights: any }) => {
+const Minimap = ({ linesAndHighlights, visible }: { linesAndHighlights: any, visible: boolean }) => {
   const inViewportColor = lightenOrDarkenColor(colors.background, 20)
   const linesHtml = linesAndHighlights.map((line: any) => {
     const spansForLine: any[] = []
@@ -64,7 +64,7 @@ const Minimap = ({ linesAndHighlights }: { linesAndHighlights: any }) => {
 
   return (
     <PluginRight
-      visible={true}
+      visible={visible}
       setBackground={false}
       extraStyle={{ background: colors.background }}
       width={'150px'}
@@ -79,5 +79,9 @@ container.id = 'minimap'
 document.getElementById('plugins')!.appendChild(container)
 
 window.api.on(Events.minimap, (linesAndHighlights) =>
-  render(<Minimap linesAndHighlights={linesAndHighlights} />, container)
+  render(<Minimap linesAndHighlights={linesAndHighlights} visible={true} />, container)
+)
+
+window.api.on(Events.minimapHide, () =>
+  render(<Minimap linesAndHighlights={[]} visible={false} />, container)
 )

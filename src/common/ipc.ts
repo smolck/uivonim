@@ -56,6 +56,7 @@ export const Events = {
   updateNameplates: 'window.refresh',
   lspDiagnostics: 'lspDiagnostics',
   minimap: 'minimap',
+  minimapHide: 'minimapHide',
 } as const
 
 export const RedrawEvents = {
