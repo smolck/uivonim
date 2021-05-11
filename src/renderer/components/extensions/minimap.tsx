@@ -51,31 +51,32 @@ const container = document.createElement('div')
 container.id = 'minimap'
 document.getElementById('plugins')!.appendChild(container)
 
-let ctxCache: CanvasRenderingContext2D
-let canvasCache: HTMLCanvasElement
+let ctx: CanvasRenderingContext2D
+let canvas: HTMLCanvasElement
 let linesAndHighlightsCache: any[]
+let viewportCache: any
+
+const maxLines = 200
 
 // https://stackoverflow.com/a/18053642
 const onClick = (event: MouseEvent) => {
-  const rect = canvasCache.getBoundingClientRect()
-  // const x = event.clientX - rect.left
+  const rect = canvas.getBoundingClientRect()
   const y = event.clientY - rect.top
 
-  const height = canvasCache.height / 200
-  const row = Math.floor(y / height)
+  const height = canvas.height / maxLines
+  const row = Math.floor(y / height) + (viewportCache.botline > maxLines ? viewportCache.botline - maxLines : 0)
   window.api.invoke(Invokables.nvimJumpTo, { line: row })
 }
 
 const update = (viewport: any, linesAndHighlights?: any[]) => {
   if (linesAndHighlights) linesAndHighlightsCache = linesAndHighlights
+  viewportCache = viewport
 
   if (!isVisible) render(<Minimap visible={true} />, container)
-  if (!ctxCache || !canvasCache) {
-    const canvas = (document.getElementById('minimap-canvas') as HTMLCanvasElement)
-    const ctx = canvas.getContext('2d')!!
-    ctxCache = ctx
-    canvasCache = canvas
-    ctxCache.scale(window.devicePixelRatio, window.devicePixelRatio)
+  if (!ctx || !canvas) {
+    canvas = (document.getElementById('minimap-canvas') as HTMLCanvasElement)
+    ctx = canvas.getContext('2d')!!
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
     // https://stackoverflow.com/a/48309022
     canvas.width = canvas.getBoundingClientRect().width;
@@ -85,25 +86,28 @@ const update = (viewport: any, linesAndHighlights?: any[]) => {
   }
 
   // Background
-  ctxCache.beginPath()
-  ctxCache.fillStyle = colors.background
-  ctxCache.fillRect(0, 0, canvasCache.width, canvasCache.height)
+  ctx.beginPath()
+  ctx.fillStyle = colors.background
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const width = canvasCache.width / 80
-  const height = canvasCache.height / 200
+  const width = canvas.width / 80
+  const height = canvas.height / maxLines
 
   // Viewport
-  ctxCache.beginPath()
-  ctxCache.fillStyle = lightenOrDarkenColor(colors.background, 30)
-  ctxCache.fillRect(0, viewport.topline * height, canvasCache.width,
-                    (viewport.botline * height) - (viewport.topline * height))
+  ctx.beginPath()
+  ctx.fillStyle = lightenOrDarkenColor(colors.background, 30)
+  const needsAName = viewport.botline - maxLines
+  const y = viewport.botline > maxLines ? (viewport.topline - needsAName) * height : viewport.topline * height
+  ctx.fillRect(0, y, canvas.width, (viewport.botline * height) - (viewport.topline * height))
 
-  ctxCache.beginPath()
-  linesAndHighlightsCache.forEach((line: any[], row) => {
+  ctx.beginPath()
+  const start = viewport.botline > maxLines ? viewport.botline - maxLines : 0
+  const end = viewport.botline > maxLines ? viewport.botline : maxLines
+  linesAndHighlightsCache.slice(start, end).forEach((line: any[], row) => {
     line.forEach((char, col) => {
-      ctxCache.fillStyle = (char.hl ? asColor(char.hl.foreground) : colors.background)!!
-      ctxCache.font = `2px ${font.face}`
-      ctxCache.fillText(char, col * width, row * height, width)
+      ctx.fillStyle = (char.hl ? asColor(char.hl.foreground) : colors.background)!!
+      ctx.font = `2px ${font.face}`
+      ctx.fillText(char, col * width, row * height, width)
     })
   })
 }
