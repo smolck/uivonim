@@ -57,6 +57,7 @@ export const Events = {
   lspDiagnostics: 'lspDiagnostics',
   minimap: 'minimap',
   minimapHide: 'minimapHide',
+  minimapUpdate: 'minimapUpdate',
 } as const
 
 export const RedrawEvents = {

@@ -56,13 +56,9 @@ local function get_lines_and_highlights(bufnr)
   local new_lines = {}
   local api = vim.api
 
-  local info = vim.fn.getwininfo(vim.fn.win_getid())[1]
   for i, line in ipairs(lines) do
     local row = i
     local n = 0
-
-    local in_viewport = row >= info.topline and row <= info.botline
-    new_lines[i] = { in_viewport }
 
     -- https://stackoverflow.com/a/832414
     for char in line:gmatch('.') do
@@ -79,17 +75,22 @@ local function get_lines_and_highlights(bufnr)
 end
 
 local enabled = false
+local visible = false
 
 function M.disable()
   enabled = false
   vim.cmd [[ autocmd! UivonimMinimap ]]
 end
 
+function M.is_visible()
+  return visible
+end
+
 function M.enable()
   enabled = true
   vim.cmd [[
     augroup UivonimMinimap
-      autocmd WinScrolled * silent lua require'uivonim/minimap'.show()
+      autocmd WinScrolled * silent lua if require'uivonim/minimap'.is_visible() then require'uivonim/minimap'.update() else require'uivonim/minimap'.show() end
     augroup end
   ]]
 end
@@ -98,14 +99,24 @@ function M.show()
   if enabled then
     local lines_and_hls = get_lines_and_highlights(0)
     if lines_and_hls then
-      notify_uivonim('minimap', lines_and_hls)
+      local info = vim.fn.getwininfo(vim.fn.win_getid())[1]
+      notify_uivonim('minimap', lines_and_hls, { topline = info.topline, botline = info.botline })
+      visible = true
     end
+  end
+end
+
+function M.update()
+  if enabled then
+    local info = vim.fn.getwininfo(vim.fn.win_getid())[1]
+    notify_uivonim('minimap-update', { topline = info.topline, botline = info.botline })
   end
 end
 
 function M.hide()
   if enabled then
     notify_uivonim('minimap-hide')
+    visible = false
   end
 end
 
