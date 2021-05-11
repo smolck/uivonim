@@ -59,6 +59,7 @@ local function get_lines_and_highlights(bufnr)
   for i, line in ipairs(lines) do
     local row = i
     local n = 0
+    new_lines[i] = {}
 
     -- https://stackoverflow.com/a/832414
     for char in line:gmatch('.') do
