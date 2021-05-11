@@ -37,9 +37,8 @@ const Minimap = ({ linesAndHighlights }: { linesAndHighlights: any }) => {
   const linesHtml = linesAndHighlights.map((line: any) => {
     const spansForLine: any[] = []
 
-    let inViewport = false
-    line.forEach((char: any) => {
-      if (char.inViewport) inViewport = true
+    let inViewport = line[0]
+    line.slice(1).forEach((char: any) => {
       spansForLine.push(
         <span
           style={{

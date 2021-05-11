@@ -57,18 +57,18 @@ local function get_lines_and_highlights(bufnr)
 
   local info = vim.fn.getwininfo(vim.fn.win_getid())[1]
   for i, line in ipairs(lines) do
-    new_lines[i] = {}
     local row = i
     local n = 0
 
-    local inViewport = row >= info.topline and row <= info.botline
+    local in_viewport = row >= info.topline and row <= info.botline
+    new_lines[i] = { in_viewport }
+
     -- https://stackoverflow.com/a/832414
     for char in line:gmatch('.') do
       table.insert(new_lines[i],
         {
           char = char,
           hl = line_highlights[row][n] and api.nvim_get_hl_by_name(line_highlights[row][n], true) or nil,
-          inViewport = inViewport
         })
       n = n + 1
     end
