@@ -1,6 +1,7 @@
 import { Invokables } from '../../common/ipc'
 import { parseGuifont } from '../../common/utils'
 import { colors } from './highlight-attributes'
+import { asColor } from '../../common/utils'
 
 // From https://github.com/glacambre/firenvim/blob/bd334382c48905d4e74a90e52bd9b0e90d64bcb7/src/utils/configuration.ts#L1-L19 {{{
 // These modes are defined in https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c
@@ -70,12 +71,12 @@ export const setCanvas = (cvs: HTMLCanvasElement) => {
 }
 
 type HighlightInfo = {
-  background: string
   // TODO(smolck): Make sure that these types being optionald doesn't break
   // `if`s or anything. TBH not quite sure that could even happen but y'know.
+  background?: string
+  foreground?: string
   bold?: boolean
   blend?: number
-  foreground: string
   italic?: boolean
   reverse?: boolean
   special?: string
@@ -178,7 +179,7 @@ type State = {
   mode: Mode
 }
 
-const newHighlight = (bg: string, fg: string): HighlightInfo => {
+const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
   return {
     background: bg,
     foreground: fg,
@@ -340,13 +341,13 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
   },
   default_colors_set: (fg: number, bg: number, sp: number) => {
     if (fg !== undefined && fg !== -1) {
-      globalState.highlights[0].foreground = toHexCss(fg)
+      globalState.highlights[0].foreground = asColor(fg)
     }
     if (bg !== undefined && bg !== -1) {
-      globalState.highlights[0].background = toHexCss(bg)
+      globalState.highlights[0].background = asColor(bg)
     }
     if (sp !== undefined && sp !== -1) {
-      globalState.highlights[0].special = toHexCss(sp)
+      globalState.highlights[0].special = asColor(sp)
     }
     const curGridSize = globalState.gridSizes[getGridId()]
     if (curGridSize !== undefined) {
@@ -507,12 +508,12 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
     if (highlights[id] === undefined) {
       highlights[id] = newHighlight(undefined, undefined)
     }
-    highlights[id].foreground = toHexCss(rgbAttr.foreground)
-    highlights[id].background = toHexCss(rgbAttr.background)
+    highlights[id].foreground = asColor(rgbAttr.foreground)
+    highlights[id].background = asColor(rgbAttr.background)
     highlights[id].bold = rgbAttr.bold
     highlights[id].blend = rgbAttr.blend
     highlights[id].italic = rgbAttr.italic
-    highlights[id].special = toHexCss(rgbAttr.special)
+    highlights[id].special = asColor(rgbAttr.special)
     highlights[id].strikethrough = rgbAttr.strikethrough
     highlights[id].undercurl = rgbAttr.undercurl
     highlights[id].underline = rgbAttr.underline
@@ -661,9 +662,11 @@ function paint(_: DOMHighResTimeStamp) {
                 background = foreground
                 foreground = tmp
               }
-              context.fillStyle = background
+
+              context.fillStyle = background || ''
               context.fillRect(pixelX, pixelY, width, charHeight)
-              context.fillStyle = foreground
+              context.fillStyle = foreground || ''
+
               let fontStr = ''
               let changeFont = false
               if (cellHigh.bold) {
@@ -778,11 +781,11 @@ function paint(_: DOMHighResTimeStamp) {
       }
 
       // Finally draw cursor
-      context.fillStyle = background
+      context.fillStyle = background || ''
       context.fillRect(cursorWidth, cursorHeight, width, height)
 
       if (info.cursor_shape === 'block') {
-        context.fillStyle = foreground
+        context.fillStyle = foreground || ''
         const char = charactersGrid[cursor.y][cursor.x]
         context.fillText(
           char,
