@@ -65,7 +65,7 @@ export const setCanvas = (cvs: HTMLCanvasElement) => {
   state.canvas = cvs
   setCanvasDimensions(state.canvas, window.innerWidth, window.innerHeight)
   defaultFontString = 'monospace'
-  state.context = state.canvas.getContext('2d', { alpha: false })
+  state.context = state.canvas.getContext('2d', { alpha: false })!!
   setFontString(state, defaultFontString)
 }
 
