@@ -39,7 +39,7 @@ const invalidateMetrics = () => {
 let fontString: string
 const setFontString = (state: State, s: string) => {
   fontString = s
-  state.context.font = fontString
+  state.context!!.font = fontString
   invalidateMetrics()
 }
 
@@ -71,15 +71,17 @@ export const setCanvas = (cvs: HTMLCanvasElement) => {
 
 type HighlightInfo = {
   background: string
-  bold: boolean
-  blend: number
+  // TODO(smolck): Make sure that these types being optionald doesn't break
+  // `if`s or anything. TBH not quite sure that could even happen but y'know.
+  bold?: boolean
+  blend?: number
   foreground: string
-  italic: boolean
-  reverse: boolean
-  special: string
-  strikethrough: boolean
-  undercurl: boolean
-  underline: boolean
+  italic?: boolean
+  reverse?: boolean
+  special?: string
+  strikethrough?: boolean
+  undercurl?: boolean
+  underline?: boolean
 }
 
 // We then have a GridSize type. We need this type in order to keep track of
@@ -163,8 +165,8 @@ type Mode = {
 }
 
 type State = {
-  canvas: HTMLCanvasElement
-  context: CanvasRenderingContext2D
+  canvas?: HTMLCanvasElement
+  context?: CanvasRenderingContext2D
   cursor: Cursor
   gridCharacters: string[][][]
   gridDamages: GridDamage[][]
@@ -179,21 +181,11 @@ type State = {
 const newHighlight = (bg: string, fg: string): HighlightInfo => {
   return {
     background: bg,
-    bold: undefined,
-    blend: undefined,
     foreground: fg,
-    italic: undefined,
-    reverse: undefined,
-    special: undefined,
-    strikethrough: undefined,
-    undercurl: undefined,
-    underline: undefined,
   }
 }
 
 const globalState: State = {
-  canvas: undefined,
-  context: undefined,
   cursor: {
     currentGrid: 1,
     display: true,
@@ -288,7 +280,7 @@ export const getGlyphInfo = (state: State) => {
     maxCellHeight === undefined ||
     maxBaselineDistance === undefined
   ) {
-    recomputeCharSize(state.context)
+    recomputeCharSize(state.context!!)
   }
   return [maxCellWidth, maxCellHeight, maxBaselineDistance]
 }
@@ -296,7 +288,7 @@ export const getGlyphInfo = (state: State) => {
 const measureWidth = (state: State, char: string) => {
   const charWidth = getGlyphInfo(state)[0]
   return (
-    Math.ceil(state.context.measureText(char).width / charWidth) * charWidth
+    Math.ceil(state.context!!.measureText(char).width / charWidth) * charWidth
   )
 }
 
@@ -304,8 +296,8 @@ export const getLogicalSize = () => {
   const state = globalState
   const [cellWidth, cellHeight] = getGlyphInfo(state)
   return [
-    Math.floor(state.canvas.width / cellWidth),
-    Math.floor(state.canvas.height / cellHeight),
+    Math.floor(state.canvas!!.width / cellWidth),
+    Math.floor(state.canvas!!.height / cellHeight),
   ]
 }
 
@@ -560,8 +552,8 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
           window.api.invoke(
             Invokables.nvimResizeGrid,
             getGridId(),
-            Math.floor(state.canvas.width / charWidth),
-            Math.floor(state.canvas.height / charHeight)
+            Math.floor(state.canvas!!.width / charWidth),
+            Math.floor(state.canvas!!.height / charHeight)
           )
         }
         break
@@ -589,8 +581,8 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
           window.api.invoke(
             Invokables.nvimResizeGrid,
             gid,
-            Math.floor(state.canvas.width / charWidth),
-            Math.floor(state.canvas.height / charHeight)
+            Math.floor(state.canvas!!.width / charWidth),
+            Math.floor(state.canvas!!.height / charHeight)
           )
         }
         break
@@ -612,8 +604,8 @@ function paint(_: DOMHighResTimeStamp) {
   frameScheduled = false
 
   const state = globalState
-  const canvas = state.canvas
-  const context = state.context
+  const canvas = state.canvas!!
+  const context = state.context!!
   const gid = getGridId()
   const charactersGrid = state.gridCharacters[gid]
   const highlightsGrid = state.gridHighlights[gid]
