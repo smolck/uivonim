@@ -27,12 +27,28 @@ const nutella = () => {
   const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
 
+  // TODO(smolck): Just used mainly to test out/work on the firenvim renderer,
+  // should eventually be able to remove all the webgl code (?)
+  const canvasThingFg = document.createElement('canvas') as HTMLCanvasElement
+  const canvasThingBg = document.createElement('canvas') as HTMLCanvasElement
+
   let fontAtlasCache: HTMLCanvasElement
 
   let textFGRenderer = TextFG(foregroundGL)
   let textBGRenderer = TextBG(backgroundGL)
 
   const resizeCanvas = (width: number, height: number) => {
+    const w = Math.round(width * window.devicePixelRatio)
+    const h = Math.round(height * window.devicePixelRatio)
+
+    // TODO(smolck): All of this is just no
+    if (canvasThingFg.width !== w || canvasThingFg.height !== h) {
+      canvasThingFg.width = w
+      canvasThingFg.height = h
+      canvasThingFg.style.width = `${width}px`
+      canvasThingFg.style.height = `${height}px`
+    }
+
     textBGRenderer.resize(width, height)
     textFGRenderer.resize(width, height)
   }
@@ -189,8 +205,9 @@ const nutella = () => {
     updateCursorPosition,
     updateCursorColor,
     showCursor,
-    foregroundElement: foregroundGL.canvasElement,
-    backgroundElement: backgroundGL.canvasElement,
+    // TODO(smolck)
+    foregroundElement: canvasThingFg,// foregroundGL.canvasElement,
+    backgroundElement: canvasThingBg, // backgroundGL.canvasElement,
     reInit: ({ fg, bg }: { fg: boolean; bg: boolean }) => {
       if (fg) {
         textFGRenderer = TextFG(foregroundGL)

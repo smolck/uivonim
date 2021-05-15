@@ -1,30 +1,10 @@
 import { Invokables } from '../../common/ipc'
-import { parseGuifont } from '../../common/utils'
 import { colors } from './highlight-attributes'
 import { asColor } from '../../common/utils'
-
-// From https://github.com/glacambre/firenvim/blob/bd334382c48905d4e74a90e52bd9b0e90d64bcb7/src/utils/configuration.ts#L1-L19 {{{
-// These modes are defined in https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c
-export type NvimMode =
-  | 'all'
-  | 'normal'
-  | 'visual'
-  | 'insert'
-  | 'replace'
-  | 'cmdline_normal'
-  | 'cmdline_insert'
-  | 'cmdline_replace'
-  | 'operator'
-  | 'visual_select'
-  | 'cmdline_hover'
-  | 'statusline_hover'
-  | 'statusline_drag'
-  | 'vsep_hover'
-  | 'vsep_drag'
-  | 'more'
-  | 'more_lastline'
-  | 'showmatch'
-// }}}
+import { cursor as TODONameThisBetter } from '../cursor'
+import { CursorShape } from '../../common/types'
+import { font } from '../workspace'
+import { sub } from '../dispatch'
 
 let glyphCache: any = {}
 const wipeGlyphCache = () => {
@@ -35,13 +15,6 @@ let metricsInvalidated = false
 const invalidateMetrics = () => {
   metricsInvalidated = true
   wipeGlyphCache()
-}
-
-let fontString: string
-const setFontString = (state: State, s: string) => {
-  fontString = s
-  state.context!!.font = fontString
-  invalidateMetrics()
 }
 
 const glyphId = (char: string, high: number) => {
@@ -59,15 +32,14 @@ const setCanvasDimensions = (
   cvs.style.height = `${height}px`
 }
 
-// TODO(smolck): Font stuff is kind of already dealt with in workspace? So . . .
-let defaultFontString = ''
 export const setCanvas = (cvs: HTMLCanvasElement) => {
   const state = globalState
   state.canvas = cvs
   setCanvasDimensions(state.canvas, window.innerWidth, window.innerHeight)
-  defaultFontString = 'monospace'
-  state.context = state.canvas.getContext('2d', { alpha: false })!!
-  setFontString(state, defaultFontString)
+  const ctx = state.canvas.getContext('2d', { alpha: false })!!
+  console.log(ctx)
+  state.context = ctx
+  state.context!!.font = `${font.size}px ${font.size}`
 }
 
 type HighlightInfo = {
@@ -150,21 +122,6 @@ type Cursor = {
   lastMove: DOMHighResTimeStamp
 }
 
-type Mode = {
-  current: number
-  styleEnabled: boolean
-  modeInfo: {
-    attr_id: number
-    attr_id_lm: number
-    blinkoff: number
-    blinkon: number
-    blinkwait: number
-    cell_percentage: number
-    cursor_shape: string
-    name: NvimMode
-  }[]
-}
-
 type State = {
   canvas?: HTMLCanvasElement
   context?: CanvasRenderingContext2D
@@ -176,7 +133,6 @@ type State = {
   gridSizes: GridDimensions[]
   highlights: HighlightInfo[]
   linespace: number
-  mode: Mode
 }
 
 const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
@@ -201,23 +157,44 @@ const globalState: State = {
   gridSizes: [],
   highlights: [newHighlight(colors.background, colors.foreground)],
   linespace: 0,
-  mode: {
-    current: 0,
-    styleEnabled: false,
-    modeInfo: [
-      {
-        attr_id: 0,
-        attr_id_lm: 0,
-        blinkoff: 0,
-        blinkon: 0,
-        blinkwait: 0,
-        cell_percentage: 0,
-        cursor_shape: 'block',
-        name: 'normal',
-      },
-    ],
-  },
 }
+
+let fontString = `${font.size} ${font.face}`
+sub('workspace.font.updated', ({ size, face, lineSpace }) => {
+  const newFont = `${size}px ${face}`
+  fontString = newFont
+  globalState.context!!.font = newFont
+  invalidateMetrics()
+
+  const [charWidth, charHeight] = getGlyphInfo(globalState)
+  window.api.invoke(
+    Invokables.nvimResizeGrid,
+    activeGrid,
+    Math.floor(globalState.canvas!!.width / charWidth),
+    Math.floor(globalState.canvas!!.height / charHeight)
+  )
+
+  if (globalState.linespace === lineSpace) {
+    return
+  }
+
+  // TODO(smolck)
+  globalState.linespace = lineSpace
+  // invalidateMetrics()
+  // const [charWidth, charHeight] = getGlyphInfo(state)
+  const gid = activeGrid
+  const curGridSize = globalState.gridSizes[gid]
+  if (curGridSize !== undefined) {
+    pushDamage(
+      activeGrid,
+      DamageKind.Cell,
+      curGridSize.height,
+      curGridSize.width,
+      0,
+      0
+    )
+  }
+})
 
 const pushDamage = (
   grid: number,
@@ -315,19 +292,11 @@ export const getGridCoordinates = (x: number, y: number) => {
   ]
 }
 
-export const getGridId = () => {
-  return 1
-}
-
-export const getCurrentMode = () => {
-  const mode = globalState.mode
-  return mode.modeInfo[mode.current].name
-}
-
-const handlers: { [key: string]: (...args: any[]) => void } = {
+let activeGrid = 1
+export const handlers: { [key: string]: (...args: any[]) => void } = {
   busy_start: () => {
     pushDamage(
-      getGridId(),
+      activeGrid,
       DamageKind.Cell,
       1,
       1,
@@ -349,10 +318,10 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
     if (sp !== undefined && sp !== -1) {
       globalState.highlights[0].special = asColor(sp)
     }
-    const curGridSize = globalState.gridSizes[getGridId()]
+    const curGridSize = globalState.gridSizes[activeGrid]
     if (curGridSize !== undefined) {
       pushDamage(
-        getGridId(),
+        activeGrid,
         DamageKind.Cell,
         curGridSize.height,
         curGridSize.width,
@@ -388,11 +357,12 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
   },
   grid_cursor_goto: (id: number, row: number, column: number) => {
     const cursor = globalState.cursor
-    pushDamage(getGridId(), DamageKind.Cell, 1, 1, cursor.x, cursor.y)
+    pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
     cursor.currentGrid = id
     cursor.x = column
     cursor.y = row
     cursor.lastMove = performance.now()
+    activeGrid = id
   },
   grid_line: (id: number, row: number, col: number, changes: any[]) => {
     const charGrid = globalState.gridCharacters[id]
@@ -406,7 +376,6 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
         high = change[1]
       }
       const repeat = change[2] === undefined ? 1 : change[2]
-
       pushDamage(id, DamageKind.Cell, 1, repeat, prevCol, row)
 
       const limit = prevCol + repeat
@@ -519,76 +488,6 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
     highlights[id].underline = rgbAttr.underline
     highlights[id].reverse = rgbAttr.reverse
   },
-  mode_change: (_: string, modeIdx: number) => {
-    globalState.mode.current = modeIdx
-    if (globalState.mode.styleEnabled) {
-      const cursor = globalState.cursor
-      pushDamage(getGridId(), DamageKind.Cell, 1, 1, cursor.x, cursor.y)
-      scheduleFrame()
-    }
-  },
-  mode_info_set: (cursorStyleEnabled: boolean, modeInfo: []) => {
-    // Missing: handling of cell-percentage
-    const mode = globalState.mode
-    mode.styleEnabled = cursorStyleEnabled
-    mode.modeInfo = modeInfo
-  },
-  option_set: (option: string, value: any) => {
-    const state = globalState
-    switch (option) {
-      case 'guifont':
-        {
-          let newFontString
-          if (value === '') {
-            newFontString = defaultFontString
-          } else {
-            const guifont = parseGuifont(value)
-            newFontString = `${guifont.size}px ${guifont.face}`
-          }
-          if (newFontString === fontString) {
-            break
-          }
-          setFontString(state, newFontString)
-          const [charWidth, charHeight] = getGlyphInfo(state)
-          window.api.invoke(
-            Invokables.nvimResizeGrid,
-            getGridId(),
-            Math.floor(state.canvas!!.width / charWidth),
-            Math.floor(state.canvas!!.height / charHeight)
-          )
-        }
-        break
-      case 'linespace':
-        {
-          if (state.linespace === value) {
-            break
-          }
-          state.linespace = value
-          invalidateMetrics()
-          const [charWidth, charHeight] = getGlyphInfo(state)
-          const gid = getGridId()
-          const curGridSize = state.gridSizes[gid]
-          if (curGridSize !== undefined) {
-            pushDamage(
-              getGridId(),
-              DamageKind.Cell,
-              curGridSize.height,
-              curGridSize.width,
-              0,
-              0
-            )
-          }
-
-          window.api.invoke(
-            Invokables.nvimResizeGrid,
-            gid,
-            Math.floor(state.canvas!!.width / charWidth),
-            Math.floor(state.canvas!!.height / charHeight)
-          )
-        }
-        break
-    }
-  },
 }
 
 // keep track of wheter a frame is already being scheduled or not. This avoids
@@ -601,13 +500,17 @@ function scheduleFrame() {
   }
 }
 
+let modeHlId = 0
+export const setModeHlId = (id: number) => modeHlId = id
+
 function paint(_: DOMHighResTimeStamp) {
+  console.log(activeGrid)
   frameScheduled = false
 
   const state = globalState
   const canvas = state.canvas!!
   const context = state.context!!
-  const gid = getGridId()
+  const gid = activeGrid
   const charactersGrid = state.gridCharacters[gid]
   const highlightsGrid = state.gridHighlights[gid]
   const damages = state.gridDamages[gid]
@@ -687,7 +590,7 @@ function paint(_: DOMHighResTimeStamp) {
               if (cellHigh.strikethrough) {
                 context.fillRect(pixelX, pixelY + baseline / 2, width, 1)
               }
-              context.fillStyle = cellHigh.special
+              context.fillStyle = cellHigh.special || ''
               const baselineHeight = charHeight - baseline
               if (cellHigh.underline) {
                 const linepos = baselineHeight * 0.3
@@ -735,19 +638,11 @@ function paint(_: DOMHighResTimeStamp) {
   if (state.cursor.display) {
     const cursor = state.cursor
     if (cursor.currentGrid === gid) {
-      // Missing: handling of cell-percentage
-      const mode = state.mode
-      const info = mode.styleEnabled
-        ? mode.modeInfo[mode.current]
-        : mode.modeInfo[0]
-      const shouldBlink =
-        info.blinkwait > 0 && info.blinkon > 0 && info.blinkoff > 0
-
       // Decide color. As described in the doc, if attr_id is 0 colors
       // should be reverted.
-      let background = highlights[info.attr_id].background
-      let foreground = highlights[info.attr_id].foreground
-      if (info.attr_id === 0) {
+      let background = highlights[modeHlId].background
+      let foreground = highlights[modeHlId].foreground
+      if (modeHlId === 0) {
         const tmp = background
         background = foreground
         foreground = tmp
@@ -759,32 +654,17 @@ function paint(_: DOMHighResTimeStamp) {
       let cursorHeight = cursor.y * charHeight
       let width = charWidth
       let height = charHeight
-      if (info.cursor_shape === 'vertical') {
-        width = 1
-      } else if (info.cursor_shape === 'horizontal') {
+      if (TODONameThisBetter.shape === CursorShape.line) width = 1
+      else if (TODONameThisBetter.shape === CursorShape.underline) {
         cursorHeight += charHeight - 2
         height = 1
-      }
-
-      const now = performance.now()
-      // Decide if the cursor should be inverted. This only happens if
-      // blinking is on, we've waited blinkwait time and we're in the
-      // "blinkoff" time slot.
-      const blinkOff =
-        shouldBlink &&
-        now - info.blinkwait > cursor.lastMove &&
-        now % (info.blinkon + info.blinkoff) > info.blinkon
-      if (blinkOff) {
-        const high = highlights[highlightsGrid[cursor.y][cursor.x]]
-        background = high.background
-        foreground = high.foreground
       }
 
       // Finally draw cursor
       context.fillStyle = background || ''
       context.fillRect(cursorWidth, cursorHeight, width, height)
 
-      if (info.cursor_shape === 'block') {
+      if (TODONameThisBetter.shape === CursorShape.block) {
         context.fillStyle = foreground || ''
         const char = charactersGrid[cursor.y][cursor.x]
         context.fillText(
@@ -792,16 +672,6 @@ function paint(_: DOMHighResTimeStamp) {
           cursor.x * charWidth,
           cursor.y * charHeight + baseline
         )
-      }
-
-      if (shouldBlink) {
-        // if the cursor should blink, we need to paint continuously
-        const relativeNow = performance.now() % (info.blinkon + info.blinkoff)
-        const nextPaint =
-          relativeNow < info.blinkon
-            ? info.blinkon - relativeNow
-            : info.blinkoff - (relativeNow - info.blinkon)
-        setTimeout(scheduleFrame, nextPaint)
       }
     }
   }

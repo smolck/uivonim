@@ -245,6 +245,7 @@ export const pixelPosition = (row: number, col: number) => {
 
 webgl.backgroundElement.setAttribute('wat', 'webgl-background')
 webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
+webgl.foregroundElement.id = 'webgl-foreground'
 
 Object.assign(webglContainer.style, {
   position: 'absolute',

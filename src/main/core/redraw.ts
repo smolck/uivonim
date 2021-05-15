@@ -160,7 +160,7 @@ const mode_change = ([, [m]]: [any, [string]], nvim: Nvim, send: SendFunc) => {
   nvim.instanceApi.setMode(normalizeVimMode(m))
   const info = modes.get(m)
   if (info) {
-    send(RedrawEvents.modeChange, info)
+    send(RedrawEvents.modeChange, info, m)
   }
 }
 
@@ -346,7 +346,7 @@ export const handleRedraw = (
     // Done a lot here since then perhaps . . .
     if (e === 'grid_line') sendToRenderer(RedrawEvents.gridLine, ev)
     // TODO(smolck): Really hope this doesn't need to be handled here
-    else if (e === 'flush') winUpdates = true
+    else if (e === 'flush') (winUpdates = true, sendToRenderer(RedrawEvents.flush))
     else if (e === 'grid_scroll') sendToRenderer(RedrawEvents.gridScroll, ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev, sendToRenderer)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev, sendToRenderer)
@@ -380,8 +380,8 @@ export const handleRedraw = (
     else if (e === 'wildmenu_hide') sendToRenderer(RedrawEvents.wildmenuHide)
     else if (e.startsWith('msg_')) messageEvents.push(ev)
     else if (e === 'set_title') sendToRenderer(RedrawEvents.setTitle, ev[1][0])
-    else if (e === 'busy_start') sendToRenderer(RedrawEvents.hideThenDisableCursor)
-    else if (e === 'busy_stop') sendToRenderer(RedrawEvents.enableThenShowCursor)
+    else if (e === 'busy_start') sendToRenderer(RedrawEvents.busyStart)
+    else if (e === 'busy_stop') sendToRenderer(RedrawEvents.busyStop)
   }
 
   // we queue the message events because we are interested to know

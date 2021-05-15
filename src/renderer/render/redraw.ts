@@ -23,6 +23,7 @@ import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import { handlers } from './canvas-renderer'
 
 let dummyData = new Float32Array()
 
@@ -34,6 +35,7 @@ const default_colors_set = (e: any) => {
     const [fg, bg, sp] = e[ix]
     if (fg < 0 && bg < 0 && sp < 0) continue
     defaultColorsChanged = setDefaultColors(fg, bg, sp)
+    handlers.default_colors_set(fg, bg, sp)
   }
 
   if (!defaultColorsChanged) return
@@ -47,6 +49,7 @@ const hl_attr_define = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [id, attr /*cterm_attr*/, , info] = e[ix]
+    handlers.hl_attr_define(id, attr)
     addHighlight(id, attr, info)
   }
 
@@ -65,16 +68,18 @@ const win_hide = (e: any) => {
 }
 
 const grid_clear = ([, [gridId]]: any) => {
-  if (gridId === 1) return
+  // if (gridId === 1) return
   if (!windows.has(gridId)) return
 
-  const win = windows.get(gridId)
+  handlers.grid_clear(gridId)
+  // TODO(smolck)
+  /*const win = windows.get(gridId)
   win.webgl.clear()
-  win.webgl.clearGridBuffer()
+  win.webgl.clearGridBuffer()*/
 }
 
 const grid_destroy = ([, [gridId]]: any) => {
-  if (gridId === 1) return
+  // if (gridId === 1) return
   windows.remove(gridId)
 }
 
@@ -303,15 +308,31 @@ const handle: {
   },
 })
 
-handle.gridLine(grid_line)
-handle.gridCursorGoto((gridId, row, col) => {
-  windows.setActiveGrid(gridId)
-  moveCursor(row, col)
+handle.gridLine((e) => {
+  for (let ix = 1; ix < e.length; ix++) {
+    const [gridId, row, startCol, changes] = e[ix]
+    handlers.grid_line(gridId, row, startCol, changes)
+  }
 })
-handle.gridScroll(grid_scroll)
+handle.gridCursorGoto((gridId, row, col) => {
+  handlers.grid_cursor_goto(gridId, row, col)
+  // windows.setActiveGrid(gridId)
+  // moveCursor(row, col)
+})
+handle.gridScroll(([, [gridId, top, bottom, left, right, rows, cols]]) => {
+  // if (gridId === 1) return
+  handlers.grid_scroll(gridId, top, bottom, left, right, rows, cols)
+})
 handle.gridClear(grid_clear)
 handle.gridDestroy(grid_destroy)
-handle.gridResize(grid_resize)
+handle.gridResize((e) => {
+  for (let ix = 1; ix < e.length; ix++) {
+    const [gridId, width, height] = e[ix]
+    // if (gridId === 1) continue
+
+    handlers.grid_resize(gridId, width, height)
+  }
+})
 
 handle.winPos(win_pos)
 handle.winFloatPos(win_float_pos)
@@ -328,7 +349,10 @@ handle.modeChange((mode: Mode) => {
   }
 
   setCursorShape(mode.shape, mode.size)
+  // TODO(smolck)
+  handlers.flush()
 })
+handle.flush(() => handlers.flush())
 handle.pmenuHide(() => dispatch.pub('pmenu.hide'))
 handle.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
 handle.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
@@ -345,8 +369,10 @@ handle.msgClear((maybeMatcherKey) =>
 )
 handle.showCursor(() => showCursor())
 handle.hideCursor(() => hideCursor())
-handle.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
-handle.enableThenShowCursor(() => (enableCursor(), showCursor()))
+
+handle.busyStart(() => handlers.busy_start())
+handle.busyStop(() => handlers.busy_stop())
+
 handle.pubRedraw(() => dispatch.pub('redraw'))
 
 handle.disposeInvalidWinsThenLayout(
@@ -379,7 +405,9 @@ const updateFont = () => {
 }
 
 handle.optionSet((e: any) => {
-  e.slice(1).forEach(([k, value]: any) => options.set(k, value))
+  e.slice(1).forEach(([k, value]: any) => {
+    options.set(k, value)
+  })
 
   updateFont()
 })
