@@ -1,4 +1,6 @@
 import { Invokables } from '../../common/ipc'
+import { parseGuifont } from '../../common/utils'
+import { colors } from './highlight-attributes'
 
 // From https://github.com/glacambre/firenvim/blob/bd334382c48905d4e74a90e52bd9b0e90d64bcb7/src/utils/configuration.ts#L1-L19 {{{
 // These modes are defined in https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c
@@ -56,26 +58,17 @@ const setCanvasDimensions = (
   cvs.style.height = `${height}px`
 }
 
-const makeFontString = (fontSize: string, fontFamily: string) => {
-  return `${fontSize} ${fontFamily}`
-}
-
-let defaultFontSize = ''
-const defaultFontFamily = 'monospace'
+// TODO(smolck): Font stuff is kind of already dealt with in workspace? So . . .
 let defaultFontString = ''
 export const setCanvas = (cvs: HTMLCanvasElement) => {
   const state = globalState
   state.canvas = cvs
   setCanvasDimensions(state.canvas, window.innerWidth, window.innerHeight)
-  defaultFontSize = window.getComputedStyle(state.canvas).fontSize
-  defaultFontString = makeFontString(defaultFontSize, defaultFontFamily)
+  defaultFontString = 'monospace'
   state.context = state.canvas.getContext('2d', { alpha: false })
   setFontString(state, defaultFontString)
 }
 
-// We first define highlight information.
-const defaultBackground = '#FFFFFF'
-const defaultForeground = '#000000'
 type HighlightInfo = {
   background: string
   bold: boolean
@@ -183,6 +176,21 @@ type State = {
   mode: Mode
 }
 
+const newHighlight = (bg: string, fg: string): HighlightInfo => {
+  return {
+    background: bg,
+    bold: undefined,
+    blend: undefined,
+    foreground: fg,
+    italic: undefined,
+    reverse: undefined,
+    special: undefined,
+    strikethrough: undefined,
+    undercurl: undefined,
+    underline: undefined,
+  }
+}
+
 const globalState: State = {
   canvas: undefined,
   context: undefined,
@@ -198,7 +206,7 @@ const globalState: State = {
   gridDamagesCount: [],
   gridHighlights: [],
   gridSizes: [],
-  highlights: [newHighlight(defaultBackground, defaultForeground)],
+  highlights: [newHighlight(colors.background, colors.foreground)],
   linespace: 0,
   mode: {
     current: 0,
@@ -312,21 +320,6 @@ export const getGridCoordinates = (x: number, y: number) => {
     Math.floor((x * window.devicePixelRatio) / cellWidth),
     Math.floor((y * window.devicePixelRatio) / cellHeight),
   ]
-}
-
-const newHighlight = (bg: string, fg: string): HighlightInfo => {
-  return {
-    background: bg,
-    bold: undefined,
-    blend: undefined,
-    foreground: fg,
-    italic: undefined,
-    reverse: undefined,
-    special: undefined,
-    strikethrough: undefined,
-    undercurl: undefined,
-    underline: undefined,
-  }
 }
 
 export const getGridId = () => {
@@ -556,14 +549,8 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
           if (value === '') {
             newFontString = defaultFontString
           } else {
-            const guifont = parseGuifont(value, {
-              'font-family': defaultFontFamily,
-              'font-size': defaultFontSize,
-            })
-            newFontString = makeFontString(
-              guifont['font-size'],
-              guifont['font-family']
-            )
+            const guifont = parseGuifont(value)
+            newFontString = `${guifont.size}px ${guifont.face}`
           }
           if (newFontString === fontString) {
             break
@@ -642,7 +629,7 @@ function paint(_: DOMHighResTimeStamp) {
         {
           const pixelWidth = (damage.w * charWidth) / window.devicePixelRatio
           const pixelHeight = (damage.h * charHeight) / window.devicePixelRatio
-          page.resizeEditor(pixelWidth, pixelHeight)
+          // TODO(smolck): page.resizeEditor(pixelWidth, pixelHeight)
           setCanvasDimensions(canvas, pixelWidth, pixelHeight)
           // Note: changing width and height resets font, so we have to
           // set it again. Who thought this was a good idea???
