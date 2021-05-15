@@ -470,6 +470,11 @@ const createRenderer = () => {
     // TODO(smolck): What to do here?
     clearAll: () => {},
 
+    getChar: (gridId: number, row: number, col: number) => gridCharacters[gridId][row][col],
+    getLine: (gridId: number, row: number) => gridCharacters[gridId][row].join(''),
+
+    scheduleRedraw: scheduleFrame,
+
     // TODO(smolck): Do we even use these/need these? {{{
     getLogicalSize: () => {
       const [cellWidth, cellHeight] = getGlyphInfo()
@@ -710,3 +715,4 @@ const createRenderer = () => {
 }
 
 export default createRenderer
+export type Renderer = ReturnType<typeof createRenderer>

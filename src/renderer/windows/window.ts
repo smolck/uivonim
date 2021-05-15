@@ -2,6 +2,7 @@ import {
   createWebGLView,
   size as windowsGridSize,
 } from '../windows/window-manager'
+import { Renderer } from '../render/renderer'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { specs as titleSpecs } from '../title'
 import { cell } from '../workspace'
@@ -45,17 +46,10 @@ interface PosOpts {
   padding?: boolean
 }
 
-interface HighlightCell {
-  row: number
-  col: number
-  char: string
-}
-
 export interface Editor {
   getChar(row: number, col: number): string
   getLine(row: number): string
   getAllLines(): string[]
-  findHighlightCells(highlightGroup: string): HighlightCell[]
   positionToEditorPixels(
     editorLine: number,
     editorColumn: number,
@@ -109,7 +103,7 @@ const edgeDetection = (el: HTMLElement) => {
 export const paddingX = 5
 export const paddingY = 4
 
-export default () => {
+export default (renderer: Renderer) => {
   const wininfo: WindowInfo = {
     id: '0',
     gridId: '0',
@@ -191,7 +185,8 @@ export default () => {
 
   api.resizeWindow = (width, height) => {
     Object.assign(wininfo, { height, width })
-    webgl.resize(height, width)
+    // TODO(smolck)
+    // webgl.resize(height, width)
   }
 
   api.setWindowInfo = (info) => {
@@ -222,12 +217,15 @@ export default () => {
 
     if (!wininfo.visible) {
       container.style.display = 'flex'
-      webgl.renderGridBuffer()
+      // TODO(smolck)
+      renderer.scheduleRedraw()
+      // webgl.renderGridBuffer()
     }
 
     container.id = `${info.id}`
     container.setAttribute('gridid', info.gridId)
-    webgl.updateGridId(info.gridIdNumber)
+    // TODO(smolck)
+    // webgl.updateGridId(info.gridIdNumber)
     Object.assign(wininfo, info)
   }
 
@@ -257,7 +255,7 @@ export default () => {
   api.hide = () => {
     wininfo.visible = false
     container.style.display = 'none'
-    webgl.clear()
+    // TODO(smolck): webgl.clear()
   }
 
   // maybeHide + maybeShow used for hiding/showing windows when
@@ -267,13 +265,13 @@ export default () => {
   api.maybeHide = () => {
     if (!wininfo.visible) return
     container.style.display = 'none'
-    webgl.clear()
+    // TODO(smolck): webgl.clear()
   }
 
   api.maybeShow = () => {
     if (!wininfo.visible) return
     container.style.display = 'flex'
-    webgl.renderGridBuffer()
+    // TODO(smolck): webgl.renderGridBuffer()
   }
 
   api.refreshLayout = () => {
@@ -291,7 +289,7 @@ export default () => {
     if (same) return
 
     Object.assign(layout, { x, y, width, height })
-    webgl.layout(x + paddingX, y + paddingY, width, height)
+    // TODO(smolck): webgl.layout(x + paddingX, y + paddingY, width, height)
 
     // Don't add border to floats.
     if (!wininfo.is_float) {
@@ -316,50 +314,19 @@ export default () => {
     }
   }
 
-  api.redrawFromGridBuffer = () => webgl.renderGridBuffer()
+  api.redrawFromGridBuffer = () => renderer.scheduleRedraw(),// webgl.renderGridBuffer()
 
   api.updateNameplate = (data) => nameplate.update(data)
 
   api.editor = {
-    getChar: (row, col) => {
-      const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3] || 0)
-    },
-    getLine: (row) => {
-      const buf = webgl.getGridLine(row)
-      let line = ''
-      for (let ix = 0; ix < buf.length; ix += 4) {
-        const charIndex = buf[ix + 3]
-        line += getCharFromIndex(charIndex)
-      }
-      return line
-    },
+    getChar: (row, col) => renderer.getChar(wininfo.gridIdNumber, row, col),
+    getLine: (row) => renderer.getLine(wininfo.gridIdNumber, row),
     getAllLines: () => {
       const lines: any = []
       for (let row = 0; row < wininfo.height; row++) {
         lines.push(api.editor.getLine(row))
       }
       return lines
-    },
-    findHighlightCells: (highlightGroup) => {
-      const highlights = highlightLookup(highlightGroup).map((m) => m.hlid)
-      if (!highlights.length) return []
-
-      const results: any = []
-
-      for (let row = 0; row < wininfo.height; row++) {
-        for (let col = 0; col < wininfo.width; col++) {
-          const buf = webgl.getGridCell(row, col)
-          if (highlights.includes(buf[2]))
-            results.push({
-              col: buf[0],
-              row: buf[1],
-              char: getCharFromIndex(buf[3]),
-            })
-        }
-      }
-
-      return results
     },
     positionToEditorPixels: (line, col, maybeOpts) => {
       const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
