@@ -3,8 +3,6 @@ import { RedrawEvents } from '../../common/ipc'
 import {
   WinPosWinInfo,
   WinFloatPosWinInfo,
-  CursorShape,
-  Mode,
   PopupMenu,
   MessageKind,
   CommandType,
