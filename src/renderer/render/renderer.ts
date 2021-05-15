@@ -169,6 +169,10 @@ const createRenderer = () => {
   }
 
   let fontString = `${font.size} ${font.face}`
+
+  // TODO(smolck): This works/is right thing to do on workspace resize?
+  sub('resize', () => invalidateMetrics())
+
   sub('workspace.font.updated', ({ size, face, lineSpace }) => {
     const newFont = `${size}px ${face}`
     fontString = newFont
