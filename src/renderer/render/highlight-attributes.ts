@@ -67,15 +67,7 @@ export const colors: DefaultColors = new Proxy(Object.create(null), {
   get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
 })
 
-// because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
-// string it might be a code point number - need to turn it back into a string. see
-// msgpack-decoder for more info on how this works.
-const sillyString = (s: any): string =>
-  typeof s === 'number' ? String.fromCodePoint(s) : s
-
 const highlightInfo = MapSet<number, string, HighlightInfo>()
-const canvas = document.createElement('canvas')
-const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = new Map<number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
@@ -143,10 +135,10 @@ export const addHighlight = (
   })
 
   infos.forEach((info) => {
-    const name = sillyString(info.hi_name)
-    const builtinName = sillyString(info.ui_name)
+    const name = info.hi_name
+    const builtinName = info.ui_name
 
-    highlightInfo.set(0, sillyString(info.hi_name), {
+    highlightInfo.set(0, info.hi_name, {
       name,
       builtinName,
       hlid: id,
@@ -187,38 +179,3 @@ export const highlightLookup = (name: string): HighlightInfo[] => {
   return [...info]
 }
 export const getHighlight = (id: number) => highlights.get(id)
-
-export const generateColorLookupAtlas = () => {
-  // hlid are 0 indexed, but width starts at 1
-  const max = Math.max(...highlights.keys())
-  const texelSize = 2
-  canvas.width = (max + 1) * texelSize
-  canvas.height = 3 * texelSize
-
-  const defaultColors = getCurrentDefaultColors()
-  ui.imageSmoothingEnabled = false
-
-  highlights.forEach((hlgrp, id) => {
-    const defbg = hlgrp.reverse
-      ? defaultColors.foreground
-      : defaultColors.background
-    ui.fillStyle = hlgrp.background || defbg
-    ui.fillRect(id * texelSize, 0, texelSize, texelSize)
-
-    const deffg = hlgrp.reverse
-      ? defaultColors.background
-      : defaultColors.foreground
-    ui.fillStyle = hlgrp.foreground || deffg
-    ui.fillRect(id * texelSize, 1 * texelSize, texelSize, texelSize)
-
-    if (!hlgrp.underline) return
-
-    const color = hlgrp.special || defaultColors.special
-    ui.fillStyle = color
-    ui.fillRect(id * texelSize, 2 * texelSize, texelSize, texelSize)
-  })
-
-  return canvas
-}
-
-export const getColorAtlas = () => canvas
