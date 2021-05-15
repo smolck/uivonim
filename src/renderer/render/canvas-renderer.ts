@@ -24,44 +24,46 @@ export type NvimMode =
 // }}}
 
 let glyphCache: any = {}
-function wipeGlyphCache() {
+const wipeGlyphCache = () => {
   glyphCache = {}
 }
 
 let metricsInvalidated = false
-function invalidateMetrics() {
+const invalidateMetrics = () => {
   metricsInvalidated = true
   wipeGlyphCache()
 }
 
 let fontString: string
-function setFontString(state: State, s: string) {
+const setFontString = (state: State, s: string) => {
   fontString = s
   state.context.font = fontString
   invalidateMetrics()
 }
 
-function glyphId(char: string, high: number) {
+const glyphId = (char: string, high: number) => {
   return char + '-' + high
 }
 
-function setCanvasDimensions(
+const setCanvasDimensions = (
   cvs: HTMLCanvasElement,
   width: number,
   height: number
-) {
+) => {
   cvs.width = width * window.devicePixelRatio
   cvs.height = height * window.devicePixelRatio
   cvs.style.width = `${width}px`
   cvs.style.height = `${height}px`
 }
-function makeFontString(fontSize: string, fontFamily: string) {
+
+const makeFontString = (fontSize: string, fontFamily: string) => {
   return `${fontSize} ${fontFamily}`
 }
+
 let defaultFontSize = ''
 const defaultFontFamily = 'monospace'
 let defaultFontString = ''
-export function setCanvas(cvs: HTMLCanvasElement) {
+export const setCanvas = (cvs: HTMLCanvasElement) => {
   const state = globalState
   state.canvas = cvs
   setCanvasDimensions(state.canvas, window.innerWidth, window.innerHeight)
@@ -216,14 +218,14 @@ const globalState: State = {
   },
 }
 
-function pushDamage(
+const pushDamage = (
   grid: number,
   kind: DamageKind,
   h: number,
   w: number,
   x: number,
   y: number
-) {
+) => {
   const damages = globalState.gridDamages[grid]
   const count = globalState.gridDamagesCount[grid]
   if (damages.length === count) {
@@ -241,7 +243,7 @@ function pushDamage(
 let maxCellWidth: number
 let maxCellHeight: number
 let maxBaselineDistance: number
-function recomputeCharSize(ctx: CanvasRenderingContext2D) {
+const recomputeCharSize = (ctx: CanvasRenderingContext2D) => {
   // 94, K+32: we ignore the first 32 ascii chars because they're non-printable
   const chars = new Array(94)
     .fill(0)
@@ -271,7 +273,7 @@ function recomputeCharSize(ctx: CanvasRenderingContext2D) {
   maxBaselineDistance = baseline
   metricsInvalidated = false
 }
-export function getGlyphInfo(state: State) {
+export const getGlyphInfo = (state: State) => {
   if (
     metricsInvalidated ||
     maxCellWidth === undefined ||
@@ -282,14 +284,15 @@ export function getGlyphInfo(state: State) {
   }
   return [maxCellWidth, maxCellHeight, maxBaselineDistance]
 }
-function measureWidth(state: State, char: string) {
+
+const measureWidth = (state: State, char: string) => {
   const charWidth = getGlyphInfo(state)[0]
   return (
     Math.ceil(state.context.measureText(char).width / charWidth) * charWidth
   )
 }
 
-export function getLogicalSize() {
+export const getLogicalSize = () => {
   const state = globalState
   const [cellWidth, cellHeight] = getGlyphInfo(state)
   return [
@@ -298,12 +301,12 @@ export function getLogicalSize() {
   ]
 }
 
-export function computeGridDimensionsFor(width: number, height: number) {
+export const computeGridDimensionsFor = (width: number, height: number) => {
   const [cellWidth, cellHeight] = getGlyphInfo(globalState)
   return [Math.floor(width / cellWidth), Math.floor(height / cellHeight)]
 }
 
-export function getGridCoordinates(x: number, y: number) {
+export const getGridCoordinates = (x: number, y: number) => {
   const [cellWidth, cellHeight] = getGlyphInfo(globalState)
   return [
     Math.floor((x * window.devicePixelRatio) / cellWidth),
@@ -311,7 +314,7 @@ export function getGridCoordinates(x: number, y: number) {
   ]
 }
 
-function newHighlight(bg: string, fg: string): HighlightInfo {
+const newHighlight = (bg: string, fg: string): HighlightInfo => {
   return {
     background: bg,
     bold: undefined,
@@ -326,11 +329,11 @@ function newHighlight(bg: string, fg: string): HighlightInfo {
   }
 }
 
-export function getGridId() {
+export const getGridId = () => {
   return 1
 }
 
-export function getCurrentMode() {
+export const getCurrentMode = () => {
   const mode = globalState.mode
   return mode.modeInfo[mode.current].name
 }
@@ -822,18 +825,4 @@ function paint(_: DOMHighResTimeStamp) {
   }
 
   state.gridDamagesCount[gid] = 0
-}
-
-export function onRedraw(events: any[]) {
-  for (let i = 0; i < events.length; ++i) {
-    const event = events[i]
-    const handler = (handlers as any)[event[0] as any]
-    if (handler !== undefined) {
-      for (let j = 1; j < event.length; ++j) {
-        handler.apply(globalState, event[j])
-      }
-    } else {
-      // console.error(`${event[0]} is not implemented.`);
-    }
-  }
 }
