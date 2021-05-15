@@ -1,4 +1,6 @@
-// From https://github.com/glacambre/firenvim/blob/bd334382c48905d4e74a90e52bd9b0e90d64bcb7/src/utils/configuration.ts#L1-L19
+import { Invokables } from '../../common/ipc'
+
+// From https://github.com/glacambre/firenvim/blob/bd334382c48905d4e74a90e52bd9b0e90d64bcb7/src/utils/configuration.ts#L1-L19 {{{
 // These modes are defined in https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c
 export type NvimMode =
   | 'all'
@@ -19,11 +21,7 @@ export type NvimMode =
   | 'more'
   | 'more_lastline'
   | 'showmatch'
-
-let functions: any
-export function setFunctions(fns: any) {
-  functions = fns
-}
+// }}}
 
 let glyphCache: any = {}
 function wipeGlyphCache() {
@@ -31,7 +29,6 @@ function wipeGlyphCache() {
 }
 
 let metricsInvalidated = false
-
 function invalidateMetrics() {
   metricsInvalidated = true
   wipeGlyphCache()
@@ -43,9 +40,11 @@ function setFontString(state: State, s: string) {
   state.context.font = fontString
   invalidateMetrics()
 }
+
 function glyphId(char: string, high: number) {
   return char + '-' + high
 }
+
 function setCanvasDimensions(
   cvs: HTMLCanvasElement,
   width: number,
@@ -568,7 +567,8 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
           }
           setFontString(state, newFontString)
           const [charWidth, charHeight] = getGlyphInfo(state)
-          functions.ui_try_resize_grid(
+          window.api.invoke(
+            Invokables.nvimResizeGrid,
             getGridId(),
             Math.floor(state.canvas.width / charWidth),
             Math.floor(state.canvas.height / charHeight)
@@ -595,7 +595,9 @@ const handlers: { [key: string]: (...args: any[]) => void } = {
               0
             )
           }
-          functions.ui_try_resize_grid(
+
+          window.api.invoke(
+            Invokables.nvimResizeGrid,
             gid,
             Math.floor(state.canvas.width / charWidth),
             Math.floor(state.canvas.height / charHeight)
