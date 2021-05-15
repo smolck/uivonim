@@ -72,6 +72,7 @@ export const RedrawEvents = {
   winHide: 'win_hide',
   tablineUpdate: 'tabline_update',
   modeChange: 'mode_change',
+  modeInfoSet: 'mode_info_set',
   pmenuHide: 'pmenu.hide',
   pmenuSelect: 'pmenu.select',
   pmenuShow: 'pmenu.show',

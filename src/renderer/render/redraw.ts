@@ -1,47 +1,29 @@
 import {
   addHighlight,
-  generateColorLookupAtlas,
   setDefaultColors,
-} from '../render/highlight-attributes'
-import {
-  getCharIndex,
-  getUpdatedFontAtlasMaybe,
-} from '../render/font-texture-atlas'
+} from './highlight-attributes'
 import * as windows from '../windows/window-manager'
-import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor, setCursorShape, setCursorColor } from '../cursor'
 import * as dispatch from '../dispatch'
-import { getColorById } from '../render/highlight-attributes'
 import { RedrawEvents, Invokables } from '../../common/ipc'
 import {
   WinPosWinInfo,
   WinFloatPosWinInfo,
-  Mode,
   PopupMenu,
 } from '../../common/types'
 import * as workspace from '../workspace'
 import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
-import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
-import { handlers } from './canvas-renderer'
-
-let dummyData = new Float32Array()
 
 const default_colors_set = (e: any) => {
   const count = e.length
-  let defaultColorsChanged = false
 
   for (let ix = 1; ix < count; ix++) {
     const [fg, bg, sp] = e[ix]
     if (fg < 0 && bg < 0 && sp < 0) continue
-    defaultColorsChanged = setDefaultColors(fg, bg, sp)
-    handlers.default_colors_set(fg, bg, sp)
+    setDefaultColors(fg, bg, sp)
+    windows.renderer.handlers.default_colors_set(fg, bg, sp)
   }
-
-  if (!defaultColorsChanged) return
-
-  const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
 }
 
 const hl_attr_define = (e: any) => {
@@ -49,12 +31,9 @@ const hl_attr_define = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [id, attr /*cterm_attr*/, , info] = e[ix]
-    handlers.hl_attr_define(id, attr)
+    windows.renderer.handlers.hl_attr_define(id, attr)
     addHighlight(id, attr, info)
   }
-
-  const colorAtlas = generateColorLookupAtlas()
-  windows.webgl.updateColorAtlas(colorAtlas)
 }
 
 const win_pos = (wins: WinPosWinInfo[]) => {
@@ -68,11 +47,11 @@ const win_hide = (e: any) => {
 }
 
 const grid_clear = ([, [gridId]]: any) => {
-  // if (gridId === 1) return
+  // TODO(smolck): if (gridId === 1) return
   if (!windows.has(gridId)) return
 
-  handlers.grid_clear(gridId)
   // TODO(smolck)
+  windows.renderer.handlers.grid_clear(gridId)
   /*const win = windows.get(gridId)
   win.webgl.clear()
   win.webgl.clearGridBuffer()*/
@@ -81,112 +60,6 @@ const grid_clear = ([, [gridId]]: any) => {
 const grid_destroy = ([, [gridId]]: any) => {
   // if (gridId === 1) return
   windows.remove(gridId)
-}
-
-const grid_resize = (e: any) => {
-  const count = e.length
-
-  for (let ix = 1; ix < count; ix++) {
-    const [gridId, width, height] = e[ix]
-    if (gridId === 1) continue
-    // grid events show up before win events
-    if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
-    windows.get(gridId).resizeWindow(width, height)
-  }
-}
-
-const grid_scroll = ([
-  ,
-  [gridId, top, bottom /*left*/ /*right*/, , , amount],
-]: any) => {
-  if (gridId === 1) return
-  // we make the assumption that left & right will always be
-  // at the window edges (left == 0 && right == window.width)
-  const win = windows.get(gridId)
-
-  amount > 0
-    ? win.webgl.moveRegionUp(amount, top, bottom)
-    : win.webgl.moveRegionDown(-amount, top, bottom)
-}
-
-const grid_line = (e: any) => {
-  const count = e.length
-  const gridRenderIndexes: any = []
-  const grids: any = []
-  let hlid = 0
-  let activeGrid = 0
-  let buffer = dummyData
-  let gridBuffer = dummyData
-  let width = 1
-  let col = 0
-  let charIndex = 0
-
-  // first item in the event arr is the event name.
-  // we skip that because it's cool to do that
-  for (let ix = 1; ix < count; ix++) {
-    const [gridId, row, startCol, charData] = e[ix]
-
-    // TODO: anything of interest on grid 1? messages are supported by ext_messages
-    if (gridId === 1) continue
-
-    if (gridId !== activeGrid) {
-      activeGrid = gridId
-      const win = windows.get(gridId)
-      width = win.cols
-      buffer = win.webgl.getBuffer()
-      gridBuffer = win.webgl.getGridBuffer()
-      if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
-      grids.push(activeGrid)
-    }
-
-    hlid = 0
-    col = startCol
-    const charDataSize = charData.length
-
-    for (let cd = 0; cd < charDataSize; cd++) {
-      const data = charData[cd]
-      const char = data[0]
-      const repeats = data[2] || 1
-      hlid = typeof data[1] === 'number' ? data[1] : hlid
-
-      if (typeof char === 'string') {
-        const nextCD = charData[cd + 1]
-        const doubleWidth =
-          nextCD &&
-          typeof nextCD[0] === 'string' &&
-          nextCD[0].codePointAt(0) === undefined
-        charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-      } else charIndex = char - 32
-
-      for (let r = 0; r < repeats; r++) {
-        buffer[gridRenderIndexes[gridId]] = col
-        buffer[gridRenderIndexes[gridId] + 1] = row
-        buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = charIndex
-        gridRenderIndexes[gridId] += 4
-
-        // TODO: could maybe deffer this to next frame?
-        const bufix = col * 4 + width * row * 4
-        gridBuffer[bufix] = col
-        gridBuffer[bufix + 1] = row
-        gridBuffer[bufix + 2] = hlid
-        gridBuffer[bufix + 3] = charIndex
-
-        col++
-      }
-    }
-  }
-
-  const atlas = getUpdatedFontAtlasMaybe()
-  if (atlas) windows.webgl.updateFontAtlas(atlas)
-
-  const gridCount = grids.length
-  for (let ix = 0; ix < gridCount; ix++) {
-    const gridId = grids[ix]
-    const win = windows.get(gridId)
-    const renderCount = gridRenderIndexes[gridId]
-    win.webgl.render(renderCount)
-  }
 }
 
 const win_close = (id: number) => {
@@ -311,17 +184,17 @@ const handle: {
 handle.gridLine((e) => {
   for (let ix = 1; ix < e.length; ix++) {
     const [gridId, row, startCol, changes] = e[ix]
-    handlers.grid_line(gridId, row, startCol, changes)
+    windows.renderer.handlers.grid_line(gridId, row, startCol, changes)
   }
 })
 handle.gridCursorGoto((gridId, row, col) => {
-  handlers.grid_cursor_goto(gridId, row, col)
+  windows.renderer.handlers.grid_cursor_goto(gridId, row, col)
   // windows.setActiveGrid(gridId)
   // moveCursor(row, col)
 })
 handle.gridScroll(([, [gridId, top, bottom, left, right, rows, cols]]) => {
   // if (gridId === 1) return
-  handlers.grid_scroll(gridId, top, bottom, left, right, rows, cols)
+  windows.renderer.handlers.grid_scroll(gridId, top, bottom, left, right, rows, cols)
 })
 handle.gridClear(grid_clear)
 handle.gridDestroy(grid_destroy)
@@ -330,7 +203,7 @@ handle.gridResize((e) => {
     const [gridId, width, height] = e[ix]
     // if (gridId === 1) continue
 
-    handlers.grid_resize(gridId, width, height)
+    windows.renderer.handlers.grid_resize(gridId, width, height)
   }
 })
 
@@ -342,17 +215,17 @@ handle.winHide(win_hide)
 handle.tablineUpdate(({ curtab, tabs }) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 )
-handle.modeChange((mode: Mode) => {
-  if (mode.hlid) {
-    const { background } = getColorById(mode.hlid)
-    if (background) setCursorColor(background)
+handle.modeChange((ev) => {
+  for (let i = 1; i < ev.length; ++i) {
+    windows.renderer.handlers.mode_change(ev[i][0], ev[i][1])
   }
-
-  setCursorShape(mode.shape, mode.size)
-  // TODO(smolck)
-  handlers.flush()
 })
-handle.flush(() => handlers.flush())
+handle.modeInfoSet((ev) => {
+  for (let i = 1; i < ev.length; ++i) {
+    windows.renderer.handlers.mode_info_set(ev[i][0], ev[i][1])
+  }
+})
+handle.flush(() => windows.renderer.handlers.flush())
 handle.pmenuHide(() => dispatch.pub('pmenu.hide'))
 handle.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
 handle.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
@@ -367,11 +240,11 @@ handle.msgClear((maybeMatcherKey) =>
     ? messages.clear((message) => Reflect.get(message, maybeMatcherKey))
     : messages.clear()
 )
-handle.showCursor(() => showCursor())
-handle.hideCursor(() => hideCursor())
+handle.showCursor(() => windows.renderer.showCursor(true))
+handle.hideCursor(() => windows.renderer.showCursor(false))
 
-handle.busyStart(() => handlers.busy_start())
-handle.busyStop(() => handlers.busy_stop())
+handle.busyStart(() => windows.renderer.handlers.busy_start())
+handle.busyStop(() => windows.renderer.handlers.busy_stop())
 
 handle.pubRedraw(() => dispatch.pub('redraw'))
 
@@ -395,13 +268,7 @@ const updateFont = () => {
   const guifont = options.get('guifont')
 
   const { face, size } = parseGuifont(guifont)
-  const changed = workspace.updateEditorFont({ face, size, lineSpace })
-  if (!changed) return
-
-  const atlas = forceRegenerateFontAtlas()
-  windows.webgl.updateFontAtlas(atlas)
-  windows.webgl.updateCellSize()
-  workspace.resize()
+  workspace.updateEditorFont({ face, size, lineSpace })
 }
 
 handle.optionSet((e: any) => {

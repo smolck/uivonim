@@ -1,6 +1,5 @@
 import { Invokables } from '../../common/ipc'
 import { asColor } from '../../common/utils'
-import { cursor as TODONameThisBetter } from '../cursor'
 import { CursorShape } from '../../common/types'
 import { font } from '../workspace'
 import { sub } from '../dispatch'
@@ -95,8 +94,24 @@ const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
 
 const createRenderer = () => {
   const canvas = document.createElement('canvas') as HTMLCanvasElement
+  canvas.id = 'renderer-canvas'
   const ctx = canvas.getContext('2d', { alpha: false })!!
   ctx.font = `${font.size}px ${font.size}`
+
+  const mode =  {
+        current: 0,
+        styleEnabled : false,
+        modeInfo: [{
+            attr_id: 0,
+            attr_id_lm: 0,
+            blinkoff: 0,
+            blinkon: 0,
+            blinkwait: 0,
+            cell_percentage: 0,
+            cursor_shape: "block",
+            name: "normal",
+        }]
+    }
 
   const cursor: Cursor = {
     currentGrid: 1,
@@ -395,11 +410,15 @@ const createRenderer = () => {
 
     if (cursor.display) {
       if (cursor.currentGrid === gid) {
+        // Missing: handling of cell-percentage
+        const info = mode.styleEnabled
+            ? mode.modeInfo[mode.current]
+            : mode.modeInfo[0];
         // Decide color. As described in the doc, if attr_id is 0 colors
         // should be reverted.
         let background = highlights[modeHlId].background
         let foreground = highlights[modeHlId].foreground
-        if (modeHlId === 0) {
+        if (info.attr_id === 0) {
           const tmp = background
           background = foreground
           foreground = tmp
@@ -411,8 +430,8 @@ const createRenderer = () => {
         let cursorHeight = cursor.y * charHeight
         let width = charWidth
         let height = charHeight
-        if (TODONameThisBetter.shape === CursorShape.line) width = 1
-        else if (TODONameThisBetter.shape === CursorShape.underline) {
+        if (info.cursor_shape === 'vertical') width = 1
+        else if (info.cursor_shape === 'horizontal') {
           cursorHeight += charHeight - 2
           height = 1
         }
@@ -421,7 +440,7 @@ const createRenderer = () => {
         ctx.fillStyle = background || ''
         ctx.fillRect(cursorWidth, cursorHeight, width, height)
 
-        if (TODONameThisBetter.shape === CursorShape.block) {
+        if (info.cursor_shape === 'block') {
           ctx.fillStyle = foreground || ''
           const char = charactersGrid[cursor.y][cursor.x]
           ctx.fillText(
@@ -441,6 +460,12 @@ const createRenderer = () => {
     showCursor: (enable: boolean) => {
       cursor.display = enable
     },
+    // TODO(smolck): What to do here?
+    createView: (_gridId: number) => {},
+
+    // TODO(smolck): What to do here?
+    clearAll: () => {},
+
     // TODO(smolck): Do we even use these/need these? {{{
     getLogicalSize: () => {
       const [cellWidth, cellHeight] = getGlyphInfo()
@@ -463,8 +488,21 @@ const createRenderer = () => {
       ]
     },
     /// }}}
+    canvas,
     resizeCanvas: setCanvasDimensions,
     handlers: {
+      mode_change: (_modeAsStr: string, modeIdx: number) => {
+        mode.current = modeIdx;
+        if (mode.styleEnabled) {
+            pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y);
+            scheduleFrame();
+        }
+      },
+      mode_info_set: (cursorStyleEnabled: boolean, modeInfo: []) => {
+        // Missing: handling of cell-percentage
+        mode.styleEnabled = cursorStyleEnabled;
+        mode.modeInfo = modeInfo;
+      },
       busy_start: () => {
         pushDamage(
           activeGrid,

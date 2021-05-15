@@ -3,10 +3,7 @@ import {
   size as windowsGridSize,
 } from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
-import { highlightLookup } from '../render/highlight-attributes'
-import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../title'
-import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
 

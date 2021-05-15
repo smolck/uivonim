@@ -154,49 +154,9 @@ const tabline_update = ([, [curtab, tabs]]: any, send: SendFunc) => {
   })
 }
 
-// Mode-related {{{
-const modes = new Map<string, Mode>()
-const mode_change = ([, [m]]: [any, [string]], nvim: Nvim, send: SendFunc) => {
+const mode_change = ([, [m]]: [any, [string]], nvim: Nvim) => {
   nvim.instanceApi.setMode(normalizeVimMode(m))
-  const info = modes.get(m)
-  if (info) {
-    send(RedrawEvents.modeChange, info, m)
-  }
 }
-
-interface ModeInfo {
-  blinkoff?: number
-  blinkon?: number
-  blinkwait?: number
-  cell_percentage?: number
-  cursor_shape?: string
-  attr_id?: number
-  attr_id_lm?: number
-  hl_id?: number
-  id_lm?: number
-  mouse_shape?: number
-  name: string
-  short_name: string
-}
-
-const cursorShapeType = (shape?: string) => {
-  if (shape === 'block') return CursorShape.block
-  if (shape === 'horizontal') return CursorShape.underline
-  if (shape === 'vertical') return CursorShape.line
-  else return CursorShape.block
-}
-
-const mode_info_set = ([, [, infos]]: any) =>
-  infos.forEach((m: ModeInfo) => {
-    const info = {
-      shape: cursorShapeType(m.cursor_shape),
-      size: m.cell_percentage,
-      hlid: m.attr_id,
-    }
-
-    modes.set(m.name, info)
-  })
-// }}}
 
 const popupmenu_show = (
   [, [itemz, index, row, col, grid]]: [
@@ -359,7 +319,8 @@ export const handleRedraw = (
     else if (e === 'grid_clear') sendToRenderer(RedrawEvents.gridClear, ev)
     else if (e === 'grid_destroy') sendToRenderer(RedrawEvents.gridDestroy, ev)
     else if (e === 'tabline_update') tabline_update(ev, sendToRenderer)
-    else if (e === 'mode_change') mode_change(ev, nvim, sendToRenderer)
+    // TODO(smolck): call mode_change and send to renderer?
+    else if (e === 'mode_change') (mode_change(ev, nvim), sendToRenderer(RedrawEvents.modeChange, ev))
     else if (e === 'popupmenu_hide') sendToRenderer(RedrawEvents.pmenuHide)
     else if (e === 'popupmenu_select')
       sendToRenderer(RedrawEvents.pmenuSelect, ev[1][0])
@@ -372,7 +333,7 @@ export const handleRedraw = (
     else if (e === 'default_colors_set')
       sendToRenderer(RedrawEvents.defaultColorsSet, ev)
     else if (e === 'option_set') sendToRenderer(RedrawEvents.optionSet, ev)
-    else if (e === 'mode_info_set') mode_info_set(ev)
+    else if (e === 'mode_info_set') sendToRenderer(RedrawEvents.modeInfoSet, ev)
     else if (e === 'wildmenu_show')
       sendToRenderer(RedrawEvents.wildmenuShow, ev[1][0])
     else if (e === 'wildmenu_select')

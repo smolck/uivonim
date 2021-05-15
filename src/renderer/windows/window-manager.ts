@@ -1,6 +1,6 @@
 import CreateWindow, { Window, paddingX } from '../windows/window'
 import { cursor, moveCursor } from '../cursor'
-import CreateWebGLRenderer from '../render/webgl/renderer'
+import CreateRenderer from '../render/renderer'
 import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../workspace'
 import { throttle } from '../../common/utils'
@@ -8,13 +8,14 @@ import windowSizer from '../windows/sizer'
 import { Events } from '../../common/ipc'
 
 export const size = { width: 0, height: 0 }
-export const webgl = CreateWebGLRenderer()
+export const renderer = CreateRenderer()
 const windows = new Map<string, Window>()
 const windowsById = new Map<string, Window>()
 const invalidWindows = new Set<string>()
 const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
+webglContainer.appendChild(renderer.canvas)
 
 const superid = (id: number) => `i-${id}`
 
@@ -30,11 +31,11 @@ const getWindowById = (windowId: number) => {
 const getInstanceWindows = () => [...windows.values()]
 
 const refreshWebGLGrid = () => {
-  webgl.clearAll()
+  renderer.clearAll()
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }
 
-webgl.foregroundElement.addEventListener('webglcontextlost', (e) => {
+/*webgl.foregroundElement.addEventListener('webglcontextlost', (e) => {
   console.log('lost webgl foreground context, preventing default', e)
   e.preventDefault()
 })
@@ -51,7 +52,7 @@ webgl.backgroundElement.addEventListener('webglcontextrestored', (_e) => {
   console.log('webgl foreground context restored! re-initializing')
   webgl.reInit({ bg: true, fg: false })
   refreshWebGLGrid()
-})
+})*/
 
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   if (!anchorWin.element.style.gridArea)
@@ -89,7 +90,7 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   }
 }
 
-export const createWebGLView = (gridId: number) => webgl.createView(gridId)
+export const createWebGLView = (gridId: number) => renderer.createView(gridId)
 
 export const getActiveGridId = () => state.activeInstanceGrid
 
@@ -243,10 +244,6 @@ export const pixelPosition = (row: number, col: number) => {
   return { x: 0, y: 0 }
 }
 
-webgl.backgroundElement.setAttribute('wat', 'webgl-background')
-webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
-webgl.foregroundElement.id = 'webgl-foreground'
-
 Object.assign(webglContainer.style, {
   position: 'absolute',
   width: '100%',
@@ -268,22 +265,19 @@ Object.assign(container.style, {
   background: 'none',
 })
 
-Object.assign(webgl.backgroundElement.style, {
+Object.assign(renderer.canvas.style, {
   position: 'absolute',
   zIndex: 3,
 })
 
-Object.assign(webgl.foregroundElement.style, {
+Object.assign(renderer.canvas.style, {
   position: 'absolute',
   zIndex: 4,
 })
 
-webglContainer.appendChild(webgl.backgroundElement)
-webglContainer.appendChild(webgl.foregroundElement)
-
 onElementResize(webglContainer, (w, h) => {
   Object.assign(size, { width: w, height: h })
-  webgl.resizeCanvas(w, h)
+  renderer.resizeCanvas(w, h)
   getInstanceWindows().forEach((w) => {
     w.refreshLayout()
     w.redrawFromGridBuffer()
@@ -292,7 +286,7 @@ onElementResize(webglContainer, (w, h) => {
 
 window.api.on(Events.colorschemeStateUpdated, () =>
   requestAnimationFrame(() => {
-    webgl.clearAll()
+    renderer.clearAll()
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
   })
 )
