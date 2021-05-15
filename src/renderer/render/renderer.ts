@@ -98,20 +98,22 @@ const createRenderer = () => {
   const ctx = canvas.getContext('2d', { alpha: false })!!
   ctx.font = `${font.size}px ${font.size}`
 
-  const mode =  {
-        current: 0,
-        styleEnabled : false,
-        modeInfo: [{
-            attr_id: 0,
-            attr_id_lm: 0,
-            blinkoff: 0,
-            blinkon: 0,
-            blinkwait: 0,
-            cell_percentage: 0,
-            cursor_shape: "block",
-            name: "normal",
-        }]
-    }
+  const mode = {
+    current: 0,
+    styleEnabled: false,
+    modeInfo: [
+      {
+        attr_id: 0,
+        attr_id_lm: 0,
+        blinkoff: 0,
+        blinkon: 0,
+        blinkwait: 0,
+        cell_percentage: 0,
+        cursor_shape: 'block',
+        name: 'normal',
+      },
+    ],
+  }
 
   const cursor: Cursor = {
     currentGrid: 1,
@@ -126,7 +128,9 @@ const createRenderer = () => {
   const gridDamagesCount: number[] = []
   const gridHighlights: number[][][] = []
   const gridSizes: GridDimensions[] = []
-  const highlights: HighlightInfo[] = [newHighlight(colors.background, colors.foreground)]
+  const highlights: HighlightInfo[] = [
+    newHighlight(colors.background, colors.foreground),
+  ]
 
   let linespace = 0
   let glyphCache: any = {}
@@ -145,10 +149,7 @@ const createRenderer = () => {
     return char + '-' + high
   }
 
-  const setCanvasDimensions = (
-    width: number,
-    height: number
-  ) => {
+  const setCanvasDimensions = (width: number, height: number) => {
     canvas.width = width * window.devicePixelRatio
     canvas.height = height * window.devicePixelRatio
     canvas.style.width = `${width}px`
@@ -262,9 +263,7 @@ const createRenderer = () => {
 
   const measureWidth = (char: string) => {
     const charWidth = getGlyphInfo()[0]
-    return (
-      Math.ceil(ctx.measureText(char).width / charWidth) * charWidth
-    )
+    return Math.ceil(ctx.measureText(char).width / charWidth) * charWidth
   }
 
   let activeGrid = 1
@@ -297,7 +296,8 @@ const createRenderer = () => {
         case DamageKind.Resize:
           {
             const pixelWidth = (damage.w * charWidth) / window.devicePixelRatio
-            const pixelHeight = (damage.h * charHeight) / window.devicePixelRatio
+            const pixelHeight =
+              (damage.h * charHeight) / window.devicePixelRatio
             // TODO(smolck): page.resizeEditor(pixelWidth, pixelHeight)
             setCanvasDimensions(pixelWidth, pixelHeight)
             // Note: changing width and height resets font, so we have to
@@ -412,8 +412,8 @@ const createRenderer = () => {
       if (cursor.currentGrid === gid) {
         // Missing: handling of cell-percentage
         const info = mode.styleEnabled
-            ? mode.modeInfo[mode.current]
-            : mode.modeInfo[0];
+          ? mode.modeInfo[mode.current]
+          : mode.modeInfo[0]
         // Decide color. As described in the doc, if attr_id is 0 colors
         // should be reverted.
         let background = highlights[modeHlId].background
@@ -456,7 +456,7 @@ const createRenderer = () => {
   }
 
   return {
-    setModeHlId: (id: number) => modeHlId = id,
+    setModeHlId: (id: number) => (modeHlId = id),
     showCursor: (enable: boolean) => {
       cursor.display = enable
     },
@@ -480,7 +480,7 @@ const createRenderer = () => {
       return [Math.floor(width / cellWidth), Math.floor(height / cellHeight)]
     },
 
-    getGridCoordinates : (x: number, y: number) => {
+    getGridCoordinates: (x: number, y: number) => {
       const [cellWidth, cellHeight] = getGlyphInfo()
       return [
         Math.floor((x * window.devicePixelRatio) / cellWidth),
@@ -492,26 +492,19 @@ const createRenderer = () => {
     resizeCanvas: setCanvasDimensions,
     handlers: {
       mode_change: (_modeAsStr: string, modeIdx: number) => {
-        mode.current = modeIdx;
+        mode.current = modeIdx
         if (mode.styleEnabled) {
-            pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y);
-            scheduleFrame();
+          pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
+          scheduleFrame()
         }
       },
       mode_info_set: (cursorStyleEnabled: boolean, modeInfo: []) => {
         // Missing: handling of cell-percentage
-        mode.styleEnabled = cursorStyleEnabled;
-        mode.modeInfo = modeInfo;
+        mode.styleEnabled = cursorStyleEnabled
+        mode.modeInfo = modeInfo
       },
       busy_start: () => {
-        pushDamage(
-          activeGrid,
-          DamageKind.Cell,
-          1,
-          1,
-          cursor.x,
-          cursor.y
-        )
+        pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
         cursor.display = false
       },
       busy_stop: () => {
@@ -664,7 +657,14 @@ const createRenderer = () => {
               dstHighs[x] = srcHighs[x]
             }
           }
-          pushDamage(id, DamageKind.Cell, dimensions.height, dimensions.width, 0, 0)
+          pushDamage(
+            id,
+            DamageKind.Cell,
+            dimensions.height,
+            dimensions.width,
+            0,
+            0
+          )
         } else if (rows < 0) {
           for (let y = bot - 1; y >= top && y + rows >= 0; --y) {
             const srcChars = charGrid[y + rows]
@@ -676,7 +676,14 @@ const createRenderer = () => {
               dstHighs[x] = srcHighs[x]
             }
           }
-          pushDamage(id, DamageKind.Cell, dimensions.height, dimensions.width, 0, 0)
+          pushDamage(
+            id,
+            DamageKind.Cell,
+            dimensions.height,
+            dimensions.width,
+            0,
+            0
+          )
         }
       },
       hl_attr_define: (id: number, rgbAttr: any) => {
@@ -694,7 +701,7 @@ const createRenderer = () => {
         highlights[id].underline = rgbAttr.underline
         highlights[id].reverse = rgbAttr.reverse
       },
-    }
+    },
   }
 }
 

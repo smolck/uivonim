@@ -1,7 +1,4 @@
-import {
-  addHighlight,
-  setDefaultColors,
-} from './highlight-attributes'
+import { addHighlight, setDefaultColors } from './highlight-attributes'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../dispatch'
 import { RedrawEvents, Invokables } from '../../common/ipc'
@@ -194,7 +191,15 @@ handle.gridCursorGoto((gridId, row, col) => {
 })
 handle.gridScroll(([, [gridId, top, bottom, left, right, rows, cols]]) => {
   // if (gridId === 1) return
-  windows.renderer.handlers.grid_scroll(gridId, top, bottom, left, right, rows, cols)
+  windows.renderer.handlers.grid_scroll(
+    gridId,
+    top,
+    bottom,
+    left,
+    right,
+    rows,
+    cols
+  )
 })
 handle.gridClear(grid_clear)
 handle.gridDestroy(grid_destroy)

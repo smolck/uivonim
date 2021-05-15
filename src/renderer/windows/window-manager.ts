@@ -202,9 +202,8 @@ export const layout = () => {
   const wininfos = getInstanceWindows().map((win) => ({
     ...win.getWindowInfo(),
   }))
-  const { gridTemplateRows, gridTemplateColumns, windowGridInfo } = windowSizer(
-    wininfos
-  )
+  const { gridTemplateRows, gridTemplateColumns, windowGridInfo } =
+    windowSizer(wininfos)
 
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
 
