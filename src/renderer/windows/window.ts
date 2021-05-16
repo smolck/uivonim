@@ -1,8 +1,8 @@
 import {
-  createWebGLView,
+  createRendererView,
   size as windowsGridSize,
 } from '../windows/window-manager'
-import { Renderer } from '../render/renderer'
+import { RendererView } from '../render/renderer'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { specs as titleSpecs } from '../title'
 import { cell } from '../workspace'
@@ -62,8 +62,7 @@ export interface Window {
   gridId: string
   row: number
   col: number
-  // TODO(smolck): Type and things
-  webgl: /*WebGLView*/ any
+  rendererView: RendererView
   visible: boolean
   element: HTMLElement
   editor: Editor
@@ -104,7 +103,7 @@ const edgeDetection = (el: HTMLElement) => {
 export const paddingX = 5
 export const paddingY = 4
 
-export default (renderer: Renderer) => {
+export default () => {
   const wininfo: WindowInfo = {
     id: '0',
     gridId: '0',
@@ -118,7 +117,7 @@ export default (renderer: Renderer) => {
     anchor: '',
   }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
-  const webgl = createWebGLView(0)
+  const rendererView = createRendererView(0)
 
   const container = makel({
     flexFlow: 'column',
@@ -152,7 +151,8 @@ export default (renderer: Renderer) => {
 
   content.appendChild(overlay)
   container.appendChild(nameplate.element)
-  container.appendChild(content)
+  container.appendChild(rendererView.canvas)
+  // container.appendChild(content)
 
   const api = {
     get id() {
@@ -176,8 +176,8 @@ export default (renderer: Renderer) => {
     get visible() {
       return wininfo.visible
     },
-    get webgl() {
-      return webgl
+    get rendererView() {
+      return rendererView
     },
     get element() {
       return container
@@ -186,8 +186,7 @@ export default (renderer: Renderer) => {
 
   api.resizeWindow = (width, height) => {
     Object.assign(wininfo, { height, width })
-    // TODO(smolck)
-    // webgl.resize(height, width)
+    rendererView.resize(height, width)
   }
 
   api.setWindowInfo = (info) => {
@@ -218,15 +217,12 @@ export default (renderer: Renderer) => {
 
     if (!wininfo.visible) {
       container.style.display = 'flex'
-      // TODO(smolck)
-      renderer.scheduleRedraw()
-      // webgl.renderGridBuffer()
+      rendererView.render()
     }
 
     container.id = `${info.id}`
     container.setAttribute('gridid', info.gridId)
-    // TODO(smolck)
-    // webgl.updateGridId(info.gridIdNumber)
+    rendererView.updateGridId(info.gridIdNumber)
     Object.assign(wininfo, info)
   }
 
@@ -256,7 +252,7 @@ export default (renderer: Renderer) => {
   api.hide = () => {
     wininfo.visible = false
     container.style.display = 'none'
-    // TODO(smolck): webgl.clear()
+    rendererView.clear()
   }
 
   // maybeHide + maybeShow used for hiding/showing windows when
@@ -266,17 +262,17 @@ export default (renderer: Renderer) => {
   api.maybeHide = () => {
     if (!wininfo.visible) return
     container.style.display = 'none'
-    // TODO(smolck): webgl.clear()
+    rendererView.clear()
   }
 
   api.maybeShow = () => {
     if (!wininfo.visible) return
     container.style.display = 'flex'
-    // TODO(smolck): webgl.renderGridBuffer()
+    rendererView.render()
   }
 
   api.refreshLayout = () => {
-    const { top, left, width, height } = content.getBoundingClientRect()
+    const { top, left, width, height } = container.getBoundingClientRect()
 
     const x = left
     const y = top - titleSpecs.height
@@ -290,7 +286,7 @@ export default (renderer: Renderer) => {
     if (same) return
 
     Object.assign(layout, { x, y, width, height })
-    // TODO(smolck): webgl.layout(x + paddingX, y + paddingY, width, height)
+    rendererView.layout(x + paddingX, y + paddingY, width, height)
 
     // Don't add border to floats.
     if (!wininfo.is_float) {
@@ -315,13 +311,13 @@ export default (renderer: Renderer) => {
     }
   }
 
-  api.redrawFromGridBuffer = () => renderer.scheduleRedraw(),// webgl.renderGridBuffer()
+  api.redrawFromGridBuffer = () => rendererView.render(),
 
   api.updateNameplate = (data) => nameplate.update(data)
 
   api.editor = {
-    getChar: (row, col) => renderer.getChar(wininfo.gridIdNumber, row, col),
-    getLine: (row) => renderer.getLine(wininfo.gridIdNumber, row),
+    getChar: (row, col) => rendererView.getChar(row, col),
+    getLine: (row) => rendererView.getLine(row),
     getAllLines: () => {
       const lines: any = []
       for (let row = 0; row < wininfo.height; row++) {

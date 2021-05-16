@@ -13,8 +13,6 @@ const windowsById = new Map<string, Window>()
 const invalidWindows = new Set<string>()
 const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
-const webglContainer = document.getElementById('webgl') as HTMLElement
-webglContainer.appendChild(renderer.canvas)
 
 const superid = (id: number) => `i-${id}`
 
@@ -28,30 +26,6 @@ const getWindowById = (windowId: number) => {
 }
 
 const getInstanceWindows = () => [...windows.values()]
-
-const refreshWebGLGrid = () => {
-  renderer.clearAll()
-  getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
-}
-
-/*webgl.foregroundElement.addEventListener('webglcontextlost', (e) => {
-  console.log('lost webgl foreground context, preventing default', e)
-  e.preventDefault()
-})
-webgl.foregroundElement.addEventListener('webglcontextrestored', (_e) => {
-  console.log('webgl foreground context restored! re-initializing')
-  webgl.reInit({ bg: false, fg: true })
-  refreshWebGLGrid()
-})
-webgl.backgroundElement.addEventListener('webglcontextlost', (e) => {
-  console.log('lost webgl background context, preventing default', e)
-  e.preventDefault()
-})
-webgl.backgroundElement.addEventListener('webglcontextrestored', (_e) => {
-  console.log('webgl foreground context restored! re-initializing')
-  webgl.reInit({ bg: true, fg: false })
-  refreshWebGLGrid()
-})*/
 
 export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   if (!anchorWin.element.style.gridArea)
@@ -89,7 +63,7 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
   }
 }
 
-export const createWebGLView = (gridId: number) => renderer.createView(gridId)
+export const createRendererView = (gridId: number) => renderer.createView(gridId)
 
 export const getActiveGridId = () => state.activeInstanceGrid
 
@@ -120,7 +94,7 @@ export const set = (
 ) => {
   const wid = superid(id)
   const gid = superid(gridId)
-  const win = windows.get(gid) || CreateWindow(renderer)
+  const win = windows.get(gid) || CreateWindow()
   win.setWindowInfo({
     anchor,
     is_float,
@@ -212,7 +186,6 @@ export const layout = () => {
 
   // wait for flex grid styles to be applied to all windows and trigger dom layout
   windowGridInfo.forEach(({ gridId }) => windows.get(gridId)!.refreshLayout())
-  refreshWebGLGrid()
 }
 
 const updateWindowNameplates = () =>
@@ -233,14 +206,14 @@ export const pixelPosition = (row: number, col: number) => {
   return { x: 0, y: 0 }
 }
 
-Object.assign(webglContainer.style, {
+/*Object.assign(webglContainer.style, {
   position: 'absolute',
   width: '100%',
   height: '100%',
   flex: 1,
   zIndex: 2,
   background: 'var(--background)',
-})
+}) */
 
 Object.assign(container.style, {
   position: 'absolute',
@@ -254,28 +227,15 @@ Object.assign(container.style, {
   background: 'none',
 })
 
-Object.assign(renderer.canvas.style, {
-  position: 'absolute',
-  zIndex: 3,
-})
-
-Object.assign(renderer.canvas.style, {
-  position: 'absolute',
-  zIndex: 4,
-})
-
-onElementResize(webglContainer, (w, h) => {
-  Object.assign(size, { width: w, height: h })
-  renderer.resizeCanvas(w, h)
+onElementResize(container, (width, height) => {
+  Object.assign(size, { width, height })
   getInstanceWindows().forEach((w) => {
     w.refreshLayout()
-    w.redrawFromGridBuffer()
   })
 })
 
 window.api.on(Events.colorschemeStateUpdated, () =>
   requestAnimationFrame(() => {
-    renderer.clearAll()
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
   })
 )

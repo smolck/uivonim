@@ -1,7 +1,7 @@
 import { Invokables } from '../../common/ipc'
 import { asColor } from '../../common/utils'
 import { font } from '../workspace'
-import { sub } from '../dispatch'
+import { sub, pub } from '../dispatch'
 import { colors } from './highlight-attributes'
 
 type HighlightInfo = {
@@ -84,6 +84,17 @@ type Cursor = {
   lastMove: DOMHighResTimeStamp
 }
 
+export interface RendererView {
+  resize: (rows: number, cols: number) => void
+  layout: (x: number, y: number, width: number, height: number) => void
+  render: () => void
+  clear: () => void
+  getChar: (row: number, col: number) => string
+  getLine: (row: number) => string
+  updateGridId: (gridId: number) => void
+  canvas: HTMLCanvasElement
+}
+
 const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
   return {
     background: bg,
@@ -91,12 +102,14 @@ const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
   }
 }
 
-const createRenderer = () => {
-  const canvas = document.createElement('canvas') as HTMLCanvasElement
-  canvas.id = 'renderer-canvas'
-  const ctx = canvas.getContext('2d', { alpha: true })!!
-  ctx.font = `${font.size}px ${font.size}`
+const setCanvasDimensions = (canvas: HTMLCanvasElement, width: number, height: number) => {
+  canvas.width = width * window.devicePixelRatio
+  canvas.height = height * window.devicePixelRatio
+  canvas.style.width = `${width}px`
+  canvas.style.height = `${height}px`
+}
 
+const createRenderer = () => {
   const mode = {
     current: 0,
     styleEnabled: false,
@@ -149,17 +162,8 @@ const createRenderer = () => {
   }
 
   let fontString = `${font.size} ${font.face}`
-  const setCanvasDimensions = (width: number, height: number) => {
-    canvas.width = width * window.devicePixelRatio
-    canvas.height = height * window.devicePixelRatio
-    canvas.style.width = `${width}px`
-    canvas.style.height = `${height}px`
-    // Note: changing width and height resets font, so we have to
-    // set it again. Who thought this was a good idea???
-    ctx.font = fontString
-  }
 
-  const getGlyphInfo = () => {
+  const getGlyphInfo = (ctx: CanvasRenderingContext2D) => {
     if (
       metricsInvalidated ||
       maxCellWidth === undefined ||
@@ -170,10 +174,6 @@ const createRenderer = () => {
     }
     return [maxCellWidth, maxCellHeight, maxBaselineDistance]
   }
-
-  // TODO(smolck): This works/is right thing to do on workspace resize?
-  sub('resize', () => {
-  })
 
   const pushDamage = (
     grid: number,
@@ -196,43 +196,6 @@ const createRenderer = () => {
     }
     gridDamagesCount[grid] = count + 1
   }
-
-  sub('workspace.font.updated', ({ size, face, lineSpace }) => {
-    const newFont = `${size}px ${face}`
-    fontString = newFont
-    ctx.font = newFont
-    invalidateMetrics()
-
-    const [charWidth, charHeight] = getGlyphInfo()
-    window.api.invoke(
-      Invokables.nvimResizeGrid,
-      activeGrid,
-      Math.floor(canvas.width / charWidth),
-      Math.floor(canvas.height / charHeight)
-    )
-
-    if (linespace === lineSpace) {
-      return
-    }
-
-    // TODO(smolck)
-    linespace = lineSpace
-    // invalidateMetrics()
-    // const [charWidth, charHeight] = getGlyphInfo(state)
-    const gid = activeGrid
-    const curGridSize = gridSizes[gid]
-    if (curGridSize !== undefined) {
-      pushDamage(
-        activeGrid,
-        DamageKind.Cell,
-        curGridSize.height,
-        curGridSize.width,
-        0,
-        0
-      )
-    }
-  })
-
 
   let maxCellWidth: number
   let maxCellHeight: number
@@ -268,8 +231,8 @@ const createRenderer = () => {
     metricsInvalidated = false
   }
 
-  const measureWidth = (char: string) => {
-    const charWidth = getGlyphInfo()[0]
+  const measureWidth = (ctx: CanvasRenderingContext2D, char: string) => {
+    const charWidth = getGlyphInfo(ctx)[0]
     return Math.ceil(ctx.measureText(char).width / charWidth) * charWidth
   }
 
@@ -277,24 +240,22 @@ const createRenderer = () => {
 
   // keep track of wheter a frame is already being scheduled or not. This avoids
   // asking for multiple frames where we'd paint the same thing anyway.
-  let frameScheduled = false
-  function scheduleFrame() {
-    if (!frameScheduled) {
-      frameScheduled = true
-      window.requestAnimationFrame(paint)
+  let frameScheduled: any = {}
+  function scheduleFrame(gridId: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+    if (!frameScheduled[gridId]) {
+      frameScheduled[gridId] = true
+      window.requestAnimationFrame(() => paint(gridId, canvas, ctx))
     }
   }
 
-  let modeHlId = 0
-  function paint(_: DOMHighResTimeStamp) {
-    frameScheduled = false
+  const paint = (gridId: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+    frameScheduled[gridId] = false
 
-    const gid = activeGrid
-    const charactersGrid = gridCharacters[gid]
-    const highlightsGrid = gridHighlights[gid]
-    const damages = gridDamages[gid]
-    const damageCount = gridDamagesCount[gid]
-    const [charWidth, charHeight, baseline] = getGlyphInfo()
+    const charactersGrid = gridCharacters[gridId]
+    const highlightsGrid = gridHighlights[gridId]
+    const damages = gridDamages[gridId]
+    const damageCount = gridDamagesCount[gridId]
+    const [charWidth, charHeight, baseline] = getGlyphInfo(ctx)
 
     for (let i = 0; i < damageCount; ++i) {
       const damage = damages[i]
@@ -305,7 +266,10 @@ const createRenderer = () => {
             const pixelHeight =
               (damage.h * charHeight) / window.devicePixelRatio
             // TODO(smolck): page.resizeEditor(pixelWidth, pixelHeight)
-            setCanvasDimensions(pixelWidth, pixelHeight)
+            setCanvasDimensions(canvas, pixelWidth, pixelHeight)
+            // Note: changing width and height resets font, so we have to
+            // set it again. Who thought this was a good idea???
+            ctx.font = fontString
           }
           break
         case DamageKind.Scroll:
@@ -333,7 +297,7 @@ const createRenderer = () => {
               if (glyphCache[id] === undefined) {
                 const cellHigh = highlights[rowHigh[x]]
                 const width =
-                  Math.ceil(measureWidth(row[x]) / charWidth) * charWidth
+                  Math.ceil(measureWidth(ctx, row[x]) / charWidth) * charWidth
                 let background = cellHigh.background || highlights[0].background
                 let foreground = cellHigh.foreground || highlights[0].foreground
                 if (cellHigh.reverse) {
@@ -413,7 +377,7 @@ const createRenderer = () => {
     }
 
     if (cursor.display) {
-      if (cursor.currentGrid === gid) {
+      if (cursor.currentGrid === gridId) {
         // Missing: handling of cell-percentage
         const info = mode.styleEnabled
           ? mode.modeInfo[mode.current]
@@ -456,7 +420,128 @@ const createRenderer = () => {
       }
     }
 
-    gridDamagesCount[gid] = 0
+    gridDamagesCount[gridId] = 0
+  }
+
+  let modeHlId = 0
+  const createView = (initialGridId: number): RendererView => {
+    let gridId = initialGridId
+
+    const canvas = document.createElement('canvas') as HTMLCanvasElement
+    canvas.id = `renderer-canvas-${gridId}`
+    const ctx = canvas.getContext('2d', { alpha: false })!!
+    fontString = `${font.size}px ${font.face}`
+    ctx.font = `${font.size}px ${font.face}`
+
+    const viewport = { x: 0, y: 0, width: 0, height: 0 }
+    const gridSize = { rows: 0, cols: 0 }
+
+    sub('workspace.font.updated', ({ size, face, lineSpace }) => {
+      const newFont = `${size}px ${face}`
+      fontString = newFont
+      ctx.font = newFont
+      invalidateMetrics()
+
+      const [charWidth, charHeight] = getGlyphInfo(ctx)
+      window.api.invoke(
+        Invokables.nvimResizeGrid,
+        activeGrid,
+        Math.floor(canvas.width / charWidth),
+        Math.floor(canvas.height / charHeight)
+      )
+
+      if (linespace === lineSpace) {
+        return
+      }
+
+      // TODO(smolck)
+      linespace = lineSpace
+      // invalidateMetrics()
+      // const [charWidth, charHeight] = getGlyphInfo(state)
+      const gid = activeGrid
+      const curGridSize = gridSizes[gid]
+      if (curGridSize !== undefined) {
+        pushDamage(
+          activeGrid,
+          DamageKind.Cell,
+          curGridSize.height,
+          curGridSize.width,
+          0,
+          0
+        )
+      }
+    })
+    sub('resize', () => {
+      invalidateMetrics()
+      const [charWidth, charHeight] = getGlyphInfo(ctx)
+      window.api.invoke(
+        Invokables.nvimResizeGrid,
+        activeGrid,
+        Math.floor(canvas.width / charWidth),
+        Math.floor(canvas.height / charHeight)
+      )
+    })
+
+    sub('mode_change', () => scheduleFrame(gridId, canvas, ctx))
+    sub('flush', (grid) => gridId === grid ? scheduleFrame(gridId, canvas, ctx) : {})
+
+    const updateGridId = (newGridId: number) => {
+      gridId = newGridId
+      canvas.id = `renderer-canvas-${gridId}`
+    }
+
+    const resize = (rows: number, cols: number) => {
+      /*const [charWidth, charHeight] = getGlyphInfo(ctx)
+
+      const width = cols * charWidth
+      const height = rows * charHeight
+
+      const sameGridSize = gridSize.rows === rows && gridSize.cols === cols
+      const sameViewportSize =
+        viewport.height === height && viewport.width === width
+      if (sameGridSize || sameViewportSize) return
+
+      Object.assign(gridSize, { rows, cols })
+      invalidateMetrics()
+      setCanvasDimensions(canvas, viewport.width, viewport.height)
+      scheduleFrame(gridId, canvas, ctx)*/
+    }
+
+    const layout = (x: number, y: number, width: number, height: number) => {
+      // invalidateMetrics()
+      // scheduleFrame(gridId, canvas, ctx)
+      /*const same =
+        viewport.x === x &&
+        viewport.y === y &&
+        viewport.width === width &&
+        viewport.height === height
+
+      if (same) return
+
+      Object.assign(viewport, { x, y, width, height })
+      setCanvasDimensions(canvas, viewport.width, viewport.height)
+      ctx.font = fontString*/
+    }
+
+    const render = () => {
+      scheduleFrame(gridId, canvas, ctx)
+    }
+
+    const clear = () => {
+      // const dims = gridSizes[gridId]
+      // pushDamage(gridId, DamageKind.Cell, dims.height, dims.width, 0, 0)
+    }
+
+    return {
+      clear,
+      render,
+      resize,
+      layout,
+      updateGridId,
+      getChar: (row: number, col: number) => gridCharacters[gridId][row][col],
+      getLine: (row: number) => gridCharacters[gridId][row].join(''),
+      canvas,
+    }
   }
 
   return {
@@ -464,48 +549,14 @@ const createRenderer = () => {
     showCursor: (enable: boolean) => {
       cursor.display = enable
     },
-    // TODO(smolck): What to do here?
-    createView: (_gridId: number) => {},
-
-    // TODO(smolck): What to do here?
-    clearAll: () => {},
-
-    getChar: (gridId: number, row: number, col: number) => gridCharacters[gridId][row][col],
-    getLine: (gridId: number, row: number) => gridCharacters[gridId][row].join(''),
-
-    scheduleRedraw: scheduleFrame,
-
-    // TODO(smolck): Do we even use these/need these? {{{
-    getLogicalSize: () => {
-      const [cellWidth, cellHeight] = getGlyphInfo()
-      return [
-        Math.floor(canvas.width / cellWidth),
-        Math.floor(canvas.height / cellHeight),
-      ]
-    },
-
-    computeGridDimensionsFor: (width: number, height: number) => {
-      const [cellWidth, cellHeight] = getGlyphInfo()
-      return [Math.floor(width / cellWidth), Math.floor(height / cellHeight)]
-    },
-
-    getGridCoordinates: (x: number, y: number) => {
-      const [cellWidth, cellHeight] = getGlyphInfo()
-      return [
-        Math.floor((x * window.devicePixelRatio) / cellWidth),
-        Math.floor((y * window.devicePixelRatio) / cellHeight),
-      ]
-    },
-    /// }}}
+    createView: (gridId: number) => createView(gridId),
     cursor,
-    canvas,
-    resizeCanvas: setCanvasDimensions,
     handlers: {
       mode_change: (_modeAsStr: string, modeIdx: number) => {
         mode.current = modeIdx
         if (mode.styleEnabled) {
           pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.col, cursor.row)
-          scheduleFrame()
+          pub('mode_change')
         }
       },
       mode_info_set: (cursorStyleEnabled: boolean, modeInfo: []) => {
@@ -544,7 +595,7 @@ const createRenderer = () => {
         wipeGlyphCache()
       },
       flush: () => {
-        scheduleFrame()
+        pub('flush', activeGrid)
       },
       grid_clear: (id: number) => {
         // glacambre: What should actually happen on grid_clear? The
