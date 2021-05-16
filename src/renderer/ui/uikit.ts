@@ -1,6 +1,6 @@
-import { showCursor, hideCursor } from '../cursor'
 import { Invokables } from '../../common/ipc'
 import { uuid } from '../../common/utils'
+import { renderer } from '../windows/window-manager'
 
 export const css = (builder: (classname: string) => string[]): string => {
   const id = `sc-${uuid()}`
@@ -15,9 +15,10 @@ export const css = (builder: (classname: string) => string[]): string => {
 export const vimFocus = () => {
   setTimeout(async () => window.api.invoke(Invokables.inputFocus), 1)
   document.getElementById('keycomp-textarea')?.focus()
-  showCursor()
+  // TODO(smolck): Make sure this works.
+  renderer.showCursor(true)
 }
 
 export const vimBlur = () => {
-  window.api.invoke(Invokables.inputBlur).then(() => hideCursor())
+  window.api.invoke(Invokables.inputBlur).then(() => renderer.showCursor(false))
 }

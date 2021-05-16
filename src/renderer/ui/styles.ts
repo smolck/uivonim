@@ -15,7 +15,6 @@ import {
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
 import { Invokables } from '../../common/ipc'
-import { setCursorColor } from '../cursor'
 
 // this will return a var like '244, 120, 042'
 // then we can use this var in rgba color styles
@@ -74,16 +73,6 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   getColorAndSetVar('uvnFunction', 'function')
   getColorAndSetVar('uvnPreProc', 'preproc')
   getColorAndSetVar('uvnLink', 'linkcolor')
-
-  getColorByName('uvnCursor')
-    .then(({ background, reverse }) =>
-      background
-        ? setCursorColor(background)
-        : reverse
-        ? setCursorColor(nvimColors.foreground)
-        : {}
-    )
-    .catch(console.error)
 }
 
 // TODO(smolck): This is . . . pretty hacky. For some reason

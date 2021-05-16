@@ -1,6 +1,5 @@
 import { Invokables } from '../../common/ipc'
 import { asColor } from '../../common/utils'
-import { CursorShape } from '../../common/types'
 import { font } from '../workspace'
 import { sub } from '../dispatch'
 import { colors } from './highlight-attributes'

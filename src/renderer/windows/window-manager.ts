@@ -120,7 +120,7 @@ export const set = (
 ) => {
   const wid = superid(id)
   const gid = superid(gridId)
-  const win = windows.get(gid) || CreateWindow()
+  const win = windows.get(gid) || CreateWindow(renderer)
   win.setWindowInfo({
     anchor,
     is_float,

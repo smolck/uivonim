@@ -62,7 +62,8 @@ export interface Window {
   gridId: string
   row: number
   col: number
-  webgl: WebGLView
+  // TODO(smolck): Type and things
+  webgl: /*WebGLView*/ any
   visible: boolean
   element: HTMLElement
   editor: Editor
