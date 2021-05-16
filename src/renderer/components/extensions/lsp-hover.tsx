@@ -4,7 +4,6 @@ import { sub } from '../../dispatch'
 import { debounce } from '../../../common/utils'
 import Overlay from '../overlay'
 import { docStyle } from '../../ui/styles'
-import { cursor } from '../../cursor'
 import { parse as stringToMarkdown, setOptions } from 'marked'
 import { render } from 'inferno'
 import { cell, size as workspaceSize } from '../../workspace'
@@ -82,14 +81,14 @@ const show = ({ data, doc, hoverHeight, maxWidth }: ShowParams) => {
     maxWidth,
     value: data,
     visible: true,
-    ...getPosition(cursor.row, cursor.col, hoverHeight),
+    ...getPosition(windows.renderer.cursor.row, windows.renderer.cursor.col, hoverHeight),
   })
 
   render(<Hover {...state} />, container)
 }
 const updatePosition = () => {
   if (state.visible)
-    Object.assign(state, getPosition(cursor.row, cursor.col, state.hoverHeight))
+    Object.assign(state, getPosition(windows.renderer.cursor.row, windows.renderer.cursor.col, state.hoverHeight))
 
   render(<Hover {...state} />, container)
 }

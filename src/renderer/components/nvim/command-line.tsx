@@ -1,9 +1,4 @@
-import {
-  enableCursor,
-  disableCursor,
-  hideCursor,
-  showCursor,
-} from '../../cursor'
+import { renderer } from '../../windows/window-manager'
 import { CommandType, CommandUpdate } from '../../../common/types'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
@@ -111,8 +106,7 @@ sub('wildmenu.hide', () => {
 })
 
 sub('cmd.hide', () => {
-  enableCursor()
-  showCursor()
+  renderer.showCursor(true)
 
   // TODO(smolck)
   document.getElementById('keycomp-textarea')?.focus()
@@ -123,8 +117,7 @@ sub('cmd.hide', () => {
 })
 
 sub('cmd.update', ({ cmd, kind, position, prompt }: CommandUpdate) => {
-  hideCursor()
-  disableCursor()
+  renderer.showCursor(false)
 
   state.kind = kind
   if (prompt) state.prompt = prompt

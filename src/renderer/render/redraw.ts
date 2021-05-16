@@ -186,7 +186,7 @@ handle.gridLine((e) => {
 })
 handle.gridCursorGoto((gridId, row, col) => {
   windows.renderer.handlers.grid_cursor_goto(gridId, row, col)
-  // windows.setActiveGrid(gridId)
+  windows.setActiveGrid(gridId)
   // moveCursor(row, col)
 })
 handle.gridScroll(([, [gridId, top, bottom, left, right, rows, cols]]) => {

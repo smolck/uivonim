@@ -6,7 +6,6 @@ import * as workspace from '../../workspace'
 import { PopupMenu } from '../../../common/types'
 import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
-import { cursor } from '../../cursor'
 import { parse as stringToMarkdown } from 'marked'
 import { render } from 'inferno'
 import Icon from '../icon'
@@ -314,7 +313,7 @@ export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(
     // Minus 2 because workspace.size.rows appears to be 2 rows greater than the actual rows
     // TODO(smolck): Is that ^^^ right?
-    workspace.size.rows - cursor.row - 2,
+    workspace.size.rows - windows.renderer.cursor.row - 2,
     options.length
   )
 

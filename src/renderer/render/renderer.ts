@@ -79,8 +79,8 @@ type GridDamage = CellDamage & ResizeDamage & ScrollDamage
 type Cursor = {
   currentGrid: number
   display: boolean
-  x: number
-  y: number
+  col: number
+  row: number
   lastMove: DOMHighResTimeStamp
 }
 
@@ -94,7 +94,7 @@ const newHighlight = (bg?: string, fg?: string): HighlightInfo => {
 const createRenderer = () => {
   const canvas = document.createElement('canvas') as HTMLCanvasElement
   canvas.id = 'renderer-canvas'
-  const ctx = canvas.getContext('2d', { alpha: false })!!
+  const ctx = canvas.getContext('2d', { alpha: true })!!
   ctx.font = `${font.size}px ${font.size}`
 
   const mode = {
@@ -117,8 +117,8 @@ const createRenderer = () => {
   const cursor: Cursor = {
     currentGrid: 1,
     display: true,
-    x: 0,
-    y: 0,
+    col: 0,
+    row: 0,
     lastMove: performance.now(),
   }
 
@@ -148,11 +148,15 @@ const createRenderer = () => {
     return char + '-' + high
   }
 
+  let fontString = `${font.size} ${font.face}`
   const setCanvasDimensions = (width: number, height: number) => {
     canvas.width = width * window.devicePixelRatio
     canvas.height = height * window.devicePixelRatio
     canvas.style.width = `${width}px`
     canvas.style.height = `${height}px`
+    // Note: changing width and height resets font, so we have to
+    // set it again. Who thought this was a good idea???
+    ctx.font = fontString
   }
 
   const getGlyphInfo = () => {
@@ -167,10 +171,31 @@ const createRenderer = () => {
     return [maxCellWidth, maxCellHeight, maxBaselineDistance]
   }
 
-  let fontString = `${font.size} ${font.face}`
-
   // TODO(smolck): This works/is right thing to do on workspace resize?
-  sub('resize', () => invalidateMetrics())
+  sub('resize', () => {
+  })
+
+  const pushDamage = (
+    grid: number,
+    kind: DamageKind,
+    h: number,
+    w: number,
+    x: number,
+    y: number
+  ) => {
+    const damages = gridDamages[grid]
+    const count = gridDamagesCount[grid]
+    if (damages.length === count) {
+      damages.push({ kind, h, w, x, y })
+    } else {
+      damages[count].kind = kind
+      damages[count].h = h
+      damages[count].w = w
+      damages[count].x = x
+      damages[count].y = y
+    }
+    gridDamagesCount[grid] = count + 1
+  }
 
   sub('workspace.font.updated', ({ size, face, lineSpace }) => {
     const newFont = `${size}px ${face}`
@@ -208,27 +233,6 @@ const createRenderer = () => {
     }
   })
 
-  const pushDamage = (
-    grid: number,
-    kind: DamageKind,
-    h: number,
-    w: number,
-    x: number,
-    y: number
-  ) => {
-    const damages = gridDamages[grid]
-    const count = gridDamagesCount[grid]
-    if (damages.length === count) {
-      damages.push({ kind, h, w, x, y })
-    } else {
-      damages[count].kind = kind
-      damages[count].h = h
-      damages[count].w = w
-      damages[count].x = x
-      damages[count].y = y
-    }
-    gridDamagesCount[grid] = count + 1
-  }
 
   let maxCellWidth: number
   let maxCellHeight: number
@@ -283,7 +287,6 @@ const createRenderer = () => {
 
   let modeHlId = 0
   function paint(_: DOMHighResTimeStamp) {
-    console.log(activeGrid)
     frameScheduled = false
 
     const gid = activeGrid
@@ -303,9 +306,6 @@ const createRenderer = () => {
               (damage.h * charHeight) / window.devicePixelRatio
             // TODO(smolck): page.resizeEditor(pixelWidth, pixelHeight)
             setCanvasDimensions(pixelWidth, pixelHeight)
-            // Note: changing width and height resets font, so we have to
-            // set it again. Who thought this was a good idea???
-            ctx.font = fontString
           }
           break
         case DamageKind.Scroll:
@@ -363,6 +363,7 @@ const createRenderer = () => {
                 if (changeFont) {
                   ctx.font = fontString
                 }
+
                 if (cellHigh.strikethrough) {
                   ctx.fillRect(pixelX, pixelY + baseline / 2, width, 1)
                 }
@@ -429,8 +430,8 @@ const createRenderer = () => {
 
         // Decide cursor shape. Default to block, change to
         // vertical/horizontal if needed.
-        const cursorWidth = cursor.x * charWidth
-        let cursorHeight = cursor.y * charHeight
+        const cursorWidth = cursor.col * charWidth
+        let cursorHeight = cursor.row * charHeight
         let width = charWidth
         let height = charHeight
         if (info.cursor_shape === 'vertical') width = 1
@@ -445,11 +446,11 @@ const createRenderer = () => {
 
         if (info.cursor_shape === 'block') {
           ctx.fillStyle = foreground || ''
-          const char = charactersGrid[cursor.y][cursor.x]
+          const char = charactersGrid[cursor.row][cursor.col]
           ctx.fillText(
             char,
-            cursor.x * charWidth,
-            cursor.y * charHeight + baseline
+            cursor.col * charWidth,
+            cursor.row * charHeight + baseline
           )
         }
       }
@@ -496,13 +497,14 @@ const createRenderer = () => {
       ]
     },
     /// }}}
+    cursor,
     canvas,
     resizeCanvas: setCanvasDimensions,
     handlers: {
       mode_change: (_modeAsStr: string, modeIdx: number) => {
         mode.current = modeIdx
         if (mode.styleEnabled) {
-          pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
+          pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.col, cursor.row)
           scheduleFrame()
         }
       },
@@ -512,7 +514,7 @@ const createRenderer = () => {
         mode.modeInfo = modeInfo
       },
       busy_start: () => {
-        pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
+        pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.col, cursor.row)
         cursor.display = false
       },
       busy_stop: () => {
@@ -566,10 +568,10 @@ const createRenderer = () => {
         pushDamage(id, DamageKind.Cell, dims.height, dims.width, 0, 0)
       },
       grid_cursor_goto: (id: number, row: number, column: number) => {
-        pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.x, cursor.y)
+        pushDamage(activeGrid, DamageKind.Cell, 1, 1, cursor.col, cursor.row)
         cursor.currentGrid = id
-        cursor.x = column
-        cursor.y = row
+        cursor.col = column
+        cursor.row = row
         cursor.lastMove = performance.now()
         activeGrid = id
       },

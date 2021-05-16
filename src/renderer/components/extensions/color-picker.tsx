@@ -5,7 +5,6 @@ import Overlay from '../overlay'
 import { debounce } from '../../../common/utils'
 import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
-import { cursor } from '../../cursor'
 import { render } from 'inferno'
 import { Invokables, Events } from '../../../common/ipc'
 
@@ -91,7 +90,7 @@ const assignStateAndRender = (newState: any) => (
 const uiShow = () =>
   assignStateAndRender({
     visible: true,
-    ...getPosition(cursor.row, cursor.col),
+    ...getPosition(windows.renderer.cursor.row, windows.renderer.cursor.col),
   })
 state.hideFunc = () => assignStateAndRender({ visible: false })
 

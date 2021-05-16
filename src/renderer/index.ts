@@ -44,10 +44,6 @@ workspace.onResize(({ rows, cols }) =>
 workspace.resize()
 
 requestAnimationFrame(() => {
-  const cvs = document.getElementById('webgl-foreground') as HTMLCanvasElement
-  console.log('canvas!', cvs)
-  setCanvas(cvs)
-
   require('./render/redraw')
 
   // high priority components

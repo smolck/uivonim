@@ -6,7 +6,6 @@ import Overlay from '../overlay'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
 import { Events } from '../../../common/ipc'
-import { cursor } from '../../cursor'
 
 type CodeAction = {
   title: string
@@ -119,7 +118,7 @@ const prev = () =>
   })
 
 window.api.on(Events.codeActionAction, (actions) => {
-  const { x, y } = windows.pixelPosition(cursor.row + 1, cursor.col)
+  const { x, y } = windows.pixelPosition(windows.renderer.cursor.row + 1, windows.renderer.cursor.col)
   show({
     x,
     y,

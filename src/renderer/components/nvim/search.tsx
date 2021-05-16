@@ -1,9 +1,3 @@
-import {
-  hideCursor,
-  showCursor,
-  disableCursor,
-  enableCursor,
-} from '../../cursor'
 import { CommandType, CommandUpdate } from '../../../common/types'
 import * as windows from '../../windows/window-manager'
 import { WindowOverlay } from '../../windows/window'
@@ -74,16 +68,14 @@ const assignStateAndRender = (newState: any) => (
 )
 
 const hide = () => {
-  enableCursor()
-  showCursor()
+  windows.renderer.showCursor(true)
   if (winOverlay) winOverlay.remove()
   assignStateAndRender({ value: '', visible: false })
 }
 
 const updateQuery = ({ cmd, kind, position }: CommandUpdate) => {
   const cmdKind = kind || state.kind
-  hideCursor()
-  disableCursor()
+  windows.renderer.showCursor(false)
 
   !state.visible &&
     setTimeout(() => {
