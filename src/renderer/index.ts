@@ -64,6 +64,7 @@ requestAnimationFrame(() => {
   })
 
   setTimeout(() => {
+    require('./components/extensions/minimap')
     require('./components/extensions/buffers')
     require('./components/extensions/color-picker')
     require('./components/extensions/explorer')

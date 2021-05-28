@@ -210,6 +210,9 @@ function setupActionHandlers(instanceApi: InstanceApi) {
   sendOn('explorer', Events.explorer)
   sendOn('update-nameplates', Events.updateNameplates)
   sendOn('diagnostics', Events.lspDiagnostics)
+  sendOn('minimap', Events.minimap)
+  sendOn('minimap-hide', Events.minimapHide)
+  sendOn('minimap-update', Events.minimapUpdate)
 
   nvim.instanceApi.onAction('version', () =>
     nvim.instanceApi.nvimCommand(`echo 'Uivonim v${app.getVersion()}'`)
