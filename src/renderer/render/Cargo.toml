@@ -1,0 +1,36 @@
+[package]
+name = "render"
+version = "0.1.0"
+authors = ["smolck <46855713+smolck@users.noreply.github.com>"]
+edition = "2018"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.0"
+
+[dependencies]
+wasm-bindgen = "0.2"
+luminance = "0.43"
+luminance-front = "0.3"
+luminance-derive = "0.6"
+luminance-web-sys = "0.2"
+luminance-webgl = "0.3.2"
+luminance-windowing = "0.9"
+js-sys = "0.3.51"
+
+[dependencies.web-sys]
+version = "0.3.44"
+features = [
+  "console",
+  "Document",
+  "ImageBitmap",
+  "HtmlCanvasElement",
+  "CanvasRenderingContext2d",
+  "ImageData",
+  "Node"
+]
+
+[lib]
+# TODO(smolck): Are both of these necessary? The latter one seems to be for
+# tests/* to work, but not so sure about the first.
+crate-type = ["cdylib", "lib"]
+test = false

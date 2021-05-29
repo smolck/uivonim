@@ -1,7 +1,7 @@
-import { asColor, MapSet } from '../../common/utils'
-import { pub } from '../dispatch'
+import { asColor, MapSet } from '../common/utils'
+import { pub } from './dispatch'
 import { EventEmitter } from 'events'
-import { Invokables } from '../../common/ipc'
+import { Invokables } from '../common/ipc'
 
 const ee = new EventEmitter()
 

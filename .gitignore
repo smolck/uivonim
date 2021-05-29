@@ -1,3 +1,5 @@
+/src/renderer/render/pkg
+/src/renderer/render/target
 /xdg_config
 /extension_dependencies
 /node_modules

@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/smolck/uivonim",
   "dependencies": {
+    "@wasm-tool/wasm-pack-plugin": "^1.4.0",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.7.2",

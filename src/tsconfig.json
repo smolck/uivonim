@@ -12,6 +12,7 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "esnext",
+    "module": "es2020",
     "moduleResolution": "node",
     "outDir": "../build",
     "strict": true,

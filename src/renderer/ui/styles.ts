@@ -11,7 +11,7 @@ import {
 import {
   colors as nvimColors,
   getColorByName,
-} from '../render/highlight-attributes'
+} from '../highlight-attributes'
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
 import { Invokables } from '../../common/ipc'

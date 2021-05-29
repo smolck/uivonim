@@ -1,6 +1,7 @@
 // See webpack confs in https://github.com/reZach/secure-electron-template
 const webpack = require('webpack')
 const path = require('path')
+const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin')
 
 module.exports = {
   mode: 'development',
@@ -60,4 +61,9 @@ module.exports = {
     path: path.resolve(__dirname, 'build/renderer'),
     filename: 'bundle.js',
   },
+  plugins: [
+    new WasmPackPlugin({
+      crateDirectory: path.resolve(__dirname, 'src/renderer/render')
+    })
+  ]
 }

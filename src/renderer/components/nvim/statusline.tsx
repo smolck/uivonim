@@ -1,4 +1,4 @@
-import { getColorByName } from '../../render/highlight-attributes'
+import { getColorByName } from '../../highlight-attributes'
 import { sub, processAnyBuffered } from '../../dispatch'
 import { darken, brighten, cvar } from '../../ui/css'
 import { ExtContainer } from '../../../common/types'
