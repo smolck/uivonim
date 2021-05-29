@@ -17,16 +17,14 @@ const distanceAsc = <T>(a: Distance<T>, b: Distance<T>) =>
 const distanceDesc = <T>(a: Distance<T>, b: Distance<T>) =>
   a.lines === b.lines ? a.characters > b.characters : a.lines > b.lines
 
-const locationItemAsDistance = (line: number, column: number) => <
-  T extends LocationItem
->(
-  item: T
-) =>
-  ({
-    reference: item,
-    lines: item.range.start.line - line,
-    characters: item.range.start.character - column,
-  } as Distance<T>)
+const locationItemAsDistance =
+  (line: number, column: number) =>
+  <T extends LocationItem>(item: T) =>
+    ({
+      reference: item,
+      lines: item.range.start.line - line,
+      characters: item.range.start.character - column,
+    } as Distance<T>)
 
 const findNextItem = <T extends LocationItem>(
   items: T[],

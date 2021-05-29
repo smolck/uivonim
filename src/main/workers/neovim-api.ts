@@ -22,13 +22,8 @@ if (!workerData || !workerData.nvimPath)
     )}`
   )
 
-const {
-  state,
-  watchState,
-  onStateChange,
-  onStateValue,
-  untilStateValue,
-} = NvimState('main')
+const { state, watchState, onStateChange, onStateValue, untilStateValue } =
+  NvimState('main')
 
 const watchers = {
   actions: new EventEmitter(),
@@ -294,14 +289,8 @@ nvimInstance.on('nvim_buf_changedtick_event', (args: any[]) => {
 
 nvimInstance.subscribe('nvim_buf_lines_event')
 nvimInstance.on('nvim_buf_lines_event', (args: any[]) => {
-  const [
-    extContainerData,
-    changedTick,
-    firstLine,
-    lastLine,
-    lineData,
-    more,
-  ] = args
+  const [extContainerData, changedTick, firstLine, lastLine, lineData, more] =
+    args
   const bufId = extContainerData.id
 
   watchers.bufferEvents.emit(`change:${bufId}`, {

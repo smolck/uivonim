@@ -115,10 +115,11 @@ const actions = {
         if (!res.length) return a.updateResults([])
 
         const textLines = res.map((m) => m.line)
-        const coloredLines: ColorData[][] = await colorizer.request.colorizePerChar(
-          textLines,
-          api.nvim.state.filetype
-        )
+        const coloredLines: ColorData[][] =
+          await colorizer.request.colorizePerChar(
+            textLines,
+            api.nvim.state.filetype
+          )
 
         const lines = coloredLines
           .filter((m) => m.length)

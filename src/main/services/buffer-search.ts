@@ -48,7 +48,9 @@ export const fuzzy = async (
 export const fuzzyVisible = async (query: string): Promise<FilterResult[]> => {
   const { editorTopLine: start, editorBottomLine: end } = nvim.state
   // TODO(smolck): `end + 1` or just `end`?
-  const visibleLines = await (await nvim.buffer).getLines({
+  const visibleLines = await (
+    await nvim.buffer
+  ).getLines({
     start,
     end: end + 1,
     strictIndexing: true,

@@ -380,8 +380,10 @@ export const handleRedraw = (
     else if (e === 'wildmenu_hide') sendToRenderer(RedrawEvents.wildmenuHide)
     else if (e.startsWith('msg_')) messageEvents.push(ev)
     else if (e === 'set_title') sendToRenderer(RedrawEvents.setTitle, ev[1][0])
-    else if (e === 'busy_start') sendToRenderer(RedrawEvents.hideThenDisableCursor)
-    else if (e === 'busy_stop') sendToRenderer(RedrawEvents.enableThenShowCursor)
+    else if (e === 'busy_start')
+      sendToRenderer(RedrawEvents.hideThenDisableCursor)
+    else if (e === 'busy_stop')
+      sendToRenderer(RedrawEvents.enableThenShowCursor)
   }
 
   // we queue the message events because we are interested to know

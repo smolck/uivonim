@@ -69,9 +69,9 @@ const snakeCase = (m: string) =>
 export const type = (m: any) =>
   (Object.prototype.toString.call(m).match(/^\[object (\w+)\]/) ||
     [])[1].toLowerCase()
-export const within = (target: number, tolerance: number) => (
-  candidate: number
-) => Math.abs(target - candidate) <= tolerance
+export const within =
+  (target: number, tolerance: number) => (candidate: number) =>
+    Math.abs(target - candidate) <= tolerance
 export const objToMap = (obj: object, map: Map<any, any>) =>
   Object.entries(obj).forEach(([k, v]) => map.set(k, v))
 export const listof = (count: number, fn: () => any) =>
@@ -91,8 +91,10 @@ export const merge = Object.assign
 export const cc = (...a: any[]) => Promise.all(a)
 export const delay = (t: number) => new Promise((d) => setTimeout(d, t))
 export const ID = (val = 0) => ({ next: () => (val++, val) })
-export const $ = <T>(...fns: Function[]) => (...a: any[]) =>
-  (fns.reduce((res, fn, ix) => (ix ? fn(res) : fn(...res)), a) as unknown) as T
+export const $ =
+  <T>(...fns: Function[]) =>
+  (...a: any[]) =>
+    fns.reduce((res, fn, ix) => (ix ? fn(res) : fn(...res)), a) as unknown as T
 export const is = new Proxy<Types>({} as Types, {
   get: (_, key) => (val: any) => type(val) === key,
 })
@@ -101,7 +103,12 @@ export const onProp = <T>(cb: (name: PropertyKey) => void): T =>
 export const onFnCall = <T>(cb: (name: string, args: any[]) => void): T =>
   new Proxy(
     {},
-    { get: (_, name) => (...args: any[]) => cb(name as string, args) }
+    {
+      get:
+        (_, name) =>
+        (...args: any[]) =>
+          cb(name as string, args),
+    }
   ) as T
 export const pascalCase = (m: string) => m[0].toUpperCase() + m.slice(1)
 export const camelCase = (m: string) => m[0].toLowerCase() + m.slice(1)
@@ -153,9 +160,11 @@ export const genList = <T>(count: number, fn: (index: number) => T) => {
   return resultList
 }
 
-export const minmax = (min: number, max: number) => (...numbers: number[]) => {
-  return Math.min(max, Math.max(min, ...numbers))
-}
+export const minmax =
+  (min: number, max: number) =>
+  (...numbers: number[]) => {
+    return Math.min(max, Math.max(min, ...numbers))
+  }
 
 export const pathRelativeTo = (path: string, otherPath: string) =>
   path.includes(otherPath)
@@ -192,8 +201,10 @@ export const pathReducer = (p = '') =>
         : (levels++, basename(p)),
   }))(p)
 
-export const matchOn = (val: any) => (opts: object): any =>
-  (Reflect.get(opts, val) || (() => {}))()
+export const matchOn =
+  (val: any) =>
+  (opts: object): any =>
+    (Reflect.get(opts, val) || (() => {}))()
 
 export const isOnline = (host = 'google.com') =>
   new Promise((fin) => {
@@ -536,10 +547,7 @@ export class Watchers extends Map<string, Set<Function>> {
   add(event: string, handler: (data: any) => void) {
     this.has(event)
       ? this.get(event)!.add(handler)
-      : this.set(
-          event,
-          new Set<Function>([handler])
-        )
+      : this.set(event, new Set<Function>([handler]))
   }
 
   notify(event: string, ...args: any[]) {

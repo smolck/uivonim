@@ -35,7 +35,8 @@ interface ProcessItem extends ProcessStats {
 
 const MB = 1024 * 1024
 const CMD = '/bin/ps -ax -o pid=,ppid=,pcpu=,pmem=,command='
-const PID_CMD = /^\s*([0-9]+)\s+([0-9]+)\s+([0-9]+\.[0-9]+)\s+([0-9]+\.[0-9]+)\s+(.+)$/
+const PID_CMD =
+  /^\s*([0-9]+)\s+([0-9]+)\s+([0-9]+\.[0-9]+)\s+([0-9]+\.[0-9]+)\s+(.+)$/
 const usageHistory = new Map<number, ProcessHistory>()
 const container = document.getElementById('process-list') as HTMLElement
 const historyContainer = document.getElementById(

@@ -76,19 +76,21 @@ const StateConstructor = (_stateName: string) => {
   }
 
   const onStateValue: OnStateValue = new Proxy(Object.create(null), {
-    get: (_, key: string) => (matchValue: any, ...args: any[]) => {
-      const matchPreviousValue = args.find((a) => typeof a === 'string')
-      const fn = args.find((a) => typeof a === 'function')
+    get:
+      (_, key: string) =>
+      (matchValue: any, ...args: any[]) => {
+        const matchPreviousValue = args.find((a) => typeof a === 'string')
+        const fn = args.find((a) => typeof a === 'function')
 
-      watchers.on(key, (value, previousValue) => {
-        const same = value === matchValue
-        const prevSame =
-          typeof matchPreviousValue == null
-            ? true
-            : previousValue === matchPreviousValue
-        if (same && prevSame) fn()
-      })
-    },
+        watchers.on(key, (value, previousValue) => {
+          const same = value === matchValue
+          const prevSame =
+            typeof matchPreviousValue == null
+              ? true
+              : previousValue === matchPreviousValue
+          if (same && prevSame) fn()
+        })
+      },
   })
 
   const untilStateValue: UntilStateValue = new Proxy(Object.create(null), {

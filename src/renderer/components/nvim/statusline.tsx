@@ -407,7 +407,9 @@ sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 window.api.on(Events.lspDiagnostics, (diagnostics) => {
   let errors = 0
   let warnings = 0
-  diagnostics.forEach((d: any) => d.severity === 1 ? errors += 1 : d.severity === 2 ? warnings += 1 : {})
+  diagnostics.forEach((d: any) =>
+    d.severity === 1 ? (errors += 1) : d.severity === 2 ? (warnings += 1) : {}
+  )
   assignStateAndRender({ errors, warnings })
 })
 

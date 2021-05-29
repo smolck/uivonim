@@ -145,10 +145,8 @@ export default () => {
       else return Math.round((left * 100) / width) / 100
     },
     saturation: (e: MouseEvent, container: HTMLElement) => {
-      const {
-        width: containerWidth,
-        height: containerHeight,
-      } = container.getBoundingClientRect()
+      const { width: containerWidth, height: containerHeight } =
+        container.getBoundingClientRect()
       let left =
         e.pageX - (container.getBoundingClientRect().left + window.pageXOffset)
       let top =

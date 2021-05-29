@@ -45,10 +45,8 @@ type S = typeof state
 // scroll after next section has been rendered as expanded (a little hacky)
 const scrollIntoView = (next: number) =>
   setTimeout(() => {
-    const {
-      top: containerTop,
-      bottom: containerBottom,
-    } = elref.getBoundingClientRect()
+    const { top: containerTop, bottom: containerBottom } =
+      elref.getBoundingClientRect()
     const e = els.get(next)
     if (!e) return
 

@@ -42,12 +42,7 @@ const getIcon = (kind: MessageKind) =>
 
 const WhyDiv = (props: any) => <div {...props}>{props.children}</div>
 
-const MessageHistory = ({
-  vis: visible,
-  messages,
-  ix: index,
-  query,
-}: S) => (
+const MessageHistory = ({ vis: visible, messages, ix: index, query }: S) => (
   <div
     style={{
       background: 'var(--background-45)',

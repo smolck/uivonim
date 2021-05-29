@@ -23,22 +23,23 @@ export const FunctionGroup = () => {
   const fns: string[] = []
 
   const defineFunc: DefineFunction = onProp(
-    (name: PropertyKey) => (strParts: TemplateStringsArray, ...vars: any[]) => {
-      const expr = strParts
-        .map((m, ix) => [m, vars[ix]].join(''))
-        .join('')
-        .split('\n')
-        .filter((m) => m)
-        .map((m) => m.trim())
-        .join('\\n')
-        .replace(/"/g, '\\"')
+    (name: PropertyKey) =>
+      (strParts: TemplateStringsArray, ...vars: any[]) => {
+        const expr = strParts
+          .map((m, ix) => [m, vars[ix]].join(''))
+          .join('')
+          .split('\n')
+          .filter((m) => m)
+          .map((m) => m.trim())
+          .join('\\n')
+          .replace(/"/g, '\\"')
 
-      fns.push(
-        `exe ":fun! ${pascalCase(
-          name as string
-        )}(...) range\\n${expr}\\nendfun"`
-      )
-    }
+        fns.push(
+          `exe ":fun! ${pascalCase(
+            name as string
+          )}(...) range\\n${expr}\\nendfun"`
+        )
+      }
   )
 
   return {

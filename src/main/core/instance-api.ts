@@ -13,13 +13,8 @@ import { Events } from '../../common/ipc'
 
 const InstanceApi = (workerInstanceRef: Worker, winRef: BrowserWindow) => {
   const ee = new EventEmitter()
-  const {
-    state,
-    watchState,
-    onStateValue,
-    onStateChange,
-    untilStateValue,
-  } = NeovimState('nvim-mirror')
+  const { state, watchState, onStateValue, onStateChange, untilStateValue } =
+    NeovimState('nvim-mirror')
 
   const actionRegistrations: string[] = []
   if (actionRegistrations.length)
