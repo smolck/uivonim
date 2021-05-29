@@ -175,7 +175,7 @@ impl FontAtlas {
         }
     }
 
-    pub fn regen(&mut self) -> bool {
+    pub fn maybe_regen(&mut self) -> bool {
         if self.chars_queue.len() > 0 {
             self.regen_from_chars(&self.chars_queue);
 

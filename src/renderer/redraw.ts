@@ -26,8 +26,6 @@ import { Scene } from './render/pkg'
 // import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 
 export default (scene: Scene) => {
-  let dummyData = new Float32Array()
-
   const default_colors_set = (e: any) => {
     const count = e.length
     let defaultColorsChanged = false
@@ -86,6 +84,9 @@ export default (scene: Scene) => {
     for (let ix = 1; ix < count; ix++) {
       const [gridId, width, height] = e[ix]
       if (gridId === 1) continue
+      scene.handle_grid_resize(gridId, width, height)
+
+      // TODO(smolck): Windows will probably just be in wasm
       // grid events show up before win events
       if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
       windows.get(gridId).resizeWindow(width, height)
@@ -107,83 +108,15 @@ export default (scene: Scene) => {
   }
 
   const grid_line = (e: any) => {
-    const count = e.length
-    const gridRenderIndexes: any = []
-    const grids: any = []
-    let hlid = 0
-    let activeGrid = 0
-    let buffer = dummyData
-    let gridBuffer = dummyData
-    let width = 1
-    let col = 0
-    let charIndex = 0
-
-    // first item in the event arr is the event name.
-    // we skip that because it's cool to do that
-    for (let ix = 1; ix < count; ix++) {
-      const [gridId, row, startCol, charData] = e[ix]
-
-      // TODO: anything of interest on grid 1? messages are supported by ext_messages
-      if (gridId === 1) continue
-
-      if (gridId !== activeGrid) {
-        activeGrid = gridId
-        const win = windows.get(gridId)
-        width = win.cols
-        buffer = win.webgl.getBuffer()
-        gridBuffer = win.webgl.getGridBuffer()
-        if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
-        grids.push(activeGrid)
-      }
-
-      hlid = 0
-      col = startCol
-      const charDataSize = charData.length
-
-      for (let cd = 0; cd < charDataSize; cd++) {
-        const data = charData[cd]
-        const char = data[0]
-        const repeats = data[2] || 1
-        hlid = typeof data[1] === 'number' ? data[1] : hlid
-
-        if (typeof char === 'string') {
-          const nextCD = charData[cd + 1]
-          const doubleWidth =
-            nextCD &&
-            typeof nextCD[0] === 'string' &&
-            nextCD[0].codePointAt(0) === undefined
-          charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-        } else charIndex = char - 32
-
-        for (let r = 0; r < repeats; r++) {
-          buffer[gridRenderIndexes[gridId]] = col
-          buffer[gridRenderIndexes[gridId] + 1] = row
-          buffer[gridRenderIndexes[gridId] + 2] = hlid
-          buffer[gridRenderIndexes[gridId] + 3] = charIndex
-          gridRenderIndexes[gridId] += 4
-
-          // TODO: could maybe deffer this to next frame?
-          const bufix = col * 4 + width * row * 4
-          gridBuffer[bufix] = col
-          gridBuffer[bufix + 1] = row
-          gridBuffer[bufix + 2] = hlid
-          gridBuffer[bufix + 3] = charIndex
-
-          col++
-        }
-      }
-    }
-
-    const atlas = getUpdatedFontAtlasMaybe()
-    if (atlas) windows.webgl.updateFontAtlas(atlas)
-
-    const gridCount = grids.length
+    scene.handle_grid_line(e)
+    scene.maybe_regen_font_atlas();
+    /*const gridCount = grids.length
     for (let ix = 0; ix < gridCount; ix++) {
       const gridId = grids[ix]
       const win = windows.get(gridId)
       const renderCount = gridRenderIndexes[gridId]
       win.webgl.render(renderCount)
-    }
+    }*/
   }
 
   const win_close = (id: number) => {
@@ -374,8 +307,11 @@ export default (scene: Scene) => {
     const changed = workspace.updateEditorFont({ face, size, lineSpace })
     if (!changed) return
 
-    const atlas = forceRegenerateFontAtlas()
-    windows.webgl.updateFontAtlas(atlas)
+    // TODO(smolck): Send the new font to wasm too and stuff.
+    scene.force_regen_font_atlas()
+
+    // const atlas = forceRegenerateFontAtlas()
+    // windows.webgl.updateFontAtlas(atlas)
     windows.webgl.updateCellSize()
     workspace.resize()
   }

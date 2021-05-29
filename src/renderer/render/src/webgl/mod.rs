@@ -71,6 +71,11 @@ impl Scene {
     }
 
     #[wasm_bindgen]
+    pub fn maybe_regen_font_atlas(&mut self) {
+        self.font_atlas.maybe_regen();
+    }
+
+    #[wasm_bindgen]
     pub fn handle_grid_line(&mut self, data: &JsValue) -> Result<(), JsValue> {
         for evt in js_sys::try_iter(data)?.expect("hey this should be iterable please") {
             let evt = evt?;
