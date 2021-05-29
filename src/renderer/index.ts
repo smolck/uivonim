@@ -5,16 +5,15 @@ import { debounce, merge } from '../common/utils'
 import * as windows from './windows/window-manager'
 import { Events, Invokables } from '../common/ipc'
 import startThatRedrawStuff from './redraw'
-
-(async function() {
-  const wasm = await import('./render/pkg');
+;(async function () {
+  const wasm = await import('./render/pkg')
   // TODO(smolck)
-  const scene = wasm.Scene.new('tbd');
+  const scene = wasm.Scene.new('tbd')
 
   window
     .matchMedia('screen and (min-resolution: 2dppx)')
     .addEventListener('change', () => {
-      scene.regen_font_atlas();
+      scene.regen_font_atlas()
 
       // TODO(smolck): windows.webgl.updateCellSize()
       workspace.resize()
@@ -53,7 +52,7 @@ import startThatRedrawStuff from './redraw'
   workspace.resize()
 
   requestAnimationFrame(() => {
-    startThatRedrawStuff(scene);
+    startThatRedrawStuff(scene)
 
     // high priority components
     requestAnimationFrame(() => {

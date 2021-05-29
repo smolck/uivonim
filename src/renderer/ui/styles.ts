@@ -8,10 +8,7 @@ import {
   cvar,
   hexToRGB,
 } from '../ui/css'
-import {
-  colors as nvimColors,
-  getColorByName,
-} from '../highlight-attributes'
+import { colors as nvimColors, getColorByName } from '../highlight-attributes'
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
 import { Invokables } from '../../common/ipc'

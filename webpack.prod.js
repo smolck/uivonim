@@ -60,7 +60,7 @@ module.exports = {
   },
   plugins: [
     new WasmPackPlugin({
-      crateDirectory: path.resolve(__dirname, 'src/renderer/render')
-    })
-  ]
+      crateDirectory: path.resolve(__dirname, 'src/renderer/render'),
+    }),
+  ],
 }

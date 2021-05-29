@@ -8,7 +8,15 @@ import {
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'*/
 import * as windows from './windows/window-manager'
-import { hideCursor, showCursor, moveCursor, disableCursor, enableCursor, setCursorShape, setCursorColor } from './cursor'
+import {
+  hideCursor,
+  showCursor,
+  moveCursor,
+  disableCursor,
+  enableCursor,
+  setCursorShape,
+  setCursorColor,
+} from './cursor'
 import * as dispatch from './dispatch'
 import { getColorById } from './highlight-attributes'
 import { RedrawEvents, Invokables } from '../common/ipc'
@@ -109,7 +117,7 @@ export default (scene: Scene) => {
 
   const grid_line = (e: any) => {
     scene.handle_grid_line(e)
-    scene.maybe_regen_font_atlas();
+    scene.maybe_regen_font_atlas()
     /*const gridCount = grids.length
     for (let ix = 0; ix < gridCount; ix++) {
       const gridId = grids[ix]
@@ -183,7 +191,10 @@ export default (scene: Scene) => {
           Math.min(gridInfo.height, anchorGridInfo.height)
         )
 
-        if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
+        if (
+          clampedWidth === gridInfo.width &&
+          clampedHeight === gridInfo.height
+        )
           return
         else
           window.api.invoke(

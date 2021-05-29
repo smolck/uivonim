@@ -3,3 +3,5 @@ dist
 extension_dependencies
 node_modules
 xdg_config
+src/renderer/render/target
+src/renderer/render/pkg
