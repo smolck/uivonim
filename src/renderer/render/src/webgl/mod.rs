@@ -73,10 +73,14 @@ impl Scene {
 
     #[wasm_bindgen]
     pub fn render(&mut self) {
+        let (width, height) = {
+            (self.surface.canvas.width() as f32, self.surface.canvas.height() as f32)
+        };
         let Scene {
             ref mut surface,
             ref mut program,
             ref mut tex,
+            ref mut font_atlas,
             ..
         } = self;
 
@@ -84,7 +88,11 @@ impl Scene {
 
         let tess: Tess<Vertex, (), (), Interleaved> = surface
             .new_tess()
-            .set_vertices::<Vertex, _>([]) // TODO(smolck)
+            .set_vertices::<Vertex, _>(self.grid.to_vertices(
+                font_atlas,
+                width,
+                height,
+            ).as_slice()) // TODO(smolck)
             .set_mode(Mode::Triangle)
             .build()
             .unwrap();

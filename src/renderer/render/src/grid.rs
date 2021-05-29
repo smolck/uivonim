@@ -104,6 +104,7 @@ pub struct Grid {
     rows: Vec<Vec<Cell>>,
     width: u32,
     height: u32,
+    vertices_cache: Option<Vec<Vertex>>,
 }
 
 impl Grid {
@@ -112,6 +113,44 @@ impl Grid {
             rows: vec![],
             width: 0,
             height: 0,
+            vertices_cache: None,
+        }
+    }
+
+    pub fn to_vertices(
+        &mut self,
+        font_atlas: &mut FontAtlas,
+        width: f32,
+        height: f32,
+    ) -> &Vec<Vertex> {
+        if self.vertices_cache.is_none() {
+            // TODO(smolck): This needs to be based on font, for now just what the values
+            // hard-coded in the font atlas code
+            let (char_width, char_height): (f32, f32) = (10., 20.); // in px
+
+            let starting_x = 0.;
+            let starting_y = 0.;
+            let mut vertices = vec![];
+
+            // TODO(smolck): This *has* to be slow, right?
+            for (i, row) in self.rows.iter().enumerate() {
+                for (j, cell) in row.iter().enumerate() {
+                    let y = starting_y + (i as f32 * char_height);
+                    let x = starting_x + (j as f32 * char_width);
+                    vertices.extend(cell.to_vertices(
+                        x / width,
+                        y / height,
+                        char_width / width,
+                        char_height / height,
+                        font_atlas,
+                    ));
+                }
+            }
+
+            self.vertices_cache = Some(vertices);
+            &self.vertices_cache.as_ref().unwrap()
+        } else {
+            &self.vertices_cache.as_ref().unwrap()
         }
     }
 
@@ -163,11 +202,23 @@ impl Grid {
             let evt = evt?;
             // TODO(smolck)
             // let grid_id = Reflect::get(&evt, &JsValue::from(0)).unwrap().as_f64().unwrap() as u64;
-            let row = Reflect::get(&evt, &JsValue::from(1)).unwrap().as_f64().unwrap() as u32;
-            let col_start = Reflect::get(&evt, &JsValue::from(2)).unwrap().as_f64().unwrap() as u32;
+            let row = Reflect::get(&evt, &JsValue::from(1))
+                .unwrap()
+                .as_f64()
+                .unwrap() as u32;
+            let col_start = Reflect::get(&evt, &JsValue::from(2))
+                .unwrap()
+                .as_f64()
+                .unwrap() as u32;
 
             self.handle_single_grid_line(row, col_start, &evt)?;
         }
+
+        // invalidate cache
+        // TODO(smolck): Should probably be smart about this, since I feel like this'll be too slow.
+        //  Keep information around about where in `vertices_cache` each char's vertices lives, and then
+        // only update the ones that have changed between grid_line events.
+        self.vertices_cache = None;
 
         Ok(())
     }
