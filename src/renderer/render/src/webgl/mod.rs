@@ -2,6 +2,8 @@ pub mod types;
 use crate::font_atlas::FontAtlas;
 use crate::grid::Grid;
 use crate::webgl::types::*;
+use std::collections::HashMap;
+use js_sys::Reflect;
 
 use luminance::{
     backend::texture::Texture as TextureBackend, texture::Texture, Semantics, UniformInterface,
@@ -33,7 +35,8 @@ pub struct Scene {
 
     font_atlas: FontAtlas,
     // TODO(smolck): Multigrid
-    grid: Grid,
+    grids: HashMap<u64, Grid>,
+    active_grid: u64,
 }
 
 #[wasm_bindgen]
@@ -52,11 +55,12 @@ impl Scene {
             .ignore_warnings();
 
         Scene {
+            active_grid: 0, // TODO(smolck)
             surface,
             program,
             tex: initial_tex,
             font_atlas,
-            grid: Grid::new(),
+            grids: HashMap::new(),
         }
     }
 
@@ -67,20 +71,54 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn grid_line(&mut self, data: &JsValue) -> Result<(), JsValue> {
-        self.grid.handle_grid_line(&data)
+    pub fn handle_grid_line(&mut self, data: &JsValue) -> Result<(), JsValue> {
+        for evt in js_sys::try_iter(data)?.expect("hey this should be iterable please") {
+            let evt = evt?;
+            let grid_id = Reflect::get(&evt, &JsValue::from(0))
+                .unwrap()
+                .as_f64()
+                .unwrap() as u64;
+            let row = Reflect::get(&evt, &JsValue::from(1))
+                .unwrap()
+                .as_f64()
+                .unwrap() as u32;
+            let col_start = Reflect::get(&evt, &JsValue::from(2))
+                .unwrap()
+                .as_f64()
+                .unwrap() as u32;
+
+            self.grids
+                .get_mut(&grid_id)
+                .expect("Umm yeah there should be this grid")
+                .handle_single_grid_line(row, col_start, &evt)?;
+        }
+
+        Ok(())
+    }
+
+    #[wasm_bindgen]
+    pub fn handle_grid_resize(&mut self, grid_id: u64, width: u32, height: u32) {
+        if let Some(grid) = self.grids.get_mut(&grid_id) {
+            grid.resize(width as usize, height as usize);
+        } else {
+            self.grids.insert(grid_id, Grid::new_with_dimensions(width, height));
+        }
     }
 
     #[wasm_bindgen]
     pub fn render(&mut self) {
         let (width, height) = {
-            (self.surface.canvas.width() as f32, self.surface.canvas.height() as f32)
+            (
+                self.surface.canvas.width() as f32,
+                self.surface.canvas.height() as f32,
+            )
         };
         let Scene {
             ref mut surface,
             ref mut program,
             ref mut tex,
             ref mut font_atlas,
+            ref active_grid,
             ..
         } = self;
 
@@ -88,11 +126,13 @@ impl Scene {
 
         let tess: Tess<Vertex, (), (), Interleaved> = surface
             .new_tess()
-            .set_vertices::<Vertex, _>(self.grid.to_vertices(
-                font_atlas,
-                width,
-                height,
-            ).as_slice()) // TODO(smolck)
+            .set_vertices::<Vertex, _>(
+                self.grids
+                    .get_mut(active_grid)
+                    .unwrap()
+                    .to_vertices(font_atlas, width, height)
+                    .as_slice(),
+            ) // TODO(smolck)
             .set_mode(Mode::Triangle)
             .build()
             .unwrap();

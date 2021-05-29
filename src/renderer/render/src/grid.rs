@@ -117,6 +117,15 @@ impl Grid {
         }
     }
 
+    pub fn new_with_dimensions(width: u32, height: u32) -> Grid {
+        Grid {
+            rows: Vec::with_capacity(height as usize),
+            vertices_cache: None,
+            width,
+            height,
+        }
+    }
+
     pub fn to_vertices(
         &mut self,
         font_atlas: &mut FontAtlas,
@@ -193,26 +202,6 @@ impl Grid {
         }
 
         self.rows[row as usize][(col_start as usize)..].swap_with_slice(new_cells.as_mut_slice());
-
-        Ok(())
-    }
-
-    pub fn handle_grid_line(&mut self, data: &JsValue) -> Result<(), JsValue> {
-        for evt in js_sys::try_iter(data)?.expect("hey this should be iterable please") {
-            let evt = evt?;
-            // TODO(smolck)
-            // let grid_id = Reflect::get(&evt, &JsValue::from(0)).unwrap().as_f64().unwrap() as u64;
-            let row = Reflect::get(&evt, &JsValue::from(1))
-                .unwrap()
-                .as_f64()
-                .unwrap() as u32;
-            let col_start = Reflect::get(&evt, &JsValue::from(2))
-                .unwrap()
-                .as_f64()
-                .unwrap() as u32;
-
-            self.handle_single_grid_line(row, col_start, &evt)?;
-        }
 
         // invalidate cache
         // TODO(smolck): Should probably be smart about this, since I feel like this'll be too slow.
