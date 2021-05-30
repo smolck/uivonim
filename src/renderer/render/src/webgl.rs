@@ -5,7 +5,10 @@ use luminance::{
     backend::texture::Texture as TextureBackend,
     pipeline::{PipelineState, TextureBinding},
     pixel::{NormRGB8UI, NormRGBA8UI, NormUnsigned},
-    shader::Uniform, texture::Dim2, texture::Texture, Semantics, UniformInterface, Vertex,
+    shader::Uniform,
+    texture::Dim2,
+    texture::Texture,
+    Semantics, UniformInterface, Vertex,
 };
 use std::collections::HashMap;
 
