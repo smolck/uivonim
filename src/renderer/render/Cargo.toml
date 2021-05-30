@@ -8,6 +8,8 @@ edition = "2018"
 wasm-bindgen-test = "0.3.0"
 
 [dependencies]
+serde = { version = "1.0.126", features = ["derive"] }
+serde-wasm-bindgen = "0.2.0"
 wasm-bindgen = "0.2"
 luminance = "0.43"
 luminance-front = "0.3"

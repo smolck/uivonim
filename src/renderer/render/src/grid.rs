@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast as _;
 
@@ -17,7 +19,8 @@ pub struct GridLineSingle {
     pub cells: Vec<GridLineCell>,
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[wasm_bindgen]
+#[derive(PartialEq, Clone, Copy, Serialize)]
 pub struct Cell {
     pub hl_id: i64,
     pub char: char,
@@ -43,7 +46,7 @@ impl Cell {
     // TBH might not even keep this function here . . .
     pub fn to_vertices(
         &self,
-        x: f32,
+        x: f32, // TODO(smolck): Just use viewport stuff?
         y: f32,
         char_width: f32,
         char_height: f32,
@@ -100,30 +103,68 @@ impl Cell {
     }
 }
 
-pub struct Grid {
-    rows: Vec<Vec<Cell>>,
+pub struct Viewport {
+    x: u32,
+    y: u32,
     width: u32,
     height: u32,
+}
+
+pub struct GridSize {
+    rows: u32,
+    cols: u32,
+}
+
+#[wasm_bindgen]
+pub struct Grid {
+    rows: Vec<Vec<Cell>>,
+    size: GridSize,
     vertices_cache: Option<Vec<Vertex>>,
+    id: u64,
+    viewport: Viewport,
 }
 
 impl Grid {
-    pub fn new() -> Grid {
+    pub fn new(initial_grid_id: u64) -> Grid {
         Grid {
             rows: vec![],
-            width: 0,
-            height: 0,
+            size: GridSize { rows: 0, cols: 0 },
             vertices_cache: None,
+            id: initial_grid_id,
+            viewport: Viewport {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            },
         }
     }
 
-    pub fn new_with_dimensions(width: u32, height: u32) -> Grid {
+    pub fn new_with_dimensions(initial_grid_id: u64, rows: u32, cols: u32) -> Grid {
         Grid {
-            rows: Vec::with_capacity(height as usize),
+            rows: Vec::with_capacity(rows as usize),
             vertices_cache: None,
-            width,
-            height,
+            size: GridSize { rows, cols },
+            viewport: Viewport {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            },
+            id: initial_grid_id,
         }
+    }
+
+    pub fn update_grid_id(&mut self, new_grid_id: u64) {
+        self.id = new_grid_id;
+    }
+
+    pub fn get_id(&self) -> u64 {
+        self.id
+    }
+
+    pub fn get_size(&self) -> &GridSize {
+        &self.size
     }
 
     pub fn to_vertices(
@@ -170,7 +211,7 @@ impl Grid {
         col_start: u32,
         cells: &JsValue,
     ) -> Result<(), JsValue> {
-        let mut new_cells = Vec::with_capacity((self.width - col_start) as usize);
+        let mut new_cells = Vec::with_capacity((self.size.cols - col_start) as usize);
         // each cell should be [text(, hl_id, repeat)], see `:help ui-events` and help for
         // `grid_line`
         for cell in js_sys::try_iter(cells)?.expect("hey this should be iterable please") {
@@ -211,21 +252,51 @@ impl Grid {
 
         Ok(())
     }
+}
+
+#[wasm_bindgen]
+impl Grid {
+    pub fn layout(&mut self, x: u32, y: u32, width: u32, height: u32) {
+        let same = self.viewport.x == x
+            && self.viewport.y == y
+            && self.viewport.width == width
+            && self.viewport.height == height;
+
+        if !same {
+            self.viewport = Viewport {
+                x,
+                y,
+                width,
+                height,
+            };
+        }
+    }
 
     // TODO(smolck): Type of `rows` and `cols`?
-    pub fn resize(&mut self, rows: usize, cols: usize) {
-        if rows > self.rows.len() {
-            self.rows.resize_with(rows, Default::default);
-        }
+    pub fn resize(&mut self, rows: u32, cols: u32) {
+        // TODO(smolck): Pass in cell width & height . . . somehow.
+        // For now just use predefined vals (see font atlas code).
+        let (cell_width, cell_height) = (10, 20);
 
-        if cols > self.width as usize {
-            for row in self.rows.iter_mut() {
-                row.resize_with(cols, Default::default);
+        let width = cell_width * cols;
+        let height = cell_height * rows;
+
+        let same_grid_size = self.size.rows == rows && self.size.cols == cols;
+        let same_viewport_size = self.viewport.height == height && self.viewport.width == width;
+        if !same_grid_size || !same_viewport_size {
+            if rows > self.rows.len() as u32 {
+                self.rows.resize_with(rows as usize, Default::default);
             }
-        }
 
-        self.height = rows as u32;
-        self.width = cols as u32;
+            if cols > self.size.cols {
+                for row in self.rows.iter_mut() {
+                    row.resize_with(cols as usize, Default::default);
+                }
+            }
+
+            self.size.rows = rows;
+            self.size.cols = cols;
+        }
     }
 
     pub fn clear(&mut self) {
@@ -237,12 +308,12 @@ impl Grid {
     }
 
     // TODO(smolck): Types of `row` and `col`?
-    pub fn get_cell(&self, row: usize, col: usize) -> &Cell {
-        &self.rows[row][col]
+    pub fn get_cell(&self, row: usize, col: usize) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.rows[row][col]).unwrap()
     }
 
-    pub fn get_line(&self, row: usize) -> &Vec<Cell> {
-        &self.rows[row]
+    pub fn get_line(&self, row: usize) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.rows[row]).unwrap()
     }
 
     pub fn move_region_up(&mut self, lines: usize, top: usize, bottom: usize) {
@@ -251,7 +322,7 @@ impl Grid {
 
         // TODO(smolck): bottom + 1 is right? . . .
         while row <= bottom + 1 {
-            for i in 0..self.width {
+            for i in 0..self.size.cols {
                 self.rows[row - offset][i as usize] = self.rows[row][i as usize].extract();
             }
 
@@ -266,7 +337,7 @@ impl Grid {
         let mut end_row = (bottom + 1) + offset;
 
         while end_row >= start_row {
-            for i in 0..self.width {
+            for i in 0..self.size.cols {
                 self.rows[end_row + offset][i as usize] = self.rows[end_row][i as usize].extract();
             }
 
@@ -287,11 +358,11 @@ impl Grid {
 // For tests
 impl Grid {
     pub fn assert_width(&self, expected: u32) {
-        assert_eq!(self.width, expected);
+        assert_eq!(self.size.cols, expected);
     }
 
     pub fn assert_height(&self, expected: u32) {
-        assert_eq!(self.height, expected);
+        assert_eq!(self.size.rows, expected);
     }
 
     pub fn rows(&self) -> &Vec<Vec<Cell>> {

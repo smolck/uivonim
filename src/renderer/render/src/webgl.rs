@@ -133,15 +133,14 @@ impl Scene {
     #[wasm_bindgen]
     pub fn handle_grid_resize(&mut self, grid_id: u64, width: u32, height: u32) {
         if let Some(grid) = self.grids.get_mut(&grid_id) {
-            grid.resize(width as usize, height as usize);
+            grid.resize(width, height);
         } else {
             self.grids
-                .insert(grid_id, Grid::new_with_dimensions(width, height));
+                .insert(grid_id, Grid::new_with_dimensions(grid_id, width, height));
         }
     }
 
-    #[wasm_bindgen]
-    pub fn render(&mut self) {
+    fn render_internal(&mut self, grid_id: u64) {
         let (width, height) = {
             (
                 self.surface.canvas.width() as f32,
@@ -163,7 +162,7 @@ impl Scene {
             .new_tess()
             .set_vertices::<Vertex, _>(
                 self.grids
-                    .get_mut(active_grid)
+                    .get_mut(&grid_id)
                     .unwrap()
                     .to_vertices(font_atlas, width, height)
                     .as_slice(),
@@ -196,5 +195,44 @@ impl Scene {
             .assume()
             .into_result()
             .unwrap()
+    }
+
+    #[wasm_bindgen]
+    pub fn render_active(&mut self) {
+        self.render_internal(self.active_grid);
+    }
+
+    #[wasm_bindgen]
+    pub fn render_grid(&mut self, grid_id: u64) {
+        // TODO(smolck)
+        self.render_internal(grid_id);
+    }
+
+    #[wasm_bindgen]
+    pub fn get_cell_from_grid(
+        &self,
+        grid_id: u64,
+        row: usize,
+        col: usize,
+    ) -> Result<JsValue, JsValue> {
+        if let Some(grid) = self.grids.get(&grid_id) {
+            Ok(grid.get_cell(row, col))
+        } else {
+            Err(JsValue::from_str("Grid does not exist"))
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn get_line_from_grid(&self, grid_id: u64, row: usize) -> Result<JsValue, JsValue> {
+        if let Some(grid) = self.grids.get(&grid_id) {
+            Ok(grid.get_line(row))
+        } else {
+            Err(JsValue::from_str("Grid does not exist"))
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn clear_grid(&mut self, grid_id: u64) {
+        unimplemented!();
     }
 }
