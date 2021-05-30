@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast as _;
 
 use crate::font_atlas::{AtlasCharBounds, FontAtlas};
-use crate::webgl::types::{Vertex, VertexPosition, VertexTexCoords};
+use crate::webgl::{Vertex, VertexPosition, VertexTexCoords};
 
 use js_sys::Reflect;
 

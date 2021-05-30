@@ -1,22 +1,19 @@
-pub mod types;
 use crate::font_atlas::FontAtlas;
 use crate::grid::Grid;
-use crate::webgl::types::*;
-use std::collections::HashMap;
 use js_sys::Reflect;
-
 use luminance::{
-    backend::texture::Texture as TextureBackend, texture::Texture, Semantics, UniformInterface,
+    backend::texture::Texture as TextureBackend,
+    pipeline::{PipelineState, TextureBinding},
+    pixel::{NormRGB8UI, NormRGBA8UI, NormUnsigned},
+    shader::Uniform, texture::Dim2, texture::Texture, Semantics, UniformInterface, Vertex,
 };
+use std::collections::HashMap;
 
 use luminance_front::{
     context::GraphicsContext,
-    pipeline::{PipelineState, TextureBinding},
-    pixel::{NormRGB8UI, NormRGBA8UI, NormUnsigned},
     render_state::RenderState,
     shader::Program,
     tess::{Interleaved, Mode, Tess},
-    texture::Dim2,
 };
 use luminance_web_sys::WebSysWebGL2Surface;
 use luminance_webgl::webgl2::WebGL2;
@@ -26,6 +23,35 @@ use web_sys::{Document, WebGl2RenderingContext};
 
 const VS: &'static str = include_str!("vs.glsl");
 const FS: &'static str = include_str!("fs.glsl");
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Semantics)]
+pub enum Semantics {
+    #[sem(name = "pos", repr = "[f32; 2]", wrapper = "VertexPosition")]
+    Position,
+    #[sem(name = "texCoords", repr = "[f32; 2]", wrapper = "VertexTexCoords")]
+    TexCoords,
+}
+
+#[derive(Debug, UniformInterface)]
+pub struct ShaderInterface {
+    // #[uniform(unbound)]
+    //time: Uniform<f32>,
+    #[uniform(unbound, name = "fontAtlas")]
+    pub font_atlas: Uniform<TextureBinding<Dim2, NormUnsigned>>,
+    // #[uniform(unbound, name = "bgColor")]
+    // bg_color: Uniform<[f32; 4]>,
+    #[uniform(unbound, name = "fgColor")]
+    pub fg_color: Uniform<[f32; 4]>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Vertex)]
+#[vertex(sem = "Semantics")]
+pub struct Vertex {
+    #[vertex(normalized = "true")]
+    pub v_pos: VertexPosition,
+    pub v_tex_coords: VertexTexCoords,
+}
 
 #[wasm_bindgen]
 pub struct Scene {
@@ -106,7 +132,8 @@ impl Scene {
         if let Some(grid) = self.grids.get_mut(&grid_id) {
             grid.resize(width as usize, height as usize);
         } else {
-            self.grids.insert(grid_id, Grid::new_with_dimensions(width, height));
+            self.grids
+                .insert(grid_id, Grid::new_with_dimensions(width, height));
         }
     }
 
