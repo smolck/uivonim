@@ -179,11 +179,12 @@ const finetti = () => {
     moveRegionUp,
     moveRegionDown,
     getBuffer: () => buffer,
-    resetAtlasBounds: () => {
-      for (let ix = 0; ix < buffer.length; ix += 7) {
-        const char = getCharFromIndex(buffer[ix + 3])
-        buffer[ix + 5] = char!.bounds.left
-        buffer[ix + 6] = char!.bounds.bottom
+    resetAtlasBounds: (maybeBuffer?: Float32Array) => {
+      const buf = maybeBuffer || buffer // TODO(smolck): Why tho
+      for (let ix = 0; ix < buf.length; ix += 7) {
+        const char = getCharFromIndex(buf[ix + 3])
+        buf[ix + 5] = char!.bounds.left
+        buf[ix + 6] = char!.bounds.bottom
       }
     }
   }

@@ -162,9 +162,9 @@ export const getUpdatedFontAtlasMaybe = () => {
 /** To be used when the workspace font has changed */
 export const forceRegenerateFontAtlas = () => {
   // All the bounds are invalidated, so need to redo those as well.
-  const chars: [boolean, string][] = []
-  charsInAtlas.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, charStr]))
-  charsQueue.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, charStr]))
+  const chars: [boolean, number, string][] = []
+  charsInAtlas.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, atlasChar.idx, charStr]))
+  charsQueue.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, atlasChar.idx,  charStr]))
   charsInAtlas.clear()
   charsQueue.clear()
   nextBounds = undefined
@@ -175,7 +175,10 @@ export const forceRegenerateFontAtlas = () => {
   ctx.textBaseline = 'top'
   ctx.fillStyle = 'white'
 
-  chars.forEach(([doubleWidth, char]) => getChar(char, doubleWidth))
+  chars.forEach(([doubleWidth, charIdx, char]) => {
+    const newChar = getChar(char, doubleWidth)
+    charsByIdx.set(charIdx, newChar)
+  })
 
   genAtlas(true)
   return canvas
