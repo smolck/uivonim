@@ -119,18 +119,17 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
 
 export const getCharFromIndex = (idx: number) => charsByIdx.get(idx)
 
+ctx.font = `${font.size}px ${font.face}`
+ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+ctx.textBaseline = 'top'
+ctx.fillStyle = 'white'
+
 for (let ix = 32; ix < 127; ix++) {
   getChar(String.fromCharCode(ix), false)
 }
 
 const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
   console.log('gen that atlas!', charsQueue, charsInAtlas, font)
-
-  ctx.imageSmoothingEnabled = false
-  ctx.font = `${font.size}px ${font.face}`
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-  ctx.textBaseline = 'top'
-  ctx.fillStyle = 'white'
 
   const draw = (char: AtlasChar, charStr: string) => {
     const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
@@ -162,8 +161,6 @@ export const getUpdatedFontAtlasMaybe = () => {
 
 /** To be used when the workspace font has changed */
 export const forceRegenerateFontAtlas = () => {
-  // TODO(smolck): How to update the bounds for the grid buffer(s)?
-
   // All the bounds are invalidated, so need to redo those as well.
   const chars: [boolean, string][] = []
   charsInAtlas.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, charStr]))
@@ -172,7 +169,12 @@ export const forceRegenerateFontAtlas = () => {
   charsQueue.clear()
   nextBounds = undefined
 
-  ctx.clearRect(0, 0, atlasWidth, atlasHeight)
+  canvas.width = Math.floor(atlasWidth * window.devicePixelRatio)
+  ctx.font = `${font.size}px ${font.face}`
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+  ctx.textBaseline = 'top'
+  ctx.fillStyle = 'white'
+
   chars.forEach(([doubleWidth, char]) => getChar(char, doubleWidth))
 
   genAtlas(true)
