@@ -66,8 +66,7 @@ export default (webgl: WebGL) => {
       float posy = posFloat.y * -2.0 + 1.0;
       gl_Position = vec4(posx, posy, 0, 1);
 
-      vec2 normalizedQuadVertex = ${v.quadVertex} / ${v.fontAtlasResolution};
-      o_glyphPosition = ${v.atlasBounds} + normalizedQuadVertex;
+      o_glyphPosition = (${v.atlasBounds} + ${v.quadVertex}) / ${v.fontAtlasResolution};
 
       float texelSize = 2.0;
       float color_x = ${v.hlid} * texelSize + 1.0;

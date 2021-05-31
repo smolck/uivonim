@@ -184,7 +184,6 @@ const nutella = () => {
       getBuffer: () => dataBuffer,
       resetAtlasBounds: () => {
         gridBuffer.resetAtlasBounds()
-        gridBuffer.resetAtlasBounds(dataBuffer)
       },
     }
   }

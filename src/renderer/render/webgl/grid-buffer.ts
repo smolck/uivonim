@@ -1,4 +1,5 @@
 import { AtlasChar, getCharFromIndex } from '../font-texture-atlas'
+import { cell } from '../../workspace'
 
 const finetti = () => {
   let buffer = new Float32Array()
@@ -179,12 +180,17 @@ const finetti = () => {
     moveRegionUp,
     moveRegionDown,
     getBuffer: () => buffer,
-    resetAtlasBounds: (maybeBuffer?: Float32Array) => {
-      const buf = maybeBuffer || buffer // TODO(smolck): Why tho
-      for (let ix = 0; ix < buf.length; ix += 7) {
-        const char = getCharFromIndex(buf[ix + 3])
-        buf[ix + 5] = char!.bounds.left
-        buf[ix + 6] = char!.bounds.bottom
+    resetAtlasBounds: () => {
+      for (let ix = 0; ix < buffer.length; ix += 7) {
+        const char = getCharFromIndex(buffer[ix + 3])
+        if (!char) return
+        if (buffer[ix + 4] == 1) {
+          buffer[ix + 5] = char!.bounds.left + cell.width
+          buffer[ix + 6] = char!.bounds.bottom
+        } else {
+          buffer[ix + 5] = char!.bounds.left
+          buffer[ix + 6] = char!.bounds.bottom
+        }
       }
     }
   }

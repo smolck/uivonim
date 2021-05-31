@@ -44,15 +44,12 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
   if (!nextBounds) throw new Error('nextBounds not defined font atlas')
 
   const oldBounds = nextBounds
+  const moveDown = oldBounds.right + cell.width >= atlasWidth
 
-  // Normalize oldBounds.right
-  const moveDown = (oldBounds.right * atlasWidth) + cell.width >= atlasWidth
-
-  const padding = 2
-  const charHeight = (cell.height + padding) / atlasHeight
-  const charWidth =
-    // Normalized
-    ((isDoubleWidth ? (cell.width * 2) : cell.width) + padding) / atlasWidth
+  const paddingY = 5
+  const paddingX = 2
+  const charHeight = cell.height + paddingY
+  const charWidth = (isDoubleWidth ? (cell.width * 2) : cell.width) + paddingX
 
   nextBounds = moveDown ? {
     left: 0,
@@ -66,8 +63,6 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
     bottom: oldBounds.bottom,
   }
 }
-
-export const normalizedCharWidth = () => cell.width / atlasWidth
 
 export const getChar = (char: string, isDoubleWidth: boolean = false) => {
   const maybeChar = charsInAtlas.get(char) || charsQueue.get(char)
@@ -89,14 +84,13 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
   } else {
     // First char in font atlas
 
-    // Normalize width by dividing by atlasWidth
-    const width = (isDoubleWidth ? (cell.width * 2) : cell.width) / atlasWidth
+    const width = isDoubleWidth ? (cell.width * 2) : cell.width
 
     const bounds = {
       left: 0,
       right: width,
       top: 0,
-      bottom: cell.height / atlasHeight,
+      bottom: cell.height,
     }
 
     // `updateNextBounds` needs `nextBounds` to be defined
@@ -133,9 +127,8 @@ const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
 
   const draw = (char: AtlasChar, charStr: string) => {
     const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
-    const x = char.bounds.left * atlasWidth
-    // TODO(smolck): +2 just moves the chars down a bit, seems to make things look better?
-    const y = char.bounds.bottom * atlasHeight + 2
+    const x = char.bounds.left
+    const y = char.bounds.bottom + 3
 
     ctx.save()
     ctx.beginPath()

@@ -7,7 +7,6 @@ import {
   AtlasChar,
   getChar,
   getUpdatedFontAtlasMaybe,
-  normalizedCharWidth,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
 import {
@@ -33,6 +32,7 @@ import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import { cell } from '../workspace'
 
 let dummyData = new Float32Array()
 
@@ -166,7 +166,7 @@ const grid_line = (e: any) => {
           isDoubleWidth: true,
           bounds: {
             ...prevChar!.bounds,
-            left: prevChar!.bounds.left + normalizedCharWidth(),
+            left: prevChar!.bounds.left + cell.width,
             right: prevChar!.bounds.right,
           }
         } : {...atlasChar, isDoubleWidth: false} // TODO(smolck): QUIT IT WITH THE HACKS
