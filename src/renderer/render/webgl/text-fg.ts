@@ -12,7 +12,7 @@ export default (webgl: WebGL) => {
 
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
-    isDoubleWidth: VarKind.Attribute,
+    isSecondHalfOfDoubleWidthCell: VarKind.Attribute,
     atlasBounds: VarKind.Attribute,
 
     canvasResolution: VarKind.Uniform,
@@ -35,7 +35,7 @@ export default (webgl: WebGL) => {
     in vec2 ${v.cellPosition};
     in float ${v.hlid};
     in vec2 ${v.atlasBounds};
-    in float ${v.isDoubleWidth};
+    in float ${v.isSecondHalfOfDoubleWidthCell};
 
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.fontAtlasResolution};
@@ -54,7 +54,7 @@ export default (webgl: WebGL) => {
 
     void main() {
       vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
+      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
       bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${v.shouldShowCursor};
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
@@ -157,7 +157,7 @@ export default (webgl: WebGL) => {
       divisor: 1,
     },
     {
-      pointer: program.vars.isDoubleWidth,
+      pointer: program.vars.isSecondHalfOfDoubleWidthCell,
       type: webgl.gl.FLOAT,
       size: 1,
       offset: 4 * Float32Array.BYTES_PER_ELEMENT,

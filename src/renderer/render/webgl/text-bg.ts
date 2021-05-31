@@ -10,7 +10,7 @@ export default (webgl: WebGL) => {
   let cursorShape = 0 /* CursorShape.block */
 
   const program = webgl.setupProgram({
-    isDoubleWidth: VarKind.Attribute,
+    isSecondHalfOfDoubleWidthCell: VarKind.Attribute,
     quadVertex: VarKind.Attribute,
     isCursorTri: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
@@ -32,7 +32,7 @@ export default (webgl: WebGL) => {
     in vec2 ${v.cellPosition};
     in float ${v.isCursorTri};
     in float ${v.hlid};
-    in float ${v.isDoubleWidth};
+    in float ${v.isSecondHalfOfDoubleWidthCell};
     uniform vec2 ${v.cursorPosition};
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.colorAtlasResolution};
@@ -47,7 +47,7 @@ export default (webgl: WebGL) => {
 
     void main() {
       vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${
+      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${
       v.cursorPosition
     } == prevCellPos && ${v.cursorShape} == 0;
       bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${
@@ -141,7 +141,7 @@ export default (webgl: WebGL) => {
       divisor: 1,
     },
     {
-      pointer: program.vars.isDoubleWidth,
+      pointer: program.vars.isSecondHalfOfDoubleWidthCell,
       type: webgl.gl.FLOAT,
       size: 1,
       offset: 4 * Float32Array.BYTES_PER_ELEMENT,

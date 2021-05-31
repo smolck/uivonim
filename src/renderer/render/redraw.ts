@@ -161,28 +161,40 @@ const grid_line = (e: any) => {
       const atlasChar = getChar(char, doubleWidth)
 
       for (let r = 0; r < repeats; r++) {
+        // If the previous char was double width, nvim will send an empty cell
+        // "" next; we check for that, and give that info to the grid buffer so
+        // webgl can handle it accordingly.
         const char = prevWasDoubleWidth
           ? {
               ...prevChar!,
-              isDoubleWidth: true,
+              isSecondHalfOfDoubleWidthCell: true,
               bounds: {
                 ...prevChar!.bounds,
                 left: prevChar!.bounds.left + cell.width,
                 right: prevChar!.bounds.right,
               },
             }
-          : { ...atlasChar, isDoubleWidth: false } // TODO(smolck): QUIT IT WITH THE HACKS
+          : { ...atlasChar, isSecondHalfOfDoubleWidthCell: false }
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
         buffer[gridRenderIndexes[gridId] + 3] = char.idx
-        buffer[gridRenderIndexes[gridId] + 4] = char.isDoubleWidth ? 1 : 0
+        buffer[gridRenderIndexes[gridId] + 4] =
+          char.isSecondHalfOfDoubleWidthCell ? 1 : 0
         buffer[gridRenderIndexes[gridId] + 5] = char.bounds.left
         buffer[gridRenderIndexes[gridId] + 6] = char.bounds.bottom
         gridRenderIndexes[gridId] += 7
 
         // TODO: could maybe deffer this to next frame?
-        gridBufferSetCell({ row, col, hlId: hlid, atlasChar: char })
+        gridBufferSetCell({
+          row,
+          col,
+          hlId: hlid,
+          charIdx: char.idx,
+          leftAtlasBounds: char.bounds.left,
+          bottomAtlasBounds: char.bounds.bottom,
+          isSecondHalfOfDoubleWidthCell: char.isSecondHalfOfDoubleWidthCell,
+        })
         col++
       }
 

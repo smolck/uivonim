@@ -6,7 +6,6 @@ import TextBG from './text-bg'
 import { cursor as cursorState } from '../../cursor'
 import { CursorShape } from '../../../common/types'
 import { getActiveGridId } from '../../windows/window-manager'
-import { AtlasChar } from '../font-texture-atlas'
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
@@ -23,7 +22,10 @@ export interface WebGLView {
     row: number
     col: number
     hlId: number
-    atlasChar: AtlasChar
+    charIdx: number
+    isSecondHalfOfDoubleWidthCell: boolean
+    leftAtlasBounds: number
+    bottomAtlasBounds: number
   }) => void
   getBuffer: () => Float32Array
   updateGridId: (gridId: number) => void

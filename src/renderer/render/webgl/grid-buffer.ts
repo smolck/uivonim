@@ -1,4 +1,4 @@
-import { AtlasChar, getCharFromIndex } from '../font-texture-atlas'
+import { getCharFromIndex } from '../font-texture-atlas'
 import { cell } from '../../workspace'
 
 const finetti = () => {
@@ -9,21 +9,27 @@ const finetti = () => {
     row,
     col,
     hlId,
-    atlasChar,
+    charIdx,
+    leftAtlasBounds,
+    bottomAtlasBounds,
+    isSecondHalfOfDoubleWidthCell,
   }: {
     row: number
     col: number
     hlId: number
-    atlasChar: AtlasChar
+    charIdx: number
+    isSecondHalfOfDoubleWidthCell: boolean
+    leftAtlasBounds: number
+    bottomAtlasBounds: number
   }) => {
     const bufix = col * 7 + width * row * 7
     buffer[bufix] = col
     buffer[bufix + 1] = row
     buffer[bufix + 2] = hlId
-    buffer[bufix + 3] = atlasChar.idx
-    buffer[bufix + 4] = atlasChar.isDoubleWidth ? 1 : 0
-    buffer[bufix + 5] = atlasChar.bounds.left
-    buffer[bufix + 6] = atlasChar.bounds.bottom
+    buffer[bufix + 3] = charIdx
+    buffer[bufix + 4] = isSecondHalfOfDoubleWidthCell ? 1 : 0
+    buffer[bufix + 5] = leftAtlasBounds
+    buffer[bufix + 6] = bottomAtlasBounds
   }
 
   const getCellLocal = (
@@ -39,7 +45,7 @@ const finetti = () => {
       row: theBuffer[ix + 1],
       hlId: theBuffer[ix + 2],
       charIdx: theBuffer[ix + 3],
-      isDoubleWidth: theBuffer[ix + 4],
+      isSecondHalfOfDoubleWidthCell: theBuffer[ix + 4],
       leftTexBounds: theBuffer[ix + 5],
       topTexBounds: theBuffer[ix + 6],
     }
@@ -52,7 +58,7 @@ const finetti = () => {
     row: number,
     hlId: number,
     charIdx: number,
-    isDoubleWidth: number,
+    isSecondHalfOfDoubleWidthCell: number,
     leftBounds: number,
     topBounds: number
   ) => {
@@ -62,7 +68,8 @@ const finetti = () => {
     theBuffer[bufix + 2] = hlId
     // TODO(smolck): But why
     if (samePos && charIdx) theBuffer[bufix + 3] = charIdx
-    if (samePos && isDoubleWidth) theBuffer[bufix + 4] = isDoubleWidth
+    if (samePos && isSecondHalfOfDoubleWidthCell)
+      theBuffer[bufix + 4] = isSecondHalfOfDoubleWidthCell
     if (samePos && leftBounds) theBuffer[bufix + 5] = leftBounds
     if (samePos && topBounds) theBuffer[bufix + 6] = topBounds
   }
@@ -100,7 +107,7 @@ const finetti = () => {
         row,
         cell.hlId,
         cell.charIdx,
-        cell.isDoubleWidth,
+        cell.isSecondHalfOfDoubleWidthCell,
         cell.leftTexBounds,
         cell.topTexBounds
       )
