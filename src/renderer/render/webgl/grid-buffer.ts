@@ -183,13 +183,13 @@ const finetti = () => {
     const endIndex = bottomIndex - offset
 
     for (let ix = endIndex; ix >= startIndex; ix -= 7) {
-      buffer[ix - offset] = buffer[ix]
-      buffer[ix - offset + 1] = buffer[ix + 1] + lines
-      buffer[ix - offset + 2] = buffer[ix + 2]
-      buffer[ix - offset + 3] = buffer[ix + 3]
-      buffer[ix - offset + 4] = buffer[ix + 4]
-      buffer[ix - offset + 5] = buffer[ix + 5]
-      buffer[ix - offset + 6] = buffer[ix + 6]
+      buffer[ix + offset] = buffer[ix]
+      buffer[ix + offset + 1] = buffer[ix + 1] + lines
+      buffer[ix + offset + 2] = buffer[ix + 2]
+      buffer[ix + offset + 3] = buffer[ix + 3]
+      buffer[ix + offset + 4] = buffer[ix + 4]
+      buffer[ix + offset + 5] = buffer[ix + 5]
+      buffer[ix + offset + 6] = buffer[ix + 6]
       buffer[ix + 2] = 0
       buffer[ix + 3] = 0
       buffer[ix + 4] = 0
