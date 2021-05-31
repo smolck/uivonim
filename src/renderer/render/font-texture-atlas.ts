@@ -125,8 +125,6 @@ for (let ix = 32; ix < 127; ix++) {
 }
 
 const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
-  console.log('gen that atlas!', charsQueue, charsInAtlas, font)
-
   const draw = (char: AtlasChar, charStr: string) => {
     const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
     const x = char.bounds.left
@@ -176,6 +174,11 @@ export const forceRegenerateFontAtlas = () => {
 
   chars.forEach(([doubleWidth, charIdx, char]) => {
     const newChar = getChar(char, doubleWidth)
+    // The index it receives from `getChar` isn't what it originally had,
+    // so set that.
+    // TODO(smolck): Potential source of issues that `charsIdx` isn't
+    // updated/reset?
+    newChar.idx = charIdx
     charsByIdx.set(charIdx, newChar)
   })
 
