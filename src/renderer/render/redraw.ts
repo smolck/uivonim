@@ -394,6 +394,7 @@ const updateFont = () => {
   windows.webgl.updateCellSize()
   workspace.resize()
   windows.resetAtlasBounds()
+  windows.refreshWebGLGrid()
 }
 
 handle.optionSet((e: any) => {
