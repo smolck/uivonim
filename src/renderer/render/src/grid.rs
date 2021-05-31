@@ -120,12 +120,12 @@ pub struct Grid {
     rows: Vec<Vec<Cell>>,
     size: GridSize,
     vertices_cache: Option<Vec<Vertex>>,
-    id: u64,
+    id: u32,
     viewport: Viewport,
 }
 
 impl Grid {
-    pub fn new(initial_grid_id: u64) -> Grid {
+    pub fn new(initial_grid_id: u32) -> Grid {
         Grid {
             rows: vec![],
             size: GridSize { rows: 0, cols: 0 },
@@ -140,7 +140,7 @@ impl Grid {
         }
     }
 
-    pub fn new_with_dimensions(initial_grid_id: u64, rows: u32, cols: u32) -> Grid {
+    pub fn new_with_dimensions(initial_grid_id: u32, rows: u32, cols: u32) -> Grid {
         Grid {
             rows: Vec::with_capacity(rows as usize),
             vertices_cache: None,
@@ -155,11 +155,11 @@ impl Grid {
         }
     }
 
-    pub fn update_grid_id(&mut self, new_grid_id: u64) {
+    pub fn update_grid_id(&mut self, new_grid_id: u32) {
         self.id = new_grid_id;
     }
 
-    pub fn get_id(&self) -> u64 {
+    pub fn get_id(&self) -> u32 {
         self.id
     }
 

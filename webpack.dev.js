@@ -66,4 +66,7 @@ module.exports = {
       crateDirectory: path.resolve(__dirname, 'src/renderer/render'),
     }),
   ],
+  experiments: {
+    asyncWebAssembly: true,
+  }
 }

@@ -8,11 +8,10 @@ import { specs as titleSpecs } from '../title'
 import { Scene } from '../render/pkg'
 import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
-import { assert } from 'console'
 
 export interface WindowInfo {
   id: number
-  gridId: BigInt // TODO(smolck)
+  gridId: number // TODO(smolck)
   row: number
   col: number
   width: number
@@ -74,10 +73,10 @@ const positionToWorkspacePixels = (layout: { x: number, y: number, width: number
   return { x, y }
 }
 
-const createWindow = (scene: Scene) => {
+const createWindow = () => {
   const wininfo: WindowInfo = {
     id: 0,
-    gridId: BigInt(0),
+    gridId: 0,
     row: 0,
     col: 0,
     width: 0,
@@ -148,9 +147,10 @@ const createWindow = (scene: Scene) => {
       return container
     },
 
+    positionToWorkspacePixels: (row: number, col: number, maybeOpts?: PosOpts) => positionToWorkspacePixels(layout, row, col, maybeOpts),
     resizeWindow: (width: number, height: number) => {
       Object.assign(wininfo, { height, width })
-      scene.handle_grid_resize(wininfo.gridId, width, height)
+      // scene.handle_grid_resize(wininfo.gridId, width, height)
     },
 
     setWindowInfo: (info: WindowInfo) => {
@@ -182,7 +182,7 @@ const createWindow = (scene: Scene) => {
 
       if (!wininfo.visible) {
         container.style.display = 'flex'
-        scene.render_grid(info.gridId)
+        // scene.render_grid(info.gridId)
       }
 
       container.id = `${info.id}`
@@ -204,7 +204,11 @@ const createWindow = (scene: Scene) => {
     hide: () => {
       wininfo.visible = false
       container.style.display = 'none'
-      scene.clear_grid(wininfo.gridId)
+      // scene.clear_grid(wininfo.gridId)
+    },
+
+    clear: () => {
+      // scene.clear_grid(wininfo.gridId)
     },
 
     // maybeHide + maybeShow used for hiding/showing windows when
@@ -265,36 +269,38 @@ const createWindow = (scene: Scene) => {
       }
     },
 
-    redraw: () => scene.render_grid(wininfo.gridId),
+    redraw: () => {}, // scene.render_grid(wininfo.gridId),
     updateNameplate: (data: NameplateState) => nameplate.update(data),
 
     editor: {
       getChar: (row: number, col: number) => {
-        const maybeChar = scene.get_cell_from_grid(wininfo.gridId, row, col)
+        /*const maybeChar = scene.get_cell_from_grid(wininfo.gridId, row, col)
         if (typeof maybeChar === 'string') {
           throw new Error(maybeChar)
         } else {
           return maybeChar.char // See `Cell` type in src/renderer/render/src/grid.rs
-        }
+        }*/
+        return "hi"
       },
       getLine: (row: number) => {
-        const line = scene.get_line_from_grid(wininfo.gridId, row)
+        /*const line = scene.get_line_from_grid(wininfo.gridId, row)
         if (typeof line === 'string') {
           throw new Error(line)
         } else {
           return line.map((c: any) => c.char) // See `Cell` type in src/renderer/render/src/grid.rs
-        }
+        }*/
+        return []
       },
       getAllLines: () => {
         const lines: any = []
         for (let row = 0; row < wininfo.height; row++) {
           // TODO(smolck): Just have a wasm func for this?
-          const line = scene.get_line_from_grid(wininfo.gridId, row)
+          /*const line = scene.get_line_from_grid(wininfo.gridId, row)
           if (typeof line === 'string') {
             throw new Error(line)
           } else {
             lines.push(line.map((c: any) => c.char)) // See `Cell` type in src/renderer/render/src/grid.rs
-          }
+          }*/
         }
         return lines
       },
@@ -306,14 +312,14 @@ const createWindow = (scene: Scene) => {
 
         for (let row = 0; row < wininfo.height; row++) {
           for (let col = 0; col < wininfo.width; col++) {
-            const cell = scene.get_cell_from_grid(wininfo.gridId, row, col) // TODO(smolck): Error handling?
-            assert(typeof cell !== 'string', cell)
+            /*const cell = scene.get_cell_from_grid(wininfo.gridId, row, col) // TODO(smolck): Error handling?
+            console.assert(typeof cell !== 'string', cell)
 
             if (highlights.includes(cell.hl_id))
               results.push({
                 col, row, // TODO(smolck)
                 char: cell.char,
-              })
+              })*/
           }
         }
 

@@ -11,6 +11,9 @@ use luminance::{
     Semantics, UniformInterface, Vertex,
 };
 use std::collections::HashMap;
+use web_sys::Element;
+use web_sys::HtmlCanvasElement;
+use web_sys::HtmlElement;
 
 use luminance_front::{
     context::GraphicsContext,
@@ -21,6 +24,7 @@ use luminance_front::{
 use luminance_web_sys::WebSysWebGL2Surface;
 use luminance_webgl::webgl2::WebGL2;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast as _;
 
 use web_sys::{Document, WebGl2RenderingContext};
 
@@ -64,14 +68,15 @@ pub struct Scene {
 
     font_atlas: FontAtlas,
     // TODO(smolck): Multigrid
-    grids: HashMap<u64, Grid>,
-    active_grid: u64,
+    grids: HashMap<u32, Grid>,
+    active_grid: u32,
 }
 
 #[wasm_bindgen]
 impl Scene {
-    pub fn new(canvas_name: &str) -> Scene {
-        let mut surface = WebSysWebGL2Surface::new(canvas_name).expect("web-sys surface");
+    #[wasm_bindgen]
+    pub fn new(canvas: HtmlCanvasElement) -> Scene {
+        let mut surface = WebSysWebGL2Surface::from_canvas(canvas).expect("web-sys surface");
 
         // TODO(smolck): Font atlas width & height things, and font, stuff.
         let font_atlas = FontAtlas::new("16px monospace", "font-atlas", 500, 500);
@@ -111,7 +116,7 @@ impl Scene {
             let grid_id = Reflect::get(&evt, &JsValue::from(0))
                 .unwrap()
                 .as_f64()
-                .unwrap() as u64;
+                .unwrap() as u32;
             let row = Reflect::get(&evt, &JsValue::from(1))
                 .unwrap()
                 .as_f64()
@@ -131,7 +136,7 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn handle_grid_resize(&mut self, grid_id: u64, width: u32, height: u32) {
+    pub fn handle_grid_resize(&mut self, grid_id: u32, width: u32, height: u32) {
         if let Some(grid) = self.grids.get_mut(&grid_id) {
             grid.resize(width, height);
         } else {
@@ -140,7 +145,7 @@ impl Scene {
         }
     }
 
-    fn render_internal(&mut self, grid_id: u64) {
+    fn render_internal(&mut self, grid_id: u32) {
         let (width, height) = {
             (
                 self.surface.canvas.width() as f32,
@@ -203,18 +208,13 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn render_grid(&mut self, grid_id: u64) {
+    pub fn render_grid(&mut self, grid_id: u32) {
         // TODO(smolck)
         self.render_internal(grid_id);
     }
 
     #[wasm_bindgen]
-    pub fn get_cell_from_grid(
-        &self,
-        grid_id: u64,
-        row: usize,
-        col: usize,
-    ) -> Result<JsValue, JsValue> {
+    pub fn get_cell_from_grid(&self, grid_id: u32, row: usize, col: usize) -> Result<JsValue, JsValue> {
         if let Some(grid) = self.grids.get(&grid_id) {
             Ok(grid.get_cell(row, col))
         } else {
@@ -223,7 +223,7 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn get_line_from_grid(&self, grid_id: u64, row: usize) -> Result<JsValue, JsValue> {
+    pub fn get_line_from_grid(&self, grid_id: u32, row: usize) -> Result<JsValue, JsValue> {
         if let Some(grid) = self.grids.get(&grid_id) {
             Ok(grid.get_line(row))
         } else {
@@ -232,7 +232,40 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn clear_grid(&mut self, grid_id: u64) {
-        unimplemented!();
+    pub fn get_active_grid_id(&self) -> u32 {
+        self.active_grid
+    }
+
+    #[wasm_bindgen]
+    pub fn set_active_grid(&mut self, grid_id: u32) {
+        self.active_grid = grid_id
+    }
+
+    #[wasm_bindgen]
+    pub fn move_region_up(&mut self, grid_id: u32, lines: usize, top: usize, bottom: usize) {
+        if let Some(grid) = self.grids.get_mut(&grid_id) {
+            grid.move_region_up(lines, top, bottom);
+        } else {
+            // TODO(smolck)
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn move_region_down(&mut self, grid_id: u32, lines: usize, top: usize, bottom: usize) {
+        if let Some(grid) = self.grids.get_mut(&grid_id) {
+            grid.move_region_down(lines, top, bottom);
+        } else {
+            // TODO(smolck)
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn clear_grid(&mut self, grid_id: u32) {
+        web_sys::console::log_1(&JsValue::from_str("Clear grid unimplemented"));
+    }
+
+    #[wasm_bindgen]
+    pub fn clear_all(&mut self) {
+        web_sys::console::log_1(&JsValue::from_str("Clear all unimplemented"));
     }
 }
