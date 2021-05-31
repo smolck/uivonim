@@ -47,10 +47,12 @@ export default (webgl: WebGL) => {
 
     void main() {
       vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
-      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${
-        v.shouldShowCursor
-      };
+      bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${
+      v.cursorPosition
+    } == prevCellPos && ${v.cursorShape} == 0;
+      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${
+      v.cellPosition
+    }) && ${v.shouldShowCursor};
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
@@ -321,7 +323,7 @@ export default (webgl: WebGL) => {
   }
 
   const showCursor = (enable: boolean) => (
-    shouldShowCursor = enable,
+    (shouldShowCursor = enable),
     webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
   )
 

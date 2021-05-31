@@ -161,15 +161,17 @@ const grid_line = (e: any) => {
       const atlasChar = getChar(char, doubleWidth)
 
       for (let r = 0; r < repeats; r++) {
-        const char = prevWasDoubleWidth ? {
-          ...prevChar!,
-          isDoubleWidth: true,
-          bounds: {
-            ...prevChar!.bounds,
-            left: prevChar!.bounds.left + cell.width,
-            right: prevChar!.bounds.right,
-          }
-        } : {...atlasChar, isDoubleWidth: false} // TODO(smolck): QUIT IT WITH THE HACKS
+        const char = prevWasDoubleWidth
+          ? {
+              ...prevChar!,
+              isDoubleWidth: true,
+              bounds: {
+                ...prevChar!.bounds,
+                left: prevChar!.bounds.left + cell.width,
+                right: prevChar!.bounds.right,
+              },
+            }
+          : { ...atlasChar, isDoubleWidth: false } // TODO(smolck): QUIT IT WITH THE HACKS
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid

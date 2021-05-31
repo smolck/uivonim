@@ -10,7 +10,12 @@ const finetti = () => {
     col,
     hlId,
     atlasChar,
-  }: { row: number, col: number, hlId: number, atlasChar: AtlasChar  }) => {
+  }: {
+    row: number
+    col: number
+    hlId: number
+    atlasChar: AtlasChar
+  }) => {
     const bufix = col * 7 + width * row * 7
     buffer[bufix] = col
     buffer[bufix + 1] = row
@@ -21,7 +26,12 @@ const finetti = () => {
     buffer[bufix + 6] = atlasChar.bounds.bottom
   }
 
-  const getCellLocal = (theBuffer: Float32Array, localWidth: number, row: number, col: number) => {
+  const getCellLocal = (
+    theBuffer: Float32Array,
+    localWidth: number,
+    row: number,
+    col: number
+  ) => {
     const ix = col * 7 + localWidth * row * 7
 
     return {
@@ -31,7 +41,7 @@ const finetti = () => {
       charIdx: theBuffer[ix + 3],
       isDoubleWidth: theBuffer[ix + 4],
       leftTexBounds: theBuffer[ix + 5],
-      topTexBounds: theBuffer[ix + 6]
+      topTexBounds: theBuffer[ix + 6],
     }
   }
 
@@ -83,7 +93,17 @@ const finetti = () => {
       // TODO(smolck): Need ifs?
       // if (cell.hlId && samePos) buffer[ix + 2] = cell.hlId
       // if (cell.charIdx && samePos) buffer[ix + 3] = cell.charIdx
-      setCellLocal(samePos, buffer, col, row, cell.hlId, cell.charIdx, cell.isDoubleWidth, cell.leftTexBounds, cell.topTexBounds)
+      setCellLocal(
+        samePos,
+        buffer,
+        col,
+        row,
+        cell.hlId,
+        cell.charIdx,
+        cell.isDoubleWidth,
+        cell.leftTexBounds,
+        cell.topTexBounds
+      )
 
       col++
       if (col >= width) {
@@ -192,7 +212,7 @@ const finetti = () => {
           buffer[ix + 6] = char!.bounds.bottom
         }
       }
-    }
+    },
   }
 }
 

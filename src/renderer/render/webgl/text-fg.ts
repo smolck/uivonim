@@ -55,9 +55,7 @@ export default (webgl: WebGL) => {
     void main() {
       vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
       bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
-      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${
-        v.shouldShowCursor
-      };
+      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${v.shouldShowCursor};
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex} + ${v.cellPadding};
@@ -273,7 +271,8 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
   }
 
-  const showCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
+  const showCursor = (enable: boolean) =>
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])

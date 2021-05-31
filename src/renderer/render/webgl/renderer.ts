@@ -19,11 +19,11 @@ export interface WebGLView {
   moveRegionDown: (lines: number, top: number, bottom: number) => void
   getGridCell: (row: number, col: number) => Float32Array
   getGridLine: (row: number) => Float32Array
-  setGridBufferCell: (info: { 
-    row: number,
-    col: number,
-    hlId: number,
-    atlasChar: AtlasChar,
+  setGridBufferCell: (info: {
+    row: number
+    col: number
+    hlId: number
+    atlasChar: AtlasChar
   }) => void
   getBuffer: () => Float32Array
   updateGridId: (gridId: number) => void

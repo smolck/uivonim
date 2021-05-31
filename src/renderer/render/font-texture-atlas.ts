@@ -1,10 +1,10 @@
 import { cell, font } from '../workspace'
 
 export interface AtlasCharBounds {
-  left: number,
-  right: number,
-  top: number,
-  bottom: number,
+  left: number
+  right: number
+  top: number
+  bottom: number
 }
 
 export interface AtlasChar {
@@ -49,19 +49,21 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
   const paddingY = 5
   const paddingX = 2
   const charHeight = cell.height + paddingY
-  const charWidth = (isDoubleWidth ? (cell.width * 2) : cell.width) + paddingX
+  const charWidth = (isDoubleWidth ? cell.width * 2 : cell.width) + paddingX
 
-  nextBounds = moveDown ? {
-    left: 0,
-    right: charWidth,
-    top: oldBounds.top + charHeight,
-    bottom: oldBounds.bottom + charHeight,
-  } : {
-    left: oldBounds.left + charWidth,
-    right: oldBounds.right + charWidth,
-    top: oldBounds.top,
-    bottom: oldBounds.bottom,
-  }
+  nextBounds = moveDown
+    ? {
+        left: 0,
+        right: charWidth,
+        top: oldBounds.top + charHeight,
+        bottom: oldBounds.bottom + charHeight,
+      }
+    : {
+        left: oldBounds.left + charWidth,
+        right: oldBounds.right + charWidth,
+        top: oldBounds.top,
+        bottom: oldBounds.bottom,
+      }
 }
 
 export const getChar = (char: string, isDoubleWidth: boolean = false) => {
@@ -84,7 +86,7 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
   } else {
     // First char in font atlas
 
-    const width = isDoubleWidth ? (cell.width * 2) : cell.width
+    const width = isDoubleWidth ? cell.width * 2 : cell.width
 
     const bounds = {
       left: 0,
@@ -94,7 +96,7 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
     }
 
     // `updateNextBounds` needs `nextBounds` to be defined
-    nextBounds = bounds;
+    nextBounds = bounds
     updateNextBounds(isDoubleWidth)
 
     newChar = {
@@ -156,8 +158,12 @@ export const getUpdatedFontAtlasMaybe = () => {
 export const forceRegenerateFontAtlas = () => {
   // All the bounds are invalidated, so need to redo those as well.
   const chars: [boolean, number, string][] = []
-  charsInAtlas.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, atlasChar.idx, charStr]))
-  charsQueue.forEach((atlasChar, charStr) => chars.push([atlasChar.isDoubleWidth, atlasChar.idx,  charStr]))
+  charsInAtlas.forEach((atlasChar, charStr) =>
+    chars.push([atlasChar.isDoubleWidth, atlasChar.idx, charStr])
+  )
+  charsQueue.forEach((atlasChar, charStr) =>
+    chars.push([atlasChar.isDoubleWidth, atlasChar.idx, charStr])
+  )
   charsInAtlas.clear()
   charsQueue.clear()
   nextBounds = undefined
