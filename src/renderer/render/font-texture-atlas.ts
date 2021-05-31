@@ -1,23 +1,23 @@
 import { cell, font } from '../workspace'
 
-interface AtlasCharBounds {
+export interface AtlasCharBounds {
   left: number,
   right: number,
   top: number,
   bottom: number,
 }
 
-interface AtlasChar {
+export interface AtlasChar {
+  idx: number
   char: string
   isDoubleWidth: boolean
   bounds: AtlasCharBounds
 }
 
 const canvas = document.createElement('canvas')
-document.body.appendChild(canvas)
 // TODO(smolck)
 const atlasWidth = 1000
-const atlasHeight = 200
+const atlasHeight = 500
 
 canvas.width = Math.floor(atlasWidth * window.devicePixelRatio)
 canvas.height = Math.floor(atlasHeight * window.devicePixelRatio)
@@ -25,6 +25,10 @@ canvas.height = Math.floor(atlasHeight * window.devicePixelRatio)
 const ctx = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const charsInAtlas = new Map<string, AtlasChar>()
 const charsQueue = new Map<string, AtlasChar>()
+
+const charsByIdx = new Map<number, AtlasChar>()
+let charsIdx = 0
+
 let nextBounds: AtlasCharBounds | undefined
 
 // https://stackoverflow.com/a/12057594
@@ -62,22 +66,25 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
   }
 }
 
+export const normalizedCharWidth = () => cell.width / atlasWidth
+
 export const getChar = (char: string, isDoubleWidth: boolean = false) => {
   const maybeChar = charsInAtlas.get(char) || charsQueue.get(char)
   if (maybeChar) return maybeChar
 
   // Char isn't in font atlas, so let's add it.
+  const idx = charsIdx++
+  let newChar
   if (nextBounds) {
-    const newChar = {
+    newChar = {
       char,
       isDoubleWidth,
       bounds: nextBounds,
+      idx,
     }
 
     charsQueue.set(char, newChar)
     updateNextBounds(isDoubleWidth)
-
-    return newChar
   } else {
     // First char in font atlas
 
@@ -95,18 +102,21 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
     nextBounds = bounds;
     updateNextBounds(isDoubleWidth)
 
-    const newChar = {
+    newChar = {
       char,
+      idx,
       isDoubleWidth,
-      bounds: nextBounds,
+      bounds,
     }
 
     charsQueue.set(char, newChar)
-    return newChar
   }
+
+  charsByIdx.set(idx, newChar)
+  return newChar
 }
 
-console.log(getChar)
+export const getCharFromIndex = (idx: number) => charsByIdx.get(idx)
 
 for (let ix = 32; ix < 127; ix++) {
   getChar(String.fromCharCode(ix), false)

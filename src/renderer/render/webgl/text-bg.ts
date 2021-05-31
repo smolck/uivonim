@@ -10,6 +10,7 @@ export default (webgl: WebGL) => {
   let cursorShape = 0 /* CursorShape.block */
 
   const program = webgl.setupProgram({
+    isDoubleWidth: VarKind.Attribute,
     quadVertex: VarKind.Attribute,
     isCursorTri: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
@@ -31,6 +32,7 @@ export default (webgl: WebGL) => {
     in vec2 ${v.cellPosition};
     in float ${v.isCursorTri};
     in float ${v.hlid};
+    in float ${v.isDoubleWidth};
     uniform vec2 ${v.cursorPosition};
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.colorAtlasResolution};
@@ -44,7 +46,9 @@ export default (webgl: WebGL) => {
     out vec2 o_colorPosition;
 
     void main() {
-      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${
+      vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
+      bool tbdNameCondition = ${v.isDoubleWidth} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
+      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${
         v.shouldShowCursor
       };
 
@@ -115,7 +119,7 @@ export default (webgl: WebGL) => {
   webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
 
   // total size of all pointers. chunk size that goes to shader
-  const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
+  const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
 
   const wrenderBuffer = program.setupData([
     {
@@ -131,6 +135,14 @@ export default (webgl: WebGL) => {
       type: webgl.gl.FLOAT,
       size: 1,
       offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+      stride: wrenderStride,
+      divisor: 1,
+    },
+    {
+      pointer: program.vars.isDoubleWidth,
+      type: webgl.gl.FLOAT,
+      size: 1,
+      offset: 4 * Float32Array.BYTES_PER_ELEMENT,
       stride: wrenderStride,
       divisor: 1,
     },
@@ -289,7 +301,7 @@ export default (webgl: WebGL) => {
     // background
     quadBuffer.setData(quads.boxes)
     webgl.gl.uniform1f(program.vars.hlidType, 0)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
     webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
 
@@ -303,7 +315,7 @@ export default (webgl: WebGL) => {
       webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
 
     webgl.gl.uniform1f(program.vars.hlidType, 2)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
     webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
   }

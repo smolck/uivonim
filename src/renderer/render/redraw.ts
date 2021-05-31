@@ -4,8 +4,10 @@ import {
   setDefaultColors,
 } from '../render/highlight-attributes'
 import {
+  AtlasChar,
   getChar,
   getUpdatedFontAtlasMaybe,
+  normalizedCharWidth,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
 import {
@@ -119,9 +121,10 @@ const grid_line = (e: any) => {
   let hlid = 0
   let activeGrid = 0
   let buffer = dummyData
-  let gridBuffer = dummyData
-  let width = 1
+  let gridBufferSetCell = (_x: any) => {}
   let col = 0
+  let prevWasDoubleWidth = false
+  let prevChar: AtlasChar
 
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
@@ -134,9 +137,8 @@ const grid_line = (e: any) => {
     if (gridId !== activeGrid) {
       activeGrid = gridId
       const win = windows.get(gridId)
-      width = win.cols
       buffer = win.webgl.getBuffer()
-      gridBuffer = win.webgl.getGridBuffer()
+      gridBufferSetCell = win.webgl.setGridBufferCell
       if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
       grids.push(activeGrid)
     }
@@ -159,21 +161,31 @@ const grid_line = (e: any) => {
       const atlasChar = getChar(char, doubleWidth)
 
       for (let r = 0; r < repeats; r++) {
+        const char = prevWasDoubleWidth ? {
+          ...prevChar!,
+          isDoubleWidth: true,
+          bounds: {
+            ...prevChar!.bounds,
+            left: prevChar!.bounds.left + normalizedCharWidth(),
+            right: prevChar!.bounds.right,
+          }
+        } : {...atlasChar, isDoubleWidth: false} // TODO(smolck): QUIT IT WITH THE HACKS
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = atlasChar.bounds.left
-        gridRenderIndexes[gridId] += 4
+        buffer[gridRenderIndexes[gridId] + 3] = char.idx
+        buffer[gridRenderIndexes[gridId] + 4] = char.isDoubleWidth ? 1 : 0
+        buffer[gridRenderIndexes[gridId] + 5] = char.bounds.left
+        buffer[gridRenderIndexes[gridId] + 6] = char.bounds.bottom
+        gridRenderIndexes[gridId] += 7
 
         // TODO: could maybe deffer this to next frame?
-        const bufix = col * 4 + width * row * 4
-        gridBuffer[bufix] = col
-        gridBuffer[bufix + 1] = row
-        gridBuffer[bufix + 2] = hlid
-        gridBuffer[bufix + 3] = atlasChar.bounds.left
-
+        gridBufferSetCell({ row, col, hlId: hlid, atlasChar: char })
         col++
       }
+
+      prevChar = atlasChar
+      prevWasDoubleWidth = doubleWidth
     }
   }
 
@@ -381,6 +393,7 @@ const updateFont = () => {
   windows.webgl.updateFontAtlas(atlas)
   windows.webgl.updateCellSize()
   workspace.resize()
+  windows.resetAtlasBounds()
 }
 
 handle.optionSet((e: any) => {

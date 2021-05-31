@@ -294,3 +294,7 @@ window.api.on(Events.colorschemeStateUpdated, () =>
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
   })
 )
+
+export const resetAtlasBounds = () => {
+  windows.forEach((win) => win.webgl.resetAtlasBounds())
+}
