@@ -48,10 +48,11 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
   // Normalize oldBounds.right
   const moveDown = (oldBounds.right * atlasWidth) + cell.width >= atlasWidth
 
-  const charHeight = cell.height / atlasHeight
+  const padding = 2
+  const charHeight = (cell.height + padding) / atlasHeight
   const charWidth =
     // Normalized
-    (isDoubleWidth ? (cell.width * 2) : cell.width) / atlasWidth
+    ((isDoubleWidth ? (cell.width * 2) : cell.width) + padding) / atlasWidth
 
   nextBounds = moveDown ? {
     left: 0,
@@ -134,7 +135,8 @@ const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
   const draw = (char: AtlasChar, charStr: string) => {
     const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
     const x = char.bounds.left * atlasWidth
-    const y = char.bounds.bottom * atlasHeight
+    // TODO(smolck): +2 just moves the chars down a bit, seems to make things look better?
+    const y = char.bounds.bottom * atlasHeight + 2
 
     ctx.save()
     ctx.beginPath()
