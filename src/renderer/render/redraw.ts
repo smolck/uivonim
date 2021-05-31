@@ -4,7 +4,7 @@ import {
   setDefaultColors,
 } from '../render/highlight-attributes'
 import {
-  getCharIndex,
+  getChar,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
@@ -122,7 +122,6 @@ const grid_line = (e: any) => {
   let gridBuffer = dummyData
   let width = 1
   let col = 0
-  let charIndex = 0
 
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
@@ -152,20 +151,18 @@ const grid_line = (e: any) => {
       const repeats = data[2] || 1
       hlid = typeof data[1] === 'number' ? data[1] : hlid
 
-      if (typeof char === 'string') {
-        const nextCD = charData[cd + 1]
-        const doubleWidth =
-          nextCD &&
-          typeof nextCD[0] === 'string' &&
-          nextCD[0].codePointAt(0) === undefined
-        charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-      } else charIndex = char - 32
+      const nextCD = charData[cd + 1]
+      const doubleWidth =
+        nextCD &&
+        typeof nextCD[0] === 'string' &&
+        nextCD[0].codePointAt(0) === undefined
+      const atlasChar = getChar(char, doubleWidth)
 
       for (let r = 0; r < repeats; r++) {
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = charIndex
+        buffer[gridRenderIndexes[gridId] + 3] = atlasChar.bounds.left
         gridRenderIndexes[gridId] += 4
 
         // TODO: could maybe deffer this to next frame?
@@ -173,7 +170,7 @@ const grid_line = (e: any) => {
         gridBuffer[bufix] = col
         gridBuffer[bufix + 1] = row
         gridBuffer[bufix + 2] = hlid
-        gridBuffer[bufix + 3] = charIndex
+        gridBuffer[bufix + 3] = atlasChar.bounds.left
 
         col++
       }

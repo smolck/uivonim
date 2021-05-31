@@ -4,7 +4,7 @@ import {
 } from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
-import { getCharFromIndex } from '../render/font-texture-atlas'
+// import { getCh } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../title'
 import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../workspace'
@@ -324,17 +324,20 @@ export default () => {
   api.updateNameplate = (data) => nameplate.update(data)
 
   api.editor = {
-    getChar: (row, col) => {
-      const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3] || 0)
+    getChar: (_row, _col) => {
+      // const buf = webgl.getGridCell(row, col)
+      // TODO(smolck)
+      return ''
+      // return getCharFromIndex(buf[3] || 0)
     },
-    getLine: (row) => {
-      const buf = webgl.getGridLine(row)
+    getLine: (_row) => {
+      // const buf = webgl.getGridLine(row)
       let line = ''
-      for (let ix = 0; ix < buf.length; ix += 4) {
+      // TODO(smolck)
+      /*for (let ix = 0; ix < buf.length; ix += 4) {
         const charIndex = buf[ix + 3]
         line += getCharFromIndex(charIndex)
-      }
+      }*/
       return line
     },
     getAllLines: () => {
@@ -357,7 +360,8 @@ export default () => {
             results.push({
               col: buf[0],
               row: buf[1],
-              char: getCharFromIndex(buf[3]),
+              char: '' // TODO(smolck)
+              // char: getCharFromIndex(buf[3]),
             })
         }
       }
