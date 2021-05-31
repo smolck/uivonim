@@ -246,7 +246,7 @@ const handle: {
 })
 
 handle.gridLine(grid_line)
-/*handle.gridCursorGoto((gridId, row, col) => {
+handle.gridCursorGoto((gridId, row, col) => {
   windows.setActiveGrid(gridId)
   moveCursor(row, col)
 })
@@ -258,7 +258,7 @@ handle.gridResize(grid_resize)
 handle.winPos(win_pos)
 handle.winFloatPos(win_float_pos)
 handle.winClose(win_close)
-handle.winHide(win_hide)*/
+handle.winHide(win_hide)
 
 handle.tablineUpdate(({ curtab, tabs }) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
