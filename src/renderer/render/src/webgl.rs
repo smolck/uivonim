@@ -127,10 +127,14 @@ impl Scene {
                 .as_f64()
                 .unwrap() as u32;
 
+            let cells = Reflect::get(&evt, &JsValue::from(3)).unwrap();
+
+            if grid_id == 1 { continue; } // TODO(smolck)
+
             self.grids
                 .get_mut(&grid_id)
                 .expect("Umm yeah there should be this grid")
-                .handle_single_grid_line(row, col_start, &evt)?;
+                .handle_single_grid_line(row, col_start, &cells)?;
         }
 
         Ok(())
@@ -215,7 +219,12 @@ impl Scene {
     }
 
     #[wasm_bindgen]
-    pub fn get_cell_from_grid(&self, grid_id: u32, row: usize, col: usize) -> Result<JsValue, JsValue> {
+    pub fn get_cell_from_grid(
+        &self,
+        grid_id: u32,
+        row: usize,
+        col: usize,
+    ) -> Result<JsValue, JsValue> {
         if let Some(grid) = self.grids.get(&grid_id) {
             Ok(grid.get_cell(row, col))
         } else {

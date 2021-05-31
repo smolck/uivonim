@@ -20,7 +20,7 @@ pub struct GridLineSingle {
 }
 
 #[wasm_bindgen]
-#[derive(PartialEq, Clone, Copy, Serialize)]
+#[derive(PartialEq, Clone, Copy, Serialize, Debug)]
 pub struct Cell {
     pub hl_id: i64,
     pub char: char,
@@ -141,8 +141,15 @@ impl Grid {
     }
 
     pub fn new_with_dimensions(initial_grid_id: u32, rows: u32, cols: u32) -> Grid {
+        let mut initial_rows = Vec::with_capacity(rows as usize);
+        initial_rows.resize_with(rows as usize, || vec![]);
+        for row in initial_rows.iter_mut() {
+            // TODO(smolck)
+            row.resize_with((cols + 1) as usize, Default::default);
+        }
+
         Grid {
-            rows: Vec::with_capacity(rows as usize),
+            rows: initial_rows,
             vertices_cache: None,
             size: GridSize { rows, cols },
             viewport: Viewport {
@@ -211,6 +218,7 @@ impl Grid {
         col_start: u32,
         cells: &JsValue,
     ) -> Result<(), JsValue> {
+        web_sys::console::log_1(&JsValue::from(&format!("{}", self.size.cols)))
         let mut new_cells = Vec::with_capacity((self.size.cols - col_start) as usize);
         // each cell should be [text(, hl_id, repeat)], see `:help ui-events` and help for
         // `grid_line`
@@ -218,9 +226,11 @@ impl Grid {
             let cell = cell?;
 
             let mut hl_id = 0;
-            if let Ok(hl) = Reflect::get(&cell, &JsValue::from(1)) {
-                // TODO(smolck): Is this really the only way to go from JsValue -> integer?
-                hl_id = hl.as_f64().unwrap() as i64;
+
+            // TODO(smolck): Is this really the only way to go from JsValue -> integer? The
+            // .as_f64() then as i64?
+            if let Some(hl) = Reflect::get(&cell, &JsValue::from(1)).unwrap().as_f64() {
+                hl_id = hl as i64;
             }
 
             let cell_that_isnt_js = Cell {
@@ -233,8 +243,8 @@ impl Grid {
                     .parse::<char>()
                     .unwrap(),
             };
-            if let Ok(repeat) = Reflect::get(&cell, &JsValue::from(2)) {
-                for _ in 0..repeat.as_f64().unwrap() as usize {
+            if let Some(repeat) = Reflect::get(&cell, &JsValue::from(2)).unwrap().as_f64() {
+                for _ in 0..repeat as usize {
                     new_cells.push(cell_that_isnt_js);
                 }
             } else {
@@ -242,6 +252,12 @@ impl Grid {
             }
         }
 
+        web_sys::console::log_1(&JsValue::from(&format!(
+            "col_start: {}, slice len: {}, new_cells len: {}",
+            col_start,
+            self.rows[row as usize][(col_start as usize)..].len(),
+            new_cells.len(),
+        )));
         self.rows[row as usize][(col_start as usize)..].swap_with_slice(new_cells.as_mut_slice());
 
         // invalidate cache
@@ -290,7 +306,8 @@ impl Grid {
 
             if cols > self.size.cols {
                 for row in self.rows.iter_mut() {
-                    row.resize_with(cols as usize, Default::default);
+                    // TODO(smolck)
+                    row.resize_with((cols + 1) as usize, Default::default);
                 }
             }
 

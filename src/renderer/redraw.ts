@@ -112,7 +112,7 @@ const grid_scroll = ([
 }
 
 const grid_line = (e: any) => {
-  windows.handle_grid_line(e)
+  windows.handle_grid_line(e.slice(1))
   windows.maybe_regen_font_atlas()
   /*const gridCount = grids.length
   for (let ix = 0; ix < gridCount; ix++) {
