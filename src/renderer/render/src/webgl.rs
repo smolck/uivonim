@@ -76,6 +76,7 @@ pub struct Scene {
 impl Scene {
     #[wasm_bindgen]
     pub fn new(canvas: HtmlCanvasElement) -> Scene {
+        console_error_panic_hook::set_once();
         let mut surface = WebSysWebGL2Surface::from_canvas(canvas).expect("web-sys surface");
 
         // TODO(smolck): Font atlas width & height things, and font, stuff.
