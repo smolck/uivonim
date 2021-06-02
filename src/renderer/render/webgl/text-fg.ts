@@ -135,9 +135,6 @@ export default (webgl: WebGL) => {
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
-  console.log(program.vars.atlasBounds)
-  console.log(program.vars.cellPosition)
-  console.log(program.vars.hlid)
 
   const wrenderBuffer = program.setupData([
     {
