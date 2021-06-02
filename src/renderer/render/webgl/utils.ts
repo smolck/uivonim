@@ -17,9 +17,14 @@ interface AttribPointer extends VertexArrayPointer {
 }
 
 export enum VarKind {
-  Attribute,
-  Uniform,
+  Attribute = 0,
+  Uniform1f,
+  Uniform1i,
+  Uniform2f,
+  Uniform4f
 }
+
+const isUniform = (kind: VarKind) => kind > VarKind.Attribute
 
 interface SetupData {
   setData: (
@@ -29,9 +34,6 @@ interface SetupData {
 }
 
 type VK = { [index: string]: VarKind }
-type SD1 = (pointers: AttribPointer) => SetupData
-type SD2 = (pointers: AttribPointer[]) => SetupData
-type SetupDataFunc = SD1 & SD2
 
 const create = (options?: WebGLContextAttributes) => {
   const canvas = document.createElement('canvas')
@@ -127,76 +129,105 @@ const create = (options?: WebGLContextAttributes) => {
     let fragmentShader: string
     let program: WebGLProgram
     let vao: WebGLVertexArrayObject
-    const varLocations = new Map<string, any>()
-    type VarGet = { [Key in keyof T]: number }
+
+    type Var = {
+      location: WebGLUniformLocation,
+      kind: VarKind,
+    }
+    const varLocations = new Map<string, Var>()
+
+    type VarGet = { [Key in keyof T]: any }
+
+    let programCreated = false
 
     const vars: VarGet = new Proxy(Object.create(null), {
-      get: (_, key: string) => varLocations.get(key),
-    })
-
-    const setVertexShader = (shader: string) => {
-      vertexShader = shader
-    }
-
-    const setFragmentShader = (shader: string) => {
-      fragmentShader = shader
-    }
-
-    const create = () => {
-      const res = createProgramWithShaders(vertexShader, fragmentShader)
-      if (!res)
-        throw new Error(
-          'catastrophic failure of the third kind to create webgl program'
-        )
-      program = res
-
-      const createdVao = gl.createVertexArray()
-      if (!createdVao)
-        throw new Error(`failed to create vertex array object... hmmm`)
-      vao = createdVao
-
-      Object.entries(incomingVars).forEach(([key, kind]) => {
-        const location =
-          kind === VarKind.Uniform
-            ? gl.getUniformLocation(program, key)
-            : gl.getAttribLocation(program, key)
-
-        if (typeof location === 'number' && location < 0) {
-          const kindText = kind === VarKind.Uniform ? 'uniform' : 'attribute'
-          console.warn(
-            `${kindText} ${key} is not used in any shader. this will cause "index out of range warnings" if you try to use the pointer (like vertexAttribPointer)`
-          )
+      // TODO(smolck): Use `!` or `?` instead? Not sure if we want to assert
+      // non-null, or if it even matters because of type-checking . . .
+      get: (_, key: string) => varLocations.get(key)!.location,
+      set: (_: any, key: string, value: any) => {
+        if (!programCreated) {
+          return false
         }
 
-        varLocations.set(key, location)
-      })
-    }
+        const { kind, location } = varLocations.get(key)!
+        switch (kind) {
+          case VarKind.Attribute:
+            return false // Can't set attributes this way (yet?)
+          case VarKind.Uniform1f:
+            gl.uniform1f(location, value)
+            break
+          case VarKind.Uniform1i:
+            gl.uniform1i(location, value)
+            break
+          case VarKind.Uniform2f:
+            gl.uniform2fv(location, value)
+            break
+          case VarKind.Uniform4f:
+            gl.uniform4fv(location, value)
+            break
+        }
 
-    const use = () => {
-      gl.useProgram(program)
-      gl.bindVertexArray(vao)
-      gl.enable(gl.SCISSOR_TEST)
-    }
+        return true
+      }
+    })
 
-    const setupData: SetupDataFunc = (pointers: any) => {
-      const buffer = gl.createBuffer()
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-
-      pointers.length
-        ? pointers.forEach((pointer: AttribPointer) =>
-            setupVertexArray(pointer)
+    return {
+      vars,
+      setVertexShader: (shader: string) => vertexShader = shader,
+      setFragmentShader: (shader: string) => fragmentShader = shader,
+      create: () => {
+        const res = createProgramWithShaders(vertexShader, fragmentShader)
+        if (!res)
+          throw new Error(
+            'catastrophic failure of the third kind to create webgl program'
           )
-        : setupVertexArray(pointers)
+        program = res
 
-      return {
-        setData: (data: any, drawKind = gl.STATIC_DRAW) => {
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-          gl.bufferData(gl.ARRAY_BUFFER, data, drawKind)
-        },
+        const createdVao = gl.createVertexArray()
+        if (!createdVao)
+          throw new Error(`failed to create vertex array object... hmmm`)
+        vao = createdVao
+
+        Object.entries(incomingVars).forEach(([key, kind]) => {
+          const location =
+            isUniform(kind)
+              ? gl.getUniformLocation(program, key)
+              : gl.getAttribLocation(program, key)
+
+          if (typeof location === 'number' && location < 0) {
+            const kindText = isUniform(kind) ? 'uniform' : 'attribute'
+            console.warn(
+              `${kindText} ${key} is not used in any shader. this will cause "index out of range warnings" if you try to use the pointer (like vertexAttribPointer)`
+            )
+          }
+
+          varLocations.set(key, { kind, location: location! })
+        })
+        programCreated = true
+      },
+      use: () => {
+        gl.useProgram(program)
+        gl.bindVertexArray(vao)
+        gl.enable(gl.SCISSOR_TEST)
+      },
+      setupData: (pointers: AttribPointer | AttribPointer[]): SetupData => {
+        const buffer = gl.createBuffer()
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+
+        Array.isArray(pointers)
+          ? pointers.forEach((pointer: AttribPointer) =>
+              setupVertexArray(pointer)
+            )
+          : setupVertexArray(pointers)
+
+        return {
+          setData: (data: any, drawKind = gl.STATIC_DRAW) => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+            gl.bufferData(gl.ARRAY_BUFFER, data, drawKind)
+          },
+        }
       }
     }
-
-    return { create, vars, use, setVertexShader, setFragmentShader, setupData }
   }
 
   return {

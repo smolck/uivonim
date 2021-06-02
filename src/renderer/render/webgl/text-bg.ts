@@ -19,15 +19,15 @@ export default (webgl: WebGL) => {
     isCursorTri: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
-    hlidType: VarKind.Uniform,
-    canvasResolution: VarKind.Uniform,
-    colorAtlasResolution: VarKind.Uniform,
-    colorAtlasTextureId: VarKind.Uniform,
-    cellSize: VarKind.Uniform,
-    cursorPosition: VarKind.Uniform,
-    cursorColor: VarKind.Uniform,
-    cursorShape: VarKind.Uniform,
-    shouldShowCursor: VarKind.Uniform,
+    hlidType: VarKind.Uniform1f,
+    canvasResolution: VarKind.Uniform2f,
+    colorAtlasResolution: VarKind.Uniform2f,
+    colorAtlasTextureId: VarKind.Uniform1i,
+    cellSize: VarKind.Uniform2f,
+    cursorPosition: VarKind.Uniform2f,
+    cursorColor: VarKind.Uniform4f,
+    cursorShape: VarKind.Uniform1i,
+    shouldShowCursor: VarKind.Uniform1i,
   })
 
   program.setVertexShader(vertShader)
@@ -40,15 +40,11 @@ export default (webgl: WebGL) => {
 
   const colorAtlas = getColorAtlas()
   webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-  webgl.gl.uniform1i(program.vars.colorAtlasTextureId, 0)
-  webgl.gl.uniform2f(
-    program.vars.colorAtlasResolution,
-    colorAtlas.width,
-    colorAtlas.height
-  )
-  webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
-  webgl.gl.uniform4fv(program.vars.cursorColor, [1, 1, 1, 1])
-  webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+  program.vars.colorAtlasTextureId = 0
+  program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
+  program.vars.cursorPosition = [0, 0]
+  program.vars.cursorColor = [1, 1, 1, 1]
+  program.vars.shouldShowCursor = shouldShowCursor
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
@@ -181,7 +177,7 @@ export default (webgl: WebGL) => {
       ]),
     }
 
-    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+    program.vars.cellSize = [cell.width, cell.height]
     if (!initial) Object.assign(quads, next)
     return next
   }
@@ -215,7 +211,7 @@ export default (webgl: WebGL) => {
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
     webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
     webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    webgl.gl.uniform2f(program.vars.canvasResolution, width, height)
+    program.vars.canvasResolution = [width, height]
   }
 
   const render = (
@@ -229,13 +225,13 @@ export default (webgl: WebGL) => {
     wrenderBuffer.setData(buffer)
 
     if (shouldShowCursor && cursorShape == 2)
-      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
+      program.vars.shouldShowCursor = false
     // background
     quadBuffer.setData(quads.boxes)
-    webgl.gl.uniform1f(program.vars.hlidType, 0)
+    program.vars.hlidType = 0
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+    program.vars.shouldShowCursor = shouldShowCursor
 
     // underlines
     quadBuffer.setData(quads.lines)
@@ -244,39 +240,35 @@ export default (webgl: WebGL) => {
     // so set shouldShowCursor to false, then back to it's previous value after
     // the draw call.
     if (shouldShowCursor && cursorShape != 2 /* CursorShape.underline */)
-      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
+      program.vars.shouldShowCursor = false
 
-    webgl.gl.uniform1f(program.vars.hlidType, 2)
+    program.vars.hlidType = 2
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+    program.vars.shouldShowCursor = shouldShowCursor
   }
 
   const showCursor = (enable: boolean) => (
     (shouldShowCursor = enable),
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
+    program.vars.shouldShowCursor = enable
   )
 
   const updateCursorColor = (color: [number, number, number]) => {
-    webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
+    program.vars.cursorColor = [...color, 1]
   }
 
   const updateCursorShape = (shape: CursorShape) => {
     cursorShape = shape
-    webgl.gl.uniform1i(program.vars.cursorShape, shape)
+    program.vars.cursorShape = shape
   }
 
   const updateCursorPosition = (row: number, col: number) => {
-    webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
+    program.vars.cursorPosition = [col, row]
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-    webgl.gl.uniform2f(
-      program.vars.colorAtlasResolution,
-      colorAtlas.width,
-      colorAtlas.height
-    )
+    program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
   }
 
   const clear = (x: number, y: number, width: number, height: number) => {
