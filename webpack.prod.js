@@ -36,6 +36,11 @@ module.exports = {
           extensions: ['.js', '.jsx', '.json'],
         },
       },
+      {
+        // For loading frag and vertex shaders via imports in src/renderer/render/webgl
+        test: /\.glsl$/,
+        type: 'asset/source'
+      }
     ],
   },
   resolve: {

@@ -3,6 +3,10 @@ import generateFontAtlas from '../font-texture-atlas'
 import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { CursorShape } from '../../../common/types'
+// @ts-ignore
+import vertShader from './shaders/text-fg-vert.glsl'
+// @ts-ignore
+import fragShader from './shaders/text-fg-frag.glsl'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -29,75 +33,8 @@ export default (webgl: WebGL) => {
     cursorColor: VarKind.Uniform,
   })
 
-  program.setVertexShader(
-    (v) => `#version 300 es
-    in vec2 ${v.quadVertex};
-    in vec2 ${v.cellPosition};
-    in float ${v.hlid};
-    in vec2 ${v.atlasBounds};
-    in float ${v.isSecondHalfOfDoubleWidthCell};
-
-    uniform vec2 ${v.canvasResolution};
-    uniform vec2 ${v.fontAtlasResolution};
-    uniform vec2 ${v.colorAtlasResolution};
-    uniform vec2 ${v.cellSize};
-    uniform vec2 ${v.cellPadding};
-    uniform sampler2D ${v.colorAtlasTextureId};
-
-    uniform vec4 ${v.cursorColor};
-    uniform vec2 ${v.cursorPosition};
-    uniform bool ${v.shouldShowCursor};
-    uniform int ${v.cursorShape};
-
-    out vec2 o_glyphPosition;
-    out vec4 o_color;
-
-    void main() {
-      vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
-      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${v.shouldShowCursor};
-
-      vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex} + ${v.cellPadding};
-      vec2 posFloat = vertexPosition / ${v.canvasResolution};
-      float posx = posFloat.x * 2.0 - 1.0;
-      float posy = posFloat.y * -2.0 + 1.0;
-      gl_Position = vec4(posx, posy, 0, 1);
-
-      o_glyphPosition = (${v.atlasBounds} + ${v.quadVertex}) / ${v.fontAtlasResolution};
-
-      float texelSize = 2.0;
-      float color_x = ${v.hlid} * texelSize + 1.0;
-      float color_y = 1.0 * texelSize + 1.0;
-      vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
-
-      vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
-
-      if (isCursorCell && cursorShape == 0) {
-        o_color = ${v.cursorColor};
-      } else {
-        o_color = textureColor;
-      }
-    }
-  `
-  )
-
-  program.setFragmentShader(
-    (v) => `#version 300 es
-    precision mediump float;
-
-    in vec2 o_glyphPosition;
-    in vec4 o_color;
-    uniform sampler2D ${v.fontAtlasTextureId};
-
-    out vec4 outColor;
-
-    void main() {
-      vec4 glyphColor = texture(${v.fontAtlasTextureId}, o_glyphPosition);
-      outColor = glyphColor * o_color;
-    }
-  `
-  )
+  program.setVertexShader(vertShader)
+  program.setFragmentShader(fragShader)
 
   program.create()
   program.use()

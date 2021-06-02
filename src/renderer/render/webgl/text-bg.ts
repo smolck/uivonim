@@ -3,6 +3,10 @@ import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { hexToRGB } from '../../ui/css'
 import { CursorShape } from '../../../common/types'
+// @ts-ignore
+import vertShader from './shaders/text-bg-vert.glsl'
+// @ts-ignore
+import fragShader from './shaders/text-bg-frag.glsl'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -26,82 +30,8 @@ export default (webgl: WebGL) => {
     shouldShowCursor: VarKind.Uniform,
   })
 
-  program.setVertexShader(
-    (v) => `#version 300 es
-    in vec2 ${v.quadVertex};
-    in vec2 ${v.cellPosition};
-    in float ${v.isCursorTri};
-    in float ${v.hlid};
-    in float ${v.isSecondHalfOfDoubleWidthCell};
-    uniform vec2 ${v.cursorPosition};
-    uniform vec2 ${v.canvasResolution};
-    uniform vec2 ${v.colorAtlasResolution};
-    uniform vec2 ${v.cellSize};
-    uniform vec4 ${v.cursorColor};
-    uniform bool ${v.shouldShowCursor};
-    uniform int ${v.cursorShape};
-    uniform float ${v.hlidType};
-    uniform sampler2D ${v.colorAtlasTextureId};
-    out vec4 o_color;
-    out vec2 o_colorPosition;
-
-    void main() {
-      vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${
-      v.cursorPosition
-    } == prevCellPos && ${v.cursorShape} == 0;
-      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${
-      v.cellPosition
-    }) && ${v.shouldShowCursor};
-
-      vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
-      vec2 posFloat = vertexPosition / ${v.canvasResolution};
-      float posx = posFloat.x * 2.0 - 1.0;
-      float posy = posFloat.y * -2.0 + 1.0;
-      gl_Position = vec4(posx, posy, 0, 1);
-
-      float texelSize = 2.0;
-      float color_x = ${v.hlid} * texelSize + 1.0;
-      float color_y = ${v.hlidType} * texelSize + 1.0;
-      vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
-
-      bool condition;
-      ${
-        /*
-        TODO(smolck): I'm almost certain there's a way to do this
-        condition all in one without extra if statements, but my brain is
-        not finding it right now.
-      */ ''
-      }
-      if (${v.cursorShape} == 1) {
-        condition = isCursorCell && isCursorTri == 1.0;
-      } else {
-        condition = isCursorCell;
-      }
-
-      if (condition) {
-        o_color = cursorColor;
-      } else {
-        vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
-        o_color = textureColor;
-      }
-    }
-  `
-  )
-
-  program.setFragmentShader(
-    () => `#version 300 es
-    precision mediump float;
-
-    in vec4 o_color;
-    out vec4 outColor;
-
-    void main() {
-      outColor = o_color;
-    }
-  `
-  )
+  program.setVertexShader(vertShader)
+  program.setFragmentShader(fragShader)
 
   program.create()
   program.use()

@@ -130,20 +130,16 @@ const create = (options?: WebGLContextAttributes) => {
     const varLocations = new Map<string, any>()
     type VarGet = { [Key in keyof T]: number }
 
-    const varToString: VarGet = new Proxy(Object.create(null), {
-      get: (_: any, key: string) => key,
-    })
-
     const vars: VarGet = new Proxy(Object.create(null), {
       get: (_, key: string) => varLocations.get(key),
     })
 
-    const setVertexShader = (fn: (incomingVars: VarGet) => string) => {
-      vertexShader = fn(varToString)
+    const setVertexShader = (shader: string) => {
+      vertexShader = shader
     }
 
-    const setFragmentShader = (fn: (incomingVars: VarGet) => string) => {
-      fragmentShader = fn(varToString)
+    const setFragmentShader = (shader: string) => {
+      fragmentShader = shader
     }
 
     const create = () => {
