@@ -44,7 +44,7 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
   if (!nextBounds) throw new Error('nextBounds not defined font atlas')
 
   const oldBounds = nextBounds
-  const moveDown = oldBounds.right + cell.width >= atlasWidth
+  const moveDown = oldBounds.right + (isDoubleWidth ? cell.width * 2 : cell.width) >= atlasWidth
 
   const paddingY = 5
   const paddingX = 2
