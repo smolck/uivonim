@@ -18,15 +18,12 @@ out vec2 o_colorPosition;
 
 void main() {
   vec2 prevCellPos = vec2(cellPosition.x - 1.0, cellPosition.y);
-  bool tbdNameCondition = isSecondHalfOfDoubleWidthCell == 1.0 && cursorPosition == prevCellPos && cursorShape == 0;
-  bool isCursorCell = (tbdNameCondition || cursorPosition == cellPosition) && shouldShowCursor;
+  bool colorInSecondHalfOfDoubleWidthCell = isSecondHalfOfDoubleWidthCell == 1.0 && cursorPosition == prevCellPos && cursorShape == 0;
+  bool isCursorCell = (colorInSecondHalfOfDoubleWidthCell || cursorPosition == cellPosition) && shouldShowCursor;
 
-  vec2 absolutePixelPosition = cellPosition * cellSize;
-  vec2 vertexPosition = absolutePixelPosition + quadVertex;
+  vec2 vertexPosition = (cellPosition * cellSize) + quadVertex;
   vec2 posFloat = vertexPosition / canvasResolution;
-  float posx = posFloat.x * 2.0 - 1.0;
-  float posy = posFloat.y * -2.0 + 1.0;
-  gl_Position = vec4(posx, posy, 0, 1);
+  gl_Position = vec4(posFloat.x * 2.0 - 1.0, posFloat.y * -2.0 + 1.0, 0, 1);
 
   float texelSize = 2.0;
   float color_x = hlid * texelSize + 1.0;
