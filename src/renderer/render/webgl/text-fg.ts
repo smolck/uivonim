@@ -196,7 +196,8 @@ export default (webgl: WebGL) => {
     program.vars.cellPadding = [0, cell.padding]
   }
 
-  const showCursor = (enable: boolean) => program.vars.shouldShowCursor = enable // TODO(smolck)
+  const showCursor = (enable: boolean) =>
+    (program.vars.shouldShowCursor = enable) // TODO(smolck)
 
   const updateCursorColor = (color: [number, number, number]) => {
     program.vars.cursorColor = [...color, 1]

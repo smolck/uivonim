@@ -21,7 +21,7 @@ export enum VarKind {
   Uniform1f,
   Uniform1i,
   Uniform2f,
-  Uniform4f
+  Uniform4f,
 }
 
 const isUniform = (kind: VarKind) => kind > VarKind.Attribute
@@ -131,8 +131,8 @@ const create = (options?: WebGLContextAttributes) => {
     let vao: WebGLVertexArrayObject
 
     type Var = {
-      location: WebGLUniformLocation,
-      kind: VarKind,
+      location: WebGLUniformLocation
+      kind: VarKind
     }
     const varLocations = new Map<string, Var>()
 
@@ -168,13 +168,13 @@ const create = (options?: WebGLContextAttributes) => {
         }
 
         return true
-      }
+      },
     })
 
     return {
       vars,
-      setVertexShader: (shader: string) => vertexShader = shader,
-      setFragmentShader: (shader: string) => fragmentShader = shader,
+      setVertexShader: (shader: string) => (vertexShader = shader),
+      setFragmentShader: (shader: string) => (fragmentShader = shader),
       create: () => {
         const res = createProgramWithShaders(vertexShader, fragmentShader)
         if (!res)
@@ -189,10 +189,9 @@ const create = (options?: WebGLContextAttributes) => {
         vao = createdVao
 
         Object.entries(incomingVars).forEach(([key, kind]) => {
-          const location =
-            isUniform(kind)
-              ? gl.getUniformLocation(program, key)
-              : gl.getAttribLocation(program, key)
+          const location = isUniform(kind)
+            ? gl.getUniformLocation(program, key)
+            : gl.getAttribLocation(program, key)
 
           if (typeof location === 'number' && location < 0) {
             const kindText = isUniform(kind) ? 'uniform' : 'attribute'
@@ -226,7 +225,7 @@ const create = (options?: WebGLContextAttributes) => {
             gl.bufferData(gl.ARRAY_BUFFER, data, drawKind)
           },
         }
-      }
+      },
     }
   }
 

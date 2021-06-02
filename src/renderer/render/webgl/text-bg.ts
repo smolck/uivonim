@@ -249,8 +249,7 @@ export default (webgl: WebGL) => {
   }
 
   const showCursor = (enable: boolean) => (
-    (shouldShowCursor = enable),
-    program.vars.shouldShowCursor = enable
+    (shouldShowCursor = enable), (program.vars.shouldShowCursor = enable)
   )
 
   const updateCursorColor = (color: [number, number, number]) => {
