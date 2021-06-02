@@ -326,14 +326,14 @@ export default () => {
   api.editor = {
     getChar: (row, col) => {
       const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3] || 0)
+      return getCharFromIndex(buf[3])?.char || '' // TODO(smolck)
     },
     getLine: (row) => {
       const buf = webgl.getGridLine(row)
       let line = ''
       for (let ix = 0; ix < buf.length; ix += 4) {
         const charIndex = buf[ix + 3]
-        line += getCharFromIndex(charIndex)
+        line += getCharFromIndex(charIndex)?.char || '' // TODO(smolck)
       }
       return line
     },
@@ -357,7 +357,7 @@ export default () => {
             results.push({
               col: buf[0],
               row: buf[1],
-              char: getCharFromIndex(buf[3]),
+              char: getCharFromIndex(buf[3])!.char,
             })
         }
       }

@@ -18,9 +18,18 @@ export interface WebGLView {
   moveRegionDown: (lines: number, top: number, bottom: number) => void
   getGridCell: (row: number, col: number) => Float32Array
   getGridLine: (row: number) => Float32Array
-  getGridBuffer: () => Float32Array
+  setGridBufferCell: (info: {
+    row: number
+    col: number
+    hlId: number
+    charIdx: number
+    isSecondHalfOfDoubleWidthCell: boolean
+    leftAtlasBounds: number
+    bottomAtlasBounds: number
+  }) => void
   getBuffer: () => Float32Array
   updateGridId: (gridId: number) => void
+  resetAtlasBounds: () => void
 }
 
 const nutella = () => {
@@ -99,7 +108,7 @@ const nutella = () => {
       if (sameGridSize || sameViewportSize) return
 
       Object.assign(gridSize, { rows, cols })
-      dataBuffer = new Float32Array(rows * cols * 4)
+      dataBuffer = new Float32Array(rows * cols * 7)
       gridBuffer.resize(rows, cols)
     }
 
@@ -173,8 +182,11 @@ const nutella = () => {
       updateGridId,
       getGridCell: gridBuffer.getCell,
       getGridLine: gridBuffer.getLine,
-      getGridBuffer: gridBuffer.getBuffer,
+      setGridBufferCell: gridBuffer.setCell,
       getBuffer: () => dataBuffer,
+      resetAtlasBounds: () => {
+        gridBuffer.resetAtlasBounds()
+      },
     }
   }
 

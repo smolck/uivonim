@@ -29,7 +29,8 @@ const getWindowById = (windowId: number) => {
 
 const getInstanceWindows = () => [...windows.values()]
 
-const refreshWebGLGrid = () => {
+// TODO(smolck): Any reason not to export this?
+export const refreshWebGLGrid = () => {
   webgl.clearAll()
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }
@@ -294,3 +295,7 @@ window.api.on(Events.colorschemeStateUpdated, () =>
     getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
   })
 )
+
+export const resetAtlasBounds = () => {
+  windows.forEach((win) => win.webgl.resetAtlasBounds())
+}

@@ -13,6 +13,8 @@ window
     windows.webgl.updateFontAtlas(atlas)
     windows.webgl.updateCellSize()
     workspace.resize()
+    windows.resetAtlasBounds()
+    windows.refreshWebGLGrid()
 
     // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
     // TODO: idk why i have to do this but this works

@@ -4,7 +4,8 @@ import {
   setDefaultColors,
 } from '../render/highlight-attributes'
 import {
-  getCharIndex,
+  AtlasChar,
+  getChar,
   getUpdatedFontAtlasMaybe,
 } from '../render/font-texture-atlas'
 import * as windows from '../windows/window-manager'
@@ -31,6 +32,7 @@ import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import { cell } from '../workspace'
 
 let dummyData = new Float32Array()
 
@@ -119,10 +121,10 @@ const grid_line = (e: any) => {
   let hlid = 0
   let activeGrid = 0
   let buffer = dummyData
-  let gridBuffer = dummyData
-  let width = 1
+  let gridBufferSetCell = (_x: any) => {}
   let col = 0
-  let charIndex = 0
+  let prevWasDoubleWidth = false
+  let prevChar: AtlasChar
 
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
@@ -135,9 +137,8 @@ const grid_line = (e: any) => {
     if (gridId !== activeGrid) {
       activeGrid = gridId
       const win = windows.get(gridId)
-      width = win.cols
       buffer = win.webgl.getBuffer()
-      gridBuffer = win.webgl.getGridBuffer()
+      gridBufferSetCell = win.webgl.setGridBufferCell
       if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
       grids.push(activeGrid)
     }
@@ -152,31 +153,53 @@ const grid_line = (e: any) => {
       const repeats = data[2] || 1
       hlid = typeof data[1] === 'number' ? data[1] : hlid
 
-      if (typeof char === 'string') {
-        const nextCD = charData[cd + 1]
-        const doubleWidth =
-          nextCD &&
-          typeof nextCD[0] === 'string' &&
-          nextCD[0].codePointAt(0) === undefined
-        charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-      } else charIndex = char - 32
+      const nextCD = charData[cd + 1]
+      const doubleWidth =
+        nextCD &&
+        typeof nextCD[0] === 'string' &&
+        nextCD[0].codePointAt(0) === undefined
+      const atlasChar = getChar(char, doubleWidth)
 
       for (let r = 0; r < repeats; r++) {
+        // If the previous char was double width, nvim will send an empty cell
+        // "" next; we check for that, and give that info to the grid buffer so
+        // webgl can handle it accordingly.
+        const char = prevWasDoubleWidth
+          ? {
+              ...prevChar!,
+              isSecondHalfOfDoubleWidthCell: true,
+              bounds: {
+                ...prevChar!.bounds,
+                left: prevChar!.bounds.left + cell.width,
+                right: prevChar!.bounds.right,
+              },
+            }
+          : { ...atlasChar, isSecondHalfOfDoubleWidthCell: false }
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = charIndex
-        gridRenderIndexes[gridId] += 4
+        buffer[gridRenderIndexes[gridId] + 3] = char.idx
+        buffer[gridRenderIndexes[gridId] + 4] =
+          char.isSecondHalfOfDoubleWidthCell ? 1 : 0
+        buffer[gridRenderIndexes[gridId] + 5] = char.bounds.left
+        buffer[gridRenderIndexes[gridId] + 6] = char.bounds.bottom
+        gridRenderIndexes[gridId] += 7
 
         // TODO: could maybe deffer this to next frame?
-        const bufix = col * 4 + width * row * 4
-        gridBuffer[bufix] = col
-        gridBuffer[bufix + 1] = row
-        gridBuffer[bufix + 2] = hlid
-        gridBuffer[bufix + 3] = charIndex
-
+        gridBufferSetCell({
+          row,
+          col,
+          hlId: hlid,
+          charIdx: char.idx,
+          leftAtlasBounds: char.bounds.left,
+          bottomAtlasBounds: char.bounds.bottom,
+          isSecondHalfOfDoubleWidthCell: char.isSecondHalfOfDoubleWidthCell,
+        })
         col++
       }
+
+      prevChar = atlasChar
+      prevWasDoubleWidth = doubleWidth
     }
   }
 
@@ -384,6 +407,8 @@ const updateFont = () => {
   windows.webgl.updateFontAtlas(atlas)
   windows.webgl.updateCellSize()
   workspace.resize()
+  windows.resetAtlasBounds()
+  windows.refreshWebGLGrid()
 }
 
 handle.optionSet((e: any) => {

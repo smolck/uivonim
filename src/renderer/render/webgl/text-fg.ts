@@ -9,9 +9,12 @@ export default (webgl: WebGL) => {
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
-    charIndex: VarKind.Attribute,
+
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
+    isSecondHalfOfDoubleWidthCell: VarKind.Attribute,
+    atlasBounds: VarKind.Attribute,
+
     canvasResolution: VarKind.Uniform,
     fontAtlasResolution: VarKind.Uniform,
     colorAtlasResolution: VarKind.Uniform,
@@ -31,7 +34,9 @@ export default (webgl: WebGL) => {
     in vec2 ${v.quadVertex};
     in vec2 ${v.cellPosition};
     in float ${v.hlid};
-    in float ${v.charIndex};
+    in vec2 ${v.atlasBounds};
+    in float ${v.isSecondHalfOfDoubleWidthCell};
+
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.fontAtlasResolution};
     uniform vec2 ${v.colorAtlasResolution};
@@ -48,7 +53,9 @@ export default (webgl: WebGL) => {
     out vec4 o_color;
 
     void main() {
-      bool isCursorCell = ${v.cursorPosition} == ${v.cellPosition} && ${v.shouldShowCursor};
+      vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
+      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${v.cursorPosition} == prevCellPos && ${v.cursorShape} == 0;
+      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${v.cellPosition}) && ${v.shouldShowCursor};
 
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
       vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex} + ${v.cellPadding};
@@ -57,9 +64,7 @@ export default (webgl: WebGL) => {
       float posy = posFloat.y * -2.0 + 1.0;
       gl_Position = vec4(posx, posy, 0, 1);
 
-      vec2 glyphPixelPosition = vec2(${v.charIndex}, 0) * ${v.cellSize};
-      vec2 glyphVertex = glyphPixelPosition + ${v.quadVertex};
-      o_glyphPosition = glyphVertex / ${v.fontAtlasResolution};
+      o_glyphPosition = (${v.atlasBounds} + ${v.quadVertex}) / ${v.fontAtlasResolution};
 
       float texelSize = 2.0;
       float color_x = ${v.hlid} * texelSize + 1.0;
@@ -129,7 +134,7 @@ export default (webgl: WebGL) => {
   webgl.gl.uniform1i(program.vars.shouldShowCursor, 1 /* true */)
 
   // total size of all pointers. chunk size that goes to shader
-  const wrenderStride = 4 * Float32Array.BYTES_PER_ELEMENT
+  const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
 
   const wrenderBuffer = program.setupData([
     {
@@ -149,10 +154,18 @@ export default (webgl: WebGL) => {
       divisor: 1,
     },
     {
-      pointer: program.vars.charIndex,
+      pointer: program.vars.isSecondHalfOfDoubleWidthCell,
       type: webgl.gl.FLOAT,
       size: 1,
-      offset: 3 * Float32Array.BYTES_PER_ELEMENT,
+      offset: 4 * Float32Array.BYTES_PER_ELEMENT,
+      stride: wrenderStride,
+      divisor: 1,
+    },
+    {
+      pointer: program.vars.atlasBounds,
+      type: webgl.gl.FLOAT,
+      size: 2,
+      offset: 5 * Float32Array.BYTES_PER_ELEMENT,
       stride: wrenderStride,
       divisor: 1,
     },
@@ -223,7 +236,7 @@ export default (webgl: WebGL) => {
   ) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 7)
   }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
@@ -255,7 +268,8 @@ export default (webgl: WebGL) => {
     webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
   }
 
-  const showCursor = (enable: boolean) => webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
+  const showCursor = (enable: boolean) =>
+    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
 
   const updateCursorColor = (color: [number, number, number]) => {
     webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
