@@ -210,7 +210,12 @@ const finetti = () => {
     resetAtlasBounds: () => {
       for (let ix = 0; ix < buffer.length; ix += 7) {
         const char = getCharFromIndex(buffer[ix + 3])
-        if (!char) console.warn(`Hmm resetting atlas bounds and couldn't find char ${buffer[ix + 3]}`)
+        if (!char)
+          console.warn(
+            `Hmm resetting atlas bounds and couldn't find char ${
+              buffer[ix + 3]
+            }`
+          )
 
         if (buffer[ix + 4] == 1) {
           buffer[ix + 5] = char!.bounds.left + cell.width

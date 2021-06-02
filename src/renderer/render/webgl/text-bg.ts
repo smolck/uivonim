@@ -3,6 +3,10 @@ import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { hexToRGB } from '../../ui/css'
 import { CursorShape } from '../../../common/types'
+// @ts-ignore
+import vertShader from './shaders/text-bg-vert.glsl'
+// @ts-ignore
+import fragShader from './shaders/text-bg-frag.glsl'
 
 export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -15,93 +19,19 @@ export default (webgl: WebGL) => {
     isCursorTri: VarKind.Attribute,
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
-    hlidType: VarKind.Uniform,
-    canvasResolution: VarKind.Uniform,
-    colorAtlasResolution: VarKind.Uniform,
-    colorAtlasTextureId: VarKind.Uniform,
-    cellSize: VarKind.Uniform,
-    cursorPosition: VarKind.Uniform,
-    cursorColor: VarKind.Uniform,
-    cursorShape: VarKind.Uniform,
-    shouldShowCursor: VarKind.Uniform,
+    hlidType: VarKind.Uniform1f,
+    canvasResolution: VarKind.Uniform2f,
+    colorAtlasResolution: VarKind.Uniform2f,
+    colorAtlasTextureId: VarKind.Uniform1i,
+    cellSize: VarKind.Uniform2f,
+    cursorPosition: VarKind.Uniform2f,
+    cursorColor: VarKind.Uniform4f,
+    cursorShape: VarKind.Uniform1i,
+    shouldShowCursor: VarKind.Uniform1i,
   })
 
-  program.setVertexShader(
-    (v) => `#version 300 es
-    in vec2 ${v.quadVertex};
-    in vec2 ${v.cellPosition};
-    in float ${v.isCursorTri};
-    in float ${v.hlid};
-    in float ${v.isSecondHalfOfDoubleWidthCell};
-    uniform vec2 ${v.cursorPosition};
-    uniform vec2 ${v.canvasResolution};
-    uniform vec2 ${v.colorAtlasResolution};
-    uniform vec2 ${v.cellSize};
-    uniform vec4 ${v.cursorColor};
-    uniform bool ${v.shouldShowCursor};
-    uniform int ${v.cursorShape};
-    uniform float ${v.hlidType};
-    uniform sampler2D ${v.colorAtlasTextureId};
-    out vec4 o_color;
-    out vec2 o_colorPosition;
-
-    void main() {
-      vec2 prevCellPos = vec2(${v.cellPosition}.x - 1.0, ${v.cellPosition}.y);
-      bool tbdNameCondition = ${v.isSecondHalfOfDoubleWidthCell} == 1.0 && ${
-      v.cursorPosition
-    } == prevCellPos && ${v.cursorShape} == 0;
-      bool isCursorCell = (tbdNameCondition || ${v.cursorPosition} == ${
-      v.cellPosition
-    }) && ${v.shouldShowCursor};
-
-      vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
-      vec2 vertexPosition = absolutePixelPosition + ${v.quadVertex};
-      vec2 posFloat = vertexPosition / ${v.canvasResolution};
-      float posx = posFloat.x * 2.0 - 1.0;
-      float posy = posFloat.y * -2.0 + 1.0;
-      gl_Position = vec4(posx, posy, 0, 1);
-
-      float texelSize = 2.0;
-      float color_x = ${v.hlid} * texelSize + 1.0;
-      float color_y = ${v.hlidType} * texelSize + 1.0;
-      vec2 colorPosition = vec2(color_x, color_y) / ${v.colorAtlasResolution};
-
-      bool condition;
-      ${
-        /*
-        TODO(smolck): I'm almost certain there's a way to do this
-        condition all in one without extra if statements, but my brain is
-        not finding it right now.
-      */ ''
-      }
-      if (${v.cursorShape} == 1) {
-        condition = isCursorCell && isCursorTri == 1.0;
-      } else {
-        condition = isCursorCell;
-      }
-
-      if (condition) {
-        o_color = cursorColor;
-      } else {
-        vec4 textureColor = texture(${v.colorAtlasTextureId}, colorPosition);
-        o_color = textureColor;
-      }
-    }
-  `
-  )
-
-  program.setFragmentShader(
-    () => `#version 300 es
-    precision mediump float;
-
-    in vec4 o_color;
-    out vec4 outColor;
-
-    void main() {
-      outColor = o_color;
-    }
-  `
-  )
+  program.setVertexShader(vertShader)
+  program.setFragmentShader(fragShader)
 
   program.create()
   program.use()
@@ -110,15 +40,11 @@ export default (webgl: WebGL) => {
 
   const colorAtlas = getColorAtlas()
   webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-  webgl.gl.uniform1i(program.vars.colorAtlasTextureId, 0)
-  webgl.gl.uniform2f(
-    program.vars.colorAtlasResolution,
-    colorAtlas.width,
-    colorAtlas.height
-  )
-  webgl.gl.uniform2f(program.vars.cursorPosition, 0, 0)
-  webgl.gl.uniform4fv(program.vars.cursorColor, [1, 1, 1, 1])
-  webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+  program.vars.colorAtlasTextureId = 0
+  program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
+  program.vars.cursorPosition = [0, 0]
+  program.vars.cursorColor = [1, 1, 1, 1]
+  program.vars.shouldShowCursor = shouldShowCursor
 
   // total size of all pointers. chunk size that goes to shader
   const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
@@ -251,7 +177,7 @@ export default (webgl: WebGL) => {
       ]),
     }
 
-    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+    program.vars.cellSize = [cell.width, cell.height]
     if (!initial) Object.assign(quads, next)
     return next
   }
@@ -285,7 +211,7 @@ export default (webgl: WebGL) => {
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
     webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
     webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    webgl.gl.uniform2f(program.vars.canvasResolution, width, height)
+    program.vars.canvasResolution = [width, height]
   }
 
   const render = (
@@ -299,13 +225,13 @@ export default (webgl: WebGL) => {
     wrenderBuffer.setData(buffer)
 
     if (shouldShowCursor && cursorShape == 2)
-      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
+      program.vars.shouldShowCursor = false
     // background
     quadBuffer.setData(quads.boxes)
-    webgl.gl.uniform1f(program.vars.hlidType, 0)
+    program.vars.hlidType = 0
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+    program.vars.shouldShowCursor = shouldShowCursor
 
     // underlines
     quadBuffer.setData(quads.lines)
@@ -314,39 +240,34 @@ export default (webgl: WebGL) => {
     // so set shouldShowCursor to false, then back to it's previous value after
     // the draw call.
     if (shouldShowCursor && cursorShape != 2 /* CursorShape.underline */)
-      webgl.gl.uniform1i(program.vars.shouldShowCursor, 0 /* false */)
+      program.vars.shouldShowCursor = false
 
-    webgl.gl.uniform1f(program.vars.hlidType, 2)
+    program.vars.hlidType = 2
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
 
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, shouldShowCursor ? 1 : 0)
+    program.vars.shouldShowCursor = shouldShowCursor
   }
 
   const showCursor = (enable: boolean) => (
-    (shouldShowCursor = enable),
-    webgl.gl.uniform1i(program.vars.shouldShowCursor, enable ? 1 : 0)
+    (shouldShowCursor = enable), (program.vars.shouldShowCursor = enable)
   )
 
   const updateCursorColor = (color: [number, number, number]) => {
-    webgl.gl.uniform4fv(program.vars.cursorColor, [...color, 1])
+    program.vars.cursorColor = [...color, 1]
   }
 
   const updateCursorShape = (shape: CursorShape) => {
     cursorShape = shape
-    webgl.gl.uniform1i(program.vars.cursorShape, shape)
+    program.vars.cursorShape = shape
   }
 
   const updateCursorPosition = (row: number, col: number) => {
-    webgl.gl.uniform2f(program.vars.cursorPosition, col, row)
+    program.vars.cursorPosition = [col, row]
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-    webgl.gl.uniform2f(
-      program.vars.colorAtlasResolution,
-      colorAtlas.width,
-      colorAtlas.height
-    )
+    program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
   }
 
   const clear = (x: number, y: number, width: number, height: number) => {
