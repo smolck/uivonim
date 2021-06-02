@@ -33,17 +33,10 @@ void main() {
   float color_y = hlidType * texelSize + 1.0;
   vec2 colorPosition = vec2(color_x, color_y) / colorAtlasResolution;
 
-  bool condition;
-  // TODO(smolck): I'm almost certain there's a way to do this
-  // condition all in one without extra if statements, but my brain is
-  // not finding it right now.
-  if (cursorShape == 1) {
-    condition = isCursorCell && isCursorTri == 1.0;
-  } else {
-    condition = isCursorCell;
-  }
-
-  if (condition) {
+  // If cursor is a line (1; see `CursorShape` in src/common/types.ts), then
+  // check if we're in the cursor cell and if we should color in this triangle;
+  // otherwise, just check if we're in the cursor cell.
+  if (cursorShape == 1 ? isCursorCell && isCursorTri == 1.0 : isCursorCell) {
     o_color = cursorColor;
   } else {
     vec4 textureColor = texture(colorAtlasTextureId, colorPosition);
