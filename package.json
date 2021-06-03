@@ -54,7 +54,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-inferno": "^6.3.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
-    "electron": "^13.0.1",
+    "electron": "^13.1.0",
     "electron-builder": "^22.11.5",
     "electron-devtools-installer": "^3.2.0",
     "fs-extra": "^10.0.0",
