@@ -4,7 +4,7 @@ import {
 } from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
-import { getCharFromIndex } from '../render/font-texture-atlas'
+import { getCharFromUnicode } from '../render/font-atlas'
 import { specs as titleSpecs } from '../title'
 import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../workspace'
@@ -326,14 +326,16 @@ export default () => {
   api.editor = {
     getChar: (row, col) => {
       const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3])?.char || '' // TODO(smolck)
+      const maybeChar = getCharFromUnicode(buf[3])?.unicode 
+      return (maybeChar && String.fromCharCode(maybeChar)) || '' // TODO(smolck)
     },
     getLine: (row) => {
       const buf = webgl.getGridLine(row)
       let line = ''
       for (let ix = 0; ix < buf.length; ix += 4) {
         const charIndex = buf[ix + 3]
-        line += getCharFromIndex(charIndex)?.char || '' // TODO(smolck)
+        const maybeChar = getCharFromUnicode(charIndex)?.unicode 
+        line += (maybeChar && String.fromCharCode(maybeChar)) || '' // TODO(smolck)
       }
       return line
     },
@@ -353,11 +355,12 @@ export default () => {
       for (let row = 0; row < wininfo.height; row++) {
         for (let col = 0; col < wininfo.width; col++) {
           const buf = webgl.getGridCell(row, col)
+          const maybeChar = getCharFromUnicode(buf[3])?.unicode 
           if (highlights.includes(buf[2]))
             results.push({
               col: buf[0],
               row: buf[1],
-              char: getCharFromIndex(buf[3])!.char,
+              char: String.fromCharCode(maybeChar!),
             })
         }
       }

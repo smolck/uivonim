@@ -1,4 +1,4 @@
-import { getCharFromIndex } from '../font-texture-atlas'
+import { getCharFromUnicode } from '../font-atlas'
 import { cell } from '../../workspace'
 
 const finetti = () => {
@@ -209,7 +209,8 @@ const finetti = () => {
     getBuffer: () => buffer,
     resetAtlasBounds: () => {
       for (let ix = 0; ix < buffer.length; ix += 7) {
-        const char = getCharFromIndex(buffer[ix + 3])
+        // TODO(smolck)
+        const char = getCharFromUnicode(buffer[ix + 3])
         if (!char)
           console.warn(
             `Hmm resetting atlas bounds and couldn't find char ${
@@ -218,7 +219,9 @@ const finetti = () => {
           )
 
         if (buffer[ix + 4] == 1) {
-          buffer[ix + 5] = char!.bounds.left + cell.width
+          buffer[ix + 5] = char!.bounds.left 
+            // TODO(smolck): Make sure this works
+            + (char!.advance / 2)
           buffer[ix + 6] = char!.bounds.bottom
         } else {
           buffer[ix + 5] = char!.bounds.left

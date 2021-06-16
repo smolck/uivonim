@@ -1,12 +1,13 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Nvim, { MasterControl as NvimType } from './core/master-control'
 import Input, { Input as InputType } from './core/input'
-import { Events, Invokables, InternalInvokables } from '../common/ipc'
+import { Events, Invokables, InternalInvokables, SyncEvents } from '../common/ipc'
 import { InstanceApi } from './core/instance-api'
 import * as path from 'path'
 import { getDirFiles, getDirs, $HOME, parseGuifont } from '../common/utils'
 import { GenericCallback } from '../common/types'
 import { handleRedraw } from './core/redraw'
+const { Atlas } = require('./msdf-atlas.node')
 
 if (process.platform === 'darwin') {
   // For some reason '/usr/local/bin' isn't in the path when
@@ -19,6 +20,20 @@ if (process.platform === 'darwin') {
 let win: BrowserWindow
 let nvim: NvimType
 let input: InputType
+let atlas = new Atlas(32, 32)
+// TODO(smolck): If this loadFont isn't done, things crash when you try to load
+// stuff . . . fix that on the native node module side
+atlas.loadFont('/Users/smolck/dev/typescript/uivonim/src/assets/roboto-mono.ttf')
+
+const initialAtlasChars = [] 
+for (let ix = 32; ix < 127; ix++) {
+  initialAtlasChars.push(ix)
+}
+atlas.addToCharset(initialAtlasChars)
+atlas.loadCharsetGlyphs()
+atlas.packAndColorEdges()
+const initialAtlasBuf = atlas.gen(false)
+
 app.setName('uivonim')
 
 const comscan = (() => {
@@ -102,7 +117,14 @@ app.on('ready', async () => {
     },
   })
 
+  ipcMain.on(SyncEvents.regenFontAtlas, (evt) => {
+    atlas.loadCharsetGlyphs()
+    atlas.packAndColorEdges()
+    evt.returnValue = atlas.gen(false)
+  })
+
   win.loadURL(`file:///${__dirname}/index.html`)
+  win.webContents.send(Events.initialFontAtlasInfoReceieved, { info: JSON.parse(atlas.getInfo()), atlas: initialAtlasBuf })
   comscan.register((ch, msg) => win.webContents.send(ch, msg))
 
   if (process.env.NODE_ENV !== 'production') win.webContents.openDevTools()
@@ -313,4 +335,11 @@ async function setupInvokeHandlers() {
   // Note that this is all really just so that `src/renderer/components/extensions/explorer.tsx` can work.
   handle.getDirs(getDirs)
   handle.getDirFiles(getDirFiles)
+
+  handle.addCharsToFontAtlas((chars: string[]) => atlas.addToCharset(chars.map((c) => c.charCodeAt(0))))
+  handle.regenFontAtlas(() => {
+    atlas.loadCharsetGlyphs()
+    atlas.packAndColorEdges()
+    return atlas.gen(false)
+  })
 }

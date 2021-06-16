@@ -6,3 +6,8 @@
 /dist
 .vscode
 .DS_Store
+/msdf-atlas/build
+/msdf-atlas/.ccls-cache
+/msdf-atlas/node_modules
+/scratch
+.ccls-cache

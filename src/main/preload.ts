@@ -5,19 +5,23 @@ import {
   Invokables,
   InternalInvokables,
   WindowApi,
+  SyncEvents,
 } from '../common/ipc'
 import { NeovimState } from '../main/neovim/state'
 
 let nvimState: NeovimState | undefined = undefined
 let homeDir = ''
-let onReady = new Promise((resolve, _) =>
-  ipcRenderer.on(Events.invokeHandlersReady, () => resolve(null))
-)
+let initialAtlas: any
+ipcRenderer.on(Events.initialFontAtlasInfoReceieved, (_evt, atlas) => {
+  initialAtlas = atlas
+})
+let onReady = new Promise((resolve, _) => ipcRenderer.on(Events.invokeHandlersReady, () => resolve(null)))
 
 ipcRenderer.on(Events.nvimState, (_event, state) => (nvimState = state))
 ipcRenderer.on(Events.homeDir, (_event, dir) => (homeDir = dir))
 
 const api: WindowApi = {
+  initialAtlas: () => initialAtlas,
   onRedrawEvent: (evt, fn) => {
     ipcRenderer.on(evt, (_evt, ...args) => fn(...args))
   },
@@ -30,6 +34,17 @@ const api: WindowApi = {
   luaeval: async (...args) => {
     await onReady
     return ipcRenderer.invoke(InternalInvokables.luaeval, ...args)
+  },
+  sendSyncEvent: (event, ...args) => {
+    if (Object.values(SyncEvents).indexOf(event) > -1) {
+      console.log('sup', event)
+      const ret = ipcRenderer.sendSync(event, ...args)
+      console.log(ret)
+      return ret
+    } else {
+      const message = `Tried to send synchronous event ${event} that isn't a valid event: this should NOT happen`
+      throw new Error(message)
+    }
   },
   on: (event, func: (...args: any[]) => void) => {
     // Derived from https://stackoverflow.com/a/35948779

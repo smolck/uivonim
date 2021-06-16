@@ -5,9 +5,8 @@ import {
 } from '../render/highlight-attributes'
 import {
   AtlasChar,
-  getChar,
-  getUpdatedFontAtlasMaybe,
-} from '../render/font-texture-atlas'
+  getAndMaybeAddChar,
+} from '../render/font-atlas'
 import * as windows from '../windows/window-manager'
 import {
   hideCursor,
@@ -31,7 +30,6 @@ import * as workspace from '../workspace'
 import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
-import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { cell } from '../workspace'
 
 let dummyData = new Float32Array()
@@ -149,7 +147,7 @@ const grid_line = (e: any) => {
 
     for (let cd = 0; cd < charDataSize; cd++) {
       const data = charData[cd]
-      const char = data[0]
+      const char: string = data[0]
       const repeats = data[2] || 1
       hlid = typeof data[1] === 'number' ? data[1] : hlid
 
@@ -158,7 +156,7 @@ const grid_line = (e: any) => {
         nextCD &&
         typeof nextCD[0] === 'string' &&
         nextCD[0].codePointAt(0) === undefined
-      const atlasChar = getChar(char, doubleWidth)
+      const atlasChar = getAndMaybeAddChar(char.charCodeAt(0))
 
       for (let r = 0; r < repeats; r++) {
         // If the previous char was double width, nvim will send an empty cell
@@ -171,14 +169,13 @@ const grid_line = (e: any) => {
               bounds: {
                 ...prevChar!.bounds,
                 left: prevChar!.bounds.left + cell.width,
-                right: prevChar!.bounds.right,
               },
             }
           : { ...atlasChar, isSecondHalfOfDoubleWidthCell: false }
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
-        buffer[gridRenderIndexes[gridId] + 3] = char.idx
+        buffer[gridRenderIndexes[gridId] + 3] = char.unicode
         buffer[gridRenderIndexes[gridId] + 4] =
           char.isSecondHalfOfDoubleWidthCell ? 1 : 0
         buffer[gridRenderIndexes[gridId] + 5] = char.bounds.left
@@ -190,7 +187,8 @@ const grid_line = (e: any) => {
           row,
           col,
           hlId: hlid,
-          charIdx: char.idx,
+          // TODO(smolck): Rename this to `charUnicode` from `charIdx` etc.
+          charIdx: char.unicode,
           leftAtlasBounds: char.bounds.left,
           bottomAtlasBounds: char.bounds.bottom,
           isSecondHalfOfDoubleWidthCell: char.isSecondHalfOfDoubleWidthCell,
@@ -203,8 +201,9 @@ const grid_line = (e: any) => {
     }
   }
 
-  const atlas = getUpdatedFontAtlasMaybe()
-  if (atlas) windows.webgl.updateFontAtlas(atlas)
+  // TODO(smolck)
+  // const atlas = getUpdatedFontAtlasMaybe()
+  // if (atlas) windows.webgl.updateFontAtlas(atlas)
 
   const gridCount = grids.length
   for (let ix = 0; ix < gridCount; ix++) {
@@ -403,10 +402,11 @@ const updateFont = () => {
   const changed = workspace.updateEditorFont({ face, size, lineSpace })
   if (!changed) return
 
-  const atlas = forceRegenerateFontAtlas()
-  windows.webgl.updateFontAtlas(atlas)
+  /*const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)*/
   windows.webgl.updateCellSize()
   workspace.resize()
+  // TODO(smolck)
   windows.resetAtlasBounds()
   windows.refreshWebGLGrid()
 }

@@ -2,6 +2,7 @@ import { merge, throttle } from '../common/utils'
 import robotoSizes from '../common/roboto-sizes'
 import { EventEmitter } from 'events'
 import { setVar } from './ui/css'
+import { pub } from './dispatch'
 
 interface UpdateEditorFontParams {
   face?: string
@@ -118,6 +119,7 @@ export const updateEditorFont = ({
 
   if (same) return false
   setFont(fontFace, fontSize, fontLineSpace)
+  pub('workspace.font.changed', { face: fontFace })
   return true
 }
 

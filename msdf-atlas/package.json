@@ -1,0 +1,18 @@
+{
+  "name": "msdf-atlas-node-gyp",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild",
+    "build": "node-gyp rebuild --target=13.1.2 --arch=arm64 --dist-url=https://electronjs.org/headers",
+    "gen-compile-commands": "node-gyp -- configure -f \"gyp.generator.compile_commands_json.py\""
+  },
+  "author": "smolck",
+  "license": "MIT",
+  "gypfile": true,
+  "dependencies": {
+    "nan": "^2.14.2"
+  }
+}

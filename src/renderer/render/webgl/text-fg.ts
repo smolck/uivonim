@@ -1,8 +1,8 @@
 import { getColorAtlas } from '../highlight-attributes'
-import generateFontAtlas from '../font-texture-atlas'
 import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { CursorShape } from '../../../common/types'
+import { Invokables } from '../../../common/ipc'
 // @ts-ignore
 import vertShader from './shaders/text-fg-vert.glsl'
 // @ts-ignore
@@ -40,16 +40,51 @@ export default (webgl: WebGL) => {
   program.use()
 
   // wait for roboto-mono to be loaded before we generate the initial font atlas
-  ;(document as any).fonts.ready.then(() => {
-    const fontAtlas = generateFontAtlas()
+  ;(document as any).fonts.ready.then(async () => {
+    /*const fontAtlas = generateFontAtlas()
     const fontAtlasWidth = Math.floor(fontAtlas.width / window.devicePixelRatio)
     const fontAtlasHeight = Math.floor(
       fontAtlas.height / window.devicePixelRatio
-    )
+    )*/
 
-    webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
+    // webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
+    const buf = await window.api.invoke(Invokables.regenFontAtlas)
+    console.log('buf bro: ', buf)
+    const imageData = new ImageData(256, 256)
+    // Iterate through every pixel
+    // let bufIdx = 0;
+    for (let i = 0, j = 0; i < imageData.data.length, j < buf.length; i += 4, j += 3) {
+      // Percentage in the x direction, times 255
+      // let x = (i % 400) / 400 * 255;
+      // Percentage in the y direction, times 255
+      // let y = Math.ceil(i / 400) / 100 * 255;
+
+      // Modify pixel data
+      /*if (buf.slice(j, j + 3).findIndex((x: number) => x != 0) > -1) {
+        console.log(buf.slice(j, j + 3))
+      } else {
+        console.log('nope')
+      }*/
+      imageData.data[i + 0] = buf[j];        // R value
+      imageData.data[i + 1] = buf[j + 1];        // G value
+      imageData.data[i + 2] = buf[j + 2];  // B value
+      imageData.data[i + 3] = 255;      // A value
+    }
+    console.log('load the image data yo')
+    // webgl.loadPixelData(imageData)
+
     program.vars.fontAtlasTextureId = 0
-    program.vars.canvasResolution = [fontAtlasWidth, fontAtlasHeight]
+
+    const canvas = document.createElement('canvas') as HTMLCanvasElement
+    document.body.appendChild(canvas)
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.putImageData(imageData, 0, 0)
+
+    // webgl.loadPixelData(imageData)
+
+    program.vars.canvasResolution = [canvas.width, canvas.height]
+    webgl.loadCanvasTexture(canvas)
+    // program.vars.canvasResolution = [fontAtlasWidth, fontAtlasHeight]
   })
 
   const colorAtlas = getColorAtlas()
@@ -167,11 +202,13 @@ export default (webgl: WebGL) => {
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 7)
   }
 
-  const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
-    webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
+  const updateFontAtlas = (_fontAtlas: HTMLCanvasElement) => {
+    // const buf = window.api.sendSyncEvent(SyncEvents.regenFontAtlas)
+    // webgl.loadPixelData(buf, 212, 212)
+    /*webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
     const width = Math.floor(fontAtlas.width / window.devicePixelRatio)
     const height = Math.floor(fontAtlas.height / window.devicePixelRatio)
-    program.vars.fontAtlasResolution = [width, height]
+    program.vars.fontAtlasResolution = [width, height]*/
   }
 
   const updateCellSize = () => {

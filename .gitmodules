@@ -1,0 +1,3 @@
+[submodule "msdf-atlas/msdf-atlas-gen"]
+	path = msdf-atlas/msdf-atlas-gen
+	url = https://github.com/smolck/msdf-atlas-gen

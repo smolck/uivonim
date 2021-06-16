@@ -28,6 +28,10 @@ const copy = {
     $`copying runtime files`
     return fs.copy(fromRoot('runtime'), fromRoot('build/runtime'))
   },
+  nativeModule: () => {
+    $`copying native node module msdf-atlas`
+    return fs.copy(fromRoot('msdf-atlas/build/Release/msdf-atlas.node'), fromRoot('build/main/msdf-atlas.node'))
+  }
 }
 
 const copyAll = () =>
@@ -36,6 +40,7 @@ const copyAll = () =>
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
+    copy.nativeModule(),
   ])
 
 require.main === module &&

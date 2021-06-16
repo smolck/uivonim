@@ -29,7 +29,8 @@ void main() {
   vec2 posFloat = vertexPosition / canvasResolution;
   gl_Position = vec4(posFloat.x * 2.0 - 1.0, posFloat.y * -2.0 + 1.0, 0, 1);
 
-  o_glyphPosition = (atlasBounds + quadVertex) / fontAtlasResolution;
+  vec2 normalizedQuadVertex = quadVertex / fontAtlasResolution;
+  o_glyphPosition = atlasBounds; // + normalizedQuadVertex;
 
   float texelSize = 2.0;
   float color_x = hlid * texelSize + 1.0;

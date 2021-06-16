@@ -1,6 +1,10 @@
 import { WindowMetadata, InputType } from './types'
 import { NeovimState } from '../main/neovim/state'
 
+export const SyncEvents = {
+  regenFontAtlas: 'regenAtlas',
+}
+
 export const InternalInvokables = {
   stealInput: 'stealInput',
   restoreInput: 'restoreInput',
@@ -10,6 +14,9 @@ export const InternalInvokables = {
 }
 
 export const Invokables = {
+  addCharsToFontAtlas: 'addCharsToAtlas',
+  regenFontAtlas: 'regenAtlas',
+
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim.resize',
@@ -31,6 +38,7 @@ export const Invokables = {
 } as const
 
 export const Events = {
+  initialFontAtlasInfoReceieved: 'initialFontAtlasInfoRecv',
   gitOnStatus: 'gitOnStatus',
   gitOnBranch: 'gitOnBranch',
   invokeHandlersReady: 'invokeHandlersReady',
@@ -97,7 +105,30 @@ export const RedrawEvents = {
   wildmenuSelect: 'wildmenu_select',
 }
 
+interface Glyph {
+  unicode: number
+  advance: number
+  atlasBounds?: {
+    bottom: number
+    left: number
+  }
+}
+
+interface Atlas {
+  info: {
+    atlas: {
+      distanceRange: number
+      width: number
+      height: number
+    }
+    glyphs: Glyph[]
+  }
+  atlas: Uint8Array
+}
+
 export interface WindowApi {
+  initialAtlas: () => Atlas // TODO(smolck): Type this
+  sendSyncEvent: (evt: typeof SyncEvents[keyof typeof SyncEvents], ...args: any[]) => any
   onRedrawEvent: (
     evt: typeof RedrawEvents[keyof typeof RedrawEvents],
     fn: (...args: any[]) => void

@@ -2,17 +2,17 @@ import * as workspace from './workspace'
 import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 import { debounce, merge } from '../common/utils'
-import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 import { Events, Invokables } from '../common/ipc'
 
 window
   .matchMedia('screen and (min-resolution: 2dppx)')
   .addEventListener('change', () => {
-    const atlas = forceRegenerateFontAtlas()
-    windows.webgl.updateFontAtlas(atlas)
+    /*const atlas = forceRegenerateFontAtlas()
+    windows.webgl.updateFontAtlas(atlas)*/
     windows.webgl.updateCellSize()
     workspace.resize()
+    // TODO(smolck)
     windows.resetAtlasBounds()
     windows.refreshWebGLGrid()
 
