@@ -166,21 +166,14 @@ const grid_line = (e: any) => {
           ? {
               ...prevChar!,
               isSecondHalfOfDoubleWidthCell: true,
-              bounds: {
-                ...prevChar!.bounds,
-                left: prevChar!.bounds.left + cell.width,
-              },
             }
           : { ...atlasChar, isSecondHalfOfDoubleWidthCell: false }
         buffer[gridRenderIndexes[gridId]] = col
         buffer[gridRenderIndexes[gridId] + 1] = row
         buffer[gridRenderIndexes[gridId] + 2] = hlid
         buffer[gridRenderIndexes[gridId] + 3] = char.unicode
-        buffer[gridRenderIndexes[gridId] + 4] =
-          char.isSecondHalfOfDoubleWidthCell ? 1 : 0
-        buffer[gridRenderIndexes[gridId] + 5] = char.bounds.left
-        buffer[gridRenderIndexes[gridId] + 6] = char.bounds.bottom
-        gridRenderIndexes[gridId] += 7
+        buffer[gridRenderIndexes[gridId] + 4] = char.isSecondHalfOfDoubleWidthCell ? 1 : 0
+        gridRenderIndexes[gridId] += 5
 
         // TODO: could maybe deffer this to next frame?
         gridBufferSetCell({
@@ -189,8 +182,7 @@ const grid_line = (e: any) => {
           hlId: hlid,
           // TODO(smolck): Rename this to `charUnicode` from `charIdx` etc.
           charIdx: char.unicode,
-          leftAtlasBounds: char.bounds.left,
-          bottomAtlasBounds: char.bounds.bottom,
+          atlasBounds: char.bounds,
           isSecondHalfOfDoubleWidthCell: char.isSecondHalfOfDoubleWidthCell,
         })
         col++

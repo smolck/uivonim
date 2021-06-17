@@ -24,10 +24,12 @@ export interface WebGLView {
     hlId: number
     charIdx: number
     isSecondHalfOfDoubleWidthCell: boolean
-    leftAtlasBounds: number
-    bottomAtlasBounds: number
+    atlasBounds: {
+      left: number, right: number, top: number, bottom: number
+    }
   }) => void
   getBuffer: () => Float32Array
+  getTexCoordsBuffer: () => Float32Array
   updateGridId: (gridId: number) => void
   resetAtlasBounds: () => void
 }
@@ -95,6 +97,7 @@ const nutella = () => {
     const gridSize = { rows: 0, cols: 0 }
     const gridBuffer = CreateWebGLBuffer()
     let dataBuffer = new Float32Array()
+    let otherDataBuffer = new Float32Array()
 
     const updateGridId = (newGridId: number) => (gridId = newGridId)
 
@@ -108,7 +111,8 @@ const nutella = () => {
       if (sameGridSize || sameViewportSize) return
 
       Object.assign(gridSize, { rows, cols })
-      dataBuffer = new Float32Array(rows * cols * 7)
+      dataBuffer = new Float32Array(rows * cols * 5)
+      otherDataBuffer = new Float32Array(rows * cols * 12)
       gridBuffer.resize(rows, cols)
     }
 
@@ -131,7 +135,8 @@ const nutella = () => {
       const doHacks = gridId !== getActiveGridId() && cursorState.visible
       if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      console.log("what does this method even do/why does it exist TODO(smolck)")
+      textFGRenderer.render(buffer, otherDataBuffer.subarray(0, elements), x, y, width, height)
       if (doHacks) showCursor(true)
     }
 
@@ -142,7 +147,7 @@ const nutella = () => {
       const doHacks = gridId !== getActiveGridId() && cursorState.visible
       if (doHacks) showCursor(false)
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      textFGRenderer.render(buffer, gridBuffer.getTexCoordsBuffer(), x, y, width, height)
       if (doHacks) showCursor(true)
     }
 
@@ -159,7 +164,7 @@ const nutella = () => {
       const buffer = gridBuffer.getBuffer()
       const { x, y, width, height } = viewport
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      textFGRenderer.render(buffer, gridBuffer.getTexCoordsBuffer(), x, y, width, height)
     }
 
     const moveRegionDown = (lines: number, top: number, bottom: number) => {
@@ -167,7 +172,7 @@ const nutella = () => {
       const buffer = gridBuffer.getBuffer()
       const { x, y, width, height } = viewport
       textBGRenderer.render(buffer, x, y, width, height)
-      textFGRenderer.render(buffer, x, y, width, height)
+      textFGRenderer.render(buffer, gridBuffer.getTexCoordsBuffer(), x, y, width, height)
     }
 
     return {
@@ -184,6 +189,7 @@ const nutella = () => {
       getGridLine: gridBuffer.getLine,
       setGridBufferCell: gridBuffer.setCell,
       getBuffer: () => dataBuffer,
+      getTexCoordsBuffer: () => otherDataBuffer,
       resetAtlasBounds: () => {
         gridBuffer.resetAtlasBounds()
       },

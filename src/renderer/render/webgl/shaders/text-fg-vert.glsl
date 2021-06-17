@@ -2,11 +2,11 @@
 in vec2 quadVertex;
 in vec2 cellPosition;
 in float hlid;
-in vec2 atlasBounds;
 in float isSecondHalfOfDoubleWidthCell;
 
+in vec2 texCoords;
+
 uniform vec2 canvasResolution;
-uniform vec2 fontAtlasResolution;
 uniform vec2 colorAtlasResolution;
 uniform vec2 cellSize;
 uniform vec2 cellPadding;
@@ -17,7 +17,7 @@ uniform vec2 cursorPosition;
 uniform bool shouldShowCursor;
 uniform int cursorShape;
 
-out vec2 o_glyphPosition;
+out vec2 o_texCoords;
 out vec4 o_color;
 
 void main() {
@@ -29,8 +29,8 @@ void main() {
   vec2 posFloat = vertexPosition / canvasResolution;
   gl_Position = vec4(posFloat.x * 2.0 - 1.0, posFloat.y * -2.0 + 1.0, 0, 1);
 
-  vec2 normalizedQuadVertex = quadVertex / fontAtlasResolution;
-  o_glyphPosition = atlasBounds; // + normalizedQuadVertex;
+  vec2 normalizedQuadVertex = quadVertex;
+  o_texCoords = texCoords;
 
   float texelSize = 2.0;
   float color_x = hlid * texelSize + 1.0;

@@ -117,6 +117,7 @@ const create = (options?: WebGLContextAttributes) => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     // @ts-ignore typings are wrong, see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei#Pixel_storage_parameters
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
     // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
 

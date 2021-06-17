@@ -13,14 +13,13 @@ export default (webgl: WebGL) => {
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
+    texCoords: VarKind.Attribute,
 
     cellPosition: VarKind.Attribute,
     hlid: VarKind.Attribute,
     isSecondHalfOfDoubleWidthCell: VarKind.Attribute,
-    atlasBounds: VarKind.Attribute,
 
     canvasResolution: VarKind.Uniform2f,
-    fontAtlasResolution: VarKind.Uniform2f,
     colorAtlasResolution: VarKind.Uniform2f,
     fontAtlasTextureId: VarKind.Uniform1i,
     colorAtlasTextureId: VarKind.Uniform1i,
@@ -41,50 +40,28 @@ export default (webgl: WebGL) => {
 
   // wait for roboto-mono to be loaded before we generate the initial font atlas
   ;(document as any).fonts.ready.then(async () => {
-    /*const fontAtlas = generateFontAtlas()
-    const fontAtlasWidth = Math.floor(fontAtlas.width / window.devicePixelRatio)
-    const fontAtlasHeight = Math.floor(
-      fontAtlas.height / window.devicePixelRatio
-    )*/
+    const { atlas: buf } = window.api.initialAtlas()
+      // (await window.api.invoke(Invokables.regenFontAtlas))
 
-    // webgl.loadCanvasTexture(fontAtlas, webgl.gl.TEXTURE0)
-    const buf = await window.api.invoke(Invokables.regenFontAtlas)
     console.log('buf bro: ', buf)
     const imageData = new ImageData(256, 256)
-    // Iterate through every pixel
-    // let bufIdx = 0;
-    for (let i = 0, j = 0; i < imageData.data.length, j < buf.length; i += 4, j += 3) {
-      // Percentage in the x direction, times 255
-      // let x = (i % 400) / 400 * 255;
-      // Percentage in the y direction, times 255
-      // let y = Math.ceil(i / 400) / 100 * 255;
 
-      // Modify pixel data
-      /*if (buf.slice(j, j + 3).findIndex((x: number) => x != 0) > -1) {
-        console.log(buf.slice(j, j + 3))
-      } else {
-        console.log('nope')
-      }*/
+    // Iterate through every pixel
+    for (let i = 0, j = 0; i < imageData.data.length, j < buf.length; i += 4, j += 3) {
       imageData.data[i + 0] = buf[j];        // R value
       imageData.data[i + 1] = buf[j + 1];        // G value
       imageData.data[i + 2] = buf[j + 2];  // B value
       imageData.data[i + 3] = 255;      // A value
     }
     console.log('load the image data yo')
-    // webgl.loadPixelData(imageData)
 
     program.vars.fontAtlasTextureId = 0
+    webgl.loadPixelData(imageData)
 
     const canvas = document.createElement('canvas') as HTMLCanvasElement
-    document.body.appendChild(canvas)
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.putImageData(imageData, 0, 0)
-
-    // webgl.loadPixelData(imageData)
-
-    program.vars.canvasResolution = [canvas.width, canvas.height]
-    webgl.loadCanvasTexture(canvas)
-    // program.vars.canvasResolution = [fontAtlasWidth, fontAtlasHeight]
+    document.body.appendChild(canvas)
   })
 
   const colorAtlas = getColorAtlas()
@@ -97,8 +74,7 @@ export default (webgl: WebGL) => {
   program.vars.shouldShowCursor = true // TODO(smolck)
 
   // total size of all pointers. chunk size that goes to shader
-  const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
-
+  const wrenderStride = 5 * Float32Array.BYTES_PER_ELEMENT
   const wrenderBuffer = program.setupData([
     {
       pointer: program.vars.cellPosition,
@@ -123,16 +99,17 @@ export default (webgl: WebGL) => {
       offset: 4 * Float32Array.BYTES_PER_ELEMENT,
       stride: wrenderStride,
       divisor: 1,
-    },
-    {
-      pointer: program.vars.atlasBounds,
-      type: webgl.gl.FLOAT,
-      size: 2,
-      offset: 5 * Float32Array.BYTES_PER_ELEMENT,
-      stride: wrenderStride,
-      divisor: 1,
-    },
+    }
   ])
+
+  const texCoordsBuffer = program.setupData({
+    pointer: program.vars.texCoords,
+    type: webgl.gl.FLOAT,
+    size: 2,
+    // offset: 0,
+    // total size of all pointers. chunk size that goes to shader
+    // stride: 12 * Float32Array.BYTES_PER_ELEMENT
+  })
 
   const quadBuffer = program.setupData({
     pointer: program.vars.quadVertex,
@@ -142,18 +119,17 @@ export default (webgl: WebGL) => {
 
   quadBuffer.setData(
     new Float32Array([
-      0,
-      0,
-      cell.width,
-      cell.height,
-      0,
-      cell.height,
-      cell.width,
-      0,
-      cell.width,
-      cell.height,
-      0,
-      0,
+      0, 0,
+
+      cell.width, cell.height,
+
+      0, cell.height,
+
+      cell.width, 0,
+
+      cell.width, cell.height,
+
+      0, 0,
     ])
   )
 
@@ -192,6 +168,7 @@ export default (webgl: WebGL) => {
 
   const render = (
     buffer: Float32Array,
+    texCoordsBuf: Float32Array,
     x: number,
     y: number,
     width: number,
@@ -199,7 +176,11 @@ export default (webgl: WebGL) => {
   ) => {
     readjustViewportMaybe(x, y, width, height)
     wrenderBuffer.setData(buffer)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 7)
+    texCoordsBuffer.setData(texCoordsBuf)
+    // console.log('render!', texCoordsBuf)
+    // console.log(texCoordsBuf)
+    // console.log(texCoordsBuf)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 5)
   }
 
   const updateFontAtlas = (_fontAtlas: HTMLCanvasElement) => {

@@ -19,14 +19,18 @@ export interface AtlasChar {
   bounds: {
     left: number
     bottom: number
+    right: number
+    top: number
   }
 }
 
-const boundsOrDefault = (maybeBounds?: { left: number, bottom: number }) => 
+const boundsOrDefault = (maybeBounds?: { left: number, bottom: number, right: number, top: number }) => 
   maybeBounds ? { 
-    left: maybeBounds.left / atlasWidth, 
-    bottom: maybeBounds.bottom / atlasHeight 
-  } : { left: 0, bottom: 0 }
+    left: maybeBounds.left / atlasWidth,
+    bottom: maybeBounds.bottom / atlasHeight,
+    right: maybeBounds.right / atlasWidth,
+    top: maybeBounds.top / atlasHeight,
+  } : { left: 0, right: 0, bottom: 0, top: 0 }
 
 export const getAndMaybeAddChar = (charUnicode: number): AtlasChar => {
   const maybeGlyph = glyphs.find((x) => x.unicode === charUnicode)
@@ -39,12 +43,11 @@ export const getAndMaybeAddChar = (charUnicode: number): AtlasChar => {
     })*/
   }
 
+  const bounds = boundsOrDefault(maybeGlyph?.atlasBounds)
   return {
     advance: maybeGlyph ? maybeGlyph.advance : 0,
     unicode: charUnicode,
-    bounds: maybeGlyph ? 
-      boundsOrDefault(maybeGlyph.atlasBounds)
-      : { left: 0, bottom: 0 }
+    bounds
   }
 }
 

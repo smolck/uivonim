@@ -111,6 +111,8 @@ interface Glyph {
   atlasBounds?: {
     bottom: number
     left: number
+    right: number
+    top: number
   }
 }
 

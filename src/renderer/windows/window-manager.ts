@@ -277,7 +277,7 @@ Object.assign(webgl.foregroundElement.style, {
   zIndex: 4,
 })
 
-webglContainer.appendChild(webgl.backgroundElement)
+// webglContainer.appendChild(webgl.backgroundElement)
 webglContainer.appendChild(webgl.foregroundElement)
 
 onElementResize(webglContainer, (w, h) => {
