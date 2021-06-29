@@ -84,10 +84,9 @@ the signature help, float, etc. features.
 
 ## Other Cool Projects
 
-- [Oni2](https://github.com/onivim/oni2)
+- [Neovide](https://github.com/Kethku/neovide)
 - [GoNeovim](https://github.com/akiyosi/goneovim)
-- [gnvim](https://github.com/vhakulinen/gnvim)
-- [coc.nvim](https://github.com/neoclide/coc.nvim)
+- [GNvim](https://github.com/vhakulinen/gnvim)
 
 ## Special Thanks
 
