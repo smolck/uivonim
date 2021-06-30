@@ -51,6 +51,7 @@
     "@types/marked": "^2.0.3",
     "@types/node": "^15.12.3",
     "@types/webgl2": "0.0.6",
+    "@wasm-tool/wasm-pack-plugin": "^1.4.0",
     "babel-loader": "^8.2.2",
     "babel-plugin-inferno": "^6.3.0",
     "babel-plugin-syntax-jsx": "^6.18.0",

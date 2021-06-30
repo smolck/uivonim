@@ -6,3 +6,5 @@
 /dist
 .vscode
 .DS_Store
+/src/renderer/target
+/src/renderer/pkg

@@ -1,0 +1,22 @@
+[package]
+name = "renderer"
+version = "0.1.0"
+authors = ["smolck <46855713+smolck@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+seed = "0.8.0"
+wasm-bindgen = "0.2.74"
+luminance = "0.43"
+luminance-front = "0.3"
+luminance-derive = "0.6"
+luminance-web-sys = "0.2"
+luminance-webgl = "0.3.2"
+luminance-windowing = "0.9"
+
+[dependencies.web-sys]
+version = "0.3.51"

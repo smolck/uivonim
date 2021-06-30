@@ -2,11 +2,13 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta
+    <!-- TODO(smolck): Do this where it's safe and works with wasm -->
+    <!-- <meta
       http-equiv="Content-Security-Policy"
       content="default-src *; img-src blob: data: *; script-src blob: data
                'self' 'unsafe-inline'; worker-src blob: data 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: *; connect-src http://localhost:22444"
     />
+    --> 
     <title>uivonim</title>
     <style>
       @font-face {
@@ -162,7 +164,9 @@
       <textarea id="keycomp-textarea"></textarea>
     </div>
 
-    <div id="notifications"></div>
+    <div id="app"></div>
+
+    <!-- <div id="notifications"></div>
 
     <div id="workspace">
       <div id="webgl"></div>
@@ -171,7 +175,7 @@
       <div id="plugins"></div>
     </div>
 
-    <div id="statusline"></div>
+    <div id="statusline"></div>-->
 
     <script type="text/javascript" src="../renderer/bundle.js"></script>
   </body>
