@@ -1,6 +1,6 @@
-mod api;
-mod grid;
-mod webgl;
+pub mod api;
+pub mod grid;
+pub mod webgl;
 
 use api::{RedrawEventHandler, RedrawEvents};
 use seed::{prelude::*, *};
