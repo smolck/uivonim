@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 
 pub type RedrawEventHandler = Closure<dyn FnMut(JsValue)>;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum RedrawEvents {
     GridLine,
 }
