@@ -20,7 +20,9 @@ impl Model {
         F: FnMut(JsValue),
     {
         // TODO(smolck): Should be fine just discarding this value . . . I think.
-        let _ = self.handlers.insert(evt.clone(), api::on_redraw_event(evt, cb));
+        let _ = self
+            .handlers
+            .insert(evt.clone(), api::on_redraw_event(evt, cb));
     }
 }
 

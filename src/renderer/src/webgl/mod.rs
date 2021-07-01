@@ -1,23 +1,22 @@
 use luminance::{
-    Semantics, UniformInterface, Vertex,
-    backend::texture::Texture as TextureBackend,
-    texture::Texture,
+    backend::texture::Texture as TextureBackend, texture::Texture, Semantics, UniformInterface,
+    Vertex,
 };
 use std::convert::TryInto;
 
 use luminance_front::{
-    Backend,
     context::GraphicsContext,
     pipeline::{PipelineState, TextureBinding},
-    pixel::{NormRGBA8UI, NormRGB8UI, NormUnsigned},
+    pixel::{NormRGB8UI, NormRGBA8UI, NormUnsigned},
     render_state::RenderState,
     shader::Program,
     shader::Uniform,
     tess::{Interleaved, Mode, Tess},
-    texture::{Dim2, GenMipmaps, Sampler, /*Texture,*/ MagFilter, MinFilter},
+    texture::{Dim2, GenMipmaps, /*Texture,*/ MagFilter, MinFilter, Sampler},
+    Backend,
 };
-use luminance_webgl::webgl2::WebGL2;
 use luminance_web_sys::WebSysWebGL2Surface;
+use luminance_webgl::webgl2::WebGL2;
 use wasm_bindgen::prelude::*;
 
 use web_sys::{Document, WebGl2RenderingContext};
@@ -37,7 +36,11 @@ mod fg {
         SemHlId,
         #[sem(name = "atlasBounds", repr = "[f32; 2]", wrapper = "AtlasBounds")]
         SemAtlasBounds,
-        #[sem(name = "isSecondHalfOfDoubleWidthCell", repr = "f32", wrapper = "IsSecondHalfOfDoubleWidthCell")]
+        #[sem(
+            name = "isSecondHalfOfDoubleWidthCell",
+            repr = "f32",
+            wrapper = "IsSecondHalfOfDoubleWidthCell"
+        )]
         SemIsSecondHalfOfDoubleWidthCell,
     }
 
@@ -75,15 +78,17 @@ mod fg {
         cell_pos: CellPosition,
         hl_id: HlId,
         atlas_bounds: AtlasBounds,
-        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell
+        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell,
     }
 
-    pub fn create_program(context: &mut impl GraphicsContext<Backend = Backend>) -> Program<Semantics, (), ()> {
+    pub fn create_program(
+        context: &mut impl GraphicsContext<Backend = Backend>,
+    ) -> Program<Semantics, (), ()> {
         context
-          .new_shader_program()
-          .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
-          .expect("fg program creation")
-          .ignore_warnings()
+            .new_shader_program()
+            .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
+            .expect("fg program creation")
+            .ignore_warnings()
     }
 }
 
@@ -102,7 +107,11 @@ mod bg {
         SemHlId,
         #[sem(name = "atlasBounds", repr = "[f32; 2]", wrapper = "AtlasBounds")]
         SemAtlasBounds,
-        #[sem(name = "isSecondHalfOfDoubleWidthCell", repr = "f32", wrapper = "IsSecondHalfOfDoubleWidthCell")]
+        #[sem(
+            name = "isSecondHalfOfDoubleWidthCell",
+            repr = "f32",
+            wrapper = "IsSecondHalfOfDoubleWidthCell"
+        )]
         SemIsSecondHalfOfDoubleWidthCell,
         #[sem(name = "isCursorTri", repr = "f32", wrapper = "IsCursorTri")]
         SemIsCursorTri,
@@ -140,15 +149,17 @@ mod bg {
         cell_pos: CellPosition,
         hl_id: HlId,
         is_cursor_tri: IsCursorTri,
-        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell
+        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell,
     }
 
-    pub fn create_program(context: &mut impl GraphicsContext<Backend = Backend>) -> Program<Semantics, (), ()> {
+    pub fn create_program(
+        context: &mut impl GraphicsContext<Backend = Backend>,
+    ) -> Program<Semantics, (), ()> {
         context
-          .new_shader_program()
-          .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
-          .expect("bg program creation")
-          .ignore_warnings()
+            .new_shader_program()
+            .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
+            .expect("bg program creation")
+            .ignore_warnings()
     }
 }
 
