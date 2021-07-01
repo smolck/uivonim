@@ -6,6 +6,7 @@ use luminance::{
 use std::convert::TryInto;
 
 use luminance_front::{
+    Backend,
     context::GraphicsContext,
     pipeline::{PipelineState, TextureBinding},
     pixel::{NormRGBA8UI, NormRGB8UI, NormUnsigned},
@@ -21,46 +22,137 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::{Document, WebGl2RenderingContext};
 
-const VS: &'static str = include_str!("vs.glsl");
-const FS: &'static str = include_str!("fs.glsl");
+mod fg {
+    use crate::webgl::*;
+    const FRAG_SHADER: &'static str = include_str!("shaders/foreground-frag.glsl");
+    const VERT_SHADER: &'static str = include_str!("shaders/foreground-vert.glsl");
 
-const IMAGE: &[u8; 3664] = include_bytes!("atlas.png");
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Semantics)]
+    pub enum Semantics {
+        #[sem(name = "quadVertex", repr = "[f32; 2]", wrapper = "QuadVertex")]
+        SemQuadVertex,
+        #[sem(name = "cellPosition", repr = "[f32; 2]", wrapper = "CellPosition")]
+        SemCellPosition,
+        #[sem(name = "hlid", repr = "f32", wrapper = "HlId")]
+        SemHlId,
+        #[sem(name = "atlasBounds", repr = "[f32; 2]", wrapper = "AtlasBounds")]
+        SemAtlasBounds,
+        #[sem(name = "isSecondHalfOfDoubleWidthCell", repr = "f32", wrapper = "IsSecondHalfOfDoubleWidthCell")]
+        SemIsSecondHalfOfDoubleWidthCell,
+    }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Semantics)]
-pub enum Semantics {
-    #[sem(name = "v_position", repr = "[f32; 2]", wrapper = "VertexPosition")]
-    Position,
-    #[sem(name = "v_texCoords", repr = "[f32; 2]", wrapper = "VertexTexCoords")]
-    TexCoords,
+    #[derive(Debug, UniformInterface)]
+    struct ShaderInterface {
+        #[uniform(unbound, name = "canvasResolution")]
+        canvas_resolution: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "fontAtlasResolution")]
+        font_atlas_resolution: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "colorAtlasResolution")]
+        color_atlas_resolution: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "cellSize")]
+        cell_size: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "cellPadding")]
+        cell_padding: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "colorAtlasTextureId")]
+        color_atlas_tex: Uniform<TextureBinding<Dim2, NormUnsigned>>,
+        #[uniform(unbound, name = "fontAtlasTextureId")]
+        font_atlas_tex: Uniform<TextureBinding<Dim2, NormUnsigned>>,
+        #[uniform(unbound, name = "cursorColor")]
+        cursor_color: Uniform<[f32; 4]>,
+        #[uniform(unbound, name = "cursorPosition")]
+        cursor_pos: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "shouldShowCursor")]
+        should_show_cursor: Uniform<bool>,
+        #[uniform(unbound, name = "cursorShape")]
+        cursor_shape: Uniform<i32>,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy, Debug, PartialEq, Vertex)]
+    #[vertex(sem = "Semantics")]
+    struct Vertex {
+        quad_vert: QuadVertex,
+        cell_pos: CellPosition,
+        hl_id: HlId,
+        atlas_bounds: AtlasBounds,
+        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell
+    }
+
+    pub fn create_program(context: &mut impl GraphicsContext<Backend = Backend>) -> Program<Semantics, (), ()> {
+        context
+          .new_shader_program()
+          .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
+          .expect("fg program creation")
+          .ignore_warnings()
+    }
 }
 
-#[derive(Debug, UniformInterface)]
-struct ShaderInterface {
-    // #[uniform(unbound)]
-    //time: Uniform<f32>,
-    // #[uniform(unbound, name = "viewProjectionMatrix")]
-    // view_projection_matrix: Uniform<[[f32; 4]; 4]>,
-    // #[uniform(unbound, name = "modelMatrix")]
-    // model_matrix: Uniform<[[f32; 4]; 4]>,
-    #[uniform(unbound, name = "fontAtlas")]
-    font_atlas: Uniform<TextureBinding<Dim2, NormUnsigned>>,
-    #[uniform(unbound, name = "bgColor")]
-    bg_color: Uniform<[f32; 4]>,
-    #[uniform(unbound, name = "fgColor")]
-    fg_color: Uniform<[f32; 4]>,
-    #[uniform(unbound, name = "screenPxRange")]
-    screen_px_range: Uniform<f32>,
+mod bg {
+    use crate::webgl::*;
+    const FRAG_SHADER: &'static str = include_str!("shaders/background-frag.glsl");
+    const VERT_SHADER: &'static str = include_str!("shaders/background-vert.glsl");
+
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Semantics)]
+    pub enum Semantics {
+        #[sem(name = "quadVertex", repr = "[f32; 2]", wrapper = "QuadVertex")]
+        SemQuadVertex,
+        #[sem(name = "cellPosition", repr = "[f32; 2]", wrapper = "CellPosition")]
+        SemCellPosition,
+        #[sem(name = "hlid", repr = "f32", wrapper = "HlId")]
+        SemHlId,
+        #[sem(name = "atlasBounds", repr = "[f32; 2]", wrapper = "AtlasBounds")]
+        SemAtlasBounds,
+        #[sem(name = "isSecondHalfOfDoubleWidthCell", repr = "f32", wrapper = "IsSecondHalfOfDoubleWidthCell")]
+        SemIsSecondHalfOfDoubleWidthCell,
+        #[sem(name = "isCursorTri", repr = "f32", wrapper = "IsCursorTri")]
+        SemIsCursorTri,
+    }
+
+    #[derive(Debug, UniformInterface)]
+    struct ShaderInterface {
+        #[uniform(unbound, name = "canvasResolution")]
+        canvas_resolution: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "colorAtlasResolution")]
+        color_atlas_resolution: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "cellSize")]
+        cell_size: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "cellPadding")]
+        cell_padding: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "colorAtlasTextureId")]
+        color_atlas_tex: Uniform<TextureBinding<Dim2, NormUnsigned>>,
+        #[uniform(unbound, name = "cursorColor")]
+        cursor_color: Uniform<[f32; 4]>,
+        #[uniform(unbound, name = "cursorPosition")]
+        cursor_pos: Uniform<[f32; 2]>,
+        #[uniform(unbound, name = "shouldShowCursor")]
+        should_show_cursor: Uniform<bool>,
+        #[uniform(unbound, name = "cursorShape")]
+        cursor_shape: Uniform<i32>,
+        #[uniform(unbound, name = "hlidType")]
+        hlid_type: Uniform<f32>,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy, Debug, PartialEq, Vertex)]
+    #[vertex(sem = "Semantics")]
+    struct Vertex {
+        quad_vert: QuadVertex,
+        cell_pos: CellPosition,
+        hl_id: HlId,
+        is_cursor_tri: IsCursorTri,
+        is_second_half_of_double_width_cell: IsSecondHalfOfDoubleWidthCell
+    }
+
+    pub fn create_program(context: &mut impl GraphicsContext<Backend = Backend>) -> Program<Semantics, (), ()> {
+        context
+          .new_shader_program()
+          .from_strings(VERT_SHADER, None, None, FRAG_SHADER)
+          .expect("bg program creation")
+          .ignore_warnings()
+    }
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Vertex)]
-#[vertex(sem = "Semantics")]
-struct Vertex {
-    #[vertex(normalized = "true")]
-    v_pos: VertexPosition,
-    v_tex_coords: VertexTexCoords,
-}
-
+/*
 /// A convenient type to return as opaque to JS.
 #[wasm_bindgen]
 pub struct Scene {
@@ -210,4 +302,4 @@ pub fn render_scene(scene: &mut Scene) {
         .assume()
         .into_result()
         .unwrap()
-}
+}*/
