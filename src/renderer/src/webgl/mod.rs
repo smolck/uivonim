@@ -1,3 +1,5 @@
+mod font_atlas;
+
 use luminance::{
     backend::texture::Texture as TextureBackend, texture::Texture, Semantics, UniformInterface,
     Vertex,
