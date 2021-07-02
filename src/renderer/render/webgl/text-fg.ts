@@ -117,6 +117,7 @@ export default () => {
   ]), gl.STATIC_DRAW)
 
   const vertexArrayInfo = twgl.createVertexArrayInfo(gl, programInfo, bufferInfo)
+
   const resize = (width: number, height: number) => {
     const w = Math.round(width * window.devicePixelRatio)
     const h = Math.round(height * window.devicePixelRatio)
@@ -136,7 +137,7 @@ export default () => {
     height: number
   ) => {
     const bottom = (y + height) * window.devicePixelRatio
-    const yy = Math.round(gl.canvas.height - bottom)
+    const yy = Math.round(canvas.height - bottom)
     const xx = Math.round(x * window.devicePixelRatio)
     const ww = Math.round(width * window.devicePixelRatio)
     const hh = Math.round(height * window.devicePixelRatio)
@@ -169,9 +170,6 @@ export default () => {
     gl.bindVertexArray(vertexArrayInfo.vertexArrayObject!!)
     twgl.setUniforms(programInfo, uniforms)
     twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 6, 0, buffer.length / 7)
-    // webgl.gl.drawArraysInstanced()
-
-    // webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 7)
   }
 
   const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {

@@ -1,5 +1,4 @@
 import { getColorAtlas, colors } from '../highlight-attributes'
-import { WebGL, VarKind } from './utils'
 import { cell } from '../../workspace'
 import { hexToRGB } from '../../ui/css'
 import { CursorShape } from '../../../common/types'
@@ -7,89 +6,89 @@ import { CursorShape } from '../../../common/types'
 import vertShader from './shaders/text-bg-vert.glsl'
 // @ts-ignore
 import fragShader from './shaders/text-bg-frag.glsl'
+import * as twgl from 'twgl.js'
 
-export default (webgl: WebGL) => {
+export default () => {
+  const canvas = document.createElement('canvas') as HTMLCanvasElement
+  const gl = canvas.getContext('webgl2', { alpha: true, preserveDrawingBuffer: true }) as WebGL2RenderingContext
+  twgl.addExtensionsToContext(gl)
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+
+  const programInfo = twgl.createProgramInfo(gl, [vertShader, fragShader])
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
   let shouldShowCursor = true
   let cursorShape = 0 /* CursorShape.block */
 
-  const program = webgl.setupProgram({
-    isSecondHalfOfDoubleWidthCell: VarKind.Attribute,
-    quadVertex: VarKind.Attribute,
-    isCursorTri: VarKind.Attribute,
-    cellPosition: VarKind.Attribute,
-    hlid: VarKind.Attribute,
-    hlidType: VarKind.Uniform1f,
-    canvasResolution: VarKind.Uniform2f,
-    colorAtlasResolution: VarKind.Uniform2f,
-    colorAtlasTextureId: VarKind.Uniform1i,
-    cellSize: VarKind.Uniform2f,
-    cursorPosition: VarKind.Uniform2f,
-    cursorColor: VarKind.Uniform4f,
-    cursorShape: VarKind.Uniform1i,
-    shouldShowCursor: VarKind.Uniform1i,
-  })
-
-  program.setVertexShader(vertShader)
-  program.setFragmentShader(fragShader)
-
-  program.create()
-  program.use()
-  webgl.gl.enable(webgl.gl.BLEND)
-  webgl.gl.blendFunc(webgl.gl.SRC_ALPHA, webgl.gl.ONE_MINUS_SRC_ALPHA)
+  gl.useProgram(programInfo.program)
+  gl.enable(gl.SCISSOR_TEST)
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
   const colorAtlas = getColorAtlas()
-  webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-  program.vars.colorAtlasTextureId = 0
-  program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
-  program.vars.cursorPosition = [0, 0]
-  program.vars.cursorColor = [1, 1, 1, 1]
-  program.vars.shouldShowCursor = shouldShowCursor
+  const colorAtlasTex = twgl.createTexture(gl, { src: colorAtlas })
 
-  // total size of all pointers. chunk size that goes to shader
-  const wrenderStride = 7 * Float32Array.BYTES_PER_ELEMENT
+  const uniforms = {
+    hlidType: 0,
+    canvasResolution: [0, 0],
+    colorAtlasResolution: [colorAtlas.width, colorAtlas.height],
+    colorAtlasTextureId: colorAtlasTex,
+    cellSize: [cell.width, cell.height],
 
-  const wrenderBuffer = program.setupData([
-    {
-      pointer: program.vars.cellPosition,
-      type: webgl.gl.FLOAT,
-      size: 2,
-      offset: 0,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-    {
-      pointer: program.vars.hlid,
-      type: webgl.gl.FLOAT,
-      size: 1,
-      offset: 2 * Float32Array.BYTES_PER_ELEMENT,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-    {
-      pointer: program.vars.isSecondHalfOfDoubleWidthCell,
-      type: webgl.gl.FLOAT,
-      size: 1,
-      offset: 4 * Float32Array.BYTES_PER_ELEMENT,
-      stride: wrenderStride,
-      divisor: 1,
-    },
-  ])
+    shouldShowCursor,
+    cursorPosition: [0, 0],
+    cursorShape: 0,
+    cursorColor: [1, 1, 1, 1],
+  }
 
-  const quadBuffer = program.setupData([
-    {
-      pointer: program.vars.quadVertex,
-      type: webgl.gl.FLOAT,
-      size: 2,
-      offset: 0,
-    },
-    {
-      pointer: program.vars.isCursorTri,
-      type: webgl.gl.FLOAT,
-      size: 1,
-      offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12,
-    },
-  ])
+  const renderBuffer = gl.createBuffer()
+  const quadBuffer = gl.createBuffer()
+  if (!renderBuffer || !quadBuffer) throw new Error("umm . . .") // TODO(smolck)
+
+  const stride = 7 * Float32Array.BYTES_PER_ELEMENT
+  const bufferInfo: twgl.BufferInfo = {
+    numElements: 0, // TODO(smolck)
+    attribs: {
+      cellPosition: {
+        buffer: renderBuffer,
+        size: 2,
+        type: gl.FLOAT,
+        offset: 0,
+        stride,
+        divisor: 1,
+      },
+      hlid: {
+        buffer: renderBuffer,
+        size: 1,
+        type: gl.FLOAT,
+        offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+        stride,
+        divisor: 1,
+      },
+      isSecondHalfOfDoubleWidthCell: {
+        buffer: renderBuffer,
+        size: 1,
+        type: gl.FLOAT,
+        offset: 4 * Float32Array.BYTES_PER_ELEMENT,
+        stride,
+        divisor: 1,
+      },
+
+      quadVertex: {
+        buffer: quadBuffer,
+        type: gl.FLOAT,
+        size: 2,
+        offset: 0,
+      },
+      isCursorTri: {
+        buffer: quadBuffer,
+        type: gl.FLOAT,
+        size: 1,
+        offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12,
+      },
+    }
+  }
+
+  const vertexArrayInfo = twgl.createVertexArrayInfo(gl, programInfo, bufferInfo)
 
   const updateCellSize = (initial = false, cursorSize = 20) => {
     const w = cell.width
@@ -177,7 +176,7 @@ export default (webgl: WebGL) => {
       ]),
     }
 
-    program.vars.cellSize = [cell.width, cell.height]
+    uniforms.cellSize = [cell.width, cell.height]
     if (!initial) Object.assign(quads, next)
     return next
   }
@@ -185,7 +184,15 @@ export default (webgl: WebGL) => {
   const quads = updateCellSize(true)
 
   const resize = (width: number, height: number) => {
-    webgl.resize(width, height)
+    const w = Math.round(width * window.devicePixelRatio)
+    const h = Math.round(height * window.devicePixelRatio)
+
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+    }
   }
 
   const readjustViewportMaybe = (
@@ -195,7 +202,7 @@ export default (webgl: WebGL) => {
     height: number
   ) => {
     const bottom = (y + height) * window.devicePixelRatio
-    const yy = Math.round(webgl.canvasElement.height - bottom)
+    const yy = Math.round(canvas.height - bottom)
     const xx = Math.round(x * window.devicePixelRatio)
     const ww = Math.round(width * window.devicePixelRatio)
     const hh = Math.round(height * window.devicePixelRatio)
@@ -209,9 +216,9 @@ export default (webgl: WebGL) => {
     if (same) return
 
     Object.assign(viewport, { x: xx, y: yy, width: ww, height: hh })
-    webgl.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
-    webgl.gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
-    program.vars.canvasResolution = [width, height]
+    gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height)
+    gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height)
+    uniforms.canvasResolution = [width, height]
   }
 
   const render = (
@@ -222,71 +229,74 @@ export default (webgl: WebGL) => {
     height: number
   ) => {
     readjustViewportMaybe(x, y, width, height)
-    wrenderBuffer.setData(buffer)
+    gl.bindBuffer(gl.ARRAY_BUFFER, renderBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.STATIC_DRAW)
+    gl.bindVertexArray(vertexArrayInfo.vertexArrayObject!!)
 
-    if (shouldShowCursor && cursorShape == 2)
-      program.vars.shouldShowCursor = false
     // background
-    quadBuffer.setData(quads.boxes)
-    program.vars.hlidType = 0
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
-
-    program.vars.shouldShowCursor = shouldShowCursor
+    if (shouldShowCursor && cursorShape == 2) uniforms.shouldShowCursor = false
+    uniforms.hlidType = 0
+    twgl.setUniforms(programInfo, uniforms)
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, quads.boxes, gl.STATIC_DRAW)
+    twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 12, 0, buffer.length / 7)
 
     // underlines
-    quadBuffer.setData(quads.lines)
+    uniforms.shouldShowCursor = shouldShowCursor
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, quads.lines, gl.STATIC_DRAW)
 
     // Just want to ignore the cursor logic in the vertex shader for underlines,
     // so set shouldShowCursor to false, then back to it's previous value after
     // the draw call.
-    if (shouldShowCursor && cursorShape != 2 /* CursorShape.underline */)
-      program.vars.shouldShowCursor = false
+    if (shouldShowCursor && cursorShape != CursorShape.underline)
+      uniforms.shouldShowCursor = false
+    uniforms.hlidType = 2
+    twgl.setUniforms(programInfo, uniforms)
+    twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 12, 0, buffer.length / 7)
 
-    program.vars.hlidType = 2
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 12, buffer.length / 7)
-
-    program.vars.shouldShowCursor = shouldShowCursor
+    uniforms.shouldShowCursor = shouldShowCursor
   }
 
   const showCursor = (enable: boolean) => (
-    (shouldShowCursor = enable), (program.vars.shouldShowCursor = enable)
+    (shouldShowCursor = enable), (uniforms.shouldShowCursor = enable)
   )
 
   const updateCursorColor = (color: [number, number, number]) => {
-    program.vars.cursorColor = [...color, 1]
+    uniforms.cursorColor = [...color, 1]
   }
 
   const updateCursorShape = (shape: CursorShape) => {
     cursorShape = shape
-    program.vars.cursorShape = shape
+    uniforms.cursorShape = shape
   }
 
   const updateCursorPosition = (row: number, col: number) => {
-    program.vars.cursorPosition = [col, row]
+    uniforms.cursorPosition = [col, row]
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
-    webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
-    program.vars.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
+    uniforms.colorAtlasTextureId = twgl.createTexture(gl, { src: colorAtlas })
+    uniforms.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
   }
 
   const clear = (x: number, y: number, width: number, height: number) => {
     readjustViewportMaybe(x, y, width, height)
     const [r, g, b] = hexToRGB(colors.background)
-    webgl.gl.clearColor(r / 255, g / 255, b / 255, 1)
-    webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    gl.clearColor(r / 255, g / 255, b / 255, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
   }
 
   const clearAll = () => {
     readjustViewportMaybe(
       0,
       0,
-      webgl.canvasElement.width,
-      webgl.canvasElement.height
+      canvas.width,
+      canvas.height
     )
     const [r, g, b] = hexToRGB(colors.background)
-    webgl.gl.clearColor(r / 255, g / 255, b / 255, 1)
-    webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
+    gl.clearColor(r / 255, g / 255, b / 255, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
   }
 
   return {
@@ -300,5 +310,6 @@ export default (webgl: WebGL) => {
     updateCursorPosition,
     updateCursorShape,
     updateCursorColor,
+    canvasElement: canvas,
   }
 }

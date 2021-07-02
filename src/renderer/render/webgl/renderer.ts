@@ -1,5 +1,4 @@
 import CreateWebGLBuffer from './grid-buffer'
-import CreateWebGL from './utils'
 import { cell } from '../../workspace'
 import TextFG from './text-fg'
 import TextBG from './text-bg'
@@ -33,13 +32,10 @@ export interface WebGLView {
 }
 
 const nutella = () => {
-  // const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
-  const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
-
   let fontAtlasCache: HTMLCanvasElement
 
   let textFGRenderer = TextFG()
-  let textBGRenderer = TextBG(backgroundGL)
+  let textBGRenderer = TextBG()
 
   const resizeCanvas = (width: number, height: number) => {
     textBGRenderer.resize(width, height)
@@ -202,13 +198,13 @@ const nutella = () => {
     updateCursorColor,
     showCursor,
     foregroundElement: textFGRenderer.canvasElement,
-    backgroundElement: backgroundGL.canvasElement,
+    backgroundElement: textBGRenderer.canvasElement,
     reInit: ({ fg, bg }: { fg: boolean; bg: boolean }) => {
       if (fg) {
         textFGRenderer = TextFG()
         updateFontAtlas(fontAtlasCache)
       }
-      if (bg) textBGRenderer = TextBG(backgroundGL)
+      if (bg) textBGRenderer = TextBG()
 
       showCursor(cursorState.visible)
       updateCursorPosition(cursorState.row, cursorState.col)
