@@ -68,7 +68,7 @@ const createRenderer = () => {
   ])
 
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
-  let shouldShowCursor = false
+  let shouldShowCursor = true
   let cursorShape = CursorShape.block
 
   gl.enable(gl.SCISSOR_TEST)
@@ -89,7 +89,7 @@ const createRenderer = () => {
 
     hlidType: 0,
 
-    shouldShowCursor: true,
+    shouldShowCursor,
     cursorPosition: [0, 0],
     cursorShape: 0,
     cursorColor: [0, 0, 0, 1],
