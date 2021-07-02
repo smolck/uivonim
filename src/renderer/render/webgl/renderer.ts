@@ -7,13 +7,13 @@ import { cell } from '../../workspace'
 import { CursorShape } from '../../../common/types'
 import * as twgl from 'twgl.js'
 // @ts-ignore
-import fgVertShader from './shaders/text-fg-vert.glsl'
+import fgVertShader from './shaders/fg-vert.glsl'
 // @ts-ignore
-import fgFragShader from './shaders/text-fg-frag.glsl'
+import fgFragShader from './shaders/fg-frag.glsl'
 // @ts-ignore
-import bgVertShader from './shaders/text-bg-vert.glsl'
+import bgVertShader from './shaders/bg-vert.glsl'
 // @ts-ignore
-import bgFragShader from './shaders/text-bg-frag.glsl'
+import bgFragShader from './shaders/bg-frag.glsl'
 
 export interface WebGLView {
   resize: (rows: number, cols: number) => void
@@ -42,24 +42,41 @@ export interface WebGLView {
 
 const createRenderer = () => {
   const canvas = document.createElement('canvas') as HTMLCanvasElement
-  const gl = canvas.getContext('webgl2', { alpha: true, preserveDrawingBuffer: true })
-  if (!gl) throw new Error('couldn\'t create webgl context . . . hmm')
-  twgl.addExtensionsToContext(gl)
+  const gl = canvas.getContext('webgl2', {
+    alpha: true,
+    preserveDrawingBuffer: true,
+  })
+  if (!gl)
+    throw new Error(
+      "couldn't create webgl context . . . hmm, this shouldn't happen"
+    )
+
+  // TODO(smolck): This is apparently necessary to make the type-checking
+  // GH action pass; it shouldn't be though?
+  const gl2Asgl1becausewhyts = gl as WebGLRenderingContext
+
+  twgl.addExtensionsToContext(gl2Asgl1becausewhyts)
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
 
-  const fgProgramInfo = twgl.createProgramInfo(gl, [fgVertShader, fgFragShader])
-  const bgProgramInfo = twgl.createProgramInfo(gl, [bgVertShader, bgFragShader])
+  const fgProgramInfo = twgl.createProgramInfo(gl2Asgl1becausewhyts, [
+    fgVertShader,
+    fgFragShader,
+  ])
+  const bgProgramInfo = twgl.createProgramInfo(gl2Asgl1becausewhyts, [
+    bgVertShader,
+    bgFragShader,
+  ])
 
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
   let shouldShowCursor = false
   let cursorShape = CursorShape.block
- 
+
   gl.enable(gl.SCISSOR_TEST)
   gl.enable(gl.BLEND)
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
   const colorAtlas = getColorAtlas()
-  const colorAtlasTex = twgl.createTexture(gl, { src: colorAtlas })
+  const colorAtlasTex = twgl.createTexture(gl2Asgl1becausewhyts, { src: colorAtlas })
 
   const uniforms = {
     canvasResolution: [0, 0],
@@ -87,16 +104,17 @@ const createRenderer = () => {
       fontAtlas.height / window.devicePixelRatio
     )
 
-    Object.assign(uniforms, { 
-      fontAtlasTextureId: twgl.createTexture(gl, { src: fontAtlas }),
-      fontAtlasResolution: [fontAtlasWidth, fontAtlasHeight ]
+    Object.assign(uniforms, {
+      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, { src: fontAtlas }),
+      fontAtlasResolution: [fontAtlasWidth, fontAtlasHeight],
     })
   })
 
   const renderBuffer = gl.createBuffer()
   const quadBuffer = gl.createBuffer()
   const bgQuadBuffer = gl.createBuffer()
-  if (!renderBuffer || !quadBuffer || !bgQuadBuffer) throw new Error("umm . . .") // TODO(smolck)
+  if (!renderBuffer || !quadBuffer || !bgQuadBuffer)
+    throw new Error("couldn't create buffers . . . hmm, this shouldn't happen")
 
   const stride = 7 * Float32Array.BYTES_PER_ELEMENT
   const bufferInfo: twgl.BufferInfo = {
@@ -137,13 +155,13 @@ const createRenderer = () => {
       quadVertex: {
         buffer: quadBuffer,
         type: gl.FLOAT,
-        size: 2
+        size: 2,
       },
 
       bgQuadVertex: {
         buffer: bgQuadBuffer,
         type: gl.FLOAT,
-        size: 2
+        size: 2,
       },
       isCursorTri: {
         buffer: bgQuadBuffer,
@@ -151,11 +169,13 @@ const createRenderer = () => {
         size: 1,
         offset: Float32Array.BYTES_PER_ELEMENT * 2 * 12,
       },
-    }
+    },
   }
 
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([
       0,
       0,
       cell.width,
@@ -168,7 +188,9 @@ const createRenderer = () => {
       cell.height,
       0,
       0,
-  ]), gl.STATIC_DRAW)
+    ]),
+    gl.STATIC_DRAW
+  )
 
   const updateCellSize = (initial = false, cursorSize = 20) => {
     const w = cell.width
@@ -260,7 +282,9 @@ const createRenderer = () => {
     if (!initial) Object.assign(quads, next)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([
         0,
         0,
         cell.width,
@@ -273,19 +297,29 @@ const createRenderer = () => {
         cell.height,
         0,
         0,
-    ]), gl.STATIC_DRAW)
+      ]),
+      gl.STATIC_DRAW
+    )
 
     Object.assign(uniforms, {
       cellSize: [cell.width, cell.height],
-      cellPadding: [0, cell.padding]
+      cellPadding: [0, cell.padding],
     })
     return next
   }
 
   const quads = updateCellSize(true)
 
-  const fgVertexArrayInfo = twgl.createVertexArrayInfo(gl, fgProgramInfo, bufferInfo)
-  const bgVertexArrayInfo = twgl.createVertexArrayInfo(gl, bgProgramInfo, bufferInfo)
+  const fgVertexArrayInfo = twgl.createVertexArrayInfo(
+    gl2Asgl1becausewhyts,
+    fgProgramInfo,
+    bufferInfo
+  )
+  const bgVertexArrayInfo = twgl.createVertexArrayInfo(
+    gl2Asgl1becausewhyts,
+    bgProgramInfo,
+    bufferInfo
+  )
 
   const resize = (width: number, height: number) => {
     const w = Math.round(width * window.devicePixelRatio)
@@ -340,7 +374,14 @@ const createRenderer = () => {
       gl.useProgram(fgProgramInfo.program)
       gl.bindVertexArray(fgVertexArrayInfo.vertexArrayObject!!)
       twgl.setUniforms(fgProgramInfo, uniforms)
-      twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 6, 0, buffer.length / 7)
+      twgl.drawBufferInfo(
+        gl2Asgl1becausewhyts,
+        bufferInfo,
+        gl.TRIANGLES,
+        6,
+        0,
+        buffer.length / 7
+      )
     }
 
     const renderBg = () => {
@@ -349,12 +390,20 @@ const createRenderer = () => {
       // uniforms.cursorColor = uniforms.cursorColor.slice(0, 2).reverse()
 
       // background
-      if (shouldShowCursor && cursorShape == 2) uniforms.shouldShowCursor = false
+      if (shouldShowCursor && cursorShape == 2)
+        uniforms.shouldShowCursor = false
       uniforms.hlidType = 0
       twgl.setUniforms(bgProgramInfo, uniforms)
       gl.bindBuffer(gl.ARRAY_BUFFER, bgQuadBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, quads.boxes, gl.STATIC_DRAW)
-      twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 12, 0, buffer.length / 7)
+      twgl.drawBufferInfo(
+        gl2Asgl1becausewhyts,
+        bufferInfo,
+        gl.TRIANGLES,
+        12,
+        0,
+        buffer.length / 7
+      )
 
       // underlines
       uniforms.shouldShowCursor = shouldShowCursor
@@ -368,7 +417,14 @@ const createRenderer = () => {
         uniforms.shouldShowCursor = false
       uniforms.hlidType = 2
       twgl.setUniforms(bgProgramInfo, uniforms)
-      twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES, 12, 0, buffer.length / 7)
+      twgl.drawBufferInfo(
+        gl2Asgl1becausewhyts,
+        bufferInfo,
+        gl.TRIANGLES,
+        12,
+        0,
+        buffer.length / 7
+      )
 
       uniforms.shouldShowCursor = shouldShowCursor
     }
@@ -382,12 +438,15 @@ const createRenderer = () => {
     const height = Math.floor(fontAtlas.height / window.devicePixelRatio)
     Object.assign(uniforms, {
       fontAtlasResolution: [width, height],
-      fontAtlasTextureId: twgl.createTexture(gl, { src: fontAtlas })
+      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, {
+        src: fontAtlas,
+      }),
     })
   }
 
-  const showCursor = (enable: boolean) => 
-  ((shouldShowCursor = enable), (uniforms.shouldShowCursor = enable))
+  const showCursor = (enable: boolean) => (
+    (shouldShowCursor = enable), (uniforms.shouldShowCursor = enable)
+  )
 
   const updateCursorColor = (color: [number, number, number]) => {
     const [r, g, b] = color
@@ -405,7 +464,9 @@ const createRenderer = () => {
   }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
-    uniforms.colorAtlasTextureId = twgl.createTexture(gl, { src: colorAtlas })
+    uniforms.colorAtlasTextureId = twgl.createTexture(gl2Asgl1becausewhyts, {
+      src: colorAtlas,
+    })
     uniforms.colorAtlasResolution = [colorAtlas.width, colorAtlas.height]
   }
 
@@ -415,12 +476,7 @@ const createRenderer = () => {
   }
 
   const clearAll = () => {
-    readjustViewportMaybe(
-      0,
-      0,
-      canvas.clientWidth,
-      canvas.clientHeight
-    )
+    readjustViewportMaybe(0, 0, canvas.clientWidth, canvas.clientHeight)
     gl.clear(gl.COLOR_BUFFER_BIT)
   }
 
