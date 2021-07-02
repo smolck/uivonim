@@ -33,12 +33,12 @@ export interface WebGLView {
 }
 
 const nutella = () => {
-  const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
+  // const foregroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
   const backgroundGL = CreateWebGL({ alpha: true, preserveDrawingBuffer: true })
 
   let fontAtlasCache: HTMLCanvasElement
 
-  let textFGRenderer = TextFG(foregroundGL)
+  let textFGRenderer = TextFG()
   let textBGRenderer = TextBG(backgroundGL)
 
   const resizeCanvas = (width: number, height: number) => {
@@ -201,11 +201,11 @@ const nutella = () => {
     updateCursorPosition,
     updateCursorColor,
     showCursor,
-    foregroundElement: foregroundGL.canvasElement,
+    foregroundElement: textFGRenderer.canvasElement,
     backgroundElement: backgroundGL.canvasElement,
     reInit: ({ fg, bg }: { fg: boolean; bg: boolean }) => {
       if (fg) {
-        textFGRenderer = TextFG(foregroundGL)
+        textFGRenderer = TextFG()
         updateFontAtlas(fontAtlasCache)
       }
       if (bg) textBGRenderer = TextBG(backgroundGL)
