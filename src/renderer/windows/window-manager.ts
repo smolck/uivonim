@@ -35,22 +35,13 @@ export const refreshWebGLGrid = () => {
   getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
 }
 
-webgl.foregroundElement.addEventListener('webglcontextlost', (e) => {
-  console.log('lost webgl foreground context, preventing default', e)
+webgl.canvasElement.addEventListener('webglcontextlost', (e) => {
+  console.log('lost webgl context, preventing default', e)
   e.preventDefault()
 })
-webgl.foregroundElement.addEventListener('webglcontextrestored', (_e) => {
-  console.log('webgl foreground context restored! re-initializing')
-  webgl.reInit({ bg: false, fg: true })
-  refreshWebGLGrid()
-})
-webgl.backgroundElement.addEventListener('webglcontextlost', (e) => {
-  console.log('lost webgl background context, preventing default', e)
-  e.preventDefault()
-})
-webgl.backgroundElement.addEventListener('webglcontextrestored', (_e) => {
-  console.log('webgl foreground context restored! re-initializing')
-  webgl.reInit({ bg: true, fg: false })
+webgl.canvasElement.addEventListener('webglcontextrestored', (_e) => {
+  console.log('webgl context restored! re-initializing')
+  webgl.reInit()
   refreshWebGLGrid()
 })
 
@@ -243,8 +234,7 @@ export const pixelPosition = (row: number, col: number) => {
   return { x: 0, y: 0 }
 }
 
-webgl.backgroundElement.setAttribute('wat', 'webgl-background')
-webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
+webgl.canvasElement.setAttribute('wat', 'webgl-background')
 
 Object.assign(webglContainer.style, {
   position: 'absolute',
@@ -267,18 +257,7 @@ Object.assign(container.style, {
   background: 'none',
 })
 
-Object.assign(webgl.backgroundElement.style, {
-  position: 'absolute',
-  zIndex: 3,
-})
-
-Object.assign(webgl.foregroundElement.style, {
-  position: 'absolute',
-  zIndex: 4,
-})
-
-webglContainer.appendChild(webgl.backgroundElement)
-webglContainer.appendChild(webgl.foregroundElement)
+webglContainer.appendChild(webgl.canvasElement)
 
 onElementResize(webglContainer, (w, h) => {
   Object.assign(size, { width: w, height: h })
