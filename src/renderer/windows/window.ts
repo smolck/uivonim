@@ -11,9 +11,8 @@ import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
 
 export interface WindowInfo {
-  id: string
-  gridId: string
-  gridIdNumber: number
+  id: number
+  gridId: number
   row: number
   col: number
   width: number
@@ -67,8 +66,8 @@ export interface Editor {
 }
 
 export interface Window {
-  id: string
-  gridId: string
+  id: number
+  gridId: number
   row: number
   col: number
   webgl: WebGLView
@@ -114,9 +113,8 @@ export const paddingY = 4
 
 export default () => {
   const wininfo: WindowInfo = {
-    id: '0',
-    gridId: '0',
-    gridIdNumber: 0,
+    id: 0,
+    gridId: 0,
     row: 0,
     col: 0,
     width: 0,
@@ -229,8 +227,8 @@ export default () => {
     }
 
     container.id = `${info.id}`
-    container.setAttribute('gridid', info.gridId)
-    webgl.updateGridId(info.gridIdNumber)
+    container.setAttribute('gridid', info.gridId.toString())
+    webgl.updateGridId(info.gridId)
     Object.assign(wininfo, info)
   }
 

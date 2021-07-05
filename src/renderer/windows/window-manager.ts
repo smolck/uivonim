@@ -9,30 +9,26 @@ import { Events } from '../../common/ipc'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
-const windows = new Map<string, Window>()
-const windowsById = new Map<string, Window>()
-const invalidWindows = new Set<string>()
-const state = { activeGrid: '', activeInstanceGrid: 1 }
+const windowsByGrid = new Map<number, Window>()
+const windowsById = new Map<number, Window>()
+const invalidGrids = new Set<number>()
+let activeGrid = 0
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const superid = (id: number) => `i-${id}`
-
 const getWindowById = (windowId: number) => {
-  const win = windowsById.get(superid(windowId))
+  const win = windowsById.get(windowId)
   if (!win)
     throw new Error(
-      `trying to get window that does not exist ${superid(windowId)}`
+      `trying to get window that does not exist ${windowId}`
     )
   return win
 }
 
-const getInstanceWindows = () => [...windows.values()]
-
 // TODO(smolck): Any reason not to export this?
 export const refreshWebGLGrid = () => {
   webgl.clearAll()
-  getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
+  windowsByGrid.forEach((w) => w.redrawFromGridBuffer())
 }
 
 webgl.canvasElement.addEventListener('webglcontextlost', (e) => {
@@ -83,25 +79,22 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
 
 export const createWebGLView = (gridId: number) => webgl.createView(gridId)
 
-export const getActiveGridId = () => state.activeInstanceGrid
+export const getActiveGridId = () => activeGrid
 
 export const setActiveGrid = (id: number) =>
-  Object.assign(state, {
-    activeGrid: superid(id),
-    activeInstanceGrid: id,
-  })
+  activeGrid = id
 
 export const getActive = () => {
-  const win = windows.get(state.activeGrid)
+  const win = windowsByGrid.get(activeGrid)
   if (!win)
     throw new Error(
-      `trying to get window that does not exist ${state.activeGrid}`
+      `trying to get window that does not exist ${activeGrid}`
     )
   return win
 }
 
 export const set = (
-  id: number,
+  winId: number,
   gridId: number,
   row: number,
   col: number,
@@ -110,9 +103,7 @@ export const set = (
   is_float: boolean = false,
   anchor = ''
 ) => {
-  const wid = superid(id)
-  const gid = superid(gridId)
-  const win = windows.get(gid) || CreateWindow()
+  const win = windowsByGrid.get(gridId) || CreateWindow()
   win.setWindowInfo({
     anchor,
     is_float,
@@ -121,13 +112,12 @@ export const set = (
     width,
     height,
     visible: true,
-    id: wid,
-    gridId: gid,
-    gridIdNumber: gridId,
+    id: winId,
+    gridId: gridId,
   })
 
-  if (!windows.has(gid)) windows.set(gid, win)
-  if (!windowsById.has(wid)) windowsById.set(wid, win)
+  if (!windowsByGrid.has(gridId)) windowsByGrid.set(gridId, win)
+  if (!windowsById.has(winId)) windowsById.set(winId, win)
 
   // we only want to add grids that have valid window positions and do not
   // overlap coordinates with other windows. this happens rarely (in term
@@ -138,10 +128,10 @@ export const set = (
   // if (windowPosition && windowExistsAtPosition(wid, row, col)) return invalidWindows.add(gid)
 
   // behavior 2: receive "grid_resize" events (gridId > 1) but no followup "win_pos" events
-  if (id < 0) return invalidWindows.add(gid)
+  if (winId < 0) return invalidGrids.add(gridId)
 
   container.appendChild(win.element)
-  invalidWindows.delete(gid)
+  invalidGrids.delete(gridId)
 }
 
 // i made the assumption that a grid_resize event was always going to follow up
@@ -151,19 +141,19 @@ export const set = (
 // we also win_pos events that overlap on the same start_col,start_row indexes
 // this should not happen on ext_multigrid, maybe floating windows but not here
 export const disposeInvalidWindows = () => {
-  invalidWindows.forEach((gid) => {
-    const win = windows.get(gid)
+  invalidGrids.forEach((gid) => {
+    const win = windowsByGrid.get(gid)
     if (!win) throw new Error(`window grid does not exist ${gid}`)
-    windows.delete(gid)
+    windowsByGrid.delete(gid)
     windowsById.delete(win.id)
-    invalidWindows.delete(gid)
+    invalidGrids.delete(gid)
   })
 
-  invalidWindows.delete(superid(-1))
+  invalidGrids.delete(-1)
 }
 
 export const remove = (gridId: number) => {
-  const win = windows.get(superid(gridId))
+  const win = windowsByGrid.get(gridId)
   if (!win)
     return console.warn(
       `trying to destroy a window that does not exist ${gridId}`
@@ -174,44 +164,45 @@ export const remove = (gridId: number) => {
   requestAnimationFrame(() => {
     win.element.remove()
     windowsById.delete(win.getWindowInfo().id)
-    windows.delete(superid(gridId))
+    windowsByGrid.delete(gridId)
   })
 }
 
 export const get = (gridId: number) => {
-  const win = windows.get(superid(gridId))
+  const win = windowsByGrid.get(gridId)
   if (!win)
     throw new Error(
-      `trying to get window that does not exist ${superid(gridId)}`
+      `trying to get window that does not exist ${gridId}`
     )
   return win
 }
 
-export const has = (gridId: number) => windows.has(superid(gridId))
+export const has = (gridId: number) => windowsByGrid.has(gridId)
 
 export const layout = () => {
-  const wininfos = getInstanceWindows().map((win) => ({
-    ...win.getWindowInfo(),
-  }))
+  const wininfos = []
+  for (const [_, win] of windowsByGrid) {
+    wininfos.push(win.getWindowInfo())
+  }
   const { gridTemplateRows, gridTemplateColumns, windowGridInfo } =
     windowSizer(wininfos)
 
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
 
   windowGridInfo.forEach(({ gridId, gridRow, gridColumn }) => {
-    windows.get(gridId)!.applyGridStyle({ gridRow, gridColumn })
+    windowsByGrid.get(gridId)!.applyGridStyle({ gridRow, gridColumn })
   })
 
   // wait for flex grid styles to be applied to all windows and trigger dom layout
-  windowGridInfo.forEach(({ gridId }) => windows.get(gridId)!.refreshLayout())
+  windowGridInfo.forEach(({ gridId }) => windowsByGrid.get(gridId)!.refreshLayout())
   refreshWebGLGrid()
 
   // cursorline width does not always get resized correctly after window
   // layout changes, so we will force an update of the cursor to make sure
   // it is correct. test case: two vert splits, move to left and :bo
-  state.activeGrid &&
+  activeGrid &&
     requestAnimationFrame(() => {
-      if (!windows.has(state.activeGrid)) return
+      if (!windowsByGrid.has(activeGrid)) return
       moveCursor(cursor.row, cursor.col)
     })
 }
@@ -228,7 +219,7 @@ export const hide = (gridIds: number[][]) =>
   gridIds.forEach(([gridId]) => get(gridId).hide())
 
 export const pixelPosition = (row: number, col: number) => {
-  const win = windows.get(state.activeGrid)
+  const win = windowsByGrid.get(activeGrid)
   if (win) return win.positionToWorkspacePixels(row, col)
   console.warn('no active window grid... hmmm *twisty effect*')
   return { x: 0, y: 0 }
@@ -262,19 +253,23 @@ webglContainer.appendChild(webgl.canvasElement)
 onElementResize(webglContainer, (w, h) => {
   Object.assign(size, { width: w, height: h })
   webgl.resizeCanvas(w, h)
-  getInstanceWindows().forEach((w) => {
-    w.refreshLayout()
-    w.redrawFromGridBuffer()
-  })
+  for (const [_, win] of windowsByGrid) {
+    win.refreshLayout()
+    win.redrawFromGridBuffer()
+  }
 })
 
 window.api.on(Events.colorschemeStateUpdated, () =>
   requestAnimationFrame(() => {
     webgl.clearAll()
-    getInstanceWindows().forEach((w) => w.redrawFromGridBuffer())
+    for (const [_, win] of windowsByGrid) {
+      win.redrawFromGridBuffer()
+    }
   })
 )
 
 export const resetAtlasBounds = () => {
-  windows.forEach((win) => win.webgl.resetAtlasBounds())
+  for (const [_, win] of windowsByGrid) {
+    win.webgl.resetAtlasBounds()
+  }
 }
