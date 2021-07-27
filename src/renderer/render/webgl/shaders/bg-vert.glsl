@@ -1,9 +1,9 @@
-#version 300 es
-in vec2 bgQuadVertex;
-in vec2 cellPosition;
-in float isCursorTri;
-in float hlid;
-in float isSecondHalfOfDoubleWidthCell;
+attribute vec2 bgQuadVertex;
+attribute vec2 cellPosition;
+attribute float isCursorTri;
+attribute float hlid;
+attribute float isSecondHalfOfDoubleWidthCell;
+
 uniform vec2 cursorPosition;
 uniform vec2 canvasResolution;
 uniform vec2 colorAtlasResolution;
@@ -13,8 +13,9 @@ uniform bool shouldShowCursor;
 uniform int cursorShape;
 uniform float hlidType;
 uniform sampler2D colorAtlasTextureId;
-out vec4 o_color;
-out vec2 o_colorPosition;
+
+varying vec4 o_color;
+varying vec2 o_colorPosition;
 
 void main() {
   vec2 prevCellPos = vec2(cellPosition.x - 1.0, cellPosition.y);
@@ -36,7 +37,7 @@ void main() {
   if (cursorShape == 1 ? isCursorCell && isCursorTri == 1.0 : isCursorCell) {
     o_color = bgCursorColor;
   } else {
-    vec4 textureColor = texture(colorAtlasTextureId, colorPosition);
+    vec4 textureColor = texture2D(colorAtlasTextureId, colorPosition);
     o_color = textureColor;
   }
 }

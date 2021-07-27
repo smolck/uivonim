@@ -1,9 +1,9 @@
-import { merge, simplifyPath } from '../common/utils'
+/*import { merge, simplifyPath } from '../common/utils'
 import { Events } from '../common/ipc'
 import * as dispatch from './dispatch'
-import * as workspace from './workspace'
+import * as workspace from './workspace'*/
 
-let titleBarVisible = false
+/*let titleBarVisible = false
 const titleBar = window.api.isMacos && document.createElement('div')
 const title = window.api.isMacos && document.createElement('div')
 
@@ -59,10 +59,12 @@ if (window.api.isMacos) {
   window.api.nvimWatchState('file', (file: string) => {
     const path = simplifyPath(file, window.api.nvimState().cwd)
     window.api.setWinTitle(`${path} - uivonim`)
-  })
+  })*/
 
-export const specs = {
-  get height() {
-    return titleBarVisible ? 22 : 0
-  },
-}
+// export const specs = {
+//   get height() {
+//     // TODO(smolck): Just stop lol
+//     return 0
+//     // return titleBarVisible ? 22 : 0
+//   },
+// }

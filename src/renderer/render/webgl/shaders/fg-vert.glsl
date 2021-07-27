@@ -1,9 +1,8 @@
-#version 300 es
-in vec2 quadVertex;
-in vec2 cellPosition;
-in float hlid;
-in vec2 atlasBounds;
-in float isSecondHalfOfDoubleWidthCell;
+attribute vec2 quadVertex;
+attribute vec2 cellPosition;
+attribute float hlid;
+attribute vec2 atlasBounds;
+attribute float isSecondHalfOfDoubleWidthCell;
 
 uniform vec2 canvasResolution;
 uniform vec2 fontAtlasResolution;
@@ -17,8 +16,8 @@ uniform vec2 cursorPosition;
 uniform bool shouldShowCursor;
 uniform int cursorShape;
 
-out vec2 o_glyphPosition;
-out vec4 o_color;
+varying vec2 o_glyphPosition;
+varying vec4 o_color;
 
 void main() {
   vec2 prevCellPos = vec2(cellPosition.x - 1.0, cellPosition.y);
@@ -36,7 +35,7 @@ void main() {
   float color_y = 1.0 * texelSize + 1.0;
   vec2 colorPosition = vec2(color_x, color_y) / colorAtlasResolution;
 
-  vec4 textureColor = texture(colorAtlasTextureId, colorPosition);
+  vec4 textureColor = texture2D(colorAtlasTextureId, colorPosition);
 
   if (isCursorCell && cursorShape == 0) {
     o_color = cursorColor;

@@ -42,13 +42,20 @@ export interface WebGLView {
 
 const createRenderer = () => {
   const canvas = document.createElement('canvas') as HTMLCanvasElement
-  const gl = canvas.getContext('webgl2', {
+  const gl = canvas.getContext('webgl', {
     alpha: true,
     preserveDrawingBuffer: true,
   })
+
   if (!gl)
     throw new Error(
       "couldn't create webgl context . . . hmm, this shouldn't happen"
+    )
+
+  const vaoExtension = gl.getExtension('OES_vertex_array_object')
+  if (!vaoExtension)
+    throw new Error(
+      "couldn't get the OES_vertex_array_object extension for webgl . . . yeah kinda need/want that"
     )
 
   // TODO(smolck): This is apparently necessary to make the type-checking
@@ -372,7 +379,7 @@ const createRenderer = () => {
 
     const renderFg = () => {
       gl.useProgram(fgProgramInfo.program)
-      gl.bindVertexArray(fgVertexArrayInfo.vertexArrayObject!!)
+      vaoExtension.bindVertexArrayOES(fgVertexArrayInfo.vertexArrayObject!!)
       twgl.setUniforms(fgProgramInfo, uniforms)
       twgl.drawBufferInfo(
         gl2Asgl1becausewhyts,
@@ -386,7 +393,7 @@ const createRenderer = () => {
 
     const renderBg = () => {
       gl.useProgram(bgProgramInfo.program)
-      gl.bindVertexArray(bgVertexArrayInfo.vertexArrayObject!!)
+      vaoExtension.bindVertexArrayOES(bgVertexArrayInfo.vertexArrayObject!!)
       // uniforms.cursorColor = uniforms.cursorColor.slice(0, 2).reverse()
 
       // background

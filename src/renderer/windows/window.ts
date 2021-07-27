@@ -5,7 +5,6 @@ import {
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
-import { specs as titleSpecs } from '../title'
 import { WebGLView } from '../render/webgl/renderer'
 import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
@@ -94,15 +93,13 @@ export interface Window {
 
 const edgeDetection = (el: HTMLElement) => {
   const size = el.getBoundingClientRect()
-  const top = Math.round(size.top)
   const bottom = Math.round(size.bottom)
   const left = Math.round(size.left)
   const right = Math.round(size.right)
   const edges = Object.create(null)
 
   if (left === 0) edges.borderLeft = 'none'
-  if (top === titleSpecs.height) edges.borderTop = 'none'
-  if (bottom - titleSpecs.height === windowsGridSize.height)
+  if (bottom === windowsGridSize.height)
     edges.borderBottom = 'none'
   if (right === windowsGridSize.width) edges.borderRight = 'none'
   return edges
@@ -278,10 +275,7 @@ export default () => {
   }
 
   api.refreshLayout = () => {
-    const { top, left, width, height } = content.getBoundingClientRect()
-
-    const x = left
-    const y = top - titleSpecs.height
+    const { top: y, left: x, width, height } = content.getBoundingClientRect()
 
     const same =
       layout.x === x &&

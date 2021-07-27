@@ -1,10 +1,12 @@
+import { listen } from "@tauri-apps/api/event";
 import * as workspace from './workspace'
-import { specs as titleSpecs } from './title'
 import * as dispatch from './dispatch'
 import { debounce, merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
 import { Events, Invokables } from '../common/ipc'
+
+listen('initial-load-info', (_info) => {
 
 window
   .matchMedia('screen and (min-resolution: 2dppx)')
@@ -87,11 +89,11 @@ merge(pluginsContainer.style, {
   zIndex: 420,
   // TODO: 24px for statusline. do it better
   // TODO: and title. bruv do i even know css?
-  height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
+  height: `calc(100vh - 24px)`,
 })
 
 dispatch.sub('window.change', () => {
-  pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
+  pluginsContainer.style.height = `calc(100vh - 24px)`
 })
 
 window.api.on(Events.nvimShowMessage, (...args) =>
@@ -123,3 +125,5 @@ document.oninput = (e: InputEvent) => {
     isComposing: e.isComposing,
   })
 }
+
+})
