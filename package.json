@@ -6,6 +6,7 @@
   "description": "Extensible Neovim GUI forked from Veonim",
   "main": "build/main/main.js",
   "scripts": {
+    "tauri": "tauri",
     "dev": "npm run build && electron build/main/main.js",
     "prod": "npm run build:prod && NODE_ENV=production electron build/main/main.js",
     "prod:start": "NODE_ENV=production electron build/main/main.js",
@@ -31,6 +32,7 @@
   },
   "homepage": "https://github.com/smolck/uivonim",
   "dependencies": {
+    "@tauri-apps/api": "^1.0.0-beta.5",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.7.2",
@@ -48,6 +50,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.14.5",
     "@babel/preset-typescript": "^7.14.5",
     "@medv/finder": "^2.0.0",
+    "@tauri-apps/cli": "^1.0.0-beta.6",
     "@types/fuzzaldrin-plus": "^0.6.2",
     "@types/marked": "^2.0.4",
     "@types/node": "^16.4.7",

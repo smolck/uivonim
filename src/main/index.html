@@ -2,11 +2,13 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta
+    <!-- TODO(smolck) -->
+    <!--<meta
       http-equiv="Content-Security-Policy"
       content="default-src *; img-src blob: data: *; script-src blob: data
                'self' 'unsafe-inline'; worker-src blob: data 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: *; connect-src http://localhost:22444"
     />
+    -->
     <title>uivonim</title>
     <style>
       @font-face {
@@ -173,6 +175,6 @@
 
     <div id="statusline"></div>
 
-    <script type="text/javascript" src="../renderer/bundle.js"></script>
+    <script defer type="text/javascript" src="bundle.js"></script>
   </body>
 </html>

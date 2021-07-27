@@ -11,7 +11,7 @@ const paths = {
 const copy = {
   index: () => {
     $`copying index html`
-    return fs.copy(fromRoot(paths.index), fromRoot('build/main/index.html'))
+    return fs.copy(fromRoot(paths.index), fromRoot('build/index.html'))
   },
   processExplorer: () => {
     $`copying process-explorer html`
