@@ -384,6 +384,14 @@ export const handleRedraw = (
       sendToRenderer(RedrawEvents.hideThenDisableCursor)
     else if (e === 'busy_stop')
       sendToRenderer(RedrawEvents.enableThenShowCursor)
+    else if (e === 'win_viewport') {
+      Object.assign(nvim.instanceApi.state, {
+        line: ev[1][4],
+        column: ev[1][5],
+        editorTopLine: ev[1][2],
+        editorBottomLine: ev[1][3]
+      })
+    }
   }
 
   // we queue the message events because we are interested to know

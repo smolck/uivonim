@@ -20,16 +20,6 @@ function! UivonimState()
   return m
 endfunction
 
-function! UivonimPosition()
-  let m = {}
-  let p = getcurpos()
-  let m.line = p[1]-1
-  let m.column = p[2]-1
-  let m.editorTopLine = line('w0')
-  let m.editorBottomLine = line('w$')
-  return m
-endfunction
-
 function! UivonimGChange(...)
   call rpcnotify(0, 'uivonim-g', a:2, a:3)
 endfunction
@@ -109,22 +99,10 @@ hi! link uvnCursor Cursor
 
 " Create autocmds
 aug UivonimAU
-  au CursorMoved,CursorMovedI * call rpcnotify(0, 'uivonim-position', UivonimPosition())
   au BufAdd,BufEnter,BufDelete,BufUnload,BufWipeout,FileType,ColorScheme,DirChanged * call rpcnotify(0, 'uivonim-state', UivonimState())
-  au BufAdd * call rpcnotify(0, 'uivonim-autocmd', 'BufAdd', expand('<abuf>'))
   au BufEnter * call rpcnotify(0, 'uivonim-autocmd', 'BufEnter', expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates'))
-  au BufDelete * call rpcnotify(0, 'uivonim-autocmd', 'BufDelete', expand('<abuf>'))
-  au BufUnload * call rpcnotify(0, 'uivonim-autocmd', 'BufUnload', expand('<abuf>'))
   au BufWipeout * call rpcnotify(0, 'uivonim-autocmd', 'BufWipeout', expand('<abuf>'))
-  au BufWritePre * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePre', expand('<abuf>'))
   au BufWritePost * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePost', expand('<abuf>'))
-  au CursorMoved * call rpcnotify(0, 'uivonim-autocmd', 'CursorMoved')
-  au CursorMovedI * call rpcnotify(0, 'uivonim-autocmd', 'CursorMovedI')
-  au CompleteDone * call rpcnotify(0, 'uivonim-autocmd', 'CompleteDone', v:completed_item)
-  au InsertEnter * call rpcnotify(0, 'uivonim-autocmd', 'InsertEnter')
-  au InsertLeave * call rpcnotify(0, 'uivonim-autocmd', 'InsertLeave')
-  au TextChanged * call rpcnotify(0, 'uivonim-autocmd', 'TextChanged', b:changedtick)
-  au TextChangedI * call rpcnotify(0, 'uivonim-autocmd', 'TextChangedI', b:changedtick)
   au OptionSet * if (&ro != 1) | call rpcnotify(0, 'uivonim-autocmd', 'OptionSet', expand('<amatch>'), v:option_new, v:option_old) | endif
   au FileType * call rpcnotify(0, 'uivonim-autocmd', 'FileType', bufnr(expand('<afile>')), expand('<amatch>'))
   au WinEnter * call rpcnotify(0, 'uivonim-autocmd', 'WinEnter', win_getid())

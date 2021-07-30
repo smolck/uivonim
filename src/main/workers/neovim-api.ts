@@ -248,7 +248,6 @@ nvimInstance.command(`let g:uvn_cmd_completions .= "${events}\\n"`)
 
 nvimInstance.subscribe('uivonim')
 nvimInstance.subscribe('uivonim-state')
-nvimInstance.subscribe('uivonim-position')
 nvimInstance.subscribe('uivonim-g')
 nvimInstance.subscribe('uivonim-autocmd')
 nvimInstance.on('notification', (method, args) => {
@@ -257,9 +256,6 @@ nvimInstance.on('notification', (method, args) => {
       watchers.actions.emit(args[0], ...(args[1] || []))
       break
     case 'uivonim-state':
-      Object.assign(state, args[0])
-      break
-    case 'uivonim-position':
       Object.assign(state, args[0])
       break
     case 'uivonim-g':
@@ -339,32 +335,15 @@ const autocmd: RegisterAutocmd = new Proxy(Object.create(null), {
   get: (_, event: keyof typeof autocmds) => (fn: any) => watchers.autocmds.on(event, fn),
 })
 
-autocmd.CompleteDone((word) => watchers.events.emit('completion', word))
-autocmd.CursorMoved(() => watchers.events.emit('cursorMove'))
-autocmd.CursorMovedI(() => watchers.events.emit('cursorMoveInsert'))
-autocmd.BufAdd((bufId) => watchers.events.emit('bufOpen', bufId))
 autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', bufId))
-autocmd.BufWritePre((bufId) => watchers.events.emit('bufWritePre', bufId))
 autocmd.BufWritePost((bufId) => watchers.events.emit('bufWrite', bufId))
 autocmd.BufWipeout((bufId) => watchers.events.emit('bufClose', bufId))
-autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
-autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.FileType((_, filetype: string) =>
   watchers.events.emit('filetype', filetype)
 )
 autocmd.OptionSet((name: string, value: any) => {
   options.set(name, value)
   watchers.internal.emit(`option-set::${name}`, value)
-})
-
-autocmd.TextChanged((revision) => {
-  state.revision = revision - 0
-  watchers.events.emit('bufChange', nvimInstance.buffer)
-})
-
-autocmd.TextChangedI((revision) => {
-  state.revision = revision - 0
-  watchers.events.emit('bufChangeInsert', nvimInstance.buffer)
 })
 
 // TODO: i think we should just determine this from render events
