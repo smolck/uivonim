@@ -21,8 +21,8 @@ async fn new_nvim_child_cmd(
   use std::{fs::canonicalize, path::PathBuf};
 
   // TODO(smolck): Make this work (`cargo run`) from every dir?
-  let runtime_dir = canonicalize(PathBuf::from("../runtime"))
-    .expect("this should work, getting the runtime dir");
+  let runtime_dir =
+    canonicalize(PathBuf::from("../runtime")).expect("this should work, getting the runtime dir");
   let runtime_dir = runtime_dir
     .to_str()
     .expect("runtime dir path is valid utf8");
@@ -30,10 +30,11 @@ async fn new_nvim_child_cmd(
   create::new_child_cmd(
     Command::new("nvim").args(&[
       "--cmd",
-      &format!("let $PATH .= ':{runtime_dir}/{platform}' | let &runtimepath .= ',{runtime_dir}'",
-    runtime_dir = runtime_dir,
-    platform = std::env::consts::OS
-),
+      &format!(
+        "let $PATH .= ':{runtime_dir}/{platform}' | let &runtimepath .= ',{runtime_dir}'",
+        runtime_dir = runtime_dir,
+        platform = std::env::consts::OS
+      ),
       "--cmd",
       "com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)",
       "--cmd",
