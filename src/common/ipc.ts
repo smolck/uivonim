@@ -19,7 +19,7 @@ export const Invokables = {
   inputFocus: 'inputFocus',
   inputBlur: 'inputBlur',
   getColorByName: 'getColorByName',
-  getHighlightByName: 'getHighlightByName',
+  getHighlightByName: 'get_highlight_by_name',
   setMode: 'setMode',
   registerOneTimeUseShortcuts: 'registerOneTimeUseShortcuts',
   nvimCmd: 'nvimCmd',

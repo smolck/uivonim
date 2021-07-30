@@ -7,7 +7,7 @@
   "main": "build/main/main.js",
   "scripts": {
     "tauri": "tauri",
-    "dev": "npm run build && electron build/main/main.js",
+    "dev": "npm run build && tauri dev",
     "prod": "npm run build:prod && NODE_ENV=production electron build/main/main.js",
     "prod:start": "NODE_ENV=production electron build/main/main.js",
     "build": "node tools/build.js",

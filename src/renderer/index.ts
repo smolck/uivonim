@@ -1,12 +1,9 @@
-import { listen } from "@tauri-apps/api/event";
 import * as workspace from './workspace'
 import * as dispatch from './dispatch'
-import { debounce, merge } from '../common/utils'
+import { /*debounce,*/ merge } from '../common/utils'
 import { forceRegenerateFontAtlas } from './render/font-texture-atlas'
 import * as windows from './windows/window-manager'
-import { Events, Invokables } from '../common/ipc'
-
-listen('initial-load-info', (_info) => {
+import { invoke, listen } from './helpers'
 
 window
   .matchMedia('screen and (min-resolution: 2dppx)')
@@ -20,35 +17,34 @@ window
 
     // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
     // TODO: idk why i have to do this but this works
-    window.api.invoke(Invokables.winGetAndSetSize)
+    invoke.winGetAndSetSize({})
   })
 
-let cursorVisible = true
+/*let cursorVisible = true
 const hideCursor = debounce(() => {
   cursorVisible = false
   document.body.style.cursor = 'none'
 }, 1500)
-
-const mouseTrap = () => {
+*/
+/*const mouseTrap = () => {
   if (!cursorVisible) {
     cursorVisible = true
     document.body.style.cursor = 'default'
   }
   hideCursor()
-}
+}*/
 
-window.api.on(Events.windowEnterFullScreen, (_) =>
+// TODO(smolck): Figure this out, gonna have stuff on the Tauri side
+/*listen('', (_) =>
   window.addEventListener('mousemove', mouseTrap)
 )
 window.api.on(Events.windowLeaveFullScreen, (_) =>
   window.removeEventListener('mousemove', mouseTrap)
-)
+)*/
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.onResize(({ rows, cols }) =>
-  window.api.invoke(Invokables.nvimResize, cols, rows)
-)
+workspace.onResize(({ rows, cols }) => invoke.nvimResize({ cols, rows }))
 workspace.resize()
 
 requestAnimationFrame(() => {
@@ -96,11 +92,9 @@ dispatch.sub('window.change', () => {
   pluginsContainer.style.height = `calc(100vh - 24px)`
 })
 
-window.api.on(Events.nvimShowMessage, (...args) =>
-  require('./components/nvim/messages').default.show(...args)
-)
-window.api.on(Events.nvimMessageStatus, (..._args) => {})
-window.api.on(Events.updateNameplates, windows.refresh)
+listen.nvimShowMessage((...args: any[]) => require('./components/nvim/messages').default.show(...args))
+listen.updateNameplates(windows.refresh)
+// TODO(smolck): ??? -> listen.nvimMessageStatus((..._args) => {})
 
 document.onclick = (e) => {
   if (document.activeElement === document.body) {
@@ -110,7 +104,7 @@ document.onclick = (e) => {
 }
 
 document.onkeydown = (e: KeyboardEvent) => {
-  window.api.invoke(Invokables.documentOnKeydown, {
+  invoke.documentOnKeydown({
     key: e.key,
     ctrlKey: e.ctrlKey,
     metaKey: e.metaKey,
@@ -120,10 +114,8 @@ document.onkeydown = (e: KeyboardEvent) => {
 }
 // @ts-ignore
 document.oninput = (e: InputEvent) => {
-  window.api.invoke(Invokables.documentOnInput, {
+  invoke.documentOnInput({
     data: e.data,
     isComposing: e.isComposing,
   })
 }
-
-})

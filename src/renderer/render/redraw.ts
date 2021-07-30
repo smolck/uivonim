@@ -33,6 +33,8 @@ import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { cell } from '../workspace'
+import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/tauri'
 
 let dummyData = new Float32Array()
 
@@ -115,7 +117,6 @@ const grid_scroll = ([
 }
 
 const grid_line = (e: any) => {
-  const count = e.length
   const gridRenderIndexes: any = []
   const grids: any = []
   let hlid = 0
@@ -126,10 +127,9 @@ const grid_line = (e: any) => {
   let prevWasDoubleWidth = false
   let prevChar: AtlasChar
 
-  // first item in the event arr is the event name.
-  // we skip that because it's cool to do that
-  for (let ix = 1; ix < count; ix++) {
-    const [gridId, row, startCol, charData] = e[ix]
+  const count = e.length
+  for (let ix = 0; ix < count; ix++) {
+    const { grid: gridId, row, col_start: startCol, cells: charData } = e[ix]
 
     // TODO: anything of interest on grid 1? messages are supported by ext_messages
     if (gridId === 1) continue
@@ -330,11 +330,13 @@ const handle: {
   [Key in keyof typeof RedrawEvents]: (fn: (...args: any[]) => void) => void
 } = new Proxy(RedrawEvents, {
   get: (redrawEvents, key) => (fn: (...args: any[]) => void) => {
-    window.api.onRedrawEvent(Reflect.get(redrawEvents, key), fn)
+    listen(Reflect.get(redrawEvents, key), fn)
   },
 })
 
-handle.gridLine(grid_line)
+console.log("grid line yo!!!")
+listen('grid_line', grid_line)
+invoke('attach_ui')
 handle.gridCursorGoto((gridId, row, col) => {
   windows.setActiveGrid(gridId)
   moveCursor(row, col)

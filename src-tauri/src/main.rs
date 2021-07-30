@@ -2,9 +2,36 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
+mod commands;
+mod neovim_handler;
 
-fn main() {
+use futures::lock::Mutex;
+use neovim_handler::NeovimHandler;
+use std::sync::Arc;
+
+pub struct AppState {
+  nvim: Arc<Mutex<neovim_handler::Nvim>>,
+}
+
+#[tokio::main]
+async fn main() {
+  let (window_ref, nvim) = NeovimHandler::start_new().await;
+  let nvim = Arc::new(Mutex::new(nvim));
+
   tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![
+      commands::your_face,
+      commands::attach_ui,
+      commands::get_highlight_by_name
+    ])
+    .manage(AppState { nvim })
+    .on_page_load(move |win, _| {
+      let win_clone = win.clone();
+      tauri::async_runtime::block_on(async {
+        let mut window_ref = window_ref.lock().await;
+        *window_ref = Some(win_clone);
+      });
+    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

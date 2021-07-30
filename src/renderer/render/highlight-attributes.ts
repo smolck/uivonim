@@ -1,7 +1,7 @@
 import { asColor, MapSet } from '../../common/utils'
 import { pub } from '../dispatch'
 import { EventEmitter } from 'events'
-import { Invokables } from '../../common/ipc'
+import { invoke } from '../helpers'
 
 const ee = new EventEmitter()
 
@@ -160,11 +160,11 @@ export const addHighlight = (
 
 // TODO(smolck): Is this name misleading?
 export const getColorByName = async (name: string): Promise<Color> => {
-  const { foreground, background, reverse } = await window.api.invoke(
-    Invokables.getHighlightByName,
+  const { foreground, background, reverse } = await invoke.getHighlightByName({
     name,
-    true
-  )
+    rgb: true
+  })
+  console.log('get hl by name!', foreground, background, reverse)
   return {
     foreground: asColor(foreground),
     background: asColor(background),

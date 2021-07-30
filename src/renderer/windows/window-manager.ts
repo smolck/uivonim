@@ -6,6 +6,7 @@ import * as workspace from '../workspace'
 import { throttle } from '../../common/utils'
 import windowSizer from '../windows/sizer'
 import { Events } from '../../common/ipc'
+import { listen } from '@tauri-apps/api/event'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -259,7 +260,7 @@ onElementResize(webglContainer, (w, h) => {
   }
 })
 
-window.api.on(Events.colorschemeStateUpdated, () =>
+listen(Events.colorschemeStateUpdated, () =>
   requestAnimationFrame(() => {
     webgl.clearAll()
     for (const [_, win] of windowsByGrid) {
