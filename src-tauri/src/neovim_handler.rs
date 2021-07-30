@@ -11,7 +11,13 @@ use tokio::process::{ChildStdin, Command};
 
 pub type Nvim = Neovim<Compat<ChildStdin>>;
 
-fn startup_cmd() -> String {
+async fn new_nvim_child_cmd(
+  handler: NeovimHandler,
+) -> (
+  Nvim,
+  tokio::task::JoinHandle<Result<(), Box<nvim_rs::error::LoopError>>>,
+  tokio::process::Child,
+) {
   use std::{fs::canonicalize, path::PathBuf};
 
   // TODO(smolck): Make this work (`cargo run`) from every dir?
@@ -21,52 +27,18 @@ fn startup_cmd() -> String {
     .to_str()
     .expect("runtime dir path is valid utf8");
 
-  let cmd = format!(
-    "
-let $PATH .= ':{runtime_dir}/{platform}'
-let &runtimepath .= ',{runtime_dir}'
-let g:uivonim = 1
-let g:uvn_cmd_completions = ''
-let g:uvn_events = {{}}
-let g:uvn_callbacks = {{}}
-let g:uvn_callback_id = 0
-let g:uvn_jobs_connected = {{}}
-let g:uvn_completing = 0
-let g:uvn_complete_pos = 1
-let g:uvn_completions = []
-",
-    runtime_dir = runtime_dir,
-    platform = std::env::consts::OS
-  );
-
-  // TODO(smolck)
-  let mut cmd = cmd
-    .split('\n')
-    .filter(|x| !x.is_empty())
-    .map(|x| x.trim().replace("|", "\\|"))
-    .collect::<Vec<String>>()
-    .join(" | ");
-
-  cmd.push_str(&define_funcs_cmd);
-
-  println!("{}", cmd);
-  cmd
-}
-
-async fn new_nvim_child_cmd(
-  handler: NeovimHandler,
-) -> (
-  Nvim,
-  tokio::task::JoinHandle<Result<(), Box<nvim_rs::error::LoopError>>>,
-  tokio::process::Child,
-) {
   create::new_child_cmd(
     Command::new("nvim").args(&[
-      "--embed",
       "--cmd",
-      &startup_cmd(),
-      /*"--cmd",
-      "com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)",*/
+      &format!("let $PATH .= ':{runtime_dir}/{platform}' | let &runtimepath .= ',{runtime_dir}'",
+    runtime_dir = runtime_dir,
+    platform = std::env::consts::OS
+),
+      "--cmd",
+      "com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)",
+      "--cmd",
+      &format!("source {}/uivonim.vim", runtime_dir),
+      "--embed",
     ]),
     handler,
   )
