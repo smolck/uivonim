@@ -8,7 +8,6 @@ import {
   VimOption,
 } from '../neovim/types'
 import { BufferInfo, BufferType, GenericCallback } from '../../common/types'
-import { Autocmds } from '../neovim/startup'
 import { normalizeVimMode } from '../../common/neovim-utils'
 import { EventEmitter } from 'events'
 import NvimState from '../neovim/state'
@@ -309,12 +308,35 @@ nvimInstance
   .then((newState) => Object.assign(state, newState))
 watchers.events.emit('bufLoad')
 
+// TODO(smolck)/note: This is coordinated with runtime/autoload/uivonim.vim; here,
+// the values don't matter, but the keys do . . . yeah TODO on how to do this
+// now
+const autocmds = {
+  BufAdd: `expand('<abuf>')`,
+  BufEnter: `expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates')`,
+  BufDelete: `expand('<abuf>')`,
+  BufUnload: `expand('<abuf>')`,
+  BufWipeout: `expand('<abuf>')`,
+  BufWritePre: `expand('<abuf>')`,
+  BufWritePost: `expand('<abuf>')`,
+  CursorMoved: null,
+  CursorMovedI: null,
+  CompleteDone: `v:completed_item`,
+  InsertEnter: null,
+  InsertLeave: null,
+  TextChanged: `b:changedtick`,
+  TextChangedI: `b:changedtick`,
+  OptionSet: `expand('<amatch>'), v:option_new, v:option_old`,
+  FileType: `bufnr(expand('<afile>')), expand('<amatch>')`,
+  WinEnter: `win_getid()`,
+}
+
 type RegisterAutocmd = {
-  [Key in Autocmds]: (fn: (...arg: any[]) => void) => void | any
+  [Key in keyof typeof autocmds]: (fn: (...arg: any[]) => void) => void | any
 }
 
 const autocmd: RegisterAutocmd = new Proxy(Object.create(null), {
-  get: (_, event: Autocmds) => (fn: any) => watchers.autocmds.on(event, fn),
+  get: (_, event: keyof typeof autocmds) => (fn: any) => watchers.autocmds.on(event, fn),
 })
 
 autocmd.CompleteDone((word) => watchers.events.emit('completion', word))

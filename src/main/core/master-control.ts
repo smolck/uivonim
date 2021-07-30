@@ -1,11 +1,11 @@
 import { asColor, merge, getPipeName } from '../../common/utils'
 import Worker, { Worker as WorkerType } from '../workers/messaging/worker'
-import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
 import InstanceApi from '../core/instance-api'
 import * as neovim from 'neovim'
 import { BrowserWindow } from 'electron'
+import { resolve } from 'path'
 
 type RedrawFn = (m: any[]) => void
 type ExitFn = (code: number) => void
@@ -39,11 +39,14 @@ const spawnNvimInstance = (
   useWsl: boolean,
   nvimBinary?: string
 ) => {
+  const runtimeDir = resolve(__dirname, '..', '..', '..', 'runtime')
   const args = [
     '--cmd',
-    `${startupFuncs()} | ${startupCmds}`,
+    `let $PATH .= ':${runtimeDir}/${process.platform}' | let &runtimepath .= ',${runtimeDir}'`,
     '--cmd',
     `com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)`,
+    '--cmd',
+    `source ${runtimeDir}/uivonim.vim`,
     '--embed',
     '--listen',
     pipeName,
