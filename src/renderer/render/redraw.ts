@@ -322,7 +322,7 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
 
 listenRedraw.gridLine(grid_line)
 // invoke('attach_ui')
-listenRedraw.gridCursorGoto(({ payload: [gridId, row, col]}) => {
+listenRedraw.gridCursorGoto(({ payload: [[gridId, row, col]]}) => {
   windows.setActiveGrid(gridId)
   moveCursor(row, col)
 })
