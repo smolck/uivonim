@@ -147,73 +147,31 @@ impl Handler for NeovimHandler {
 
         for evt in args.iter() {
           let event_name = evt[0].as_str().unwrap();
-          match event_name {
-            "grid_line" => {
-              win
-                .emit(
-                  event_name,
-                  evt.as_array().unwrap()[1..]
-                    .iter()
-                    .map(|grid_line| parse_grid_line(&grid_line.as_array().unwrap()))
-                    .collect::<Vec<serde_json::Value>>(),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            "grid_resize" => {
-              win
-                .emit(
-                  event_name,
-                  evt.as_array().unwrap()[1..]
-                    .iter()
-                    .map(|grid_resize| parse_grid_resize(&grid_resize.as_array().unwrap()))
-                    .collect::<Vec<serde_json::Value>>(),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            "grid_cursor_goto" => {
-              win
-                .emit(
-                  event_name,
-                  parse_grid_cursor_goto(&evt.as_array().unwrap()[1..][0].as_array().unwrap()),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            "win_pos" => {
-              win
-                .emit(
-                  event_name,
-                  evt.as_array().unwrap()[1..]
-                    .iter()
-                    .map(|win_pos| parse_win_pos(&win_pos.as_array().unwrap()))
-                    .collect::<Vec<serde_json::Value>>(),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            "default_colors_set" => {
-              win
-                .emit(
-                  event_name,
-                  evt.as_array().unwrap()[1..]
-                    .iter()
-                    .map(|e| parse_default_colors_set(&e.as_array().unwrap()))
-                    .collect::<Vec<serde_json::Value>>(),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            "option_set" => {
-              win
-                .emit(
-                  event_name,
-                  evt.as_array().unwrap()[1..]
-                    .iter()
-                    .map(|e| parse_option_set(&e.as_array().unwrap()))
-                    .collect::<Vec<serde_json::Value>>(),
-                )
-                .expect(&format!("failed to emit {} event", event_name));
-            }
-            evt_name => {
-              println!("UI redraw event {} not handled", evt_name);
-            }
+          let payload = evt.as_array().unwrap()[1..]
+            .iter()
+            .map(|v| v.as_array().unwrap().as_slice())
+            .map(match event_name {
+              "grid_line" => parse_grid_line,
+              "grid_resize" => parse_grid_resize,
+              "grid_cursor_goto" => parse_grid_cursor_goto,
+              "win_pos" => parse_win_pos,
+              "default_colors_set" => parse_default_colors_set,
+              "option_set" => parse_option_set,
+              _ => |_: &[Value]|
+                  // TODO(smolck): I mean it's kinda hacky, sure, but . . . not thinking of a
+                  // better/another way to do this rn
+                  serde_json::Value::from("[uivonim]: bruh not handled so stop it"),
+            })
+            .collect::<Vec<serde_json::Value>>();
+
+          if !payload.contains(&serde_json::Value::from(
+            "[uivonim]: bruh not handled so stop it",
+          )) {
+            win
+              .emit(event_name, payload)
+              .expect(&format!("failed to emit {} event", event_name));
+          } else {
+            println!("not handling UI event: '{}'", event_name);
           }
         }
 
