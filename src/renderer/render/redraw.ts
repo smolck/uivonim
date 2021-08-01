@@ -400,8 +400,8 @@ const updateFont = () => {
   windows.refreshWebGLGrid()
 }
 
-listenRedraw.optionSet((e: any) => {
-  e.slice(1).forEach(([k, value]: any) => options.set(k, value))
+listenRedraw.optionSet(({ payload: e }) => {
+  e.forEach(([k, value]: any) => options.set(k, value))
 
   updateFont()
 })

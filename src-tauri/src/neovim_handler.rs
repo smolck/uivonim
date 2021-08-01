@@ -200,6 +200,17 @@ impl Handler for NeovimHandler {
                 )
                 .expect(&format!("failed to emit {} event", event_name));
             }
+            "option_set" => {
+              win
+                .emit(
+                  event_name,
+                  evt.as_array().unwrap()[1..]
+                    .iter()
+                    .map(|e| parse_option_set(&e.as_array().unwrap()))
+                    .collect::<Vec<serde_json::Value>>(),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
+            }
             evt_name => {
               println!("UI redraw event {} not handled", evt_name);
             }
@@ -287,4 +298,18 @@ fn parse_default_colors_set(ev: &[Value]) -> serde_json::Value {
     ev[3].as_i64().unwrap(),
     ev[4].as_i64().unwrap(),
   ])
+}
+
+/// `ev` of the form [name, value]
+fn parse_option_set(ev: &[Value]) -> serde_json::Value {
+  let option_name = ev[0].as_str().unwrap();
+
+  // TODO(smolck): Covers all types the option value can be
+  // in an option_set event? Or are there more than these three?
+  match &ev[1] {
+    Value::Boolean(b) => json!([option_name, b,]),
+    Value::Integer(i) => json!([option_name, i.as_i64().unwrap(),]),
+    Value::String(str) => json!([option_name, str.as_str().unwrap()]),
+    _ => unreachable!(),
+  }
 }
