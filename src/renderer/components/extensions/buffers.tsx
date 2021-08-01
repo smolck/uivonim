@@ -6,7 +6,7 @@ import { BufferInfo } from '../../../common/types'
 import Input from '../text-input'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
-import { Events, Invokables } from '../../../common/ipc'
+import { listen, invoke } from '../../helpers'
 
 let state = {
   value: '',
@@ -69,7 +69,7 @@ const select = () => {
   }
 
   const { name } = state.buffers[state.index]
-  if (name) window.api.invoke(Invokables.nvimCmd, `b ${name}`)
+  if (name) invoke.nvimCmd({ cmd: `b ${name}` })
   assignStateAndRender(resetState)
 }
 
@@ -112,6 +112,4 @@ const show = (buffers: BufferInfo[]) => (
   vimBlur(), assignStateAndRender({ buffers, cache: buffers, visible: true })
 )
 
-window.api.on(Events.buffersAction, async () =>
-  show(await window.api.invoke(Invokables.getBufferInfo))
-)
+listen.buffersAction(async () => show(await invoke.getBufferInfo({})))

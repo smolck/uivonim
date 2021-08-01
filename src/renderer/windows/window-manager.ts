@@ -133,6 +133,8 @@ export const set = (
 
   container.appendChild(win.element)
   invalidGrids.delete(gridId)
+
+  console.log("window-manager stuff", windowsById, windowsByGrid)
 }
 
 // i made the assumption that a grid_resize event was always going to follow up

@@ -55,15 +55,15 @@ requestAnimationFrame(() => {
     // Focus textarea at start of application to receive input right away.
     document.getElementById('keycomp-textarea')?.focus()
 
-    require('./components/nvim/command-line')
+    /*require('./components/nvim/command-line')
     require('./components/nvim/autocomplete')
     require('./components/nvim/messages')
     require('./components/nvim/message-history')
     require('./components/nvim/search')
-    require('./components/nvim/statusline')
+    require('./components/nvim/statusline')*/
   })
 
-  setTimeout(() => {
+  /*setTimeout(() => {
     require('./components/extensions/buffers')
     require('./components/extensions/color-picker')
     require('./components/extensions/explorer')
@@ -74,7 +74,7 @@ requestAnimationFrame(() => {
     require('./components/extensions/lsp-signature-help')
 
     require('./components/memes/nc')
-  }, 600)
+  }, 600)*/
 })
 
 const pluginsContainer = document.getElementById('plugins') as HTMLElement

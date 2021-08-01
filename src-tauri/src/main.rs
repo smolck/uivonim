@@ -1,3 +1,4 @@
+#![feature(slice_pattern)] // TODO(smolck): umm . . . why tho
 #![cfg_attr(
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
@@ -22,7 +23,12 @@ async fn main() {
     .invoke_handler(tauri::generate_handler![
       commands::your_face,
       commands::attach_ui,
-      commands::get_highlight_by_name
+      commands::get_highlight_by_name,
+      commands::nvim_resize,
+      commands::nvim_resize_grid,
+      commands::nvim_command,
+      commands::get_buffer_info,
+      commands::expand,
     ])
     .manage(AppState { nvim })
     .on_page_load(move |win, _| {

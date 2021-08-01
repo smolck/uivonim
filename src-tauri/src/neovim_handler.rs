@@ -1,6 +1,9 @@
 use async_trait::async_trait;
+use core::slice::SlicePattern;
 use nvim_rs::{compat::tokio::Compat, create::tokio as create, Handler, Neovim};
 use rmpv::Value;
+
+use serde_json::json;
 
 use tauri::async_runtime::spawn;
 
@@ -136,32 +139,80 @@ impl NeovimHandler {
 impl Handler for NeovimHandler {
   type Writer = Compat<ChildStdin>;
 
-  async fn handle_notify(
-    &self,
-    name: String,
-    args: Vec<Value>,
-    _neovim: Neovim<Compat<ChildStdin>>,
-  ) {
+  async fn handle_notify(&self, name: String, args: Vec<Value>, _nvim: Neovim<Compat<ChildStdin>>) {
     match name.as_str() {
       "redraw" => {
         let win = self.window.lock().await;
         let win = win.as_ref().expect("why haven't you set the window bro");
 
         for evt in args.iter() {
-          // println!("{:?}", evt);
-          match evt[0].as_str().unwrap() {
+          let event_name = evt[0].as_str().unwrap();
+          match event_name {
             "grid_line" => {
-              for grid_line in evt.as_array().unwrap()[1..].iter() {
-                println!("emittin the grid line bro");
-                win
-                  .emit("grid_line", parse_grid_line(&grid_line.as_array().unwrap()))
-                  .expect("failed to emit grid_line event");
-              }
+              win
+                .emit(
+                  event_name,
+                  evt.as_array().unwrap()[1..]
+                    .iter()
+                    .map(|grid_line| parse_grid_line(&grid_line.as_array().unwrap()))
+                    .collect::<Vec<serde_json::Value>>(),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
             }
-            _ => {}
+            "grid_resize" => {
+              win
+                .emit(
+                  event_name,
+                  evt.as_array().unwrap()[1..]
+                    .iter()
+                    .map(|grid_resize| parse_grid_resize(&grid_resize.as_array().unwrap()))
+                    .collect::<Vec<serde_json::Value>>(),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
+            }
+            "grid_cursor_goto" => {
+              win
+                .emit(
+                  event_name,
+                  parse_grid_cursor_goto(&evt.as_array().unwrap()[1..][0].as_array().unwrap()),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
+            }
+            "win_pos" => {
+              win
+                .emit(
+                  event_name,
+                  evt.as_array().unwrap()[1..]
+                    .iter()
+                    .map(|win_pos| parse_win_pos(&win_pos.as_array().unwrap()))
+                    .collect::<Vec<serde_json::Value>>(),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
+            }
+            "default_colors_set" => {
+              win
+                .emit(
+                  event_name,
+                  evt.as_array().unwrap()[1..]
+                    .iter()
+                    .map(|e| parse_default_colors_set(&e.as_array().unwrap()))
+                    .collect::<Vec<serde_json::Value>>(),
+                )
+                .expect(&format!("failed to emit {} event", event_name));
+            }
+            evt_name => {
+              println!("UI redraw event {} not handled", evt_name);
+            }
           }
         }
+
+        win
+          .emit("dispose_invalid_wins_then_layout", serde_json::Value::Null)
+          .expect("couldn't send event");
       }
+      /*"uivonim-state" => {
+        println!("new state! {:?}", args);
+      }*/
       _ => println!("don't handle this notification yet: {:?}, {:?}", name, args),
     }
   }
@@ -181,8 +232,6 @@ impl Handler for NeovimHandler {
 ///
 /// See `:help ui-event-grid_line` in nvim for more info.
 fn parse_grid_line(ev: &[Value]) -> serde_json::Value {
-  use serde_json::json;
-
   json!({
       "grid": ev[0].as_i64().unwrap(),
       "row": ev[1].as_i64().unwrap(),
@@ -195,4 +244,47 @@ fn parse_grid_line(ev: &[Value]) -> serde_json::Value {
           ])
       }).collect::<serde_json::Value>())
   })
+}
+
+/// `ev` of the form: [grid, win, start_row, start_col, width, height]
+fn parse_win_pos(ev: &[Value]) -> serde_json::Value {
+  let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
+  println!("grid id: {}", ev[0].as_i64().unwrap());
+  json!([
+    ev[0].as_i64().unwrap(),
+    win_id.as_i64().unwrap(),
+    ev[2].as_i64().unwrap(),
+    ev[3].as_i64().unwrap(),
+    ev[4].as_i64().unwrap(),
+    ev[5].as_i64().unwrap(),
+  ])
+}
+
+/// `ev` of the form [grid, width, height]
+fn parse_grid_resize(ev: &[Value]) -> serde_json::Value {
+  json!([
+    ev[0].as_i64().unwrap(),
+    ev[1].as_i64().unwrap(),
+    ev[2].as_i64().unwrap(),
+  ])
+}
+
+/// `ev` of the form [grid, row, column]
+fn parse_grid_cursor_goto(ev: &[Value]) -> serde_json::Value {
+  json!([
+    ev[0].as_i64().unwrap(),
+    ev[1].as_i64().unwrap(),
+    ev[2].as_i64().unwrap(),
+  ])
+}
+
+/// `ev` of the form [rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg]
+fn parse_default_colors_set(ev: &[Value]) -> serde_json::Value {
+  json!([
+    ev[0].as_i64().unwrap(),
+    ev[1].as_i64().unwrap(),
+    ev[2].as_i64().unwrap(),
+    ev[3].as_i64().unwrap(),
+    ev[4].as_i64().unwrap(),
+  ])
 }

@@ -14,8 +14,8 @@ import {
 } from '../render/highlight-attributes'
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
-import { Invokables } from '../../common/ipc'
 import { setCursorColor } from '../cursor'
+import { invoke } from '../helpers'
 
 // this will return a var like '244, 120, 042'
 // then we can use this var in rgba color styles
@@ -91,11 +91,7 @@ const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
 // changes so the `uvn*` highlight groups used above are defined . . . it's
 // called on startup, see startup.ts in src/main/neovim.ts
 // and src/main/core/master-control.ts, but that doesn't seem to work . . .
-sub('colors-changed', (x) =>
-  window.api
-    .invoke(Invokables.nvimCmd, 'call UivonimCreateHighlights()')
-    .then(() => refreshColors(x))
-)
+sub('colors-changed', (x) => invoke.nvimCmd({ cmd: 'call UivonimCreateHighlights()' }).then(() => refreshColors(x)))
 
 requestAnimationFrame(() =>
   refreshColors({

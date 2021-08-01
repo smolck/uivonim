@@ -1,6 +1,6 @@
 type Cb = (...args: any[]) => void
 
-const dispatchConstructor = () => {
+export const dispatchConstructor = () => {
   const listeners: any = {}
 
   return {

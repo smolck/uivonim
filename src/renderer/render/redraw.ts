@@ -20,9 +20,7 @@ import {
 } from '../cursor'
 import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
-import { RedrawEvents, Invokables } from '../../common/ipc'
 import {
-  WinPosWinInfo,
   WinFloatPosWinInfo,
   Mode,
   PopupMenu,
@@ -33,16 +31,16 @@ import messages from '../components/nvim/messages'
 import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { cell } from '../workspace'
-import { listen } from '@tauri-apps/api/event'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke, listenRedraw } from '../helpers'
 
 let dummyData = new Float32Array()
 
-const default_colors_set = (e: any) => {
+const default_colors_set = (event: any) => {
+  const e = event.payload
   const count = e.length
   let defaultColorsChanged = false
 
-  for (let ix = 1; ix < count; ix++) {
+  for (let ix = 0; ix < count; ix++) {
     const [fg, bg, sp] = e[ix]
     if (fg < 0 && bg < 0 && sp < 0) continue
     defaultColorsChanged = setDefaultColors(fg, bg, sp)
@@ -66,8 +64,10 @@ const hl_attr_define = (e: any) => {
   windows.webgl.updateColorAtlas(colorAtlas)
 }
 
-const win_pos = (wins: WinPosWinInfo[]) => {
-  wins.forEach(({ winId, gridId, row, col, width, height }) =>
+const win_pos = (event: any) => {
+  console.log(event);
+  const wins: number[][] = event.payload;
+  wins.forEach(([ gridId, winId, row, col, width, height ]) =>
     windows.set(winId, gridId, row, col, width, height)
   )
 }
@@ -90,10 +90,11 @@ const grid_destroy = ([, [gridId]]: any) => {
   windows.remove(gridId)
 }
 
-const grid_resize = (e: any) => {
+const grid_resize = (event: any) => {
+  const e = event.payload;
   const count = e.length
 
-  for (let ix = 1; ix < count; ix++) {
+  for (let ix = 0; ix < count; ix++) {
     const [gridId, width, height] = e[ix]
     if (gridId === 1) continue
     // grid events show up before win events
@@ -116,7 +117,8 @@ const grid_scroll = ([
     : win.webgl.moveRegionDown(-amount, top, bottom)
 }
 
-const grid_line = (e: any) => {
+const grid_line = (event: any) => {
+  const e = event.payload;
   const gridRenderIndexes: any = []
   const grids: any = []
   let hlid = 0
@@ -282,12 +284,7 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         return
       else
-        window.api.invoke(
-          Invokables.nvimResizeGrid,
-          win.gridId,
-          clampedWidth,
-          clampedHeight
-        )
+        invoke.nvimResizeGrid({ grid: win.gridId, cols: clampedWidth, rows: clampedHeight })
 
       return
     }
@@ -325,36 +322,26 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
   })
 }
 
-// @ts-ignore
-const handle: {
-  [Key in keyof typeof RedrawEvents]: (fn: (...args: any[]) => void) => void
-} = new Proxy(RedrawEvents, {
-  get: (redrawEvents, key) => (fn: (...args: any[]) => void) => {
-    listen(Reflect.get(redrawEvents, key), fn)
-  },
-})
-
-console.log("grid line yo!!!")
-listen('grid_line', grid_line)
-invoke('attach_ui')
-handle.gridCursorGoto((gridId, row, col) => {
+listenRedraw.gridLine(grid_line)
+// invoke('attach_ui')
+listenRedraw.gridCursorGoto(({ payload: [gridId, row, col]}) => {
   windows.setActiveGrid(gridId)
   moveCursor(row, col)
 })
-handle.gridScroll(grid_scroll)
-handle.gridClear(grid_clear)
-handle.gridDestroy(grid_destroy)
-handle.gridResize(grid_resize)
+listenRedraw.gridScroll(grid_scroll)
+listenRedraw.gridClear(grid_clear)
+listenRedraw.gridDestroy(grid_destroy)
+listenRedraw.gridResize(grid_resize)
 
-handle.winPos(win_pos)
-handle.winFloatPos(win_float_pos)
-handle.winClose(win_close)
-handle.winHide(win_hide)
+listenRedraw.winPos(win_pos)
+listenRedraw.winFloatPos(win_float_pos)
+listenRedraw.winClose(win_close)
+listenRedraw.winHide(win_hide)
 
-handle.tablineUpdate(({ curtab, tabs }) =>
+listenRedraw.tablineUpdate(({ curtab, tabs }) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 )
-handle.modeChange((mode: Mode) => {
+listenRedraw.modeChange((mode: Mode) => {
   if (mode.hlid) {
     const { background } = getColorById(mode.hlid)
     if (background) setCursorColor(background)
@@ -362,36 +349,36 @@ handle.modeChange((mode: Mode) => {
 
   setCursorShape(mode.shape, mode.size)
 })
-handle.pmenuHide(() => dispatch.pub('pmenu.hide'))
-handle.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
-handle.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
+listenRedraw.pmenuHide(() => dispatch.pub('pmenu.hide'))
+listenRedraw.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
+listenRedraw.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
 
-handle.msgShow((message) => messages.show(message))
-handle.msgStatus((status) => dispatch.pub('message.status', status))
-handle.msgAppend((message) => messages.append(message))
-handle.msgShowHistory((messages) => showMessageHistory(messages))
-handle.msgControl((text) => dispatch.pub('message.control', text))
-handle.msgClear((maybeMatcherKey) =>
+listenRedraw.msgShow((message) => messages.show(message))
+listenRedraw.msgStatus((status) => dispatch.pub('message.status', status))
+listenRedraw.msgAppend((message) => messages.append(message))
+listenRedraw.msgShowHistory((messages) => showMessageHistory(messages))
+listenRedraw.msgControl((text) => dispatch.pub('message.control', text))
+listenRedraw.msgClear((maybeMatcherKey) =>
   maybeMatcherKey
     ? messages.clear((message) => Reflect.get(message, maybeMatcherKey))
     : messages.clear()
 )
-handle.showCursor(() => showCursor())
-handle.hideCursor(() => hideCursor())
-handle.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
-handle.enableThenShowCursor(() => (enableCursor(), showCursor()))
-handle.pubRedraw(() => dispatch.pub('redraw'))
+listenRedraw.showCursor(() => showCursor())
+listenRedraw.hideCursor(() => hideCursor())
+listenRedraw.hideThenDisableCursor(() => (hideCursor(), disableCursor()))
+listenRedraw.enableThenShowCursor(() => (enableCursor(), showCursor()))
+listenRedraw.pubRedraw(() => dispatch.pub('redraw'))
 
-handle.disposeInvalidWinsThenLayout(
+listenRedraw.disposeInvalidWinsThenLayout(
   () => (windows.disposeInvalidWindows(), windows.layout())
 )
 
-handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
-handle.cmdHide(() => dispatch.pub('cmd.hide'))
-handle.searchUpdate((update) => dispatch.pub('search.update', update))
+listenRedraw.cmdUpdate((update) => dispatch.pub('cmd.update', update))
+listenRedraw.cmdHide(() => dispatch.pub('cmd.hide'))
+listenRedraw.searchUpdate((update) => dispatch.pub('search.update', update))
 
-handle.hlAttrDefine(hl_attr_define)
-handle.defaultColorsSet(default_colors_set)
+listenRedraw.hlAttrDefine(hl_attr_define)
+listenRedraw.defaultColorsSet(default_colors_set)
 
 const options = new Map<string, any>()
 
@@ -413,14 +400,16 @@ const updateFont = () => {
   windows.refreshWebGLGrid()
 }
 
-handle.optionSet((e: any) => {
+listenRedraw.optionSet((e: any) => {
   e.slice(1).forEach(([k, value]: any) => options.set(k, value))
 
   updateFont()
 })
 
-handle.setTitle((title) => dispatch.pub('vim:title', title))
+listenRedraw.setTitle((title) => dispatch.pub('vim:title', title))
 
-handle.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
-handle.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
-handle.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))
+listenRedraw.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
+listenRedraw.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
+listenRedraw.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))
+
+invoke.attachUi({})

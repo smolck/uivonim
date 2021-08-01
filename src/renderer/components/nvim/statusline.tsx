@@ -6,7 +6,7 @@ import Icon from '../icon'
 import { colors } from '../../ui/styles'
 import { basename } from 'path'
 import { render } from 'inferno'
-import { Events } from '../../../common/ipc'
+import { watchNvimState, listen } from '../../helpers'
 
 interface Tab {
   data: number
@@ -377,11 +377,10 @@ const Tab = ({ id, label, active }: TabView) => (
   </div>
 )
 
-const watchState = window.api.nvimWatchState
-watchState('filetype', (filetype: string) => assignStateAndRender({ filetype }))
-watchState('line', (line: number) => assignStateAndRender({ line }))
-watchState('column', (column: number) => assignStateAndRender({ column }))
-watchState('cwd', (cwd: string) => {
+watchNvimState.filetype((filetype) => assignStateAndRender({ filetype }))
+watchNvimState.line((line) => assignStateAndRender({ line }))
+watchNvimState.column((column) => assignStateAndRender({ column }))
+watchNvimState.cwd((cwd) => {
   const next = basename(cwd)
   assignStateAndRender({ cwd: next })
 })
@@ -393,8 +392,8 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
     : assignStateAndRender({ active: -1, tabs: [] })
 })
 
-window.api.gitOnBranch((branch) => assignStateAndRender({ branch }))
-window.api.gitOnStatus((status) =>
+listen.gitOnBranch((branch) => assignStateAndRender({ branch }))
+listen.gitOnStatus((status) =>
   assignStateAndRender({
     additions: status.additions,
     deletions: status.deletions,
@@ -404,7 +403,7 @@ window.api.gitOnStatus((status) =>
 sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 
-window.api.on(Events.lspDiagnostics, (diagnostics) => {
+listen.lspDiagnostics((diagnostics) => {
   let errors = 0
   let warnings = 0
   diagnostics.forEach((d: any) =>
@@ -413,7 +412,7 @@ window.api.on(Events.lspDiagnostics, (diagnostics) => {
   assignStateAndRender({ errors, warnings })
 })
 
-watchState('colorscheme', async () => {
+watchNvimState.colorscheme(async (_) => {
   const { background } = await getColorByName('StatusLine')
   if (background) assignStateAndRender({ baseColor: background })
 })

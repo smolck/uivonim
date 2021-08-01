@@ -7,7 +7,7 @@ import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
 import { cursor } from '../../cursor'
 import { render } from 'inferno'
-import { Invokables, Events } from '../../../common/ipc'
+import { invoke, listen } from '../../helpers'
 
 let liveMode = false
 let restoreInput = () => {}
@@ -40,7 +40,7 @@ const possiblyUpdateColorScheme = debounce(() => {
 
   if (currentActiveColorscheme !== colorschemeBeingEdited) return
 
-  const cmd = (cmd: string) => window.api.invoke(Invokables.nvimCmd, cmd)
+  const cmd = (cmd: string) => invoke.nvimCmd({ cmd })
   cmd(`write`)
   cmd(`colorscheme ${currentActiveColorscheme}`)
   dispatch.pub('colorscheme.modified')
@@ -113,19 +113,18 @@ const show = (color: string) => {
 colorPicker.onChange((color) => {
   // TODO: will also need to send what kind of color is updated, that way
   // we know which text edit to apply (rgba or hsla, etc.)
-  window.api
-    .invoke(Invokables.nvimCmd, `exec "normal! ciw${color}"`)
+  invoke.nvimCmd({ cmd: `exec "normal! ciw${color}"` })
     .then(() => possiblyUpdateColorScheme())
 })
 
-window.api.on(Events.pickColor, async () => {
+listen.pickColor(async () => {
   liveMode = false
-  const word = await window.api.invoke(Invokables.expand, '<cword>')
+  const word = await invoke.expand({ thing: '<cword>' })
   show(word)
 })
 
-window.api.on(Events.modifyColorschemeLive, async () => {
+listen.modifyColorschemeLive(async () => {
   liveMode = true
-  const word = await window.api.invoke(Invokables.expand, '<cword>')
+  const word = await invoke.expand({ thing: '<cword>' })
   show(word)
 })
