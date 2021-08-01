@@ -1,3 +1,4 @@
+use core::slice::SlicePattern;
 use std::path::Path;
 
 use nvim_rs::error::CallError;
@@ -138,13 +139,25 @@ pub fn get_buffer_info(state: S) -> Result<Vec<BufferInfo>, String> {
   (block_on(async {
     let nvim = state.nvim.lock().await;
     let buffers = nvim.list_bufs().await?;
+
     // TODO(smolck): Is this really the bufid/bufnr?
-    let curr_buf_id = nvim.get_current_buf().await?.get_number().await?;
+
+    let curr_buf_id = nvim.get_current_buf().await?;
+    let curr_buf_id =
+      rmpv::decode::read_value(&mut curr_buf_id.get_value().as_ext().unwrap().1.as_slice())
+        .unwrap()
+        .as_i64()
+        .unwrap();
 
     Ok(
       stream::iter(buffers)
         .filter_map(|b: nvim_rs::Buffer<_>| async move {
-          let is_current = b.get_number().await.unwrap() == curr_buf_id;
+          let is_current =
+            rmpv::decode::read_value(&mut b.get_value().as_ext().unwrap().1.as_slice())
+              .unwrap()
+              .as_i64()
+              .unwrap()
+              == curr_buf_id;
           if !b.get_option("buflisted").await.unwrap().as_bool().unwrap() && is_current {
             None
           } else {
