@@ -154,6 +154,8 @@ impl Handler for NeovimHandler {
               "grid_line" => parse_grid_line,
               "grid_resize" => parse_grid_resize,
               "grid_cursor_goto" => parse_grid_cursor_goto,
+              "grid_scroll" => parse_grid_scroll,
+              "grid_clear" => |ev: &[Value]| json!([ev[0].as_i64().unwrap()]),
               "win_pos" => parse_win_pos,
               "default_colors_set" => parse_default_colors_set,
               "option_set" => parse_option_set,
@@ -270,4 +272,17 @@ fn parse_option_set(ev: &[Value]) -> serde_json::Value {
     Value::String(str) => json!([option_name, str.as_str().unwrap()]),
     _ => unreachable!(),
   }
+}
+
+/// `ev` of the form [grid, top, bot, left, right, rows, cols]
+fn parse_grid_scroll(ev: &[Value]) -> serde_json::Value {
+  json!([
+    ev[0].as_i64().unwrap(),
+    ev[1].as_i64().unwrap(),
+    ev[2].as_i64().unwrap(),
+    ev[3].as_i64().unwrap(),
+    ev[4].as_i64().unwrap(),
+    ev[5].as_i64().unwrap(),
+    ev[5].as_i64().unwrap(),
+  ])
 }

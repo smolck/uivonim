@@ -210,3 +210,197 @@ pub fn get_buffer_info(state: S) -> Result<Vec<BufferInfo>, String> {
   }))
   .map_err(|err: Box<CallError>| format!("{}", err))
 }
+
+static MODIFIERS: &[&str] = &["Alt", "Shift", "Meta", "Control"];
+
+async fn send_to_nvim(nvim: &crate::neovim_handler::Nvim, input: &str) {
+  let input = if input.len() == 1 {
+    // Necessary because of "<" being "special," see `:help nvim_input()`
+    input.replace("<", "<LT>")
+  } else {
+    input.to_string()
+  };
+
+  // TODO(smolck): Global shortcuts
+  // if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
+
+  // TODO(smolck): This todo is from the TS codebase, so . . . yeah
+  // TODO: this might need more attention. i think s-space can be a valid
+  // vim keybind. s-space was causing issues in terminal mode, sending weird
+  // term esc char.
+  match input.as_str() {
+    "<S-Space>" => nvim
+      .input("<space>")
+      .await
+      .expect("couldn't send nvim input"),
+    // TODO(smolck): From previous codebase, wat:
+    // if (inputKeys.length > 1 && !inputKeys.startsWith('<')) {
+    //   return inputKeys.split('').forEach((k: string) => nvimInput(k))
+    // }
+
+    /*x if x.len() > 1 && x.starts_with("<") => {
+      stream::iter(x.chars()).for_each_concurrent(None, |c| async {
+        nvim.input()
+      }).await;
+    }*/
+    // x if x.to_lowercase() == "<esc>"
+    x => nvim.input(x).await.expect("couldn't send nvim input"),
+  };
+}
+
+#[command]
+pub fn document_on_input(state: S, data: &str) {
+  block_on(async {
+    let mut input_state = state.input_state.lock().await;
+
+    // TODO(smolck): Maybe structure this w/out early returns so it's more clear
+    // what's going on.
+    if cfg!(target_os = "macos") {
+      if !input_state.previous_key_was_dead && input_state.key_is_dead {
+        input_state.key_is_dead = false;
+        input_state.previous_key_was_dead = true;
+        return;
+      }
+    }
+
+    if !input_state.window_has_focus || !input_state.is_capturing {
+      return;
+    }
+
+    if input_state.send_input_to_vim {
+      let nvim = state.nvim.lock().await;
+      send_to_nvim(&nvim, data).await;
+    }
+  })
+}
+
+#[command]
+pub fn document_on_keydown(
+  state: S,
+  key: &str,
+  ctrl_key: bool,
+  meta_key: bool,
+  alt_key: bool,
+  shift_key: bool,
+) {
+  block_on(async {
+    let mut input_state = state.input_state.lock().await;
+
+    if !input_state.window_has_focus || !input_state.is_capturing {
+      return;
+    }
+
+    let is_not_char = {
+      if key.len() == 1 && !ctrl_key && !meta_key && !alt_key && !shift_key {
+        false
+      }
+      // Why this monstrosity exists:
+      // If on Linux/Windows, and the key sequence is typed with alt-shift or alt
+      // (and no other modifers), send to Neovim (for alt-shift and alt mappings).
+      else if !cfg!(target_os = "macos")
+        && ((shift_key && alt_key) || alt_key)
+        && key.len() == 1
+        && !ctrl_key
+        && !meta_key
+      {
+        true
+      }
+      // Pass on modified keys (like alt-7, but not ctrl, which is used in mappings
+      else if (shift_key || meta_key || alt_key) && !ctrl_key && key.len() == 1 {
+        false
+      } else {
+        true
+      }
+    };
+
+    // TODO(smolck): For some reason on MacOS when a dead key is pressed, even if it
+    // isn't actually typed, it's received by the `oninput` handler, which causes an
+    // issue where it's sent to Neovim when it shouldn't be. To fix that, we make
+    // sure that a dead key is only ever sent to Neovim if it's typed twice in a row,
+    // which is the way it should be.
+    let workaround_for_dead_key_being_pressed_twice_in_a_row_on_macos = if cfg!(target_os = "macos")
+    {
+      // TODO(smolck): This logic feels weird/can be simplified I think.
+      let key_is_dead = key == "Dead";
+
+      if key_is_dead && !input_state.previous_key_was_dead {
+        input_state.key_is_dead = true;
+        input_state.previous_key_was_dead = false;
+        false
+      } else {
+        if input_state.previous_key_was_dead {
+          input_state.previous_key_was_dead = false;
+          input_state.key_is_dead = key_is_dead;
+        }
+
+        true
+      }
+    } else {
+      true
+    };
+
+    if is_not_char && workaround_for_dead_key_being_pressed_twice_in_a_row_on_macos {
+      let input_empty_mod_bypassed = if MODIFIERS.contains(&key) { "" } else { key };
+      let mods = {
+        let mut mods = vec![];
+        let only_shift = shift_key && !ctrl_key && !meta_key && !alt_key;
+        let not_cmd_or_ctrl = !meta_key && !ctrl_key;
+        // TODO(smolck): From TS codebase; why the heck does this exist/what does it do?
+        let macos_unicode = (cfg!(target_os = "macos") && alt_key && not_cmd_or_ctrl)
+          || (cfg!(target_os = "macos") && alt_key && shift_key && not_cmd_or_ctrl);
+
+        if (only_shift && key.is_ascii() && key.len() == 1) || macos_unicode {
+          mods
+        } else {
+          if ctrl_key {
+            mods.push("C");
+          }
+          if shift_key {
+            mods.push("S");
+          }
+          if meta_key {
+            mods.push("D");
+          }
+          if alt_key {
+            mods.push("A");
+          }
+
+          mods
+        }
+      }
+      .join("-");
+      let nvim_key = match input_empty_mod_bypassed {
+        "Backspace" => "BS",
+        "<" => "LT",
+        "Escape" => "Esc",
+        "Delete" => "Del",
+        " " => "Space",
+        "ArrowUp" => "Up",
+        "ArrowDown" => "Down",
+        "ArrowLeft" => "Left",
+        "ArrowRight" => "Right",
+        _ => input_empty_mod_bypassed,
+      };
+      // TODO(smolck): What did this do???? (from TS codebase)
+      // const wrapKey = (key: string): string =>
+      // key.length > 1 && isUpper(key[0]) ? `<${key}>` : key
+
+      let input = if mods.len() != 0 {
+        format!("<{}-{}>", mods, nvim_key)
+      } else {
+        format!("<{}>", nvim_key)
+      };
+
+      if input_state.send_input_to_vim && !nvim_key.is_empty() {
+        println!("sending {}", input);
+        state
+          .nvim
+          .lock()
+          .await
+          .input(&input)
+          .await
+          .expect("couldn't send input to nvim");
+      }
+    }
+  })
+}

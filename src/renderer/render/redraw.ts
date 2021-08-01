@@ -65,7 +65,6 @@ const hl_attr_define = (e: any) => {
 }
 
 const win_pos = (event: any) => {
-  console.log(event);
   const wins: number[][] = event.payload;
   wins.forEach(([ gridId, winId, row, col, width, height ]) =>
     windows.set(winId, gridId, row, col, width, height)
@@ -76,7 +75,7 @@ const win_hide = (e: any) => {
   windows.hide(e.slice(1))
 }
 
-const grid_clear = ([, [gridId]]: any) => {
+const grid_clear = ({ payload: [[gridId]] }: { payload: number[][] }) => {
   if (gridId === 1) return
   if (!windows.has(gridId)) return
 
@@ -103,10 +102,9 @@ const grid_resize = (event: any) => {
   }
 }
 
-const grid_scroll = ([
-  ,
+const grid_scroll = ({ payload: [
   [gridId, top, bottom /*left*/ /*right*/, , , amount],
-]: any) => {
+]}: { payload: number[][]}) => {
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
@@ -118,7 +116,7 @@ const grid_scroll = ([
 }
 
 const grid_line = (event: any) => {
-  const e = event.payload;
+  const e = event.payload
   const gridRenderIndexes: any = []
   const grids: any = []
   let hlid = 0

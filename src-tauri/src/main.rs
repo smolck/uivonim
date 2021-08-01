@@ -10,8 +10,17 @@ use futures::lock::Mutex;
 use neovim_handler::NeovimHandler;
 use std::sync::Arc;
 
+pub struct InputState {
+  previous_key_was_dead: bool,
+  key_is_dead: bool,
+  is_capturing: bool,
+  window_has_focus: bool,
+  send_input_to_vim: bool,
+}
+
 pub struct AppState {
   nvim: Arc<Mutex<neovim_handler::Nvim>>,
+  input_state: Arc<Mutex<InputState>>,
 }
 
 #[tokio::main]
@@ -29,8 +38,19 @@ async fn main() {
       commands::nvim_command,
       commands::get_buffer_info,
       commands::expand,
+      commands::document_on_input,
+      commands::document_on_keydown,
     ])
-    .manage(AppState { nvim })
+    .manage(AppState {
+      nvim,
+      input_state: Arc::new(Mutex::new(InputState {
+        previous_key_was_dead: false,
+        key_is_dead: false,
+        is_capturing: true,
+        window_has_focus: true,
+        send_input_to_vim: true,
+      })),
+    })
     .on_page_load(move |win, _| {
       let win_clone = win.clone();
       tauri::async_runtime::block_on(async {

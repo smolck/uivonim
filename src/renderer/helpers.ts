@@ -16,13 +16,13 @@ import { dispatchConstructor } from './dispatch'
 /// Defined in src-tauri/src/commands.rs
 const Invokables = {
   attachUi: 'attach_ui',
+  documentOnInput: 'document_on_input',
+  documentOnKeydown: 'document_on_keydown',
 
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim_resize',
   nvimResizeGrid: 'nvim_resize_grid',
-  documentOnInput: 'documentOnInput',
-  documentOnKeydown: 'documentOnKeydown',
   inputFocus: 'inputFocus',
   inputBlur: 'inputBlur',
   getColorByName: 'getColorByName',
