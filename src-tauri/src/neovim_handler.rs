@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use core::slice::SlicePattern;
 use nvim_rs::{compat::tokio::Compat, create::tokio as create, Handler, Neovim};
-use rmpv::Value;
+use rmpv::Value as NvimValue;
 
-use serde_json::json;
+use serde_json::{json, Value as JsonValue};
 
 use tauri::async_runtime::spawn;
 
@@ -139,7 +139,12 @@ impl NeovimHandler {
 impl Handler for NeovimHandler {
   type Writer = Compat<ChildStdin>;
 
-  async fn handle_notify(&self, name: String, args: Vec<Value>, _nvim: Neovim<Compat<ChildStdin>>) {
+  async fn handle_notify(
+    &self,
+    name: String,
+    args: Vec<NvimValue>,
+    _nvim: Neovim<Compat<ChildStdin>>,
+  ) {
     match name.as_str() {
       "redraw" => {
         let win = self.window.lock().await;
@@ -155,22 +160,21 @@ impl Handler for NeovimHandler {
               "grid_resize" => parse_grid_resize,
               "grid_cursor_goto" => parse_grid_cursor_goto,
               "grid_scroll" => parse_grid_scroll,
-              "grid_clear" => |ev: &[Value]| json!([ev[0].as_i64().unwrap()]),
+              "grid_clear" => |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap()]),
               "cmdline_show" => parse_cmdline_show,
-              "cmdline_hide" => |_ev: &[Value]| serde_json::Value::Null,
+              "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
               "win_pos" => parse_win_pos,
               "default_colors_set" => parse_default_colors_set,
+              "hl_attr_define" => parse_hl_attr_define,
               "option_set" => parse_option_set,
-              _ => |_: &[Value]|
+              _ => |_: &[NvimValue]|
                   // TODO(smolck): I mean it's kinda hacky, sure, but . . . not thinking of a
                   // better/another way to do this rn
-                  serde_json::Value::from("[uivonim]: bruh not handled so stop it"),
+                  JsonValue::from("[uivonim]: bruh not handled so stop it"),
             })
-            .collect::<Vec<serde_json::Value>>();
+            .collect::<Vec<JsonValue>>();
 
-          if !payload.contains(&serde_json::Value::from(
-            "[uivonim]: bruh not handled so stop it",
-          )) {
+          if !payload.contains(&JsonValue::from("[uivonim]: bruh not handled so stop it")) {
             win
               .emit(event_name, payload)
               .expect(&format!("failed to emit {} event", event_name));
@@ -180,7 +184,7 @@ impl Handler for NeovimHandler {
         }
 
         win
-          .emit("dispose_invalid_wins_then_layout", serde_json::Value::Null)
+          .emit("dispose_invalid_wins_then_layout", JsonValue::Null)
           .expect("couldn't send event");
       }
       /*"uivonim-state" => {
@@ -204,7 +208,7 @@ impl Handler for NeovimHandler {
 /// Here `ev` is of the form: [grid, row, col_start, cells]
 ///
 /// See `:help ui-event-grid_line` in nvim for more info.
-fn parse_grid_line(ev: &[Value]) -> serde_json::Value {
+fn parse_grid_line(ev: &[NvimValue]) -> JsonValue {
   json!({
       "grid": ev[0].as_i64().unwrap(),
       "row": ev[1].as_i64().unwrap(),
@@ -215,12 +219,12 @@ fn parse_grid_line(ev: &[Value]) -> serde_json::Value {
               c[1].as_i64(),
               c[2].as_i64(),
           ])
-      }).collect::<serde_json::Value>())
+      }).collect::<JsonValue>())
   })
 }
 
 /// `ev` of the form: [grid, win, start_row, start_col, width, height]
-fn parse_win_pos(ev: &[Value]) -> serde_json::Value {
+fn parse_win_pos(ev: &[NvimValue]) -> JsonValue {
   let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
   println!("grid id: {}", ev[0].as_i64().unwrap());
   json!([
@@ -234,7 +238,7 @@ fn parse_win_pos(ev: &[Value]) -> serde_json::Value {
 }
 
 /// `ev` of the form [grid, width, height]
-fn parse_grid_resize(ev: &[Value]) -> serde_json::Value {
+fn parse_grid_resize(ev: &[NvimValue]) -> JsonValue {
   json!([
     ev[0].as_i64().unwrap(),
     ev[1].as_i64().unwrap(),
@@ -243,7 +247,7 @@ fn parse_grid_resize(ev: &[Value]) -> serde_json::Value {
 }
 
 /// `ev` of the form [grid, row, column]
-fn parse_grid_cursor_goto(ev: &[Value]) -> serde_json::Value {
+fn parse_grid_cursor_goto(ev: &[NvimValue]) -> JsonValue {
   json!([
     ev[0].as_i64().unwrap(),
     ev[1].as_i64().unwrap(),
@@ -252,7 +256,7 @@ fn parse_grid_cursor_goto(ev: &[Value]) -> serde_json::Value {
 }
 
 /// `ev` of the form [rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg]
-fn parse_default_colors_set(ev: &[Value]) -> serde_json::Value {
+fn parse_default_colors_set(ev: &[NvimValue]) -> JsonValue {
   json!([
     ev[0].as_i64().unwrap(),
     ev[1].as_i64().unwrap(),
@@ -263,21 +267,21 @@ fn parse_default_colors_set(ev: &[Value]) -> serde_json::Value {
 }
 
 /// `ev` of the form [name, value]
-fn parse_option_set(ev: &[Value]) -> serde_json::Value {
+fn parse_option_set(ev: &[NvimValue]) -> JsonValue {
   let option_name = ev[0].as_str().unwrap();
 
   // TODO(smolck): Covers all types the option value can be
   // in an option_set event? Or are there more than these three?
   match &ev[1] {
-    Value::Boolean(b) => json!([option_name, b,]),
-    Value::Integer(i) => json!([option_name, i.as_i64().unwrap(),]),
-    Value::String(str) => json!([option_name, str.as_str().unwrap()]),
+    NvimValue::Boolean(b) => json!([option_name, b,]),
+    NvimValue::Integer(i) => json!([option_name, i.as_i64().unwrap(),]),
+    NvimValue::String(str) => json!([option_name, str.as_str().unwrap()]),
     _ => unreachable!(),
   }
 }
 
 /// `ev` of the form [grid, top, bot, left, right, rows, cols]
-fn parse_grid_scroll(ev: &[Value]) -> serde_json::Value {
+fn parse_grid_scroll(ev: &[NvimValue]) -> JsonValue {
   json!([
     ev[0].as_i64().unwrap(),
     ev[1].as_i64().unwrap(),
@@ -290,7 +294,7 @@ fn parse_grid_scroll(ev: &[Value]) -> serde_json::Value {
 }
 
 /// `ev` of the form [content, pos, firstc, prompt, indent, level]
-fn parse_cmdline_show(ev: &[Value]) -> serde_json::Value {
+fn parse_cmdline_show(ev: &[NvimValue]) -> JsonValue {
   let content = ev[0].as_array().unwrap();
   let position = ev[1].as_i64().unwrap();
   let op_char = ev[2].as_str().unwrap();
@@ -309,5 +313,70 @@ fn parse_cmdline_show(ev: &[Value]) -> serde_json::Value {
     "prompt": prompt,
     "kind": if prompt.is_empty() { ":" } else { op_char },
     "position": position,
+  })
+}
+
+/*interface HighlightInfoEvent {
+  kind: 'ui' | 'syntax' | 'terminal'
+  ui_name: string
+  hi_name: string
+  id: number
+}*/
+
+/// `ev` of the form [id, rgb_attr, cterm_attr, info]
+fn parse_hl_attr_define(ev: &[NvimValue]) -> JsonValue {
+  let id = ev[0].as_i64().unwrap();
+  let mut attr = serde_json::Map::new();
+
+  for (k, v) in ev[1].as_map().unwrap() {
+    attr.insert(
+      k.as_str().unwrap().to_string(),
+      match v {
+        // See docs for `hl_attr_define` in `:help ui-events` in nvim.
+        // foreground, background, special, cterm_fg, cterm_bg keys
+        NvimValue::Integer(i) => JsonValue::from(i.as_i64().unwrap()),
+        // reverse, italic, bold keys
+        NvimValue::String(s) => JsonValue::from(s.to_string()),
+        // underline, undercurl keys
+        NvimValue::Boolean(b) => JsonValue::from(*b),
+        _ => {
+          eprintln!("umm . . .");
+          JsonValue::Null
+          // unreachable!()
+        }
+      },
+    );
+  }
+
+  let info = ev[3]
+    .as_array()
+    .unwrap()
+    .iter()
+    .map(|m| {
+      let mut map = serde_json::Map::new();
+      for (k, v) in m.as_map().unwrap() {
+        map.insert(
+          k.as_str().unwrap().to_string(),
+          match v {
+            // See `:help ui-hlstate` in nvim.
+            // kind, ui_name, and hi_name keys
+            NvimValue::String(s) => JsonValue::from(s.to_string()),
+            // id key
+            NvimValue::Integer(i) => JsonValue::from(i.as_i64().unwrap()),
+            x => {
+              eprintln!("umm . . . {:?}", x);
+              unreachable!()
+            }
+          },
+        );
+      }
+      JsonValue::Object(map)
+    })
+    .collect::<Vec<JsonValue>>();
+
+  json!({
+    "id": id,
+    "attr": attr,
+    "info": info,
   })
 }

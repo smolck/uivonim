@@ -52,13 +52,10 @@ const default_colors_set = (event: any) => {
   windows.webgl.updateColorAtlas(colorAtlas)
 }
 
-const hl_attr_define = (e: any) => {
-  const count = e.length
-
-  for (let ix = 1; ix < count; ix++) {
-    const [id, attr /*cterm_attr*/, , info] = e[ix]
+const hl_attr_define = ({ payload: events }: { payload: any[] }) => {
+  events.forEach(({ id, attr, info }) => {
     addHighlight(id, attr, info)
-  }
+  })
 
   const colorAtlas = generateColorLookupAtlas()
   windows.webgl.updateColorAtlas(colorAtlas)
