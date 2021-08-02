@@ -337,7 +337,6 @@ listenRedraw.tablineUpdate(({ curtab, tabs }) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 )
 listenRedraw.modeChange(({ payload: modeInfo }) => {
-  console.log(modeInfo)
   if (modeInfo.attr_id) {
     const { background } = getColorById(modeInfo.attr_id)
     if (background) setCursorColor(background)
