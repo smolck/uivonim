@@ -376,7 +376,7 @@ listenRedraw.disposeInvalidWinsThenLayout(
 let currentCommandMode = 'cmd'
 listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
   updates.forEach((update) => {
-    if (update.prompt === '/' || update.prompt === '?') {
+    if (update.firstc === '/' || update.firstc === '?') {
       currentCommandMode = 'search'
       dispatch.pub('search.update', update)
     } else {
@@ -385,12 +385,12 @@ listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
     }   
   });
 })
-listenRedraw.cmdHide(() => dispatch.pub('cmd.hide'))
-listenRedraw.cmdPos(({ payload: [[pos, _level]] }) => {
-  const stuff = currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update'
-  console.log(stuff, { position: pos })
-  dispatch.pub(stuff, { position: pos })
-})
+listenRedraw.cmdHide(() => dispatch.pub(
+  currentCommandMode === 'cmd' ? 'cmd.hide' : 'search.hide'))
+listenRedraw.cmdPos(({ payload: [[pos, _level]] }) =>
+  dispatch.pub(
+    currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update',
+    { position: pos }))
 
 listenRedraw.hlAttrDefine(hl_attr_define)
 listenRedraw.defaultColorsSet(default_colors_set)

@@ -122,7 +122,12 @@ sub('cmd.hide', () => {
   render(<CommandLine {...state} />, container)
 })
 
-sub('cmd.update', ({ cmd, kind, position, prompt }: CommandUpdate) => {
+sub('cmd.update', ({
+  cmd,
+  kind,
+  position,
+  prompt,
+}: CommandUpdate) => {
   hideCursor()
   disableCursor()
 

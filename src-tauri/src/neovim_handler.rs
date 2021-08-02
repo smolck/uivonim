@@ -405,7 +405,7 @@ fn parse_grid_scroll(ev: &[NvimValue]) -> JsonValue {
 fn parse_cmdline_show(ev: &[NvimValue]) -> JsonValue {
   let content = ev[0].as_array().unwrap();
   let position = ev[1].as_i64().unwrap();
-  let op_char = ev[2].as_str().unwrap();
+  let firstc = ev[2].as_str().unwrap();
   let prompt = ev[3].as_str().unwrap();
   // TODO(smolck)
   // let indent = ev[4].as_i64().unwrap();
@@ -418,8 +418,9 @@ fn parse_cmdline_show(ev: &[NvimValue]) -> JsonValue {
 
   json!({
     "cmd": cmd,
+    "firstc": firstc,
     "prompt": prompt,
-    "kind": if prompt.is_empty() { ":" } else { op_char },
+    "kind": if prompt.is_empty() { ":" } else { firstc },
     "position": position,
   })
 }
