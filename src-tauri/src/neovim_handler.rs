@@ -202,7 +202,7 @@ impl Handler for NeovimHandler {
   ) {
     match name.as_str() {
       "redraw" => {
-        let mode_infos = &mut self.state.lock().await.mode_infos;
+        let state = &mut self.state.lock().await;
         let win = self.window.lock().await;
         let win = win.as_ref().expect("why haven't you set the window bro");
 
@@ -239,6 +239,18 @@ impl Handler for NeovimHandler {
             // Events I can't handle above because Rust-y reasons (more specifically,
             // capturing closure -> fn coercion isn't a thing apparently)
             match event_name {
+              "win_viewport" => {
+                let evt = evt[1].as_array().unwrap();
+                state.line = evt[4].as_i64().unwrap();
+                state.column = evt[5].as_i64().unwrap();
+                state.editor_top_line = evt[2].as_i64().unwrap();
+                state.editor_bottom_line = evt[3].as_i64().unwrap();
+              }
+              "flush" => {
+                // No need to worry about this (afaik), since we do the win layout thing
+                // below regardless. Although . . .
+                // TODO(smolck): maybe we shouldn't do that?
+              }
               "mode_change" => {
                 // TODO(smolck): This assumes only one mode_change event will be sent at a
                 // time (?) . . . is that safe?
@@ -247,7 +259,7 @@ impl Handler for NeovimHandler {
                 win
                   .emit(
                     event_name,
-                    mode_infos.get(&evt[0].as_str().unwrap().to_string()),
+                    state.mode_infos.get(&evt[0].as_str().unwrap().to_string()),
                   )
                   .expect(&format!("failed to emit {} event", event_name));
               }
@@ -259,7 +271,7 @@ impl Handler for NeovimHandler {
                   for (k, v) in info.as_map().unwrap().iter() {
                     mode_info.add(k.as_str().unwrap(), v);
                   }
-                  mode_infos.insert(mode_info.name.clone(), mode_info);
+                  state.mode_infos.insert(mode_info.name.clone(), mode_info);
                 }
               }
               _ => println!("not handling UI event: '{}'", event_name),
