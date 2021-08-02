@@ -18,6 +18,7 @@ const Invokables = {
   attachUi: 'attach_ui',
   documentOnInput: 'document_on_input',
   documentOnKeydown: 'document_on_keydown',
+  getFontBytes: 'get_font_bytes',
 
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',

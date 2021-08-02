@@ -404,3 +404,21 @@ pub fn document_on_keydown(
     }
   })
 }
+
+#[command]
+pub fn get_font_bytes(font_name: &str) -> Result<Vec<u8>, String> {
+  use font_kit::{source::SystemSource, handle::Handle};
+
+  if let Handle::Memory{ bytes, .. } = SystemSource::new()
+    .select_by_postscript_name(&font_name)
+    .map_err(|err| format!("selection error: {}", err))?
+    .load()
+    .map_err(|err| format!("loading error: {}", err))?
+    .handle()
+    .expect("need a handle here") {
+      Ok(bytes.to_vec())
+    }
+    else {
+      Err(format!("couldn't load the font {}", font_name))
+    }
+}

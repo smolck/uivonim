@@ -41,6 +41,7 @@ async fn main() {
       commands::expand,
       commands::document_on_input,
       commands::document_on_keydown,
+      commands::get_font_bytes,
     ])
     .manage(AppState {
       window: window_ref.clone(),
