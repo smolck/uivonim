@@ -21,6 +21,7 @@ pub struct InputState {
 pub struct AppState {
   nvim: Arc<Mutex<neovim_handler::Nvim>>,
   input_state: Arc<Mutex<InputState>>,
+  window: Arc<Mutex<Option<tauri::Window>>>,
 }
 
 #[tokio::main]
@@ -42,6 +43,7 @@ async fn main() {
       commands::document_on_keydown,
     ])
     .manage(AppState {
+      window: window_ref.clone(),
       nvim,
       input_state: Arc::new(Mutex::new(InputState {
         previous_key_was_dead: false,

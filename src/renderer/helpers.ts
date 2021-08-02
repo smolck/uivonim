@@ -38,6 +38,8 @@ const Invokables = {
 } as const
 
 const Events = {
+  stolenInputKeyListener: 'stolen_input_key_listener',
+
   gitOnStatus: 'gitOnStatus',
   gitOnBranch: 'gitOnBranch',
   invokeHandlersReady: 'invokeHandlersReady',
@@ -65,8 +67,8 @@ const Events = {
 } as const
 
 const RedrawEvents = {
-  cmdUpdate: 'cmd.update',
-  cmdHide: 'cmd.hide',
+  cmdShow: 'cmdline_show',
+  cmdHide: 'cmdline_hide',
   gridLine: 'grid_line',
   gridScroll: 'grid_scroll',
   gridCursorGoto: 'grid_cursor_goto',

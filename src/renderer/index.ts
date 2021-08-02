@@ -55,12 +55,12 @@ requestAnimationFrame(() => {
     // Focus textarea at start of application to receive input right away.
     document.getElementById('keycomp-textarea')?.focus()
 
-    /*require('./components/nvim/command-line')
+    require('./components/nvim/command-line')
     require('./components/nvim/autocomplete')
     require('./components/nvim/messages')
     require('./components/nvim/message-history')
     require('./components/nvim/search')
-    require('./components/nvim/statusline')*/
+    require('./components/nvim/statusline')
   })
 
   /*setTimeout(() => {

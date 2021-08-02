@@ -156,6 +156,8 @@ impl Handler for NeovimHandler {
               "grid_cursor_goto" => parse_grid_cursor_goto,
               "grid_scroll" => parse_grid_scroll,
               "grid_clear" => |ev: &[Value]| json!([ev[0].as_i64().unwrap()]),
+              "cmdline_show" => parse_cmdline_show,
+              "cmdline_hide" => |_ev: &[Value]| serde_json::Value::Null,
               "win_pos" => parse_win_pos,
               "default_colors_set" => parse_default_colors_set,
               "option_set" => parse_option_set,
@@ -283,6 +285,29 @@ fn parse_grid_scroll(ev: &[Value]) -> serde_json::Value {
     ev[3].as_i64().unwrap(),
     ev[4].as_i64().unwrap(),
     ev[5].as_i64().unwrap(),
-    ev[5].as_i64().unwrap(),
+    ev[6].as_i64().unwrap(),
   ])
+}
+
+/// `ev` of the form [content, pos, firstc, prompt, indent, level]
+fn parse_cmdline_show(ev: &[Value]) -> serde_json::Value {
+  let content = ev[0].as_array().unwrap();
+  let position = ev[1].as_i64().unwrap();
+  let op_char = ev[2].as_str().unwrap();
+  let prompt = ev[3].as_str().unwrap();
+  // TODO(smolck)
+  // let indent = ev[4].as_i64().unwrap();
+  // let level = ev[5].as_i64().unwrap();
+
+  // TODO: process attributes
+  let cmd = content
+    .iter()
+    .fold(String::from(""), |acc, v| acc + v[1].as_str().unwrap());
+
+  json!({
+    "cmd": cmd,
+    "prompt": prompt,
+    "kind": if prompt.is_empty() { ":" } else { op_char },
+    "position": position,
+  })
 }

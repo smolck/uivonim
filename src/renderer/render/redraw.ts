@@ -371,9 +371,17 @@ listenRedraw.disposeInvalidWinsThenLayout(
   () => (windows.disposeInvalidWindows(), windows.layout())
 )
 
-listenRedraw.cmdUpdate((update) => dispatch.pub('cmd.update', update))
+listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
+  updates.forEach((update) => {
+    if (update.prompt === '/' || update.prompt === '?') {
+      dispatch.pub('search.update', update)
+    } else {
+      dispatch.pub('cmd.update', update)
+    }   
+  });
+})
 listenRedraw.cmdHide(() => dispatch.pub('cmd.hide'))
-listenRedraw.searchUpdate((update) => dispatch.pub('search.update', update))
+// listenRedraw.searchUpdate((update) => dispatch.pub('search.update', update))
 
 listenRedraw.hlAttrDefine(hl_attr_define)
 listenRedraw.defaultColorsSet(default_colors_set)
