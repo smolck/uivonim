@@ -8,7 +8,7 @@ use serde_json::{json, Value as JsonValue};
 use tauri::async_runtime::spawn;
 
 use futures::lock::Mutex;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use tokio::process::{ChildStdin, Command};
 
@@ -50,6 +50,59 @@ async fn new_nvim_child_cmd(
   .expect("error creating new child cmd")
 }
 
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct ModeInfo {
+  pub blinkoff: Option<i64>,
+  pub blinkon: Option<i64>,
+  pub blinkwait: Option<i64>,
+  pub cell_percentage: Option<i64>,
+  pub cursor_shape: Option<String>,
+  pub attr_id: Option<i64>,
+  pub attr_id_lm: Option<i64>,
+  pub hl_id: Option<i64>,
+  pub id_lm: Option<i64>,
+  pub mouse_shape: Option<i64>,
+  pub name: String,
+  pub short_name: String,
+}
+
+impl ModeInfo {
+  fn new(name: String, short_name: String) -> Self {
+    ModeInfo {
+      name,
+      short_name,
+      blinkoff: None,
+      blinkon: None,
+      blinkwait: None,
+      cell_percentage: None,
+      cursor_shape: None,
+      attr_id: None,
+      attr_id_lm: None,
+      hl_id: None,
+      id_lm: None,
+      mouse_shape: None,
+    }
+  }
+
+  fn add(&mut self, prop: &str, value: &NvimValue) {
+    match prop {
+      "blinkoff" => self.blinkoff = value.as_i64(),
+      "blinkon" => self.blinkon = value.as_i64(),
+      "blinkwait" => self.blinkwait = value.as_i64(),
+      "cell_percentage" => self.cell_percentage = value.as_i64(),
+      "cursor_shape" => self.cursor_shape = value.as_str().map(|v| v.to_string()),
+      "attr_id" => self.attr_id = value.as_i64(),
+      "attr_id_lm" => self.attr_id_lm = value.as_i64(),
+      "hl_id" => self.hl_id = value.as_i64(),
+      "id_lm" => self.id_lm = value.as_i64(),
+      "mouse_shape" => self.mouse_shape = value.as_i64(),
+      "name" => self.name = value.as_str().unwrap().to_string(),
+      "short_name" => self.short_name = value.as_str().unwrap().to_string(),
+      _ => unreachable!(),
+    }
+  }
+}
+
 pub struct NeovimState {
   pub mode: String,        // TODO(smolck): Make type for this probably?
   pub buffer_type: String, // TODO(smolck): Same as above ^^^
@@ -64,6 +117,7 @@ pub struct NeovimState {
   pub editor_top_line: i64,
   pub editor_bottom_line: i64,
   pub absolute_filepath: String,
+  pub mode_infos: HashMap<String, ModeInfo>,
 }
 
 #[derive(Clone)]
@@ -92,6 +146,7 @@ impl NeovimHandler {
         editor_top_line: 0,
         editor_bottom_line: 0,
         absolute_filepath: "".to_string(),
+        mode_infos: HashMap::new(),
       })),
     };
 
@@ -147,12 +202,14 @@ impl Handler for NeovimHandler {
   ) {
     match name.as_str() {
       "redraw" => {
+        let mode_infos = &mut self.state.lock().await.mode_infos;
         let win = self.window.lock().await;
         let win = win.as_ref().expect("why haven't you set the window bro");
 
         for evt in args.iter() {
           let event_name = evt[0].as_str().unwrap();
-          let payload = evt.as_array().unwrap()[1..]
+          let evt = evt.as_array().unwrap();
+          let payload = evt[1..]
             .iter()
             .map(|v| v.as_array().unwrap().as_slice())
             .map(match event_name {
@@ -179,7 +236,34 @@ impl Handler for NeovimHandler {
               .emit(event_name, payload)
               .expect(&format!("failed to emit {} event", event_name));
           } else {
-            println!("not handling UI event: '{}'", event_name);
+            // Events I can't handle above because Rust-y reasons (more specifically,
+            // capturing closure -> fn coercion isn't a thing apparently)
+            match event_name {
+              "mode_change" => {
+                // TODO(smolck): This assumes only one mode_change event will be sent at a
+                // time (?) . . . is that safe?
+                let evt = evt[1].as_array().unwrap();
+
+                win
+                  .emit(
+                    event_name,
+                    mode_infos.get(&evt[0].as_str().unwrap().to_string()),
+                  )
+                  .expect(&format!("failed to emit {} event", event_name));
+              }
+              "mode_info_set" => {
+                let evt = evt[1].as_array().unwrap();
+                let infos = evt[1].as_array().unwrap();
+                for info in infos {
+                  let mut mode_info = ModeInfo::new("".to_string(), "".to_string());
+                  for (k, v) in info.as_map().unwrap().iter() {
+                    mode_info.add(k.as_str().unwrap(), v);
+                  }
+                  mode_infos.insert(mode_info.name.clone(), mode_info);
+                }
+              }
+              _ => println!("not handling UI event: '{}'", event_name),
+            }
           }
         }
 

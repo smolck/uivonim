@@ -336,13 +336,14 @@ listenRedraw.winHide(win_hide)
 listenRedraw.tablineUpdate(({ curtab, tabs }) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 )
-listenRedraw.modeChange((mode: Mode) => {
-  if (mode.hlid) {
-    const { background } = getColorById(mode.hlid)
+listenRedraw.modeChange(({ payload: modeInfo }) => {
+  console.log(modeInfo)
+  if (modeInfo.attr_id) {
+    const { background } = getColorById(modeInfo.attr_id)
     if (background) setCursorColor(background)
   }
 
-  setCursorShape(mode.shape, mode.size)
+  setCursorShape(modeInfo.cursor_shape, modeInfo.cell_percentage)
 })
 listenRedraw.pmenuHide(() => dispatch.pub('pmenu.hide'))
 listenRedraw.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))

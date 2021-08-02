@@ -14,11 +14,14 @@ export const cursor = {
 let cursorEnabled = false
 let cursorRequestedToBeHidden = false
 
-export const setCursorShape = (shape: CursorShape, size = 20) => {
-  cursor.shape = shape
+export const setCursorShape = (shape: string, size = 20) => {
+  cursor.shape = 
+    shape === 'block' ? CursorShape.block :
+    shape === 'horizontal' ? CursorShape.underline :
+    shape === 'vertical' ? CursorShape.line : CursorShape.block
   cursor.size = size
 
-  windows.webgl?.updateCursorShape(shape)
+  windows.webgl?.updateCursorShape(cursor.shape)
 }
 
 export const setCursorColor = (color: string) => {
