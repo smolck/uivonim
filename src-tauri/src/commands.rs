@@ -44,7 +44,7 @@ pub fn attach_ui(state: S) {
 }
 
 #[command]
-pub fn get_highlight_by_name(state: S, name: &str, rgb: bool) -> Map<String, serde_json::Value> {
+pub fn get_highlight_by_name(state: S, name: &str, rgb: bool) -> serde_json::Value {
   block_on(async {
     let nvim = state.nvim.lock().await;
     let resp = nvim.get_hl_by_name(name, rgb).await;
@@ -54,10 +54,10 @@ pub fn get_highlight_by_name(state: S, name: &str, rgb: bool) -> Map<String, ser
       for (k, v) in resp.unwrap().iter() {
         match v {
           rmpvVal::Integer(i) => {
-            ret.insert(k.to_string(), json!(i.as_i64()));
+            ret.insert(k.as_str().unwrap().to_string(), json!(i.as_i64().unwrap()));
           }
           rmpvVal::Boolean(b) => {
-            ret.insert(k.to_string(), json!(b));
+            ret.insert(k.as_str().unwrap().to_string(), json!(b));
           }
           _ => unreachable!(),
         }
@@ -68,7 +68,7 @@ pub fn get_highlight_by_name(state: S, name: &str, rgb: bool) -> Map<String, ser
       ret.insert("background".to_string(), json!(0));
     }
 
-    ret
+    serde_json::Value::Object(ret)
   })
 }
 
