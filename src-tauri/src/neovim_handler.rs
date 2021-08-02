@@ -220,6 +220,11 @@ impl Handler for NeovimHandler {
               "grid_clear" => |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap()]),
               "cmdline_show" => parse_cmdline_show,
               "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
+              "cmdline_pos" => |ev: &[NvimValue]|
+                json!([
+                  ev[0].as_i64().unwrap(),
+                  ev[1].as_i64().unwrap(),
+                ]),
               "win_pos" => parse_win_pos,
               "popupmenu_show" => parse_popupmenu_show,
               "popupmenu_hide" => |_ev: &[NvimValue]| JsonValue::Null,

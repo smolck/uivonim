@@ -373,17 +373,24 @@ listenRedraw.disposeInvalidWinsThenLayout(
   () => (windows.disposeInvalidWindows(), windows.layout())
 )
 
+let currentCommandMode = 'cmd'
 listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
   updates.forEach((update) => {
     if (update.prompt === '/' || update.prompt === '?') {
+      currentCommandMode = 'search'
       dispatch.pub('search.update', update)
     } else {
+      currentCommandMode = 'cmd'
       dispatch.pub('cmd.update', update)
     }   
   });
 })
 listenRedraw.cmdHide(() => dispatch.pub('cmd.hide'))
-// listenRedraw.searchUpdate((update) => dispatch.pub('search.update', update))
+listenRedraw.cmdPos(({ payload: [[pos, _level]] }) => {
+  const stuff = currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update'
+  console.log(stuff, { position: pos })
+  dispatch.pub(stuff, { position: pos })
+})
 
 listenRedraw.hlAttrDefine(hl_attr_define)
 listenRedraw.defaultColorsSet(default_colors_set)

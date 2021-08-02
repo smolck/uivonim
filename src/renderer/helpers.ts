@@ -70,6 +70,7 @@ const Events = {
 const RedrawEvents = {
   cmdShow: 'cmdline_show',
   cmdHide: 'cmdline_hide',
+  cmdPos: 'cmdline_pos',
   gridLine: 'grid_line',
   gridScroll: 'grid_scroll',
   gridCursorGoto: 'grid_cursor_goto',
@@ -100,7 +101,6 @@ const RedrawEvents = {
   hlAttrDefine: 'hl_attr_define',
   defaultColorsSet: 'default_colors_set',
   optionSet: 'option_set',
-  searchUpdate: 'search.update',
   setTitle: 'set_title',
   wildmenuShow: 'wildmenu_show',
   wildmenuHide: 'wildmenu_hide',

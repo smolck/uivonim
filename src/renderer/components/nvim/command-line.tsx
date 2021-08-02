@@ -126,7 +126,7 @@ sub('cmd.update', ({ cmd, kind, position, prompt }: CommandUpdate) => {
   hideCursor()
   disableCursor()
 
-  state.kind = kind
+  if (kind) state.kind = kind
   if (prompt) state.prompt = prompt
   state.position = position
   state.visible = true
