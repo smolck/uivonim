@@ -345,8 +345,13 @@ listenRedraw.modeChange(({ payload: modeInfo }) => {
   setCursorShape(modeInfo.cursor_shape, modeInfo.cell_percentage)
 })
 listenRedraw.pmenuHide(() => dispatch.pub('pmenu.hide'))
-listenRedraw.pmenuSelect((ix) => dispatch.pub('pmenu.select', ix))
-listenRedraw.pmenuShow((data: PopupMenu) => dispatch.pub('pmenu.show', data))
+listenRedraw.pmenuSelect(({ payload: [ix] }) => dispatch.pub('pmenu.select', ix))
+
+// TODO(smolck): This and other events assume only one will be sent
+// per batch, which may or may not be a safe assumption?? Not sure . . .
+listenRedraw.pmenuShow(
+  ({ payload: [data] }: { payload: PopupMenu[] }) =>
+    dispatch.pub('pmenu.show', data))
 
 listenRedraw.msgShow((message) => messages.show(message))
 listenRedraw.msgStatus((status) => dispatch.pub('message.status', status))

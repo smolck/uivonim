@@ -221,6 +221,9 @@ impl Handler for NeovimHandler {
               "cmdline_show" => parse_cmdline_show,
               "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
               "win_pos" => parse_win_pos,
+              "popupmenu_show" => parse_popupmenu_show,
+              "popupmenu_hide" => |_ev: &[NvimValue]| JsonValue::Null,
+              "popupmenu_select" => |ev: &[NvimValue]| JsonValue::from(ev[0].as_i64().unwrap()),
               "default_colors_set" => parse_default_colors_set,
               "hl_attr_define" => parse_hl_attr_define,
               "option_set" => parse_option_set,
@@ -474,5 +477,35 @@ fn parse_hl_attr_define(ev: &[NvimValue]) -> JsonValue {
     "id": id,
     "attr": attr,
     "info": info,
+  })
+}
+
+fn parse_popupmenu_show(ev: &[NvimValue]) -> JsonValue {
+  let items = ev[0].as_array().unwrap();
+  let selected_idx = ev[1].as_i64().unwrap();
+  let row = ev[2].as_i64().unwrap();
+  let col = ev[3].as_i64().unwrap();
+  let grid = ev[4].as_i64().unwrap();
+
+  let items = items
+    .iter()
+    .map(|v| {
+      let arr = v.as_array().unwrap();
+
+      json!({
+        "word": arr[0].as_str().unwrap(),
+        "kind": arr[1].as_str().unwrap(),
+        "menu": arr[2].as_str().unwrap(),
+        "info": arr[3].as_str().unwrap(),
+      })
+    })
+    .collect::<Vec<JsonValue>>();
+
+  json!({
+    "row": row,
+    "col": col,
+    "grid": grid,
+    "index": selected_idx,
+    "items": items,
   })
 }
