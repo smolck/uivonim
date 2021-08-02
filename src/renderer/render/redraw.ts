@@ -427,4 +427,4 @@ listenRedraw.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
 listenRedraw.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
 listenRedraw.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))
 
-invoke.attachUi({})
+invoke.attachUi({ height: workspace.size.rows, width: workspace.size.cols })

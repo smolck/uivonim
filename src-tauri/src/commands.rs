@@ -20,14 +20,14 @@ pub async fn your_face() -> String {
 type S<'a> = tauri::State<'a, crate::AppState>;
 
 #[command]
-pub fn attach_ui(state: S) {
+pub fn attach_ui(state: S, width: i64, height: i64) {
   block_on(async {
     println!("Attaching UI!");
     let mut nvim = state.nvim.lock().await;
     nvim
       .ui_attach(
-        80,
-        80,
+        width,
+        height,
         &nvim_rs::UiAttachOptions::new()
           .set_linegrid_external(true)
           .set_rgb(true)
