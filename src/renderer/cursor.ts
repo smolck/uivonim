@@ -63,4 +63,4 @@ export const moveCursor = (row: number, col: number) => {
   windows.webgl?.updateCursorPosition(row, col)
 }
 
-setCursorShape(CursorShape.block)
+setCursorShape('block')

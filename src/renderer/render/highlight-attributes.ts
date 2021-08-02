@@ -164,7 +164,6 @@ export const getColorByName = async (name: string): Promise<Color> => {
     name,
     rgb: true
   })
-  console.log('get hl by name!', foreground, background, reverse)
   return {
     foreground: asColor(foreground),
     background: asColor(background),
