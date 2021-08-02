@@ -247,6 +247,10 @@ impl Handler for NeovimHandler {
             // Events I can't handle above because Rust-y reasons (more specifically,
             // capturing closure -> fn coercion isn't a thing apparently)
             match event_name {
+              "set_title" => { // TODO(smolck): Does this work?
+                win.set_title(evt[1].as_array().unwrap()[0].as_str().unwrap())
+                .expect("okay why can't I set the title?");
+              }
               "win_viewport" => {
                 let evt = evt[1].as_array().unwrap();
                 state.line = evt[4].as_i64().unwrap();
