@@ -393,7 +393,6 @@ pub fn document_on_keydown(
       };
 
       if input_state.send_input_to_vim && !nvim_key.is_empty() {
-        println!("sending {}", input);
         state
           .nvim
           .lock()
