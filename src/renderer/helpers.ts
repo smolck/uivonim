@@ -3,6 +3,20 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/tauri'
 import { listen as tauriListen } from '@tauri-apps/api/event'
 import { dispatchConstructor } from './dispatch'
+import { CanvasKit } from 'canvaskit-wasm'
+
+let maybeThisIsntGreatButItllWork: CanvasKit
+
+export const setCanvasKit = (ck: CanvasKit) => 
+  maybeThisIsntGreatButItllWork = ck
+
+export const canvasKit = () => {
+  if (!maybeThisIsntGreatButItllWork)
+    throw new Error("NEED TO INITIALIZE CANVAS KIT BEFORE DOING THIS")
+
+  return maybeThisIsntGreatButItllWork
+}
+
 // import { listen, emit } from "@tauri-apps/api/event";
 
 /*const InternalInvokables = {

@@ -33,6 +33,7 @@
   "homepage": "https://github.com/smolck/uivonim",
   "dependencies": {
     "@tauri-apps/api": "^1.0.0-beta.5",
+    "canvaskit-wasm": "^0.28.1",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.7.2",
@@ -58,6 +59,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-inferno": "^6.3.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
+    "copy-webpack-plugin": "^9.0.1",
     "electron": "^13.1.7",
     "electron-builder": "^22.11.7",
     "electron-devtools-installer": "^3.2.0",

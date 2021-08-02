@@ -1,6 +1,7 @@
 // See webpack confs in https://github.com/reZach/secure-electron-template
 const webpack = require('webpack')
 const path = require('path')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   mode: 'development',
@@ -65,4 +66,11 @@ module.exports = {
     path: path.resolve(__dirname, 'build/'),
     filename: 'bundle.js',
   },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, 'node_modules/canvaskit-wasm/bin/canvaskit.wasm') }
+      ]
+    })
+  ],
 }

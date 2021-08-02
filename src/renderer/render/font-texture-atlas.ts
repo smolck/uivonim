@@ -1,4 +1,5 @@
-import { cell, font } from '../workspace'
+import { cell, font, getCkFont } from '../workspace'
+import { canvasKit } from '../helpers'
 
 export interface AtlasCharBounds {
   left: number
@@ -15,6 +16,19 @@ export interface AtlasChar {
 }
 
 const canvas = document.createElement('canvas')
+document.body.appendChild(canvas)
+    /*const canvas = document.createElement('canvas')
+    const ckSurface = ck.MakeCanvasSurface(canvas)!
+    const paint = new ck.Paint()
+    ckFont.setSize(25)
+    paint.setColor(ck.WHITE)
+    paint.setAntiAlias(true)
+    ckSurface.getCanvas().drawText('wassup yo??', 50, 50, paint, ckFont)
+    ckSurface.flush()
+    document.body.appendChild(canvas)*/
+
+// document.body.appendChild(canvas)
+
 // TODO(smolck)
 const atlasWidth = 1000
 const atlasHeight = 500
@@ -22,7 +36,15 @@ const atlasHeight = 500
 canvas.width = Math.floor(atlasWidth * window.devicePixelRatio)
 canvas.height = Math.floor(atlasHeight * window.devicePixelRatio)
 
-const ctx = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
+const ck = canvasKit()
+const ckSurface = ck.MakeCanvasSurface(canvas)!
+const ckCanvas = ckSurface.getCanvas()!
+const paint = new ck.Paint()
+paint.setColor(ck.WHITE)
+// paint.setAntiAlias(true)
+ckCanvas.scale(window.devicePixelRatio, window.devicePixelRatio)
+
+// const ctx = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const charsInAtlas = new Map<string, AtlasChar>()
 const charsQueue = new Map<string, AtlasChar>()
 
@@ -115,32 +137,35 @@ export const getChar = (char: string, isDoubleWidth: boolean = false) => {
 
 export const getCharFromIndex = (idx: number) => charsByIdx.get(idx)
 
-ctx.font = `${font.size}px ${font.face}`
-ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-ctx.textBaseline = 'top'
-ctx.fillStyle = 'white'
+// ctx.font = `${font.size}px ${font.face}`
+// ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+// ctx.textBaseline = 'top'
+// ctx.fillStyle = 'white'
 
 for (let ix = 32; ix < 127; ix++) {
   getChar(String.fromCharCode(ix), false)
 }
 
 const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
+  const ckFont = getCkFont().clone()
   const draw = (char: AtlasChar, charStr: string) => {
-    const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
+    // const charWidth = char.isDoubleWidth ? cell.width * 2 : cell.width
     const x = char.bounds.left
     const y = char.bounds.bottom + 3
 
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(x, y, charWidth, cell.height)
-    ctx.fillText(charStr, x, y, charWidth)
-    ctx.restore()
-
+    // TODO(smolck): Why is position different with CanvasKit?
+    ckCanvas.drawText(charStr, x, y + 10, paint, ckFont)
     charsInAtlas.set(charStr, char)
   }
 
+  ckCanvas.drawText("this is just a test for science", 50, 200, paint, ckFont)
+
   charsQueue.forEach(draw)
-  if (redrawWithAllCharsInAtlas) charsInAtlas.forEach(draw)
+  // TODO(smolck)
+  charsInAtlas.forEach(draw)
+  // if (redrawWithAllCharsInAtlas) charsInAtlas.forEach(draw)
+
+  ckSurface.flush()
 
   charsQueue.clear()
 }
@@ -167,10 +192,11 @@ export const forceRegenerateFontAtlas = () => {
   nextBounds = undefined
 
   canvas.width = Math.floor(atlasWidth * window.devicePixelRatio)
-  ctx.font = `${font.size}px ${font.face}`
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-  ctx.textBaseline = 'top'
-  ctx.fillStyle = 'white'
+  ckCanvas.scale(window.devicePixelRatio, window.devicePixelRatio)
+  // ctx.font = `${font.size}px ${font.face}`
+  // ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+  // ctx.textBaseline = 'top'
+  // ctx.fillStyle = 'white'
 
   chars.forEach(([doubleWidth, charIdx, char]) => {
     const newChar = getChar(char, doubleWidth)

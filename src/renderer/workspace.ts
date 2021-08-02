@@ -2,6 +2,18 @@ import { merge, throttle } from '../common/utils'
 import robotoSizes from '../common/roboto-sizes'
 import { EventEmitter } from 'events'
 import { setVar } from './ui/css'
+import { invoke, canvasKit } from './helpers'
+import { Font as CkFont } from 'canvaskit-wasm'
+
+const ck = canvasKit()
+let ckFont: CkFont
+export const getCkFont = () => {
+  if (!ckFont) {
+    throw new Error("yo we need this ckFont")
+  }
+
+  return ckFont
+}
 
 interface UpdateEditorFontParams {
   face?: string
@@ -32,7 +44,7 @@ const sandboxCanvas = document.createElement('canvas')
 const canvas = sandboxCanvas.getContext('2d', {
   alpha: false,
 }) as CanvasRenderingContext2D
-const DEFAULT_FONT = 'Roboto Mono Veonim'
+const DEFAULT_FONT = 'JetBrains Mono'
 const DEFAULT_FONT_SIZE = 14
 const DEFAULT_LINESPACE = 14 / 2
 
@@ -71,7 +83,13 @@ export const size = {
 }
 
 const getCharWidth = (font: string, size: number): number => {
-  const possibleSize = Math.floor(canvas.measureText('m').width)
+  let width = canvas.measureText('m').width
+  if (ckFont) {
+    const id = ckFont.getGlyphIDs('m')[0]
+    width = ckFont.getGlyphWidths([id])[0]
+  }
+
+  const possibleSize = Math.floor(width)
   // roboto mono is built-in. because font-loading is a bit slow,
   // we have precomputed most common font sizes in advance
   if (font !== DEFAULT_FONT && (size > 3 || size < 54)) return possibleSize
@@ -81,6 +99,31 @@ const getCharWidth = (font: string, size: number): number => {
 }
 
 const setFont = (face: string, size: number, lineSpace: number) => {
+  invoke.getFontBytes({ fontName: face }).then((bytes) => {
+    const bytesArr = new Uint8Array(bytes)
+    ckFont = new ck.Font(
+      ck.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer))
+
+    ckFont.setSize(size)
+    ckFont.setSubpixel(true)
+    /* const canvas = document.createElement('canvas')
+    const ckSurface = ck.MakeCanvasSurface(canvas)!
+    const paint = new ck.Paint()
+    ckFont.setSize(25)
+    paint.setColor(ck.WHITE)
+    paint.setAntiAlias(true)
+    ckSurface.getCanvas().drawText('wassup yo??', 50, 50, paint, ckFont)
+    ckSurface.flush()
+    document.body.appendChild(canvas)*/
+    // ckSurface.getCanvas().drawText('hello y\'all', 50, 50, paint, ckFont)
+    // ckSurface.flush()
+
+    Object.assign(cell, {
+      width: getCharWidth(face, size),
+      height: Math.floor(size + lineSpace),
+    })
+  }).catch((err) => console.error('setFont error: ', err))
+
   setVar('font', face)
   setVar('font-size', size)
   setVar('line-height', lineSpace / size)
