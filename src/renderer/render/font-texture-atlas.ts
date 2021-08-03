@@ -16,7 +16,7 @@ export interface AtlasChar {
 }
 
 const canvas = document.createElement('canvas')
-document.body.appendChild(canvas)
+// document.body.appendChild(canvas)
     /*const canvas = document.createElement('canvas')
     const ckSurface = ck.MakeCanvasSurface(canvas)!
     const paint = new ck.Paint()
