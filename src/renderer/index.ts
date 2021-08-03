@@ -114,14 +114,13 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
   }
 
   document.onkeydown = (e: KeyboardEvent) => {
-    const thing_to_send = {
+    invoke.documentOnKeydown({
       key: e.key,
       ctrlKey: e.ctrlKey,
       metaKey: e.metaKey,
       altKey: e.altKey,
       shiftKey: e.shiftKey,
-    }
-    invoke.documentOnKeydown(thing_to_send)
+    })
   }
 
   // @ts-ignore
