@@ -218,6 +218,7 @@ impl Handler for NeovimHandler {
               "grid_cursor_goto" => parse_grid_cursor_goto,
               "grid_scroll" => parse_grid_scroll,
               "grid_clear" => |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap()]),
+              "grid_destroy" => parse_grid_destroy,
               "cmdline_show" => parse_cmdline_show,
               "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
               "cmdline_pos" => |ev: &[NvimValue]|
@@ -225,6 +226,7 @@ impl Handler for NeovimHandler {
                   ev[0].as_i64().unwrap(),
                   ev[1].as_i64().unwrap(),
                 ]),
+              "win_close" => parse_win_close,
               "win_pos" => parse_win_pos,
               "popupmenu_show" => parse_popupmenu_show,
               "popupmenu_hide" => |_ev: &[NvimValue]| JsonValue::Null,
@@ -247,6 +249,9 @@ impl Handler for NeovimHandler {
             // Events I can't handle above because Rust-y reasons (more specifically,
             // capturing closure -> fn coercion isn't a thing apparently)
             match event_name {
+              /*"win_hide" => {
+                println!("win_hide stuff: {:?}", evt[1]);
+              }*/
               "set_title" => { // TODO(smolck): Does this work?
                 win.set_title(evt[1].as_array().unwrap()[0].as_str().unwrap())
                 .expect("okay why can't I set the title?");
@@ -518,4 +523,12 @@ fn parse_popupmenu_show(ev: &[NvimValue]) -> JsonValue {
     "index": selected_idx,
     "items": items,
   })
+}
+
+fn parse_win_close(ev: &[NvimValue]) -> JsonValue {
+  json!(ev[0].as_i64().unwrap())
+}
+
+fn parse_grid_destroy(ev: &[NvimValue]) -> JsonValue {
+  json!(ev[0].as_i64().unwrap())
 }

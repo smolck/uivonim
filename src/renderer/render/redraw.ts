@@ -81,7 +81,7 @@ const grid_clear = ({ payload: [[gridId]] }: { payload: number[][] }) => {
   win.webgl.clearGridBuffer()
 }
 
-const grid_destroy = ([, [gridId]]: any) => {
+const grid_destroy = ({ payload: [gridId] }: {payload: number[]}) => {
   if (gridId === 1) return
   windows.remove(gridId)
 }
@@ -212,7 +212,7 @@ const grid_line = (event: any) => {
   }
 }
 
-const win_close = (id: number) => {
+const win_close = ({ payload: [id] }: { payload: number[]}) => {
   windows.remove(id)
 }
 
