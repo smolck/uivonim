@@ -21,7 +21,6 @@ pub struct InputState {
 pub struct AppState {
   nvim: Arc<Mutex<neovim_handler::Nvim>>,
   input_state: Arc<Mutex<InputState>>,
-  window: Arc<Mutex<Option<tauri::Window>>>,
 }
 
 #[tokio::main]
@@ -31,7 +30,7 @@ async fn main() {
 
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
-      commands::your_face,
+      commands::quit,
       commands::attach_ui,
       commands::get_highlight_by_name,
       commands::nvim_resize,
@@ -44,7 +43,6 @@ async fn main() {
       commands::get_font_bytes,
     ])
     .manage(AppState {
-      window: window_ref.clone(),
       nvim,
       input_state: Arc::new(Mutex::new(InputState {
         previous_key_was_dead: false,
@@ -56,9 +54,10 @@ async fn main() {
     })
     .on_page_load(move |win, _| {
       let win_clone = win.clone();
-      tauri::async_runtime::block_on(async {
-        let mut window_ref = window_ref.lock().await;
-        *window_ref = Some(win_clone);
+      let re = window_ref.clone();
+      tauri::async_runtime::spawn(async move {
+        let mut win = re.lock().await;
+        *win = Some(win_clone);
       });
     })
     .run(tauri::generate_context!())

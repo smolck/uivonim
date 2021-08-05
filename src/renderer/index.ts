@@ -121,12 +121,14 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
       altKey: e.altKey,
       shiftKey: e.shiftKey,
     })
+    .catch((_e) => invoke.quit({}))
   }
 
   // @ts-ignore
   document.oninput = (e: InputEvent) => {
     if (e.data) {
       invoke.documentOnInput({ data: e.data })
+      .catch((_e) => invoke.quit({}))
     }
   }
 });

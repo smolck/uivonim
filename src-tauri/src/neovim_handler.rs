@@ -221,11 +221,9 @@ impl Handler for NeovimHandler {
               "grid_destroy" => parse_grid_destroy,
               "cmdline_show" => parse_cmdline_show,
               "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
-              "cmdline_pos" => |ev: &[NvimValue]|
-                json!([
-                  ev[0].as_i64().unwrap(),
-                  ev[1].as_i64().unwrap(),
-                ]),
+              "cmdline_pos" => {
+                |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap(), ev[1].as_i64().unwrap(),])
+              }
               "win_close" => parse_win_close,
               "win_pos" => parse_win_pos,
               "popupmenu_show" => parse_popupmenu_show,
@@ -252,9 +250,11 @@ impl Handler for NeovimHandler {
               /*"win_hide" => {
                 println!("win_hide stuff: {:?}", evt[1]);
               }*/
-              "set_title" => { // TODO(smolck): Does this work?
-                win.set_title(evt[1].as_array().unwrap()[0].as_str().unwrap())
-                .expect("okay why can't I set the title?");
+              "set_title" => {
+                // TODO(smolck): Does this work?
+                win
+                  .set_title(evt[1].as_array().unwrap()[0].as_str().unwrap())
+                  .expect("okay why can't I set the title?");
               }
               "win_viewport" => {
                 let evt = evt[1].as_array().unwrap();

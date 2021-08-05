@@ -34,6 +34,8 @@ const Invokables = {
   documentOnKeydown: 'document_on_keydown',
   getFontBytes: 'get_font_bytes',
 
+  quit: 'quit',
+
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim_resize',
