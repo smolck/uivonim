@@ -11,8 +11,7 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
   // clean this up: basically, these need to be loaded after canvaskit,
   // so that's why they're (untyped :( ) requires.
   const workspace = require('./workspace')
-  const { forceRegenerateFontAtlas } = 
-    require('./render/font-texture-atlas')
+  const { forceRegenerateFontAtlas } = require('./render/font-texture-atlas')
   const windows = require('./windows/window-manager')
 
   window
@@ -102,7 +101,9 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
     pluginsContainer.style.height = `calc(100vh - 24px)`
   })
 
-  listen.nvimShowMessage((...args: any[]) => require('./components/nvim/messages').default.show(...args))
+  listen.nvimShowMessage((...args: any[]) =>
+    require('./components/nvim/messages').default.show(...args)
+  )
   listen.updateNameplates(windows.refresh)
   // TODO(smolck): ??? -> listen.nvimMessageStatus((..._args) => {})
 
@@ -114,21 +115,21 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
   }
 
   document.onkeydown = (e: KeyboardEvent) => {
-    invoke.documentOnKeydown({
-      key: e.key,
-      ctrlKey: e.ctrlKey,
-      metaKey: e.metaKey,
-      altKey: e.altKey,
-      shiftKey: e.shiftKey,
-    })
-    .catch((_e) => invoke.quit({}))
+    invoke
+      .documentOnKeydown({
+        key: e.key,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        altKey: e.altKey,
+        shiftKey: e.shiftKey,
+      })
+      .catch((_e) => invoke.quit({}))
   }
 
   // @ts-ignore
   document.oninput = (e: InputEvent) => {
     if (e.data) {
-      invoke.documentOnInput({ data: e.data })
-      .catch((_e) => invoke.quit({}))
+      invoke.documentOnInput({ data: e.data }).catch((_e) => invoke.quit({}))
     }
   }
-});
+})
