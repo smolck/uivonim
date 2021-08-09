@@ -7,12 +7,12 @@ import { CanvasKit } from 'canvaskit-wasm'
 
 let maybeThisIsntGreatButItllWork: CanvasKit
 
-export const setCanvasKit = (ck: CanvasKit) => 
-  maybeThisIsntGreatButItllWork = ck
+export const setCanvasKit = (ck: CanvasKit) =>
+  (maybeThisIsntGreatButItllWork = ck)
 
 export const canvasKit = () => {
   if (!maybeThisIsntGreatButItllWork)
-    throw new Error("NEED TO INITIALIZE CANVAS KIT BEFORE DOING THIS")
+    throw new Error('NEED TO INITIALIZE CANVAS KIT BEFORE DOING THIS')
 
   return maybeThisIsntGreatButItllWork
 }
@@ -131,37 +131,40 @@ const RedrawEvents = {
 export const invoke: {
   [Key in keyof typeof Invokables]: (args: any) => Promise<any>
 } = new Proxy(Invokables, {
-  get: (invokables, key) => (args: any) => tauriInvoke(Reflect.get(invokables, key), args),
+  get: (invokables, key) => (args: any) =>
+    tauriInvoke(Reflect.get(invokables, key), args),
 })
 
 // @ts-ignore
 export const listen: {
   [Key in keyof typeof Events]: (fn: (...args: any[]) => void) => void
 } = new Proxy(Events, {
-  get: (events, key) => (fn: (...args: any[]) => void) => tauriListen(Reflect.get(events, key), fn),
+  get: (events, key) => (fn: (...args: any[]) => void) =>
+    tauriListen(Reflect.get(events, key), fn),
 })
 
 // @ts-ignore
 export const listenRedraw: {
   [Key in keyof typeof RedrawEvents]: (fn: (...args: any[]) => void) => void
 } = new Proxy(RedrawEvents, {
-  get: (events, key) => (fn: (...args: any[]) => void) => tauriListen(Reflect.get(events, key), fn),
+  get: (events, key) => (fn: (...args: any[]) => void) =>
+    tauriListen(Reflect.get(events, key), fn),
 })
 
 interface NvimState {
-  mode: string,        // TODO(smolck): Make type for this probably?
-  buffer_type: string, // TODO(smolck): Same as above ^^^
-  current_file: string,
-  filetype: string,
-  dir: string,
-  cwd: string,
-  colorscheme: string,
-  revision: number,
-  line: number,
-  column: number,
-  editor_top_line: number,
-  editor_bottom_line: number,
-  absolute_filepath: string,
+  mode: string // TODO(smolck): Make type for this probably?
+  buffer_type: string // TODO(smolck): Same as above ^^^
+  current_file: string
+  filetype: string
+  dir: string
+  cwd: string
+  colorscheme: string
+  revision: number
+  line: number
+  column: number
+  editor_top_line: number
+  editor_bottom_line: number
+  absolute_filepath: string
 }
 
 const watchers = dispatchConstructor()
@@ -170,14 +173,18 @@ tauriListen('nvim_state', (newState) => watchers.pub('nvim_state', newState))
 // @ts-ignore
 export const watchNvimState: {
   [Key in keyof NvimState]: (fn: (val: NvimState[Key]) => void) => void
-} = new Proxy({}, {
-  get: (_, prop) => (fn: (key: keyof NvimState) => void) => watchers.sub('nvim_state', (newState) => fn(newState[prop]))
-})
+} = new Proxy(
+  {},
+  {
+    get: (_, prop) => (fn: (key: keyof NvimState) => void) =>
+      watchers.sub('nvim_state', (newState) => fn(newState[prop])),
+  }
+)
 
 const shorts = new Map()
 export const registerOneTimeUseShortcuts = (
   shortcuts: string[],
-  cb: (shortcut: string) => void,
+  cb: (shortcut: string) => void
 ) => {
   // @ts-ignore
   shortcuts.forEach((shortcut) => shorts.set(shortcut, cb))
@@ -190,6 +197,9 @@ listen.shortcut(({ payload: shortcut }) => {
     maybeCb(shortcut)
     shorts.delete(shortcut)
   } else {
-    console.error(`umm this shouldnt happen, why is there no shortcut '${shortcut}'`, shorts)
+    console.error(
+      `umm this shouldnt happen, why is there no shortcut '${shortcut}'`,
+      shorts
+    )
   }
 })
