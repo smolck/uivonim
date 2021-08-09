@@ -41,6 +41,8 @@ async fn main() {
       commands::document_on_input,
       commands::document_on_keydown,
       commands::get_font_bytes,
+      commands::input_blur,
+      commands::input_focus,
     ])
     .manage(AppState {
       nvim,

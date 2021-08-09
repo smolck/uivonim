@@ -190,6 +190,17 @@ impl NeovimHandler {
   }
 }
 
+macro_rules! handle_all {
+  ($events:ident, $func:ident) => {
+    JsonValue::Array(
+      $events[1..]
+        .iter()
+        .map(|evt| $func(evt.as_array().unwrap()))
+        .collect(),
+    )
+  };
+}
+
 #[async_trait]
 impl Handler for NeovimHandler {
   type Writer = Compat<ChildStdin>;
@@ -206,83 +217,177 @@ impl Handler for NeovimHandler {
         let win = self.window.lock().await;
         let win = win.as_ref().expect("why haven't you set the window bro");
 
-        for evt in args.iter() {
-          let event_name = evt[0].as_str().unwrap();
-          let evt = evt.as_array().unwrap();
-          let payload = evt[1..]
-            .iter()
-            .map(|v| v.as_array().unwrap().as_slice())
-            .map(match event_name {
-              "grid_line" => parse_grid_line,
-              "grid_resize" => parse_grid_resize,
-              "grid_cursor_goto" => parse_grid_cursor_goto,
-              "grid_scroll" => parse_grid_scroll,
-              "grid_clear" => |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap()]),
-              "grid_destroy" => parse_grid_destroy,
-              "cmdline_show" => parse_cmdline_show,
-              "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
-              "cmdline_pos" => {
-                |ev: &[NvimValue]| json!([ev[0].as_i64().unwrap(), ev[1].as_i64().unwrap(),])
-              }
-              "win_close" => parse_win_close,
-              "win_pos" => parse_win_pos,
-              "popupmenu_show" => parse_popupmenu_show,
-              "popupmenu_hide" => |_ev: &[NvimValue]| JsonValue::Null,
-              "popupmenu_select" => |ev: &[NvimValue]| JsonValue::from(ev[0].as_i64().unwrap()),
-              "default_colors_set" => parse_default_colors_set,
-              "hl_attr_define" => parse_hl_attr_define,
-              "option_set" => parse_option_set,
-              _ => |_: &[NvimValue]|
-                  // TODO(smolck): I mean it's kinda hacky, sure, but . . . not thinking of a
-                  // better/another way to do this rn
-                  JsonValue::from("[uivonim]: bruh not handled so stop it"),
-            })
-            .collect::<Vec<JsonValue>>();
+        for events in args.iter() {
+          let events = events.as_array().unwrap();
+          let event_name = events[0].as_str().unwrap();
 
-          if !payload.contains(&JsonValue::from("[uivonim]: bruh not handled so stop it")) {
-            win
-              .emit(event_name, payload)
-              .expect(&format!("failed to emit {} event", event_name));
-          } else {
-            // Events I can't handle above because Rust-y reasons (more specifically,
-            // capturing closure -> fn coercion isn't a thing apparently)
-            match event_name {
-              /*"win_hide" => {
-                println!("win_hide stuff: {:?}", evt[1]);
-              }*/
-              "set_title" => {
-                // TODO(smolck): Does this work?
-                win
-                  .set_title(evt[1].as_array().unwrap()[0].as_str().unwrap())
-                  .expect("okay why can't I set the title?");
-              }
-              "win_viewport" => {
-                let evt = evt[1].as_array().unwrap();
-                state.line = evt[4].as_i64().unwrap();
-                state.column = evt[5].as_i64().unwrap();
-                state.editor_top_line = evt[2].as_i64().unwrap();
-                state.editor_bottom_line = evt[3].as_i64().unwrap();
-              }
-              "flush" => {
-                // No need to worry about this (afaik), since we do the win layout thing
-                // below regardless. Although . . .
-                // TODO(smolck): maybe we shouldn't do that?
-              }
-              "mode_change" => {
-                // TODO(smolck): This assumes only one mode_change event will be sent at a
-                // time (?) . . . is that safe?
-                let evt = evt[1].as_array().unwrap();
+          let mut handled = false;
 
+          // let event = event.as_array().unwrap();
+          let maybe_payload = match event_name {
+            "grid_line" => Some(handle_all!(events, parse_grid_line)),
+            "grid_resize" => Some(handle_all!(events, parse_grid_resize)),
+            "grid_cursor_goto" => Some(handle_all!(events, parse_grid_cursor_goto)),
+            "grid_scroll" => Some(handle_all!(events, parse_grid_scroll)),
+            "grid_clear" => Some(handle_all!(events, parse_grid_clear)),
+            "grid_destroy" => Some(handle_all!(events, parse_grid_destroy)),
+            "cmdline_show" => Some(handle_all!(events, parse_cmdline_show)),
+            "cmdline_hide" => Some(JsonValue::Null),
+            "cmdline_pos" => {
+              let event = events[1].as_array().unwrap();
+              Some(json!([
+                event[0].as_i64().unwrap(),
+                event[1].as_i64().unwrap(),
+              ]))
+            }
+            "win_close" => Some(handle_all!(events, parse_win_close)),
+            "win_pos" => Some(handle_all!(events, parse_win_pos)),
+            "popupmenu_show" => Some(handle_all!(events, parse_popupmenu_show)),
+            "popupmenu_hide" => Some(JsonValue::Null),
+            "popupmenu_select" => Some(JsonValue::from(
+              events[1].as_array().unwrap()[0].as_i64().unwrap(),
+            )),
+            "default_colors_set" => Some(handle_all!(events, parse_default_colors_set)),
+            "hl_attr_define" => Some(handle_all!(events, parse_hl_attr_define)),
+            "option_set" => Some(handle_all!(events, parse_option_set)),
+            "msg_show" => {
+              for event in events[1..].iter() {
+                let info = parse_msg_show(event.as_array().unwrap());
                 win
                   .emit(
-                    event_name,
-                    state.mode_infos.get(&evt[0].as_str().unwrap().to_string()),
+                    if info.replace_last {
+                      "messages.show"
+                    } else {
+                      "messages.append"
+                    },
+                    info,
                   )
-                  .expect(&format!("failed to emit {} event", event_name));
+                  .expect("failed to emit messages.show or messages.append event");
               }
-              "mode_info_set" => {
-                let evt = evt[1].as_array().unwrap();
-                let infos = evt[1].as_array().unwrap();
+
+              handled = true;
+
+              None
+            }
+            "msg_clear" => Some(JsonValue::Null),
+            "msg_showcmd" | "msg_showmode" => {
+              let messages = events[1].as_array().unwrap();
+              if messages.is_empty() {
+                // TODO(smolck): Is this ever even run/possible?
+                win
+                  .emit("messages.control", "")
+                  .expect("failed to emit messages.control event");
+              } else {
+                for message in messages {
+                  let message = message.as_array().unwrap();
+                  if message.is_empty() {
+                    win
+                      .emit("messages.control", "")
+                      .expect("failed to emit messages.control event");
+                  } else {
+                    // TODO(smolck): What . . . why . . . ?
+                    let message = message[0].as_array().unwrap();
+
+                    // let hl_id = message[0].as_str().unwrap();
+                    let text = message[1].as_str().unwrap();
+
+                    win
+                      .emit("messages.control", text)
+                      .expect("failed to emit messages.control event");
+                  }
+                }
+              }
+
+              handled = true;
+              None
+            }
+            "msg_history_show" => {
+              let messages = events[1].as_array().unwrap()[0].as_array().unwrap();
+
+              win
+                .emit(
+                  "msg_history_show",
+                  messages
+                    .iter()
+                    .map(|msg| {
+                      let msg = msg.as_array().unwrap();
+                      let kind = MessageKind::from_kind_str(msg[0].as_str().unwrap());
+                      let message = msg[1]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .fold(String::new(), |acc, x| {
+                          acc + x.as_array().unwrap()[1].as_str().unwrap()
+                        });
+
+                      serde_json::to_value(MessageInfo {
+                        message,
+                        kind,
+                        replace_last: false,
+                      })
+                      .unwrap()
+                    })
+                    .collect::<Vec<JsonValue>>(),
+                )
+                .expect("failed to emit msg_history_show event");
+
+              handled = true;
+              None
+            }
+            "msg_ruler" => {
+              // we display our own ruler based on cursor position. why use this?  i think
+              // maybe we could use 'set noruler' or 'set ruler' to determine if we show the
+              // ruler block in the statusline (with these msg_ruler events)
+              handled = true;
+              None
+            }
+
+            /*"win_hide" => {
+              println!("win_hide stuff: {:?}", evt[1]);
+            }*/
+            "set_title" => {
+              // TODO(smolck)
+              println!("set title: {:?}", events);
+              None
+            }
+            "win_viewport" => {
+              for event in events[1..].iter() {
+                let event = event.as_array().unwrap();
+                state.line = event[4].as_i64().unwrap();
+                state.column = event[5].as_i64().unwrap();
+                state.editor_top_line = event[2].as_i64().unwrap();
+                state.editor_bottom_line = event[3].as_i64().unwrap();
+              }
+
+              handled = true;
+              None
+            }
+            "flush" => {
+              // No need to worry about this (afaik), since we do the win layout thing
+              // below regardless. Although . . .
+              // TODO(smolck): maybe we shouldn't do that?
+              handled = true;
+              None
+            }
+            "mode_change" => {
+              // TODO(smolck): This assumes only one mode_change event will be sent at a
+              // time (?) . . . is that safe?
+              Some(
+                serde_json::to_value(
+                  state.mode_infos.get(
+                    &events[1].as_array().unwrap()[0]
+                      .as_str()
+                      .unwrap()
+                      .to_string(),
+                  ),
+                )
+                .unwrap(),
+              )
+            }
+            "mode_info_set" => {
+              for event in events[1..].iter() {
+                let event = event.as_array().unwrap();
+                let infos = event[1].as_array().unwrap();
                 for info in infos {
                   let mut mode_info = ModeInfo::new("".to_string(), "".to_string());
                   for (k, v) in info.as_map().unwrap().iter() {
@@ -291,7 +396,19 @@ impl Handler for NeovimHandler {
                   state.mode_infos.insert(mode_info.name.clone(), mode_info);
                 }
               }
-              _ => println!("not handling UI event: '{}'", event_name),
+              handled = true;
+              None
+            }
+            _ => None,
+          };
+
+          if let Some(payload) = maybe_payload {
+            win
+              .emit(event_name, payload)
+              .expect(&format!("failed to emit {} event", event_name));
+          } else {
+            if !handled {
+              println!("not handling event '{}'", event_name);
             }
           }
         }
@@ -404,6 +521,10 @@ fn parse_grid_scroll(ev: &[NvimValue]) -> JsonValue {
     ev[5].as_i64().unwrap(),
     ev[6].as_i64().unwrap(),
   ])
+}
+
+fn parse_grid_clear(ev: &[NvimValue]) -> JsonValue {
+  json!([ev[0].as_i64().unwrap()])
 }
 
 /// `ev` of the form [content, pos, firstc, prompt, indent, level]
@@ -531,4 +652,56 @@ fn parse_win_close(ev: &[NvimValue]) -> JsonValue {
 
 fn parse_grid_destroy(ev: &[NvimValue]) -> JsonValue {
   json!(ev[0].as_i64().unwrap())
+}
+
+#[derive(serde::Serialize, Debug)]
+enum MessageKind {
+  #[serde(rename(serialize = "info"))]
+  Info,
+  #[serde(rename(serialize = "error"))]
+  Error,
+  #[serde(rename(serialize = "system"))]
+  System,
+}
+
+#[derive(serde::Serialize, Debug)]
+struct MessageInfo {
+  message: String,
+  kind: MessageKind,
+  replace_last: bool,
+}
+
+impl MessageKind {
+  fn from_kind_str(kind: &str) -> MessageKind {
+    match kind {
+      "echo" | "echomsg" => MessageKind::Info,
+      "echoerr" | "emsg" => MessageKind::Error,
+      "quickfix" | "return_prompt" => MessageKind::System,
+      _ => MessageKind::System,
+    }
+  }
+}
+
+/// `ev` of the form [kind, content, replace_last]
+fn parse_msg_show(ev: &[NvimValue]) -> MessageInfo {
+  // ['echo', MessageKind.Info],
+  // ['emsg', MessageKind.Error],
+  // ['echoerr', MessageKind.Error],
+  // ['echomsg', MessageKind.Info],
+  // ['quickfix', MessageKind.System],
+  // // TODO: handle prompts
+  // ['return_prompt', MessageKind.System],
+  let kind = MessageKind::from_kind_str(ev[0].as_str().unwrap());
+  let message = ev[1].as_array().unwrap().iter().fold(
+    String::new(),
+    // `msg` here is [hlid, text] (I think; TODO(smolck): verify)
+    |acc, msg| acc + msg.as_array().unwrap()[1].as_str().unwrap(),
+  );
+  let replace_last = ev[2].as_bool().unwrap();
+
+  MessageInfo {
+    kind,
+    message,
+    replace_last,
+  }
 }

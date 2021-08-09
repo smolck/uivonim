@@ -237,12 +237,13 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 
   const shortcuts = message.actions.map((m) => m.shortcut)
 
-  window.api
+  // TODO(smolck)
+  /*window.api
     .invoke(Invokables.registerOneTimeUseShortcuts, shortcuts)
     .then((shortcut) => {
       const action = message.actions.find((m) => m.shortcut === shortcut)
       if (action) message.onAction(action.label)
-    })
+    })*/
 }
 
 // generic close/dismiss message functionality - like the (x) button in the prompt

@@ -1,0 +1,1469 @@
+#![feature(prelude_import)]
+#![feature(slice_pattern)]
+#[prelude_import]
+use std::prelude::rust_2018::*;
+#[macro_use]
+extern crate std;
+mod commands {
+    use crate::AppState;
+    use core::slice::SlicePattern;
+    use std::path::Path;
+    use nvim_rs::error::CallError;
+    use tauri::{async_runtime::block_on, command, State};
+    use rmpv::Value as rmpvVal;
+    use serde::Serialize;
+    use serde_json::{json, map::Map};
+    use futures::stream::{self, StreamExt};
+    pub async fn your_face() -> String {
+        ::core::fmt::Arguments::new_v1(
+            &["your face!"],
+            &match () {
+                () => [],
+            },
+        )
+        .to_string()
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__your_face;
+    type S<'a> = tauri::State<'a, crate::AppState>;
+    pub async fn attach_ui<'a>(width: i64, height: i64, state: State<'a, AppState>) {
+        {
+            ::std::io::_print(::core::fmt::Arguments::new_v1(
+                &["Attaching UI!\n"],
+                &match () {
+                    () => [],
+                },
+            ));
+        };
+        let mut nvim = state.nvim.lock().await;
+        nvim.ui_attach(
+            width,
+            height,
+            &nvim_rs::UiAttachOptions::new()
+                .set_linegrid_external(true)
+                .set_rgb(true)
+                .set_multigrid_external(true)
+                .set_cmdline_external(true)
+                .set_hlstate_external(true)
+                .set_popupmenu_external(true)
+                .set_messages_external(true)
+                .set_wildmenu_external(true),
+        )
+        .await
+        .expect("couldn't attach to UI!!!");
+        {
+            ::std::io::_print(::core::fmt::Arguments::new_v1(
+                &["UI attached!\n"],
+                &match () {
+                    () => [],
+                },
+            ));
+        };
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__attach_ui;
+    pub fn get_highlight_by_name(state: S, name: &str, rgb: bool) -> serde_json::Value {
+        block_on(async {
+            let nvim = state.nvim.lock().await;
+            let resp = nvim.get_hl_by_name(name, rgb).await;
+            let mut ret = Map::new();
+            if resp.is_ok() {
+                for (k, v) in resp.unwrap().iter() {
+                    match v {
+                        rmpvVal::Integer(i) => {
+                            ret.insert(
+                                k.as_str().unwrap().to_string(),
+                                ::serde_json::to_value(&i.as_i64().unwrap()).unwrap(),
+                            );
+                        }
+                        rmpvVal::Boolean(b) => {
+                            ret.insert(
+                                k.as_str().unwrap().to_string(),
+                                ::serde_json::to_value(&b).unwrap(),
+                            );
+                        }
+                        _ => ::core::panicking::panic("internal error: entered unreachable code"),
+                    }
+                }
+            } else {
+                ret.insert(
+                    "foreground".to_string(),
+                    ::serde_json::to_value(&0).unwrap(),
+                );
+                ret.insert(
+                    "background".to_string(),
+                    ::serde_json::to_value(&0).unwrap(),
+                );
+            }
+            serde_json::Value::Object(ret)
+        })
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__get_highlight_by_name;
+    pub fn nvim_resize(state: S, cols: i64, rows: i64) {
+        block_on(async {
+            let nvim = state.nvim.lock().await;
+            match nvim.ui_try_resize(cols, rows).await {
+                Ok(_) => {}
+                Err(e) => {
+                    {
+                        ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                            &["error executing nvim_resize: ", "\n"],
+                            &match (&e,) {
+                                (arg0,) => [::core::fmt::ArgumentV1::new(
+                                    arg0,
+                                    ::core::fmt::Display::fmt,
+                                )],
+                            },
+                        ));
+                    };
+                }
+            }
+        });
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__nvim_resize;
+    pub fn nvim_resize_grid(state: S, grid: i64, cols: i64, rows: i64) {
+        block_on(async {
+            let nvim = state.nvim.lock().await;
+            match nvim.ui_try_resize_grid(grid, cols, rows).await {
+                Ok(_) => {}
+                Err(e) => {
+                    {
+                        ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                            &["error executing nvim_resize_grid: ", "\n"],
+                            &match (&e,) {
+                                (arg0,) => [::core::fmt::ArgumentV1::new(
+                                    arg0,
+                                    ::core::fmt::Display::fmt,
+                                )],
+                            },
+                        ));
+                    };
+                }
+            }
+        });
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__nvim_resize_grid;
+    pub fn nvim_command(state: S, cmd: &str) {
+        block_on(async {
+            let nvim = state.nvim.lock().await;
+            match nvim.command(cmd).await {
+                Ok(_) => {}
+                Err(e) => {
+                    {
+                        ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                            &["error executing nvim_command: ", "\n"],
+                            &match (&e,) {
+                                (arg0,) => [::core::fmt::ArgumentV1::new(
+                                    arg0,
+                                    ::core::fmt::Display::fmt,
+                                )],
+                            },
+                        ));
+                    };
+                }
+            }
+        });
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__nvim_command;
+    pub fn expand(state: S, thing: &str) -> Result<String, String> {
+        block_on(async {
+            let nvim = state.nvim.lock().await;
+            nvim.call_function("expand", <[_]>::into_vec(box [rmpvVal::from(thing)]))
+                .await
+        })
+        .map(|v| v.as_str().unwrap().to_string())
+        .map_err(|err| {
+            let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                &[""],
+                &match (&err,) {
+                    (arg0,) => [::core::fmt::ArgumentV1::new(
+                        arg0,
+                        ::core::fmt::Display::fmt,
+                    )],
+                },
+            ));
+            res
+        })
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__expand;
+    pub struct BufferInfo {
+        dir: String,
+        name: String,
+        base: String,
+        terminal: bool,
+        modified: bool,
+        duplicate: bool,
+    }
+    #[doc(hidden)]
+    #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for BufferInfo {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = match _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "BufferInfo",
+                    false as usize + 1 + 1 + 1 + 1 + 1 + 1,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "dir",
+                    &self.dir,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "name",
+                    &self.name,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "base",
+                    &self.base,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "terminal",
+                    &self.terminal,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "modified",
+                    &self.modified,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "duplicate",
+                    &self.duplicate,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub fn get_buffer_info(state: S) -> Result<Vec<BufferInfo>, String> {
+        (block_on(async {
+            let nvim = state.nvim.lock().await;
+            let buffers = nvim.list_bufs().await?;
+            let curr_buf_id = nvim.get_current_buf().await?;
+            let curr_buf_id = rmpv::decode::read_value(
+                &mut curr_buf_id.get_value().as_ext().unwrap().1.as_slice(),
+            )
+            .unwrap()
+            .as_i64()
+            .unwrap();
+            Ok(stream::iter(buffers)
+                .filter_map(|b: nvim_rs::Buffer<_>| async move {
+                    let is_current =
+                        rmpv::decode::read_value(&mut b.get_value().as_ext().unwrap().1.as_slice())
+                            .unwrap()
+                            .as_i64()
+                            .unwrap()
+                            == curr_buf_id;
+                    if !b.get_option("buflisted").await.unwrap().as_bool().unwrap() && is_current {
+                        None
+                    } else {
+                        let name = b.get_name().await.unwrap();
+                        let path = Path::new(&name);
+                        Some(BufferInfo {
+                            name: name.clone(),
+                            modified: b.get_option("modified").await.unwrap().as_bool().unwrap(),
+                            terminal: b.get_option("buftype").await.unwrap().as_str().unwrap()
+                                == "terminal",
+                            base: path
+                                .file_name()
+                                .expect("a path should have a last part always, right?")
+                                .to_str()
+                                .unwrap()
+                                .to_string(),
+                            dir: path
+                                .parent()
+                                .expect("a path should always have a parent?")
+                                .to_str()
+                                .unwrap()
+                                .to_string(),
+                            duplicate: false,
+                        })
+                    }
+                })
+                .collect::<Vec<BufferInfo>>()
+                .await)
+        }))
+        .map_err(|err: Box<CallError>| {
+            let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                &[""],
+                &match (&err,) {
+                    (arg0,) => [::core::fmt::ArgumentV1::new(
+                        arg0,
+                        ::core::fmt::Display::fmt,
+                    )],
+                },
+            ));
+            res
+        })
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__get_buffer_info;
+    static MODIFIERS: &[&str] = &["Alt", "Shift", "Meta", "Control"];
+    async fn send_to_nvim(nvim: &crate::neovim_handler::Nvim, input: &str) {
+        let input = if input.len() == 1 {
+            input.replace("<", "<LT>")
+        } else {
+            input.to_string()
+        };
+        match input.as_str() {
+            "<S-Space>" => nvim
+                .input("<space>")
+                .await
+                .expect("couldn't send nvim input"),
+            x => nvim.input(x).await.expect("couldn't send nvim input"),
+        };
+    }
+    pub fn document_on_input(state: S, data: &str) {
+        block_on(async {
+            let mut input_state = state.input_state.lock().await;
+            if true {
+                if !input_state.previous_key_was_dead && input_state.key_is_dead {
+                    input_state.key_is_dead = false;
+                    input_state.previous_key_was_dead = true;
+                    return;
+                }
+            }
+            if !input_state.window_has_focus || !input_state.is_capturing {
+                return;
+            }
+            if input_state.send_input_to_vim {
+                let nvim = state.nvim.lock().await;
+                send_to_nvim(&nvim, data).await;
+            }
+        })
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__document_on_input;
+    pub fn document_on_keydown(
+        state: S,
+        key: &str,
+        ctrl_key: bool,
+        meta_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+    ) {
+        block_on(async {
+            let mut input_state = state.input_state.lock().await;
+            if !input_state.window_has_focus || !input_state.is_capturing {
+                return;
+            }
+            let is_not_char = {
+                if key.len() == 1 && !ctrl_key && !meta_key && !alt_key && !shift_key {
+                    false
+                } else if !true
+                    && ((shift_key && alt_key) || alt_key)
+                    && key.len() == 1
+                    && !ctrl_key
+                    && !meta_key
+                {
+                    true
+                } else if (shift_key || meta_key || alt_key) && !ctrl_key && key.len() == 1 {
+                    false
+                } else {
+                    true
+                }
+            };
+            let workaround_for_dead_key_being_pressed_twice_in_a_row_on_macos = if true {
+                let key_is_dead = key == "Dead";
+                if key_is_dead && !input_state.previous_key_was_dead {
+                    input_state.key_is_dead = true;
+                    input_state.previous_key_was_dead = false;
+                    false
+                } else {
+                    if input_state.previous_key_was_dead {
+                        input_state.previous_key_was_dead = false;
+                        input_state.key_is_dead = key_is_dead;
+                    }
+                    true
+                }
+            } else {
+                true
+            };
+            if is_not_char && workaround_for_dead_key_being_pressed_twice_in_a_row_on_macos {
+                let input_empty_mod_bypassed = if MODIFIERS.contains(&key) { "" } else { key };
+                let mods = {
+                    let mut mods = ::alloc::vec::Vec::new();
+                    let only_shift = shift_key && !ctrl_key && !meta_key && !alt_key;
+                    let not_cmd_or_ctrl = !meta_key && !ctrl_key;
+                    let macos_unicode = (true && alt_key && not_cmd_or_ctrl)
+                        || (true && alt_key && shift_key && not_cmd_or_ctrl);
+                    if (only_shift && key.is_ascii() && key.len() == 1) || macos_unicode {
+                        mods
+                    } else {
+                        if ctrl_key {
+                            mods.push("C");
+                        }
+                        if shift_key {
+                            mods.push("S");
+                        }
+                        if meta_key {
+                            mods.push("D");
+                        }
+                        if alt_key {
+                            mods.push("A");
+                        }
+                        mods
+                    }
+                }
+                .join("-");
+                let nvim_key = match input_empty_mod_bypassed {
+                    "Backspace" => "BS",
+                    "<" => "LT",
+                    "Escape" => "Esc",
+                    "Delete" => "Del",
+                    " " => "Space",
+                    "ArrowUp" => "Up",
+                    "ArrowDown" => "Down",
+                    "ArrowLeft" => "Left",
+                    "ArrowRight" => "Right",
+                    _ => input_empty_mod_bypassed,
+                };
+                let input = if mods.len() != 0 {
+                    {
+                        let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                            &["<", "-", ">"],
+                            &match (&mods, &nvim_key) {
+                                (arg0, arg1) => [
+                                    ::core::fmt::ArgumentV1::new(arg0, ::core::fmt::Display::fmt),
+                                    ::core::fmt::ArgumentV1::new(arg1, ::core::fmt::Display::fmt),
+                                ],
+                            },
+                        ));
+                        res
+                    }
+                } else {
+                    {
+                        let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                            &["<", ">"],
+                            &match (&nvim_key,) {
+                                (arg0,) => [::core::fmt::ArgumentV1::new(
+                                    arg0,
+                                    ::core::fmt::Display::fmt,
+                                )],
+                            },
+                        ));
+                        res
+                    }
+                };
+                if input_state.send_input_to_vim && !nvim_key.is_empty() {
+                    state
+                        .nvim
+                        .lock()
+                        .await
+                        .input(&input)
+                        .await
+                        .expect("couldn't send input to nvim");
+                }
+            }
+        })
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__document_on_keydown;
+    pub fn get_font_bytes(font_name: &str) -> Result<Vec<u8>, String> {
+        use font_kit::{handle::Handle, source::SystemSource};
+        if let Handle::Memory { bytes, .. } = SystemSource::new()
+            .select_by_postscript_name(&font_name)
+            .map_err(|err| {
+                let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                    &["selection error: "],
+                    &match (&err,) {
+                        (arg0,) => [::core::fmt::ArgumentV1::new(
+                            arg0,
+                            ::core::fmt::Display::fmt,
+                        )],
+                    },
+                ));
+                res
+            })?
+            .load()
+            .map_err(|err| {
+                let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                    &["loading error: "],
+                    &match (&err,) {
+                        (arg0,) => [::core::fmt::ArgumentV1::new(
+                            arg0,
+                            ::core::fmt::Display::fmt,
+                        )],
+                    },
+                ));
+                res
+            })?
+            .handle()
+            .expect("need a handle here")
+        {
+            Ok(bytes.to_vec())
+        } else {
+            Err({
+                let res = ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                    &["couldn\'t load the font "],
+                    &match (&font_name,) {
+                        (arg0,) => [::core::fmt::ArgumentV1::new(
+                            arg0,
+                            ::core::fmt::Display::fmt,
+                        )],
+                    },
+                ));
+                res
+            })
+        }
+    }
+    #[allow(unused_imports)]
+    pub use __cmd__get_font_bytes;
+}
+mod neovim_handler {
+    use async_trait::async_trait;
+    use core::slice::SlicePattern;
+    use nvim_rs::{compat::tokio::Compat, create::tokio as create, Handler, Neovim};
+    use rmpv::Value as NvimValue;
+    use serde_json::{json, Value as JsonValue};
+    use tauri::async_runtime::spawn;
+    use futures::lock::Mutex;
+    use std::{collections::HashMap, sync::Arc};
+    use tokio::process::{ChildStdin, Command};
+    pub type Nvim = Neovim<Compat<ChildStdin>>;
+    async fn new_nvim_child_cmd(
+        handler: NeovimHandler,
+    ) -> (
+        Nvim,
+        tokio::task::JoinHandle<Result<(), Box<nvim_rs::error::LoopError>>>,
+        tokio::process::Child,
+    ) {
+        use std::{fs::canonicalize, path::PathBuf};
+        let runtime_dir = canonicalize(PathBuf::from("../runtime"))
+            .expect("this should work, getting the runtime dir");
+        let runtime_dir = runtime_dir
+            .to_str()
+            .expect("runtime dir path is valid utf8");
+        create :: new_child_cmd (Command :: new ("nvim") . args (& ["--cmd" , & { let res = :: alloc :: fmt :: format (:: core :: fmt :: Arguments :: new_v1_formatted (& ["let $PATH .= \':" , "/" , "\' | let &runtimepath .= \'," , "\'"] , & match (& runtime_dir , & std :: env :: consts :: OS) { (arg0 , arg1) => [:: core :: fmt :: ArgumentV1 :: new (arg0 , :: core :: fmt :: Display :: fmt) , :: core :: fmt :: ArgumentV1 :: new (arg1 , :: core :: fmt :: Display :: fmt)] , } , & [:: core :: fmt :: rt :: v1 :: Argument { position : 0usize , format : :: core :: fmt :: rt :: v1 :: FormatSpec { fill : ' ' , align : :: core :: fmt :: rt :: v1 :: Alignment :: Unknown , flags : 0u32 , precision : :: core :: fmt :: rt :: v1 :: Count :: Implied , width : :: core :: fmt :: rt :: v1 :: Count :: Implied , } , } , :: core :: fmt :: rt :: v1 :: Argument { position : 1usize , format : :: core :: fmt :: rt :: v1 :: FormatSpec { fill : ' ' , align : :: core :: fmt :: rt :: v1 :: Alignment :: Unknown , flags : 0u32 , precision : :: core :: fmt :: rt :: v1 :: Count :: Implied , width : :: core :: fmt :: rt :: v1 :: Count :: Implied , } , } , :: core :: fmt :: rt :: v1 :: Argument { position : 0usize , format : :: core :: fmt :: rt :: v1 :: FormatSpec { fill : ' ' , align : :: core :: fmt :: rt :: v1 :: Alignment :: Unknown , flags : 0u32 , precision : :: core :: fmt :: rt :: v1 :: Count :: Implied , width : :: core :: fmt :: rt :: v1 :: Count :: Implied , } , }])) ; res } , "--cmd" , "com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)" , "--cmd" , & { let res = :: alloc :: fmt :: format (:: core :: fmt :: Arguments :: new_v1 (& ["source " , "/uivonim.vim"] , & match (& runtime_dir ,) { (arg0 ,) => [:: core :: fmt :: ArgumentV1 :: new (arg0 , :: core :: fmt :: Display :: fmt)] , })) ; res } , "--embed"]) , handler) . await . expect ("error creating new child cmd")
+    }
+    pub struct ModeInfo {
+        pub blinkoff: Option<i64>,
+        pub blinkon: Option<i64>,
+        pub blinkwait: Option<i64>,
+        pub cell_percentage: Option<i64>,
+        pub cursor_shape: Option<String>,
+        pub attr_id: Option<i64>,
+        pub attr_id_lm: Option<i64>,
+        pub hl_id: Option<i64>,
+        pub id_lm: Option<i64>,
+        pub mouse_shape: Option<i64>,
+        pub name: String,
+        pub short_name: String,
+    }
+    #[automatically_derived]
+    #[allow(unused_qualifications)]
+    impl ::core::clone::Clone for ModeInfo {
+        #[inline]
+        fn clone(&self) -> ModeInfo {
+            match *self {
+                ModeInfo {
+                    blinkoff: ref __self_0_0,
+                    blinkon: ref __self_0_1,
+                    blinkwait: ref __self_0_2,
+                    cell_percentage: ref __self_0_3,
+                    cursor_shape: ref __self_0_4,
+                    attr_id: ref __self_0_5,
+                    attr_id_lm: ref __self_0_6,
+                    hl_id: ref __self_0_7,
+                    id_lm: ref __self_0_8,
+                    mouse_shape: ref __self_0_9,
+                    name: ref __self_0_10,
+                    short_name: ref __self_0_11,
+                } => ModeInfo {
+                    blinkoff: ::core::clone::Clone::clone(&(*__self_0_0)),
+                    blinkon: ::core::clone::Clone::clone(&(*__self_0_1)),
+                    blinkwait: ::core::clone::Clone::clone(&(*__self_0_2)),
+                    cell_percentage: ::core::clone::Clone::clone(&(*__self_0_3)),
+                    cursor_shape: ::core::clone::Clone::clone(&(*__self_0_4)),
+                    attr_id: ::core::clone::Clone::clone(&(*__self_0_5)),
+                    attr_id_lm: ::core::clone::Clone::clone(&(*__self_0_6)),
+                    hl_id: ::core::clone::Clone::clone(&(*__self_0_7)),
+                    id_lm: ::core::clone::Clone::clone(&(*__self_0_8)),
+                    mouse_shape: ::core::clone::Clone::clone(&(*__self_0_9)),
+                    name: ::core::clone::Clone::clone(&(*__self_0_10)),
+                    short_name: ::core::clone::Clone::clone(&(*__self_0_11)),
+                },
+            }
+        }
+    }
+    #[automatically_derived]
+    #[allow(unused_qualifications)]
+    impl ::core::fmt::Debug for ModeInfo {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            match *self {
+                ModeInfo {
+                    blinkoff: ref __self_0_0,
+                    blinkon: ref __self_0_1,
+                    blinkwait: ref __self_0_2,
+                    cell_percentage: ref __self_0_3,
+                    cursor_shape: ref __self_0_4,
+                    attr_id: ref __self_0_5,
+                    attr_id_lm: ref __self_0_6,
+                    hl_id: ref __self_0_7,
+                    id_lm: ref __self_0_8,
+                    mouse_shape: ref __self_0_9,
+                    name: ref __self_0_10,
+                    short_name: ref __self_0_11,
+                } => {
+                    let debug_trait_builder =
+                        &mut ::core::fmt::Formatter::debug_struct(f, "ModeInfo");
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "blinkoff",
+                        &&(*__self_0_0),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "blinkon",
+                        &&(*__self_0_1),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "blinkwait",
+                        &&(*__self_0_2),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "cell_percentage",
+                        &&(*__self_0_3),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "cursor_shape",
+                        &&(*__self_0_4),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "attr_id",
+                        &&(*__self_0_5),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "attr_id_lm",
+                        &&(*__self_0_6),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "hl_id",
+                        &&(*__self_0_7),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "id_lm",
+                        &&(*__self_0_8),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "mouse_shape",
+                        &&(*__self_0_9),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "name",
+                        &&(*__self_0_10),
+                    );
+                    let _ = ::core::fmt::DebugStruct::field(
+                        debug_trait_builder,
+                        "short_name",
+                        &&(*__self_0_11),
+                    );
+                    ::core::fmt::DebugStruct::finish(debug_trait_builder)
+                }
+            }
+        }
+    }
+    #[doc(hidden)]
+    #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for ModeInfo {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = match _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "ModeInfo",
+                    false as usize + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "blinkoff",
+                    &self.blinkoff,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "blinkon",
+                    &self.blinkon,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "blinkwait",
+                    &self.blinkwait,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "cell_percentage",
+                    &self.cell_percentage,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "cursor_shape",
+                    &self.cursor_shape,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "attr_id",
+                    &self.attr_id,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "attr_id_lm",
+                    &self.attr_id_lm,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "hl_id",
+                    &self.hl_id,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "id_lm",
+                    &self.id_lm,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "mouse_shape",
+                    &self.mouse_shape,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "name",
+                    &self.name,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                match _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "short_name",
+                    &self.short_name,
+                ) {
+                    _serde::__private::Ok(__val) => __val,
+                    _serde::__private::Err(__err) => {
+                        return _serde::__private::Err(__err);
+                    }
+                };
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    impl ModeInfo {
+        fn new(name: String, short_name: String) -> Self {
+            ModeInfo {
+                name,
+                short_name,
+                blinkoff: None,
+                blinkon: None,
+                blinkwait: None,
+                cell_percentage: None,
+                cursor_shape: None,
+                attr_id: None,
+                attr_id_lm: None,
+                hl_id: None,
+                id_lm: None,
+                mouse_shape: None,
+            }
+        }
+        fn add(&mut self, prop: &str, value: &NvimValue) {
+            match prop {
+                "blinkoff" => self.blinkoff = value.as_i64(),
+                "blinkon" => self.blinkon = value.as_i64(),
+                "blinkwait" => self.blinkwait = value.as_i64(),
+                "cell_percentage" => self.cell_percentage = value.as_i64(),
+                "cursor_shape" => self.cursor_shape = value.as_str().map(|v| v.to_string()),
+                "attr_id" => self.attr_id = value.as_i64(),
+                "attr_id_lm" => self.attr_id_lm = value.as_i64(),
+                "hl_id" => self.hl_id = value.as_i64(),
+                "id_lm" => self.id_lm = value.as_i64(),
+                "mouse_shape" => self.mouse_shape = value.as_i64(),
+                "name" => self.name = value.as_str().unwrap().to_string(),
+                "short_name" => self.short_name = value.as_str().unwrap().to_string(),
+                _ => ::core::panicking::panic("internal error: entered unreachable code"),
+            }
+        }
+    }
+    pub struct NeovimState {
+        pub mode: String,
+        pub buffer_type: String,
+        pub current_file: String,
+        pub filetype: String,
+        pub dir: String,
+        pub cwd: String,
+        pub colorscheme: String,
+        pub revision: i64,
+        pub line: i64,
+        pub column: i64,
+        pub editor_top_line: i64,
+        pub editor_bottom_line: i64,
+        pub absolute_filepath: String,
+        pub mode_infos: HashMap<String, ModeInfo>,
+    }
+    pub struct NeovimHandler {
+        window: Arc<Mutex<Option<tauri::Window>>>,
+        state: Arc<Mutex<NeovimState>>,
+    }
+    #[automatically_derived]
+    #[allow(unused_qualifications)]
+    impl ::core::clone::Clone for NeovimHandler {
+        #[inline]
+        fn clone(&self) -> NeovimHandler {
+            match *self {
+                NeovimHandler {
+                    window: ref __self_0_0,
+                    state: ref __self_0_1,
+                } => NeovimHandler {
+                    window: ::core::clone::Clone::clone(&(*__self_0_0)),
+                    state: ::core::clone::Clone::clone(&(*__self_0_1)),
+                },
+            }
+        }
+    }
+    impl NeovimHandler {
+        pub async fn start_new() -> (Arc<Mutex<Option<tauri::Window>>>, Nvim) {
+            let window = Arc::new(Mutex::new(None));
+            let arc = window.clone();
+            let handler = NeovimHandler {
+                window,
+                state: Arc::new(Mutex::new(NeovimState {
+                    mode: "".to_string(),
+                    buffer_type: "".to_string(),
+                    current_file: "".to_string(),
+                    filetype: "".to_string(),
+                    dir: "".to_string(),
+                    cwd: "".to_string(),
+                    colorscheme: "".to_string(),
+                    revision: -1,
+                    line: 0,
+                    column: 0,
+                    editor_top_line: 0,
+                    editor_bottom_line: 0,
+                    absolute_filepath: "".to_string(),
+                    mode_infos: HashMap::new(),
+                })),
+            };
+            let (nvim, io_handler, _child) = new_nvim_child_cmd(handler).await;
+            spawn(async move {
+                match io_handler.await {
+                    Err(joinerr) => {
+                        ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                            &["Error joining IO loop: \'", "\'\n"],
+                            &match (&joinerr,) {
+                                (arg0,) => [::core::fmt::ArgumentV1::new(
+                                    arg0,
+                                    ::core::fmt::Display::fmt,
+                                )],
+                            },
+                        ));
+                    }
+                    Ok(Err(err)) => {
+                        if !err.is_reader_error() {}
+                        if !err.is_channel_closed() {
+                            {
+                                ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                                    &["Error: \'", "\'\n"],
+                                    &match (&err,) {
+                                        (arg0,) => [::core::fmt::ArgumentV1::new(
+                                            arg0,
+                                            ::core::fmt::Display::fmt,
+                                        )],
+                                    },
+                                ));
+                            };
+                        }
+                    }
+                    Ok(Ok(())) => {}
+                }
+            });
+            (arc, nvim)
+        }
+    }
+    impl Handler for NeovimHandler {
+        type Writer = Compat<ChildStdin>;
+        #[allow(
+            clippy::let_unit_value,
+            clippy::type_complexity,
+            clippy::type_repetition_in_bounds,
+            clippy::used_underscore_binding
+        )]
+        fn handle_notify<'life0, 'async_trait>(
+            &'life0 self,
+            name: String,
+            args: Vec<NvimValue>,
+            _nvim: Neovim<Compat<ChildStdin>>,
+        ) -> ::core::pin::Pin<
+            Box<dyn ::core::future::Future<Output = ()> + ::core::marker::Send + 'async_trait>,
+        >
+        where
+            'life0: 'async_trait,
+            Self: 'async_trait,
+        {
+            Box::pin(async move {
+                let __self = self;
+                let name = name;
+                let args = args;
+                let _nvim = _nvim;
+                let _: () = {
+                    match name.as_str() {
+                        "redraw" => {
+                            let state = &mut __self.state.lock().await;
+                            let win = __self.window.lock().await;
+                            let win = win.as_ref().expect("why haven't you set the window bro");
+                            for evt in args.iter() {
+                                let event_name = evt[0].as_str().unwrap();
+                                let evt = evt.as_array().unwrap();
+                                let payload = evt[1..]
+                                    .iter()
+                                    .map(|v| v.as_array().unwrap().as_slice())
+                                    .map(match event_name {
+                                        "grid_line" => parse_grid_line,
+                                        "grid_resize" => parse_grid_resize,
+                                        "grid_cursor_goto" => parse_grid_cursor_goto,
+                                        "grid_scroll" => parse_grid_scroll,
+                                        "grid_clear" => |ev: &[NvimValue]| {
+                                            ::serde_json::Value::Array(<[_]>::into_vec(box [
+                                                ::serde_json::to_value(&ev[0].as_i64().unwrap())
+                                                    .unwrap(),
+                                            ]))
+                                        },
+                                        "grid_destroy" => parse_grid_destroy,
+                                        "cmdline_show" => parse_cmdline_show,
+                                        "cmdline_hide" => |_ev: &[NvimValue]| JsonValue::Null,
+                                        "cmdline_pos" => |ev: &[NvimValue]| {
+                                            ::serde_json::Value::Array(<[_]>::into_vec(box [
+                                                ::serde_json::to_value(&ev[0].as_i64().unwrap())
+                                                    .unwrap(),
+                                                ::serde_json::to_value(&ev[1].as_i64().unwrap())
+                                                    .unwrap(),
+                                            ]))
+                                        },
+                                        "win_close" => parse_win_close,
+                                        "win_pos" => parse_win_pos,
+                                        "popupmenu_show" => parse_popupmenu_show,
+                                        "popupmenu_hide" => |_ev: &[NvimValue]| JsonValue::Null,
+                                        "popupmenu_select" => |ev: &[NvimValue]| {
+                                            JsonValue::from(ev[0].as_i64().unwrap())
+                                        },
+                                        "default_colors_set" => parse_default_colors_set,
+                                        "hl_attr_define" => parse_hl_attr_define,
+                                        "option_set" => parse_option_set,
+                                        _ => |_: &[NvimValue]| {
+                                            JsonValue::from(
+                                                "[uivonim]: bruh not handled so stop it",
+                                            )
+                                        },
+                                    })
+                                    .collect::<Vec<JsonValue>>();
+                                if !payload.contains(&JsonValue::from(
+                                    "[uivonim]: bruh not handled so stop it",
+                                )) {
+                                    win.emit(event_name, payload).expect(&{
+                                        let res =
+                                            ::alloc::fmt::format(::core::fmt::Arguments::new_v1(
+                                                &["failed to emit ", " event"],
+                                                &match (&event_name,) {
+                                                    (arg0,) => [::core::fmt::ArgumentV1::new(
+                                                        arg0,
+                                                        ::core::fmt::Display::fmt,
+                                                    )],
+                                                },
+                                            ));
+                                        res
+                                    });
+                                } else {
+                                    match event_name {
+                                        "set_title" => {
+                                            win.set_title(
+                                                evt[1].as_array().unwrap()[0].as_str().unwrap(),
+                                            )
+                                            .expect("okay why can't I set the title?");
+                                        }
+                                        "win_viewport" => {
+                                            let evt = evt[1].as_array().unwrap();
+                                            state.line = evt[4].as_i64().unwrap();
+                                            state.column = evt[5].as_i64().unwrap();
+                                            state.editor_top_line = evt[2].as_i64().unwrap();
+                                            state.editor_bottom_line = evt[3].as_i64().unwrap();
+                                        }
+                                        "flush" => {}
+                                        "mode_change" => {
+                                            let evt = evt[1].as_array().unwrap();
+                                            win.emit(
+                                                event_name,
+                                                state
+                                                    .mode_infos
+                                                    .get(&evt[0].as_str().unwrap().to_string()),
+                                            )
+                                            .expect(&{
+                                                let res = ::alloc::fmt::format(
+                                                    ::core::fmt::Arguments::new_v1(
+                                                        &["failed to emit ", " event"],
+                                                        &match (&event_name,) {
+                                                            (arg0,) => {
+                                                                [::core::fmt::ArgumentV1::new(
+                                                                    arg0,
+                                                                    ::core::fmt::Display::fmt,
+                                                                )]
+                                                            }
+                                                        },
+                                                    ),
+                                                );
+                                                res
+                                            });
+                                        }
+                                        "mode_info_set" => {
+                                            let evt = evt[1].as_array().unwrap();
+                                            let infos = evt[1].as_array().unwrap();
+                                            for info in infos {
+                                                let mut mode_info =
+                                                    ModeInfo::new("".to_string(), "".to_string());
+                                                for (k, v) in info.as_map().unwrap().iter() {
+                                                    mode_info.add(k.as_str().unwrap(), v);
+                                                }
+                                                state
+                                                    .mode_infos
+                                                    .insert(mode_info.name.clone(), mode_info);
+                                            }
+                                        }
+                                        _ => {
+                                            ::std::io::_print(::core::fmt::Arguments::new_v1(
+                                                &["not handling UI event: \'", "\'\n"],
+                                                &match (&event_name,) {
+                                                    (arg0,) => [::core::fmt::ArgumentV1::new(
+                                                        arg0,
+                                                        ::core::fmt::Display::fmt,
+                                                    )],
+                                                },
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                            win.emit("dispose_invalid_wins_then_layout", JsonValue::Null)
+                                .expect("couldn't send event");
+                        }
+                        _ => {
+                            ::std::io::_print(::core::fmt::Arguments::new_v1(
+                                &["don\'t handle this notification yet: ", ", ", "\n"],
+                                &match (&name, &args) {
+                                    (arg0, arg1) => [
+                                        ::core::fmt::ArgumentV1::new(arg0, ::core::fmt::Debug::fmt),
+                                        ::core::fmt::ArgumentV1::new(arg1, ::core::fmt::Debug::fmt),
+                                    ],
+                                },
+                            ));
+                        }
+                    }
+                };
+            })
+        }
+    }
+    /// Here `ev` is of the form: [grid, row, col_start, cells]
+    ///
+    /// See `:help ui-event-grid_line` in nvim for more info.
+    fn parse_grid_line(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::Value::Object({
+            let mut object = ::serde_json::Map::new();
+            let _ = object.insert(
+                ("grid").into(),
+                ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            );
+            let _ = object.insert(
+                ("row").into(),
+                ::serde_json::to_value(&ev[1].as_i64().unwrap()).unwrap(),
+            );
+            let _ = object.insert(
+                ("col_start").into(),
+                ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+            );
+            let _ = object.insert(
+                ("cells").into(),
+                ::serde_json::to_value(
+                    &::serde_json::to_value(
+                        &ev[3]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|c| {
+                                ::serde_json::Value::Array(<[_]>::into_vec(box [
+                                    ::serde_json::to_value(&c[0].as_str().unwrap()).unwrap(),
+                                    ::serde_json::to_value(&c[1].as_i64()).unwrap(),
+                                    ::serde_json::to_value(&c[2].as_i64()).unwrap(),
+                                ]))
+                            })
+                            .collect::<JsonValue>(),
+                    )
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+            object
+        })
+    }
+    /// `ev` of the form: [grid, win, start_row, start_col, width, height]
+    fn parse_win_pos(ev: &[NvimValue]) -> JsonValue {
+        let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
+        {
+            ::std::io::_print(::core::fmt::Arguments::new_v1(
+                &["grid id: ", "\n"],
+                &match (&ev[0].as_i64().unwrap(),) {
+                    (arg0,) => [::core::fmt::ArgumentV1::new(
+                        arg0,
+                        ::core::fmt::Display::fmt,
+                    )],
+                },
+            ));
+        };
+        ::serde_json::Value::Array(<[_]>::into_vec(box [
+            ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&win_id.as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[3].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[4].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[5].as_i64().unwrap()).unwrap(),
+        ]))
+    }
+    /// `ev` of the form [grid, width, height]
+    fn parse_grid_resize(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::Value::Array(<[_]>::into_vec(box [
+            ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[1].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+        ]))
+    }
+    /// `ev` of the form [grid, row, column]
+    fn parse_grid_cursor_goto(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::Value::Array(<[_]>::into_vec(box [
+            ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[1].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+        ]))
+    }
+    /// `ev` of the form [rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg]
+    fn parse_default_colors_set(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::Value::Array(<[_]>::into_vec(box [
+            ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[1].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[3].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[4].as_i64().unwrap()).unwrap(),
+        ]))
+    }
+    /// `ev` of the form [name, value]
+    fn parse_option_set(ev: &[NvimValue]) -> JsonValue {
+        let option_name = ev[0].as_str().unwrap();
+        match &ev[1] {
+            NvimValue::Boolean(b) => ::serde_json::Value::Array(<[_]>::into_vec(box [
+                ::serde_json::to_value(&option_name).unwrap(),
+                ::serde_json::to_value(&b).unwrap(),
+            ])),
+            NvimValue::Integer(i) => ::serde_json::Value::Array(<[_]>::into_vec(box [
+                ::serde_json::to_value(&option_name).unwrap(),
+                ::serde_json::to_value(&i.as_i64().unwrap()).unwrap(),
+            ])),
+            NvimValue::String(str) => ::serde_json::Value::Array(<[_]>::into_vec(box [
+                ::serde_json::to_value(&option_name).unwrap(),
+                ::serde_json::to_value(&str.as_str().unwrap()).unwrap(),
+            ])),
+            _ => ::core::panicking::panic("internal error: entered unreachable code"),
+        }
+    }
+    /// `ev` of the form [grid, top, bot, left, right, rows, cols]
+    fn parse_grid_scroll(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::Value::Array(<[_]>::into_vec(box [
+            ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[1].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[2].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[3].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[4].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[5].as_i64().unwrap()).unwrap(),
+            ::serde_json::to_value(&ev[6].as_i64().unwrap()).unwrap(),
+        ]))
+    }
+    /// `ev` of the form [content, pos, firstc, prompt, indent, level]
+    fn parse_cmdline_show(ev: &[NvimValue]) -> JsonValue {
+        let content = ev[0].as_array().unwrap();
+        let position = ev[1].as_i64().unwrap();
+        let firstc = ev[2].as_str().unwrap();
+        let prompt = ev[3].as_str().unwrap();
+        let cmd = content
+            .iter()
+            .fold(String::from(""), |acc, v| acc + v[1].as_str().unwrap());
+        ::serde_json::Value::Object({
+            let mut object = ::serde_json::Map::new();
+            let _ = object.insert(("cmd").into(), ::serde_json::to_value(&cmd).unwrap());
+            let _ = object.insert(("firstc").into(), ::serde_json::to_value(&firstc).unwrap());
+            let _ = object.insert(("prompt").into(), ::serde_json::to_value(&prompt).unwrap());
+            let _ = object.insert(
+                ("kind").into(),
+                ::serde_json::to_value(&if prompt.is_empty() { ":" } else { firstc }).unwrap(),
+            );
+            let _ = object.insert(
+                ("position").into(),
+                ::serde_json::to_value(&position).unwrap(),
+            );
+            object
+        })
+    }
+    /// `ev` of the form [id, rgb_attr, cterm_attr, info]
+    fn parse_hl_attr_define(ev: &[NvimValue]) -> JsonValue {
+        let id = ev[0].as_i64().unwrap();
+        let mut attr = serde_json::Map::new();
+        for (k, v) in ev[1].as_map().unwrap() {
+            attr.insert(
+                k.as_str().unwrap().to_string(),
+                match v {
+                    NvimValue::Integer(i) => JsonValue::from(i.as_i64().unwrap()),
+                    NvimValue::String(s) => JsonValue::from(s.to_string()),
+                    NvimValue::Boolean(b) => JsonValue::from(*b),
+                    _ => {
+                        {
+                            ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                                &["umm . . .\n"],
+                                &match () {
+                                    () => [],
+                                },
+                            ));
+                        };
+                        JsonValue::Null
+                    }
+                },
+            );
+        }
+        let info = ev[3]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|m| {
+                let mut map = serde_json::Map::new();
+                for (k, v) in m.as_map().unwrap() {
+                    map.insert(
+                        k.as_str().unwrap().to_string(),
+                        match v {
+                            NvimValue::String(s) => JsonValue::from(s.to_string()),
+                            NvimValue::Integer(i) => JsonValue::from(i.as_i64().unwrap()),
+                            x => {
+                                {
+                                    ::std::io::_eprint(::core::fmt::Arguments::new_v1(
+                                        &["umm . . . ", "\n"],
+                                        &match (&x,) {
+                                            (arg0,) => [::core::fmt::ArgumentV1::new(
+                                                arg0,
+                                                ::core::fmt::Debug::fmt,
+                                            )],
+                                        },
+                                    ));
+                                };
+                                {
+                                    ::core::panicking::panic(
+                                        "internal error: entered unreachable code",
+                                    )
+                                }
+                            }
+                        },
+                    );
+                }
+                JsonValue::Object(map)
+            })
+            .collect::<Vec<JsonValue>>();
+        ::serde_json::Value::Object({
+            let mut object = ::serde_json::Map::new();
+            let _ = object.insert(("id").into(), ::serde_json::to_value(&id).unwrap());
+            let _ = object.insert(("attr").into(), ::serde_json::to_value(&attr).unwrap());
+            let _ = object.insert(("info").into(), ::serde_json::to_value(&info).unwrap());
+            object
+        })
+    }
+    fn parse_popupmenu_show(ev: &[NvimValue]) -> JsonValue {
+        let items = ev[0].as_array().unwrap();
+        let selected_idx = ev[1].as_i64().unwrap();
+        let row = ev[2].as_i64().unwrap();
+        let col = ev[3].as_i64().unwrap();
+        let grid = ev[4].as_i64().unwrap();
+        let items = items
+            .iter()
+            .map(|v| {
+                let arr = v.as_array().unwrap();
+                ::serde_json::Value::Object({
+                    let mut object = ::serde_json::Map::new();
+                    let _ = object.insert(
+                        ("word").into(),
+                        ::serde_json::to_value(&arr[0].as_str().unwrap()).unwrap(),
+                    );
+                    let _ = object.insert(
+                        ("kind").into(),
+                        ::serde_json::to_value(&arr[1].as_str().unwrap()).unwrap(),
+                    );
+                    let _ = object.insert(
+                        ("menu").into(),
+                        ::serde_json::to_value(&arr[2].as_str().unwrap()).unwrap(),
+                    );
+                    let _ = object.insert(
+                        ("info").into(),
+                        ::serde_json::to_value(&arr[3].as_str().unwrap()).unwrap(),
+                    );
+                    object
+                })
+            })
+            .collect::<Vec<JsonValue>>();
+        ::serde_json::Value::Object({
+            let mut object = ::serde_json::Map::new();
+            let _ = object.insert(("row").into(), ::serde_json::to_value(&row).unwrap());
+            let _ = object.insert(("col").into(), ::serde_json::to_value(&col).unwrap());
+            let _ = object.insert(("grid").into(), ::serde_json::to_value(&grid).unwrap());
+            let _ = object.insert(
+                ("index").into(),
+                ::serde_json::to_value(&selected_idx).unwrap(),
+            );
+            let _ = object.insert(("items").into(), ::serde_json::to_value(&items).unwrap());
+            object
+        })
+    }
+    fn parse_win_close(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap()
+    }
+    fn parse_grid_destroy(ev: &[NvimValue]) -> JsonValue {
+        ::serde_json::to_value(&ev[0].as_i64().unwrap()).unwrap()
+    }
+}
+use futures::lock::Mutex;
+use neovim_handler::NeovimHandler;
+use std::sync::Arc;
+pub struct InputState {
+    previous_key_was_dead: bool,
+    key_is_dead: bool,
+    is_capturing: bool,
+    window_has_focus: bool,
+    send_input_to_vim: bool,
+}
+pub struct AppState {
+    nvim: Arc<Mutex<neovim_handler::Nvim>>,
+    input_state: Arc<Mutex<InputState>>,
+    window: Arc<Mutex<Option<tauri::Window>>>,
+}
+fn main() {
+}

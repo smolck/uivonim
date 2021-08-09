@@ -353,16 +353,12 @@ listenRedraw.pmenuShow(
   ({ payload: [data] }: { payload: PopupMenu[] }) =>
     dispatch.pub('pmenu.show', data))
 
-listenRedraw.msgShow((message) => messages.show(message))
-listenRedraw.msgStatus((status) => dispatch.pub('message.status', status))
-listenRedraw.msgAppend((message) => messages.append(message))
-listenRedraw.msgShowHistory((messages) => showMessageHistory(messages))
-listenRedraw.msgControl((text) => dispatch.pub('message.control', text))
-listenRedraw.msgClear((maybeMatcherKey) =>
-  maybeMatcherKey
-    ? messages.clear((message) => Reflect.get(message, maybeMatcherKey))
-    : messages.clear()
-)
+listenRedraw.msgShow(({ payload: message }) => messages.show(message))
+listenRedraw.msgStatus(({ payload: status }) => dispatch.pub('message.status', status))
+listenRedraw.msgAppend(({ payload: message }) => messages.append(message))
+listenRedraw.msgHistoryShow(({ payload: messages }) => showMessageHistory(messages))
+listenRedraw.msgControl(({ payload: text }) => dispatch.pub('message.control', text))
+listenRedraw.msgClear((_) => messages.clear())
 listenRedraw.showCursor(() => showCursor())
 listenRedraw.hideCursor(() => hideCursor())
 listenRedraw.hideThenDisableCursor(() => (hideCursor(), disableCursor()))

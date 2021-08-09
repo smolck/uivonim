@@ -404,6 +404,20 @@ pub async fn document_on_keydown(
 }
 
 #[command]
+pub async fn input_blur(state: S<'_>) -> Result<(), ()> {
+  state.input_state.lock().await.is_capturing = false;
+
+  Ok(())
+}
+
+#[command]
+pub async fn input_focus(state: S<'_>) -> Result<(), ()> {
+  state.input_state.lock().await.is_capturing = true;
+
+  Ok(())
+}
+
+#[command]
 pub fn get_font_bytes(font_name: &str) -> Result<Vec<u8>, String> {
   use font_kit::{handle::Handle, source::SystemSource};
 
