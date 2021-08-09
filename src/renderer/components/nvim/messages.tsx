@@ -9,7 +9,7 @@ import { colors } from '../../ui/styles'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import Icon from '../icon'
-import { Invokables } from '../../../common/ipc'
+import { registerOneTimeUseShortcuts } from '../../helpers'
 
 interface MessageAction {
   label: string
@@ -237,13 +237,13 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 
   const shortcuts = message.actions.map((m) => m.shortcut)
 
-  // TODO(smolck)
-  /*window.api
-    .invoke(Invokables.registerOneTimeUseShortcuts, shortcuts)
-    .then((shortcut) => {
-      const action = message.actions.find((m) => m.shortcut === shortcut)
-      if (action) message.onAction(action.label)
-    })*/
+  registerOneTimeUseShortcuts(shortcuts, (shortcut) => {
+    const action = message.actions.find((m) => m.shortcut === shortcut)
+    if (action) message.onAction(action.label)
+
+    // TODO(smolck): This is hacky
+    document.getElementById('keycomp-textarea')!.focus()
+  })
 }
 
 // generic close/dismiss message functionality - like the (x) button in the prompt

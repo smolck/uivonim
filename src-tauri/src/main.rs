@@ -6,6 +6,7 @@
 mod commands;
 mod neovim_handler;
 
+use std::collections::HashSet;
 use futures::lock::Mutex;
 use neovim_handler::NeovimHandler;
 use std::sync::Arc;
@@ -16,6 +17,10 @@ pub struct InputState {
   is_capturing: bool,
   window_has_focus: bool,
   send_input_to_vim: bool,
+
+  // TODO(smolck): Global shortcuts w/defaults and all that
+  global_shortcuts: HashSet<String>,
+  one_time_use_shortcuts: HashSet<String>,
 }
 
 pub struct AppState {
@@ -43,6 +48,7 @@ async fn main() {
       commands::get_font_bytes,
       commands::input_blur,
       commands::input_focus,
+      commands::register_one_time_use_shortcuts,
     ])
     .manage(AppState {
       nvim,
@@ -52,6 +58,8 @@ async fn main() {
         is_capturing: true,
         window_has_focus: true,
         send_input_to_vim: true,
+        global_shortcuts: HashSet::new(),
+        one_time_use_shortcuts: HashSet::new(),
       })),
     })
     .on_page_load(move |win, _| {

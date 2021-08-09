@@ -45,7 +45,7 @@ const Invokables = {
   getColorByName: 'getColorByName',
   getHighlightByName: 'get_highlight_by_name',
   setMode: 'setMode',
-  registerOneTimeUseShortcuts: 'registerOneTimeUseShortcuts',
+  registerOneTimeUseShortcuts: 'register_one_time_use_shortcuts',
   nvimCmd: 'nvim_command',
   getBufferInfo: 'get_buffer_info',
   nvimJumpTo: 'nvimJumpTo',
@@ -56,6 +56,8 @@ const Invokables = {
 
 const Events = {
   stolenInputKeyListener: 'stolen_input_key_listener',
+
+  shortcut: 'shortcut',
 
   gitOnStatus: 'gitOnStatus',
   gitOnBranch: 'gitOnBranch',
@@ -170,4 +172,24 @@ export const watchNvimState: {
   [Key in keyof NvimState]: (fn: (val: NvimState[Key]) => void) => void
 } = new Proxy({}, {
   get: (_, prop) => (fn: (key: keyof NvimState) => void) => watchers.sub('nvim_state', (newState) => fn(newState[prop]))
+})
+
+const shorts = new Map()
+export const registerOneTimeUseShortcuts = (
+  shortcuts: string[],
+  cb: (shortcut: string) => void,
+) => {
+  // @ts-ignore
+  shortcuts.forEach((shortcut) => shorts.set(shortcut, cb))
+  invoke.registerOneTimeUseShortcuts({ shortcuts })
+}
+
+listen.shortcut(({ payload: shortcut }) => {
+  const maybeCb = shorts.get(shortcut)
+  if (maybeCb) {
+    maybeCb(shortcut)
+    shorts.delete(shortcut)
+  } else {
+    console.error(`umm this shouldnt happen, why is there no shortcut '${shortcut}'`, shorts)
+  }
 })

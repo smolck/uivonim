@@ -5,6 +5,7 @@ use nvim_rs::error::CallError;
 use tauri::command;
 
 use rmpv::Value as rmpvVal;
+use std::collections::HashSet;
 
 use serde::Serialize;
 use serde_json::{json, map::Map};
@@ -216,7 +217,9 @@ pub async fn get_buffer_info(state: S<'_>) -> Result<Vec<BufferInfo>, String> {
 static MODIFIERS: &[&str] = &["Alt", "Shift", "Meta", "Control"];
 
 async fn send_to_nvim(
+  window: tauri::Window,
   nvim: &crate::neovim_handler::Nvim,
+  input_state: &mut crate::InputState,
   input: &str,
 ) -> Result<i64, Box<CallError>> {
   let input = if input.len() == 1 {
@@ -225,6 +228,26 @@ async fn send_to_nvim(
   } else {
     input.to_string()
   };
+
+  if let Some(shortcut) = input_state.one_time_use_shortcuts.get(&input) {
+    window
+      .emit("shortcut", shortcut)
+      .expect("couldn't emit shortcut event");
+
+    input_state.one_time_use_shortcuts.remove(&input);
+
+    let arbitrary_num = 1;
+    return Ok(arbitrary_num);
+  }
+
+  if let Some(shortcut) = input_state.global_shortcuts.get(&input) {
+    window
+      .emit("shortcut", shortcut)
+      .expect("couldn't emit shortcut event");
+
+    let arbitrary_num = 1;
+    return Ok(arbitrary_num);
+  }
 
   // TODO(smolck): Global shortcuts
   // if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
@@ -251,7 +274,7 @@ async fn send_to_nvim(
 }
 
 #[command]
-pub async fn document_on_input(state: S<'_>, data: &str) -> Result<(), ()> {
+pub async fn document_on_input(state: S<'_>, window: tauri::Window, data: &str) -> Result<(), ()> {
   let mut input_state = state.input_state.lock().await;
 
   // TODO(smolck): Maybe structure this w/out early returns so it's more clear
@@ -270,7 +293,7 @@ pub async fn document_on_input(state: S<'_>, data: &str) -> Result<(), ()> {
 
   if input_state.send_input_to_vim {
     let nvim = state.nvim.lock().await;
-    if let Err(_) = send_to_nvim(&nvim, data).await {
+    if let Err(_) = send_to_nvim(window, &nvim, &mut input_state, data).await {
       return Err(());
     };
   }
@@ -281,6 +304,7 @@ pub async fn document_on_input(state: S<'_>, data: &str) -> Result<(), ()> {
 #[command]
 pub async fn document_on_keydown(
   state: S<'_>,
+  window: tauri::Window,
   key: &str,
   ctrl_key: bool,
   meta_key: bool,
@@ -394,6 +418,24 @@ pub async fn document_on_keydown(
     };
 
     if input_state.send_input_to_vim && !nvim_key.is_empty() {
+      if let Some(shortcut) = input_state.one_time_use_shortcuts.get(&input) {
+        window
+          .emit("shortcut", shortcut)
+          .expect("couldn't emit shortcut event");
+
+        input_state.one_time_use_shortcuts.remove(&input);
+
+        return Ok(());
+      }
+
+      if let Some(shortcut) = input_state.global_shortcuts.get(&input) {
+        window
+          .emit("shortcut", shortcut)
+          .expect("couldn't emit shortcut event");
+
+        return Ok(());
+      }
+
       if let Err(_) = state.nvim.lock().await.input(&input).await {
         return Err(());
       }
@@ -413,6 +455,19 @@ pub async fn input_blur(state: S<'_>) -> Result<(), ()> {
 #[command]
 pub async fn input_focus(state: S<'_>) -> Result<(), ()> {
   state.input_state.lock().await.is_capturing = true;
+
+  Ok(())
+}
+
+#[command]
+pub async fn register_one_time_use_shortcuts(state: S<'_>, shortcuts: Vec<&str>) -> Result<(), ()> {
+  let mut input_state = state.input_state.lock().await;
+
+  for shortcut in shortcuts {
+    input_state
+      .one_time_use_shortcuts
+      .insert(shortcut.to_string());
+  }
 
   Ok(())
 }
