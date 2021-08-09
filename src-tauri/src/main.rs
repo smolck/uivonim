@@ -6,10 +6,9 @@
 mod commands;
 mod neovim_handler;
 
-use std::collections::HashSet;
 use futures::lock::Mutex;
 use neovim_handler::NeovimHandler;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 pub struct InputState {
   previous_key_was_dead: bool,
