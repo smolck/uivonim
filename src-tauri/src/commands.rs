@@ -35,8 +35,7 @@ pub async fn attach_ui(state: S<'_>, width: i64, height: i64) -> Result<(), ()> 
         .set_cmdline_external(true)
         .set_hlstate_external(true)
         .set_popupmenu_external(true)
-        .set_messages_external(true)
-        .set_wildmenu_external(true),
+        .set_messages_external(true),
     )
     .await
     .expect("couldn't attach to UI!!!");

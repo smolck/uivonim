@@ -242,7 +242,28 @@ impl Handler for NeovimHandler {
             }
             "win_close" => Some(handle_all!(events, parse_win_close)),
             "win_pos" => Some(handle_all!(events, parse_win_pos)),
-            "popupmenu_show" => Some(handle_all!(events, parse_popupmenu_show)),
+            "popupmenu_show" => {
+              events[1..]
+                .iter()
+                .map(|evt| parse_popupmenu_show(evt.as_array().unwrap()))
+                .for_each(|pmenu_show| {
+                  let (evt_name, payload) = if pmenu_show.is_wildmenu {
+                    (
+                      "wildmenu_show",
+                      serde_json::to_value(pmenu_show.items).unwrap(),
+                    )
+                  } else {
+                    ("popupmenu_show", serde_json::to_value(pmenu_show).unwrap())
+                  };
+
+                  win
+                    .emit(evt_name, payload)
+                    .expect(&format!("couldn't send {}", evt_name));
+                });
+
+              handled = true;
+              None
+            }
             "popupmenu_hide" => Some(JsonValue::Null),
             "popupmenu_select" => Some(JsonValue::from(
               events[1].as_array().unwrap()[0].as_i64().unwrap(),
@@ -616,7 +637,26 @@ fn parse_hl_attr_define(ev: &[NvimValue]) -> JsonValue {
   })
 }
 
-fn parse_popupmenu_show(ev: &[NvimValue]) -> JsonValue {
+#[derive(serde::Serialize, Debug)]
+struct PmenuShowItem {
+  word: String,
+  kind: String,
+  menu: String,
+  info: String,
+}
+
+#[derive(serde::Serialize, Debug)]
+struct PmenuShow {
+  is_wildmenu: bool,
+  row: i64,
+  col: i64,
+  /// Only exists if !is_wildmenu
+  grid: Option<i64>,
+  index: i64,
+  items: Vec<PmenuShowItem>,
+}
+
+fn parse_popupmenu_show(ev: &[NvimValue]) -> PmenuShow {
   let items = ev[0].as_array().unwrap();
   let selected_idx = ev[1].as_i64().unwrap();
   let row = ev[2].as_i64().unwrap();
@@ -628,22 +668,24 @@ fn parse_popupmenu_show(ev: &[NvimValue]) -> JsonValue {
     .map(|v| {
       let arr = v.as_array().unwrap();
 
-      json!({
-        "word": arr[0].as_str().unwrap(),
-        "kind": arr[1].as_str().unwrap(),
-        "menu": arr[2].as_str().unwrap(),
-        "info": arr[3].as_str().unwrap(),
-      })
+      PmenuShowItem {
+        word: arr[0].as_str().unwrap().to_string(),
+        kind: arr[1].as_str().unwrap().to_string(),
+        menu: arr[2].as_str().unwrap().to_string(),
+        info: arr[3].as_str().unwrap().to_string(),
+      }
     })
-    .collect::<Vec<JsonValue>>();
+    .collect::<Vec<PmenuShowItem>>();
 
-  json!({
-    "row": row,
-    "col": col,
-    "grid": grid,
-    "index": selected_idx,
-    "items": items,
-  })
+  let is_wildmenu = if grid == -1 { true } else { false };
+  PmenuShow {
+    is_wildmenu,
+    row,
+    col,
+    index: selected_idx,
+    items,
+    grid: if is_wildmenu { None } else { Some(grid) },
+  }
 }
 
 fn parse_win_close(ev: &[NvimValue]) -> JsonValue {

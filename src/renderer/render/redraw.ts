@@ -344,13 +344,24 @@ listenRedraw.modeChange(({ payload: modeInfo }) => {
 
   setCursorShape(modeInfo.cursor_shape, modeInfo.cell_percentage)
 })
-listenRedraw.pmenuHide(() => dispatch.pub('pmenu.hide'))
-listenRedraw.pmenuSelect(({ payload: [ix] }) => dispatch.pub('pmenu.select', ix))
+listenRedraw.pmenuHide(() => {
+  dispatch.pub('pmenu.hide')
+  // Seems weird, but the popupmenu_hide event handles hiding the wildmenu too .
+  // . . not really sure why that's the nvim API now, the deprecated
+  // ext_wildmenu seems maybe better but . . . that's the state of things.
+  dispatch.pub('wildmenu.hide')
+})
+listenRedraw.pmenuSelect(({ payload: ix }) => {
+  dispatch.pub('pmenu.select', ix)
+  // See note above for pmenuHide handler ^^^
+  dispatch.pub('wildmenu.select', ix)
+})
 
+listenRedraw.wildmenuShow(({ payload: items }) => dispatch.pub('wildmenu.show', items))
 // TODO(smolck): This and other events assume only one will be sent
 // per batch, which may or may not be a safe assumption?? Not sure . . .
 listenRedraw.pmenuShow(
-  ({ payload: [data] }: { payload: PopupMenu[] }) =>
+  ({ payload: data }: { payload: PopupMenu }) =>
     dispatch.pub('pmenu.show', data))
 
 listenRedraw.msgShow(({ payload: message }) => messages.show(message))
@@ -418,9 +429,5 @@ listenRedraw.optionSet(({ payload: e }) => {
 })
 
 listenRedraw.setTitle((title) => dispatch.pub('vim:title', title))
-
-listenRedraw.wildmenuShow((items) => dispatch.pub('wildmenu.show', items))
-listenRedraw.wildmenuHide(() => dispatch.pub('wildmenu.hide'))
-listenRedraw.wildmenuSelect((selected) => dispatch.pub('wildmenu.select', selected))
 
 invoke.attachUi({ height: workspace.size.rows, width: workspace.size.cols })

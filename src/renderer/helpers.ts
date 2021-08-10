@@ -123,7 +123,6 @@ const RedrawEvents = {
   optionSet: 'option_set',
   setTitle: 'set_title',
   wildmenuShow: 'wildmenu_show',
-  wildmenuHide: 'wildmenu_hide',
   wildmenuSelect: 'wildmenu_select',
 }
 

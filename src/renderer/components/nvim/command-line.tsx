@@ -94,8 +94,8 @@ plugins?.appendChild(container)
 
 // TODO: use export cns. this component is a high priority so it should be loaded early
 // because someone might open cmdline early
-sub('wildmenu.show', (opts: any[]) => {
-  state.options = [...new Set(opts)]
+sub('wildmenu.show', (items: any[]) => {
+  state.options = [...new Set(items.map((item) => item.word))]
 
   render(<CommandLine {...state} />, container)
 })
