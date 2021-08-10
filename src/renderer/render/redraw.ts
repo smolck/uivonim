@@ -20,11 +20,7 @@ import {
 } from '../cursor'
 import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
-import {
-  WinFloatPosWinInfo,
-  Mode,
-  PopupMenu,
-} from '../../common/types'
+import { WinFloatPosWinInfo, Mode, PopupMenu } from '../../common/types'
 import * as workspace from '../workspace'
 import { parseGuifont } from '../../common/utils'
 import messages from '../components/nvim/messages'
@@ -62,8 +58,8 @@ const hl_attr_define = ({ payload: events }: { payload: any[] }) => {
 }
 
 const win_pos = (event: any) => {
-  const wins: number[][] = event.payload;
-  wins.forEach(([ gridId, winId, row, col, width, height ]) =>
+  const wins: number[][] = event.payload
+  wins.forEach(([gridId, winId, row, col, width, height]) =>
     windows.set(winId, gridId, row, col, width, height)
   )
 }
@@ -81,13 +77,13 @@ const grid_clear = ({ payload: [[gridId]] }: { payload: number[][] }) => {
   win.webgl.clearGridBuffer()
 }
 
-const grid_destroy = ({ payload: [gridId] }: {payload: number[]}) => {
+const grid_destroy = ({ payload: [gridId] }: { payload: number[] }) => {
   if (gridId === 1) return
   windows.remove(gridId)
 }
 
 const grid_resize = (event: any) => {
-  const e = event.payload;
+  const e = event.payload
   const count = e.length
 
   for (let ix = 0; ix < count; ix++) {
@@ -99,9 +95,11 @@ const grid_resize = (event: any) => {
   }
 }
 
-const grid_scroll = ({ payload: [
-  [gridId, top, bottom /*left*/ /*right*/, , , amount],
-]}: { payload: number[][]}) => {
+const grid_scroll = ({
+  payload: [[gridId, top, bottom /*left*/ /*right*/, , , amount]],
+}: {
+  payload: number[][]
+}) => {
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
@@ -212,7 +210,7 @@ const grid_line = (event: any) => {
   }
 }
 
-const win_close = ({ payload: [id] }: { payload: number[]}) => {
+const win_close = ({ payload: [id] }: { payload: number[] }) => {
   windows.remove(id)
 }
 
@@ -279,7 +277,11 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height)
         return
       else
-        invoke.nvimResizeGrid({ grid: win.gridId, cols: clampedWidth, rows: clampedHeight })
+        invoke.nvimResizeGrid({
+          grid: win.gridId,
+          cols: clampedWidth,
+          rows: clampedHeight,
+        })
 
       return
     }
@@ -319,7 +321,7 @@ const win_float_pos = (wins: WinFloatPosWinInfo[]) => {
 
 listenRedraw.gridLine(grid_line)
 // invoke('attach_ui')
-listenRedraw.gridCursorGoto(({ payload: [[gridId, row, col]]}) => {
+listenRedraw.gridCursorGoto(({ payload: [[gridId, row, col]] }) => {
   windows.setActiveGrid(gridId)
   moveCursor(row, col)
 })
@@ -357,18 +359,26 @@ listenRedraw.pmenuSelect(({ payload: ix }) => {
   dispatch.pub('wildmenu.select', ix)
 })
 
-listenRedraw.wildmenuShow(({ payload: items }) => dispatch.pub('wildmenu.show', items))
+listenRedraw.wildmenuShow(({ payload: items }) =>
+  dispatch.pub('wildmenu.show', items)
+)
 // TODO(smolck): This and other events assume only one will be sent
 // per batch, which may or may not be a safe assumption?? Not sure . . .
-listenRedraw.pmenuShow(
-  ({ payload: data }: { payload: PopupMenu }) =>
-    dispatch.pub('pmenu.show', data))
+listenRedraw.pmenuShow(({ payload: data }: { payload: PopupMenu }) =>
+  dispatch.pub('pmenu.show', data)
+)
 
 listenRedraw.msgShow(({ payload: message }) => messages.show(message))
-listenRedraw.msgStatus(({ payload: status }) => dispatch.pub('message.status', status))
+listenRedraw.msgStatus(({ payload: status }) =>
+  dispatch.pub('message.status', status)
+)
 listenRedraw.msgAppend(({ payload: message }) => messages.append(message))
-listenRedraw.msgHistoryShow(({ payload: messages }) => showMessageHistory(messages))
-listenRedraw.msgControl(({ payload: text }) => dispatch.pub('message.control', text))
+listenRedraw.msgHistoryShow(({ payload: messages }) =>
+  showMessageHistory(messages)
+)
+listenRedraw.msgControl(({ payload: text }) =>
+  dispatch.pub('message.control', text)
+)
 listenRedraw.msgClear((_) => messages.clear())
 listenRedraw.showCursor(() => showCursor())
 listenRedraw.hideCursor(() => hideCursor())
@@ -389,15 +399,17 @@ listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
     } else {
       currentCommandMode = 'cmd'
       dispatch.pub('cmd.update', update)
-    }   
-  });
+    }
+  })
 })
-listenRedraw.cmdHide(() => dispatch.pub(
-  currentCommandMode === 'cmd' ? 'cmd.hide' : 'search.hide'))
+listenRedraw.cmdHide(() =>
+  dispatch.pub(currentCommandMode === 'cmd' ? 'cmd.hide' : 'search.hide')
+)
 listenRedraw.cmdPos(({ payload: [[pos, _level]] }) =>
-  dispatch.pub(
-    currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update',
-    { position: pos }))
+  dispatch.pub(currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update', {
+    position: pos,
+  })
+)
 
 listenRedraw.hlAttrDefine(hl_attr_define)
 listenRedraw.defaultColorsSet(default_colors_set)
