@@ -405,7 +405,7 @@ listenRedraw.cmdShow(({ payload: updates }: { payload: any[] }) => {
 listenRedraw.cmdHide(() =>
   dispatch.pub(currentCommandMode === 'cmd' ? 'cmd.hide' : 'search.hide')
 )
-listenRedraw.cmdPos(({ payload: [[pos, _level]] }) =>
+listenRedraw.cmdPos(({ payload: [pos, _level] }) =>
   dispatch.pub(currentCommandMode === 'cmd' ? 'cmd.update' : 'search.update', {
     position: pos,
   })

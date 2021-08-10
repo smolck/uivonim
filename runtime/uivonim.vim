@@ -100,10 +100,10 @@ hi! link uvnCursor Cursor
 " Create autocmds
 aug UivonimAU
   au BufAdd,BufEnter,BufDelete,BufUnload,BufWipeout,FileType,ColorScheme,DirChanged * call rpcnotify(0, 'uivonim-state', UivonimState())
-  au BufEnter * call rpcnotify(0, 'uivonim-autocmd', 'BufEnter', expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates'))
-  au BufWipeout * call rpcnotify(0, 'uivonim-autocmd', 'BufWipeout', expand('<abuf>'))
-  au BufWritePost * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePost', expand('<abuf>'))
-  au OptionSet * if (&ro != 1) | call rpcnotify(0, 'uivonim-autocmd', 'OptionSet', expand('<amatch>'), v:option_new, v:option_old) | endif
-  au FileType * call rpcnotify(0, 'uivonim-autocmd', 'FileType', bufnr(expand('<afile>')), expand('<amatch>'))
-  au WinEnter * call rpcnotify(0, 'uivonim-autocmd', 'WinEnter', win_getid())
+  " au BufEnter * call rpcnotify(0, 'uivonim-autocmd', 'BufEnter', expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates'))
+  " au BufWipeout * call rpcnotify(0, 'uivonim-autocmd', 'BufWipeout', expand('<abuf>'))
+  " au BufWritePost * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePost', expand('<abuf>'))
+  " au OptionSet * if (&ro != 1) | call rpcnotify(0, 'uivonim-autocmd', 'OptionSet', expand('<amatch>'), v:option_new, v:option_old) | endif
+  " au FileType * call rpcnotify(0, 'uivonim-autocmd', 'FileType', bufnr(expand('<afile>')), expand('<amatch>'))
+  " au WinEnter * call rpcnotify(0, 'uivonim-autocmd', 'WinEnter', win_getid())
 aug END

@@ -30,6 +30,11 @@ pub struct AppState {
 #[tokio::main]
 async fn main() {
   let (window_ref, nvim) = NeovimHandler::start_new().await;
+
+  nvim.subscribe("uivonim").await.unwrap();
+  nvim.subscribe("uivonim-autocmd").await.unwrap();
+  nvim.subscribe("uivonim-state").await.unwrap();
+
   let nvim = Arc::new(Mutex::new(nvim));
 
   tauri::Builder::default()
@@ -48,6 +53,8 @@ async fn main() {
       commands::input_blur,
       commands::input_focus,
       commands::register_one_time_use_shortcuts,
+      commands::steal_input,
+      commands::restore_input,
     ])
     .manage(AppState {
       nvim,

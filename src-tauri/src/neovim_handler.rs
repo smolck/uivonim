@@ -42,6 +42,12 @@ async fn new_nvim_child_cmd(
       "com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)",
       "--cmd",
       &format!("source {}/uivonim.vim", runtime_dir),
+      "--cmd",
+      // Completion for commands like `nc` when doing e.g. `:Uivonim <tab>`
+      &format!(
+        "lua vim.g.uvn_cmd_completions = '{}'",
+        ["nc", "buffers"].join("\\n")
+      ),
       "--embed",
     ]),
     handler,
@@ -211,12 +217,12 @@ impl Handler for NeovimHandler {
     args: Vec<NvimValue>,
     _nvim: Neovim<Compat<ChildStdin>>,
   ) {
+    let mut state = self.state.lock().await;
+    let win = self.window.lock().await;
+    let win = win.as_ref().expect("why haven't you set the window bro");
+
     match name.as_str() {
       "redraw" => {
-        let state = &mut self.state.lock().await;
-        let win = self.window.lock().await;
-        let win = win.as_ref().expect("why haven't you set the window bro");
-
         for events in args.iter() {
           let events = events.as_array().unwrap();
           let event_name = events[0].as_str().unwrap();
@@ -438,8 +444,64 @@ impl Handler for NeovimHandler {
           .emit("dispose_invalid_wins_then_layout", JsonValue::Null)
           .expect("couldn't send event");
       }
-      /*"uivonim-state" => {
-        println!("new state! {:?}", args);
+      "uivonim-state" => {
+        for (k, v) in args[0].as_map().unwrap() {
+          let k = k.as_str().unwrap();
+          match k {
+            "mode" => state.mode = v.as_str().unwrap().to_string(),
+            "bufferType" => state.buffer_type = v.as_str().unwrap().to_string(),
+            "file" => state.current_file = v.as_str().unwrap().to_string(),
+            "filetype" => state.filetype = v.as_str().unwrap().to_string(),
+            "cwd" => state.cwd = v.as_str().unwrap().to_string(),
+            "dir" => state.dir = v.as_str().unwrap().to_string(),
+            "colorscheme" => state.colorscheme = v.as_str().unwrap().to_string(),
+            "absoluteFilepath" => state.absolute_filepath = v.as_str().unwrap().to_string(),
+
+            "line" => state.line = v.as_i64().unwrap(),
+            "column" => state.column = v.as_i64().unwrap(),
+            "revision" => state.revision = v.as_i64().unwrap(),
+            "editorTopLine" => state.editor_top_line = v.as_i64().unwrap(),
+            "editorBottomLine" => state.editor_bottom_line = v.as_i64().unwrap(),
+            _ => {
+              eprintln!(
+                "we should never get here: uivonim-state with key {:#?} and val {:#?}",
+                k, v
+              );
+            }
+          }
+
+          // TODO(smolck): This is if we need to handle any state changes on the frontend . . . do
+          // we?
+          //
+          // NOTE(smolck): If `NeovimState` above ever gains a field that isn't
+          // i64 or String, this will break
+          /*let v_as_str = v.as_str();
+          let payload = if let Some(string) = v_as_str {
+              json!({
+                "thing_changed": k,
+                "new_value": string,
+              })
+          } else {
+              json!({
+                "thing_changed": k,
+                "new_value": v.as_i64().unwrap(),
+              })
+          };
+          win
+            .emit("uivonim_state_change", payload)
+            .expect("couldn't emit uivonim_state_change event");*/
+        }
+      }
+      "uivonim" => match args[0].as_str().unwrap() {
+        "nc" => win.emit("show_nyancat", JsonValue::Null).expect("meow"),
+        "buffers" => win.emit("show_buffers", JsonValue::Null).unwrap(),
+        x => println!("this isn't a valid action: '{}'", x),
+      },
+      /*"uivonim-autocmd" => {
+          let autocmd = args[0].as_str().unwrap();
+          match autocmd {
+
+          }
       }*/
       _ => println!("don't handle this notification yet: {:?}, {:?}", name, args),
     }

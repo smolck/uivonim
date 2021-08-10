@@ -36,6 +36,9 @@ const Invokables = {
 
   quit: 'quit',
 
+  stealInput: 'steal_input',
+  restoreInput: 'restore_input',
+
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim_resize',
@@ -59,8 +62,9 @@ const Events = {
 
   shortcut: 'shortcut',
 
-  gitOnStatus: 'gitOnStatus',
-  gitOnBranch: 'gitOnBranch',
+  gitOnStatus: 'git_on_status',
+  gitOnBranch: 'git_on_branch',
+
   invokeHandlersReady: 'invokeHandlersReady',
   homeDir: 'homeDir',
   nvimState: 'nvim.state',
@@ -70,10 +74,12 @@ const Events = {
   nvimMessageStatus: 'nvimMessageStatus',
   windowEnterFullScreen: 'window-enter-full-screen',
   windowLeaveFullScreen: 'window-leave-full-screen',
-  ncAction: 'ncAction',
+
+  showNyancat: 'show_nyancat',
+  buffersAction: 'show_buffers',
+
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
-  buffersAction: 'buffersAction',
   referencesAction: 'referencesAction',
   codeActionAction: 'codeActionAction',
   hoverAction: 'hoverAction',
@@ -202,3 +208,21 @@ listen.shortcut(({ payload: shortcut }) => {
     )
   }
 })
+
+// TODO(smolck): `once` from @tauri-apps/api/event
+// freezes the UI for some reason after calling `cb`? yeah idk,
+// anyways here's this kind of ugly hack then I guess.
+//
+// Actually, it seems to be a problem with calling `unlisten` (returned from
+// `listen`/`once` from @tauri-apps/api/event); calling *that* is what freezes
+// the UI I think. But idk for sure, maybe should open an issue/see if there
+// are any open?
+let stolenInputListener = () => {}
+export const stealInput = async (cb: () => void) => {
+  await tauriListen('input_stolen_key_pressed', (_) => stolenInputListener())
+  stolenInputListener = cb
+
+  await invoke.stealInput({})
+}
+
+export const restoreInput = async () => await invoke.restoreInput({})

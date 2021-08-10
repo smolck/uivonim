@@ -72,18 +72,18 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
       require('./components/nvim/statusline')
     })
 
-    /*setTimeout(() => {
+    setTimeout(() => {
       require('./components/extensions/buffers')
-      require('./components/extensions/color-picker')
+      /*require('./components/extensions/color-picker')
       require('./components/extensions/explorer')
 
       require('./components/extensions/lsp-code-action')
       require('./components/extensions/lsp-hover')
       require('./components/extensions/lsp-references')
-      require('./components/extensions/lsp-signature-help')
+      require('./components/extensions/lsp-signature-help')*/
 
       require('./components/memes/nc')
-    }, 600)*/
+    }, 600)
   })
 
   const pluginsContainer = document.getElementById('plugins') as HTMLElement

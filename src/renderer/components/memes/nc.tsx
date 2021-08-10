@@ -1,5 +1,5 @@
 import { render } from 'inferno'
-import { Events } from '../../../common/ipc'
+import { listen, stealInput, restoreInput } from '../../helpers'
 
 let state = {
   visible: false,
@@ -35,10 +35,11 @@ const hide = () => {
   }
 }
 
-window.api.on(Events.ncAction, () => {
+listen.showNyancat(() => {
   show()
-  window.api.stealInput(() => {
-    window.api.restoreInput()
+  stealInput(() => {
+    restoreInput()
     hide()
+    document.getElementById('keycomp-textarea')!.focus()
   })
 })

@@ -295,6 +295,10 @@ pub async fn document_on_input(state: S<'_>, window: tauri::Window, data: &str) 
     if let Err(_) = send_to_nvim(window, &nvim, &mut input_state, data).await {
       return Err(());
     };
+  } else {
+    window
+      .emit("input_stolen_key_pressed", serde_json::Value::Null)
+      .expect("should be able to do window.emit in document_on_input src/commands.rs");
   }
 
   Ok(())
@@ -438,6 +442,10 @@ pub async fn document_on_keydown(
       if let Err(_) = state.nvim.lock().await.input(&input).await {
         return Err(());
       }
+    } else if !input_state.send_input_to_vim {
+      window
+        .emit("input_stolen_key_pressed", serde_json::Value::Null)
+        .expect("should be able to do window.emit in document_on_keydown src/commands.rs");
     }
   }
 
@@ -467,6 +475,21 @@ pub async fn register_one_time_use_shortcuts(state: S<'_>, shortcuts: Vec<&str>)
       .one_time_use_shortcuts
       .insert(shortcut.to_string());
   }
+
+  Ok(())
+}
+
+#[command]
+pub async fn steal_input(state: S<'_>) -> Result<(), ()> {
+  state.input_state.lock().await.send_input_to_vim = false;
+
+  Ok(())
+}
+
+#[command]
+pub async fn restore_input(state: S<'_>) -> Result<(), ()> {
+  state.input_state.lock().await.send_input_to_vim = true;
+  println!("input restored");
 
   Ok(())
 }

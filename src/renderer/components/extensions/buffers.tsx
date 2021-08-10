@@ -44,9 +44,10 @@ const Buffers = ({ visible, value, index, buffers, inputCallbacks }: S) => (
               display: f.duplicate ? 'block' : undefined,
             }}
           >
-            {f.dir}/
+            {f.base}
           </span>
-          <span>{f.duplicate ? f.base : f.name}</span>
+          {/* TODO(smolck) */}
+          {/* <span>{f.duplicate ? f.base : f.name}</span> */}
         </RowNormal>
       ))}
     </div>
