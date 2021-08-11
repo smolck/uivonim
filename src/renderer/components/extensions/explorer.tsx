@@ -9,21 +9,19 @@ import { filter } from 'fuzzaldrin-plus'
 import { colors } from '../../ui/styles'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
-import { Invokables, Events } from '../../../common/ipc'
 import { pathRelativeTo } from '../../../common/utils'
 
-interface FileDir {
-  name: string
-  file: boolean
-  dir: boolean
-}
+import { homeDir } from '@tauri-apps/api/path'
+import { readDir, FileEntry } from '@tauri-apps/api/fs'
+import { listen, invoke, currentNvimState } from '../../helpers'
 
 let state = {
+  homeDir: '',
   val: '',
   cwd: '',
   path: '',
-  paths: [] as FileDir[],
-  cache: [] as FileDir[],
+  paths: [] as FileEntry[],
+  cache: [] as FileEntry[],
   vis: false,
   ix: 0,
   pathMode: false,
@@ -32,18 +30,17 @@ let state = {
   pathModeInputCallbacks: {},
 }
 
-const sortDirFiles = (filedirs: FileDir[]) => {
-  const dirs = filedirs.filter((f) => f.dir)
-  const files = filedirs.filter((f) => f.file)
+const sortDirFiles = (filedirs: FileEntry[]) => {
+  const dirs = filedirs.filter((f) => f.path)
+  const files = filedirs.filter((f) => f.name)
   return [...dirs, ...files]
 }
 
 const absolutePath = (path: string) =>
-  path.replace(/^~\//, `${window.api.homeDir}/`)
+  path.replace(/^~\//, `${state.homeDir}/`)
 
-const getDirs = (path: string) => window.api.invoke(Invokables.getDirs, path)
-const getDirFiles = (path: string) =>
-  window.api.invoke(Invokables.getDirFiles, path)
+const getDirs = (path: string) => readDir(path)
+const getDirFiles = (path: string) => readDir(path) //.then((entries) => entries.filter((e) => !e.children && e.name))
 
 const pathExplore = async (path: string) => {
   const fullpath = absolutePath(path)
@@ -85,7 +82,7 @@ const Explorer = ({
 
     {!pathMode && (
       <RowImportant active={/* TODO(smolck): Is this right? */ false}>
-        <span>{pathRelativeTo(path, window.api.homeDir)}</span>
+        <span>{pathRelativeTo(path, state.homeDir)}</span>
       </RowImportant>
     )}
 
@@ -93,7 +90,7 @@ const Explorer = ({
       <Input
         {...pathModeInputCallbacks}
         id={'explorer-path-mode-input'}
-        value={pathRelativeTo(pathValue, window.api.homeDir)}
+        value={pathRelativeTo(pathValue, state.homeDir)}
         color={colors.important}
         icon={'search'}
         desc={'open path'}
@@ -108,13 +105,13 @@ const Explorer = ({
       onComponentDidMount={(e: HTMLElement) => (listElRef = e)}
       style={{ 'max-height': '50vh', 'overflow-y': 'hidden' }}
     >
-      {paths.map(({ name, dir }, ix) => (
-        <RowNormal key={`${name}-${dir}`} active={ix === index}>
-          {dir ? Folder : FiletypeIcon(name)}
+      {paths.map(({ name, path }, ix) => (
+        <RowNormal key={`${name}-${path}`} active={ix === index}>
+          {path ? Folder : FiletypeIcon(name!)}
 
           <span
             style={{
-              color: dir && ix !== index ? cvar('foreground-50') : undefined,
+              color: path && ix !== index ? cvar('foreground-50') : undefined,
             }}
           >
             {name}
@@ -133,7 +130,7 @@ const assignStateAndRender = (newState: any) => (
   Object.assign(state, newState), render(<Explorer {...state} />, container)
 )
 
-const updatePaths = (paths: FileDir[]) => assignStateAndRender({ paths })
+const updatePaths = (paths: FileEntry[]) => assignStateAndRender({ paths })
 
 state.pathModeInputCallbacks = {
   change: (pathValue: string) => {
@@ -158,7 +155,7 @@ state.pathModeInputCallbacks = {
     if (!state.paths.length) return
     const dir = dirname(absolutePath(state.pathValue))
     const { name } = state.paths[state.ix]
-    const next = `${join(dir, name)}/`
+    const next = `${join(dir, name!)}/`
     pathExplore(next).then(updatePaths)
     assignStateAndRender({ ix: 0, pathValue: next })
   },
@@ -168,7 +165,7 @@ state.pathModeInputCallbacks = {
     const fullpath = absolutePath(state.pathValue)
     const goodPath = fullpath.endsWith('/') ? fullpath : dirname(fullpath)
     const { name } = state.paths[ix]
-    const pathValue = `${join(goodPath, name)}`
+    const pathValue = `${join(goodPath, name!)}`
     assignStateAndRender({ ix, pathValue })
   },
 
@@ -177,7 +174,7 @@ state.pathModeInputCallbacks = {
     const fullpath = absolutePath(state.pathValue)
     const goodPath = fullpath.endsWith('/') ? fullpath : dirname(fullpath)
     const { name } = state.paths[ix]
-    const pathValue = `${join(goodPath, name)}`
+    const pathValue = `${join(goodPath, name!)}`
     assignStateAndRender({ ix, pathValue })
   },
 }
@@ -203,7 +200,7 @@ state.inputCallbacks = {
     assignStateAndRender({ pathMode: true, ix: 0, val: '', pathValue: '' }),
 
   ctrlH: async () => {
-    const { cwd } = window.api.nvimState()
+    const { cwd } = currentNvimState()
     const filedirs = await getDirFiles(cwd)
     const paths = sortDirFiles(filedirs)
     show({ paths, cwd, path: cwd })
@@ -216,21 +213,19 @@ state.inputCallbacks = {
       return
     }
 
-    const { name, file } = state.paths[state.ix]
+    const { name, path } = state.paths[state.ix]
     if (!name) return
 
-    if (file) {
-      window.api
-        .invoke(
-          Invokables.nvimCmd,
-          `e ${pathRelativeTo(join(state.path, name), state.cwd)}`
-        )
+    if (path) {
+        invoke.nvimCmd({
+          cmd: `e ${pathRelativeTo(join(state.path, name), state.cwd)}`
+          })
         .then(() => assignStateAndRender(resetState))
       return
     }
 
-    const path = join(state.path, name)
-    getDirFiles(path).then((paths) =>
+    const pathNess = join(state.path, name)
+    getDirFiles(pathNess).then((paths) =>
       show({ path, paths: sortDirFiles(paths) })
     )
   },
@@ -285,10 +280,13 @@ state.inputCallbacks = {
     }),
 }
 
-window.api.on(Events.explorer, async (customDir?: string) => {
-  const { cwd, bufferType } = window.api.nvimState()
-  const isTerminal = bufferType === BufferType.Terminal
-  const currentDir = isTerminal ? cwd : window.api.nvimState().dir
+// TODO(smolck): I don't care to fix this component right now, but should
+// probably do that.
+listen.showExplorer(async (customDir?: string) => {
+  state.homeDir = await homeDir()
+  const { cwd, buffer_type, dir } = currentNvimState()
+  const isTerminal = buffer_type === BufferType.Terminal
+  const currentDir = isTerminal ? cwd : dir
   const path = customDir || currentDir
 
   const paths = sortDirFiles(await getDirFiles(path))

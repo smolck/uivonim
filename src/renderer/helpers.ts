@@ -78,6 +78,7 @@ const Events = {
   showNyancat: 'show_nyancat',
   buffersAction: 'show_buffers',
   pickColor: 'show_pick_color',
+  showExplorer: 'show_explorer',
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
 
@@ -87,7 +88,6 @@ const Events = {
   codeActionAction: 'codeActionAction',
   hoverAction: 'hoverAction',
   hoverCloseAction: 'hoverCloseAction',
-  explorer: 'explorer',
   updateNameplates: 'window.refresh',
   lspDiagnostics: 'lspDiagnostics',
 } as const
@@ -146,7 +146,7 @@ export const listen: {
   [Key in keyof typeof Events]: (fn: (...args: any[]) => void) => void
 } = new Proxy(Events, {
   get: (events, key) => (fn: (...args: any[]) => void) =>
-    tauriListen(Reflect.get(events, key), fn),
+    tauriListen(Reflect.get(events, key), ({ payload: stuff }) => fn(stuff)),
 })
 
 // @ts-ignore
@@ -174,7 +174,13 @@ interface NvimState {
 }
 
 const watchers = dispatchConstructor()
-tauriListen('nvim_state', (newState) => watchers.pub('nvim_state', newState))
+let nvimState: NvimState
+tauriListen('nvim_state', ({ payload: newState }) => {
+  watchers.pub('nvim_state', newState)
+  nvimState = newState as NvimState
+})
+
+export const currentNvimState = () => nvimState
 
 // @ts-ignore
 export const watchNvimState: {
