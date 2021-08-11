@@ -77,6 +77,9 @@ const Events = {
 
   showNyancat: 'show_nyancat',
   buffersAction: 'show_buffers',
+  pickColor: 'show_pick_color',
+  // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
+  // modifyColorschemeLive: 'modify_colorscheme_live',
 
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
@@ -84,8 +87,6 @@ const Events = {
   codeActionAction: 'codeActionAction',
   hoverAction: 'hoverAction',
   hoverCloseAction: 'hoverCloseAction',
-  pickColor: 'pickColor',
-  modifyColorschemeLive: 'modifyColorschemeLive',
   explorer: 'explorer',
   updateNameplates: 'window.refresh',
   lspDiagnostics: 'lspDiagnostics',
@@ -217,9 +218,9 @@ listen.shortcut(({ payload: shortcut }) => {
 // `listen`/`once` from @tauri-apps/api/event); calling *that* is what freezes
 // the UI I think. But idk for sure, maybe should open an issue/see if there
 // are any open?
-let stolenInputListener = () => {}
-export const stealInput = async (cb: () => void) => {
-  await tauriListen('input_stolen_key_pressed', (_) => stolenInputListener())
+let stolenInputListener = (_keys: string) => {}
+export const stealInput = async (cb: (keys: string) => void) => {
+  await tauriListen('input_stolen_key_pressed', ({ payload: keys }: { payload: string }) => stolenInputListener(keys))
   stolenInputListener = cb
 
   await invoke.stealInput({})

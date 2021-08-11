@@ -7,10 +7,9 @@ import onLoseFocus from '../../ui/lose-focus'
 import { basename, extname } from 'path'
 import { cursor } from '../../cursor'
 import { render } from 'inferno'
-import { invoke, listen } from '../../helpers'
+import { invoke, listen, stealInput, restoreInput } from '../../helpers'
 
 let liveMode = false
-let restoreInput = () => {}
 
 const getPosition = (row: number, col: number) => ({
   ...windows.pixelPosition(row > 12 ? row : row + 1, col - 1),
@@ -104,9 +103,9 @@ const show = (color: string) => {
   // colorPicker.setHSL(h, s, l, a)
   uiShow()
 
-  window.api.stealInput((keys: string) => {
+  stealInput((keys: string) => {
     if (keys !== '<Esc>') return
-    window.api.restoreInput().then(() => state.hideFunc())
+    restoreInput().then(() => state.hideFunc())
   })
 }
 
@@ -123,8 +122,10 @@ listen.pickColor(async () => {
   show(word)
 })
 
-listen.modifyColorschemeLive(async () => {
+// TODO(smolck): This is not a thing anymore, maybe should add it back? But is
+// it really even that useful?
+/*listen.modifyColorschemeLive(async () => {
   liveMode = true
   const word = await invoke.expand({ thing: '<cword>' })
   show(word)
-})
+})*/

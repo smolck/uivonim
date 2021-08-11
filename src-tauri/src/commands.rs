@@ -297,7 +297,7 @@ pub async fn document_on_input(state: S<'_>, window: tauri::Window, data: &str) 
     };
   } else {
     window
-      .emit("input_stolen_key_pressed", serde_json::Value::Null)
+      .emit("input_stolen_key_pressed", serde_json::Value::from(data))
       .expect("should be able to do window.emit in document_on_input src/commands.rs");
   }
 
@@ -444,7 +444,7 @@ pub async fn document_on_keydown(
       }
     } else if !input_state.send_input_to_vim {
       window
-        .emit("input_stolen_key_pressed", serde_json::Value::Null)
+        .emit("input_stolen_key_pressed", serde_json::Value::from(input))
         .expect("should be able to do window.emit in document_on_keydown src/commands.rs");
     }
   }

@@ -14,6 +14,15 @@ use tokio::process::{ChildStdin, Command};
 
 pub type Nvim = Neovim<Compat<ChildStdin>>;
 
+macro_rules! concat_command_completions {
+    ( $last:expr, $( $thing:expr ),+) => {
+      concat!($($thing, "\\n"),+, $last);
+    };
+}
+
+/// Update this as part of adding a new command (e.g. :Uivonim some-new-thing)
+static COMMAND_COMPLETIONS: &str = concat_command_completions!("pick-color", "nc", "buffers");
+
 async fn new_nvim_child_cmd(
   handler: NeovimHandler,
 ) -> (
@@ -44,10 +53,7 @@ async fn new_nvim_child_cmd(
       &format!("source {}/uivonim.vim", runtime_dir),
       "--cmd",
       // Completion for commands like `nc` when doing e.g. `:Uivonim <tab>`
-      &format!(
-        "lua vim.g.uvn_cmd_completions = '{}'",
-        ["nc", "buffers"].join("\\n")
-      ),
+      &format!("lua vim.g.uvn_cmd_completions = '{}'", COMMAND_COMPLETIONS),
       "--embed",
     ]),
     handler,
@@ -280,16 +286,24 @@ impl Handler for NeovimHandler {
             "msg_show" => {
               for event in events[1..].iter() {
                 let info = parse_msg_show(event.as_array().unwrap());
-                win
-                  .emit(
-                    if info.replace_last {
-                      "messages.show"
-                    } else {
-                      "messages.append"
-                    },
-                    info,
-                  )
-                  .expect("failed to emit messages.show or messages.append event");
+                if let MessageKind::Unknown = info.kind {
+                  // TODO(smolck): I was getting this weird `<` message on `:w<cr>` and this
+                  // makes it go into the status message part of the statusline . . . ??
+                  win
+                    .emit("messages.status", info.message)
+                    .expect("failed to emit messages.control event");
+                } else {
+                  win
+                    .emit(
+                      if info.replace_last {
+                        "messages.show"
+                      } else {
+                        "messages.append"
+                      },
+                      info,
+                    )
+                    .expect("failed to emit messages.show or messages.append event");
+                }
               }
 
               handled = true;
@@ -495,6 +509,7 @@ impl Handler for NeovimHandler {
       "uivonim" => match args[0].as_str().unwrap() {
         "nc" => win.emit("show_nyancat", JsonValue::Null).expect("meow"),
         "buffers" => win.emit("show_buffers", JsonValue::Null).unwrap(),
+        "pick-color" => win.emit("show_pick_color", JsonValue::Null).unwrap(),
         x => println!("this isn't a valid action: '{}'", x),
       },
       /*"uivonim-autocmd" => {
@@ -766,6 +781,8 @@ enum MessageKind {
   Error,
   #[serde(rename(serialize = "system"))]
   System,
+  #[serde(rename(serialize = "unknown"))]
+  Unknown,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -781,7 +798,7 @@ impl MessageKind {
       "echo" | "echomsg" => MessageKind::Info,
       "echoerr" | "emsg" => MessageKind::Error,
       "quickfix" | "return_prompt" => MessageKind::System,
-      _ => MessageKind::System,
+      _ => MessageKind::Unknown,
     }
   }
 }

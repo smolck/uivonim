@@ -37,7 +37,7 @@ const hide = () => {
 
 listen.showNyancat(() => {
   show()
-  stealInput(() => {
+  stealInput((_) => {
     restoreInput()
     hide()
     document.getElementById('keycomp-textarea')!.focus()
