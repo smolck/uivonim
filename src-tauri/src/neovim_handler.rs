@@ -21,7 +21,8 @@ macro_rules! concat_command_completions {
 }
 
 /// Update this as part of adding a new command (e.g. :Uivonim some-new-thing)
-static COMMAND_COMPLETIONS: &str = concat_command_completions!("pick-color", "nc", "buffers", "explorer");
+static COMMAND_COMPLETIONS: &str =
+  concat_command_completions!("pick-color", "nc", "buffers", "explorer");
 
 async fn new_nvim_child_cmd(
   handler: NeovimHandler,
@@ -221,7 +222,7 @@ impl Handler for NeovimHandler {
   async fn handle_notify(
     &self,
     name: String,
-    args: Vec<NvimValue>,
+    mut args: Vec<NvimValue>,
     _nvim: Neovim<Compat<ChildStdin>>,
   ) {
     let mut state = self.state.lock().await;
@@ -508,13 +509,22 @@ impl Handler for NeovimHandler {
         }
 
         // TODO(smolck): Too slow? Don't need to serialize mode_infos maybe, idk
-        win.emit("nvim_state", serde_json::to_value(state.clone()).unwrap()).unwrap();
+        win
+          .emit("nvim_state", serde_json::to_value(state.clone()).unwrap())
+          .unwrap();
       }
       "uivonim" => match args[0].as_str().unwrap() {
         "nc" => win.emit("show_nyancat", JsonValue::Null).expect("meow"),
         "buffers" => win.emit("show_buffers", JsonValue::Null).unwrap(),
         "pick-color" => win.emit("show_pick_color", JsonValue::Null).unwrap(),
         "explorer" => win.emit("show_explorer", JsonValue::Null).unwrap(),
+        "code-action" => win
+          .emit(
+            "code_action",
+            crate::helpers::nvim_val_to_json_val(args.remove(1)),
+          )
+          .unwrap(),
+
         x => println!("this isn't a valid action: '{}'", x),
       },
       /*"uivonim-autocmd" => {

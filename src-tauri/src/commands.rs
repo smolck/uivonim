@@ -495,6 +495,27 @@ pub async fn restore_input(state: S<'_>) -> Result<(), ()> {
 }
 
 #[command]
+pub async fn luaeval(
+  state: S<'_>,
+  thing: &str,
+  arg: serde_json::Value, // TODO(smolck): better name?
+) -> Result<(), String> {
+  let nvim = state.nvim.lock().await;
+
+  nvim
+    .call_function(
+      "luaeval",
+      vec![
+        nvim_rs::Value::from(thing),
+        crate::helpers::json_val_to_nvim_val(arg),
+      ],
+    )
+    .await
+    .map(|_| ())
+    .map_err(|err| format!("{}", err))
+}
+
+#[command]
 pub fn get_font_bytes(font_name: &str) -> Result<Vec<u8>, String> {
   use font_kit::{handle::Handle, source::SystemSource};
 

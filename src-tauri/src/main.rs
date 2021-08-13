@@ -4,6 +4,7 @@
   windows_subsystem = "windows"
 )]
 mod commands;
+mod helpers;
 mod neovim_handler;
 
 use futures::lock::Mutex;
@@ -55,6 +56,7 @@ async fn main() {
       commands::register_one_time_use_shortcuts,
       commands::steal_input,
       commands::restore_input,
+      commands::luaeval,
     ])
     .manage(AppState {
       nvim,

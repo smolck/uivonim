@@ -39,6 +39,8 @@ const Invokables = {
   stealInput: 'steal_input',
   restoreInput: 'restore_input',
 
+  luaeval: 'luaeval',
+
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim_resize',
@@ -79,13 +81,14 @@ const Events = {
   buffersAction: 'show_buffers',
   pickColor: 'show_pick_color',
   showExplorer: 'show_explorer',
+  codeAction: 'code_action',
+
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
 
   signatureHelpAction: 'signatureHelpAction',
   signatureHelpCloseAction: 'signatureHelpCloseAction',
   referencesAction: 'referencesAction',
-  codeActionAction: 'codeActionAction',
   hoverAction: 'hoverAction',
   hoverCloseAction: 'hoverCloseAction',
   updateNameplates: 'window.refresh',
@@ -156,6 +159,8 @@ export const listenRedraw: {
   get: (events, key) => (fn: (...args: any[]) => void) =>
     tauriListen(Reflect.get(events, key), fn),
 })
+
+export const luaeval = (thing: string, args: any) => invoke.luaeval({ thing, arg: args })
 
 interface NvimState {
   mode: string // TODO(smolck): Make type for this probably?

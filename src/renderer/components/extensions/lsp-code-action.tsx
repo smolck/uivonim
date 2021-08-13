@@ -5,8 +5,8 @@ import Input from '../text-input'
 import Overlay from '../overlay'
 import { filter } from 'fuzzaldrin-plus'
 import { render } from 'inferno'
-import { Events } from '../../../common/ipc'
 import { cursor } from '../../cursor'
+import { listen, luaeval } from '../../helpers'
 
 type CodeAction = {
   title: string
@@ -101,10 +101,7 @@ const select = () => {
 
     // roundtrip through vimscript since TS dict looks like a vimscript dict
     // TODO: see if action can be converted to a Lua table to allow direct call to lua
-    window.api.luaeval(
-      "require'uivonim/lsp'.handle_chosen_code_action(_A)",
-      action
-    )
+    luaeval("require'uivonim/lsp'.handle_chosen_code_action(_A)", action)
   assignStateAndRender(resetState)
 }
 
@@ -118,7 +115,12 @@ const prev = () =>
     index: state.index - 1 < 0 ? state.actions.length - 1 : state.index - 1,
   })
 
-window.api.on(Events.codeActionAction, (actions) => {
+listen.codeAction((actions) => {
+  // TODO(smolck): I think this is necessary due to what is
+  // emitted in the code-action handler in `src-tauri/src/neovim_handler.rs` . .
+  // . why though
+  actions = actions[0]
+
   const { x, y } = windows.pixelPosition(cursor.row + 1, cursor.col)
   show({
     x,
