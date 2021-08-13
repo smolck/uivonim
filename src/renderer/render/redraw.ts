@@ -214,7 +214,11 @@ const win_close = ({ payload: [id] }: { payload: number[] }) => {
   windows.remove(id)
 }
 
-const win_float_pos = ({ payload: wins }: { payload: WinFloatPosWinInfo[] }) => {
+const win_float_pos = ({
+  payload: wins,
+}: {
+  payload: WinFloatPosWinInfo[]
+}) => {
   wins.forEach((win) => {
     // TODO(smolck): How to handle windows positioned outside editor window?
     // Clamp it to the editor width & height, or let it go outside the editor window
