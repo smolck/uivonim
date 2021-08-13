@@ -1,3 +1,5 @@
+use crate::helpers::nvim_val_to_json_val;
+
 use async_trait::async_trait;
 use core::slice::SlicePattern;
 use nvim_rs::{compat::tokio::Compat, create::tokio as create, Handler, Neovim};
@@ -520,17 +522,16 @@ impl Handler for NeovimHandler {
         "pick-color" => win.emit("show_pick_color", JsonValue::Null).unwrap(),
         "explorer" => win.emit("show_explorer", JsonValue::Null).unwrap(),
         "code-action" => win
-          .emit(
-            "code_action",
-            crate::helpers::nvim_val_to_json_val(args.remove(1)),
-          )
+          .emit("code_action", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
         "diagnostics" => win
-          .emit(
-            "lsp_diagnostics",
-            crate::helpers::nvim_val_to_json_val(args.remove(1)),
-          )
+          .emit("lsp_diagnostics", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
+        "signature-help" => win
+          .emit("signature_help", nvim_val_to_json_val(args.remove(1)))
+          .unwrap(),
+
+        "signature-help-close" => win.emit("signature_help_close", JsonValue::Null).unwrap(),
 
         x => println!("this isn't a valid action: '{}'", x),
       },

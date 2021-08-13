@@ -4,7 +4,7 @@ import Overlay from '../overlay'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import { parse as stringToMarkdown } from 'marked'
-import { Events } from '../../../common/ipc'
+import { listen } from '../../helpers'
 
 interface ShowParams {
   row: number
@@ -204,8 +204,8 @@ const show = ({
 }
 
 // See runtime/lua/uivonim.lua
-window.api.on(Events.signatureHelpAction, (_, showParams) => {
+listen.signatureHelp(([_method, showParams]) => {
   show(showParams)
 })
 
-window.api.on(Events.signatureHelpCloseAction, hide)
+listen.signatureHelpClose((_) => hide())
