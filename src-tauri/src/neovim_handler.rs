@@ -256,6 +256,7 @@ impl Handler for NeovimHandler {
             }
             "win_close" => Some(handle_all!(events, parse_win_close)),
             "win_pos" => Some(handle_all!(events, parse_win_pos)),
+            "win_float_pos" => Some(handle_all!(events, parse_win_float_pos)),
             "popupmenu_show" => {
               events[1..]
                 .iter()
@@ -584,6 +585,20 @@ fn parse_win_pos(ev: &[NvimValue]) -> JsonValue {
     ev[4].as_i64().unwrap(),
     ev[5].as_i64().unwrap(),
   ])
+}
+
+/// `ev` of the form [grid, win, anchor, anchor_grid, anchor_row, anchor_col, focusable]
+fn parse_win_float_pos(ev: &[NvimValue]) -> JsonValue {
+  let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
+  json!({
+    "gridId": ev[0].as_i64().unwrap(),
+    "winId": win_id.as_i64().unwrap(),
+    "anchor": ev[2].as_str().unwrap(),
+    "anchorGrid": ev[3].as_i64().unwrap(),
+    "anchorRow": ev[4].as_f64().unwrap(),
+    "anchorCol": ev[5].as_f64().unwrap(),
+    "focusable": ev[6].as_bool().unwrap(),
+  })
 }
 
 /// `ev` of the form [grid, width, height]
