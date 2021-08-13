@@ -404,10 +404,12 @@ sub('message.status', (msg) => assignStateAndRender({ message: msg }))
 sub('message.control', (msg) => assignStateAndRender({ controlMessage: msg }))
 
 listen.lspDiagnostics((diagnostics) => {
+  diagnostics = diagnostics[0] // TODO(smolck): See TODO at bottom of ../extensions/lsp-code-action.tsx
+
   let errors = 0
   let warnings = 0
   diagnostics.forEach((d: any) =>
-    d.severity === 1 ? (errors += 1) : d.severity === 2 ? (warnings += 1) : {}
+    d.severity === 1 ? (errors += 1) : d.severity >= 2 ? (warnings += 1) : {}
   )
   assignStateAndRender({ errors, warnings })
 })

@@ -82,6 +82,7 @@ const Events = {
   pickColor: 'show_pick_color',
   showExplorer: 'show_explorer',
   codeAction: 'code_action',
+  lspDiagnostics: 'lsp_diagnostics',
 
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
@@ -92,7 +93,6 @@ const Events = {
   hoverAction: 'hoverAction',
   hoverCloseAction: 'hoverCloseAction',
   updateNameplates: 'window.refresh',
-  lspDiagnostics: 'lspDiagnostics',
 } as const
 
 const RedrawEvents = {

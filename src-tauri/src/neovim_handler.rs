@@ -524,6 +524,12 @@ impl Handler for NeovimHandler {
             crate::helpers::nvim_val_to_json_val(args.remove(1)),
           )
           .unwrap(),
+        "diagnostics" => win
+          .emit(
+            "lsp_diagnostics",
+            crate::helpers::nvim_val_to_json_val(args.remove(1)),
+          )
+          .unwrap(),
 
         x => println!("this isn't a valid action: '{}'", x),
       },
