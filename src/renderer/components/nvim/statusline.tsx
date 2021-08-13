@@ -10,12 +10,10 @@ import { watchNvimState, listen } from '../../helpers'
 
 interface Tab {
   data: number
-  name: string
 }
 
 interface TabInfo {
   id: number
-  name: string
 }
 
 interface TabView {
@@ -386,7 +384,7 @@ watchNvimState.cwd((cwd) => {
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
-  const mtabs = tabs.map((t) => ({ id: t.data, name: t.name }))
+  const mtabs = tabs.map((t) => ({ id: t.data }))
   mtabs.length > 1
     ? assignStateAndRender({ active: curtab.data, tabs: mtabs })
     : assignStateAndRender({ active: -1, tabs: [] })

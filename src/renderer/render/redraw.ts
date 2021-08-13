@@ -64,8 +64,8 @@ const win_pos = (event: any) => {
   )
 }
 
-const win_hide = (e: any) => {
-  windows.hide(e.slice(1))
+const win_hide = (e: number[]) => {
+  windows.hide(e)
 }
 
 const grid_clear = ({ payload: [[gridId]] }: { payload: number[][] }) => {
@@ -337,9 +337,9 @@ listenRedraw.gridResize(grid_resize)
 listenRedraw.winPos(win_pos)
 listenRedraw.winFloatPos(win_float_pos)
 listenRedraw.winClose(win_close)
-listenRedraw.winHide(win_hide)
+listenRedraw.winHide(({ payload }) => win_hide(payload))
 
-listenRedraw.tablineUpdate(({ curtab, tabs }) =>
+listenRedraw.tablineUpdate(({ payload: [{ curtab, tabs }]}) =>
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 )
 listenRedraw.modeChange(({ payload: modeInfo }) => {

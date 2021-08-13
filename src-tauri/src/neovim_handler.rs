@@ -1,7 +1,6 @@
-use crate::helpers::nvim_val_to_json_val;
+use crate::helpers::{nvim_val_to_json_val, read_i64_from_ext};
 
 use async_trait::async_trait;
-use core::slice::SlicePattern;
 use nvim_rs::{compat::tokio::Compat, create::tokio as create, Handler, Neovim};
 use rmpv::Value as NvimValue;
 
@@ -259,6 +258,8 @@ impl Handler for NeovimHandler {
             "win_close" => Some(handle_all!(events, parse_win_close)),
             "win_pos" => Some(handle_all!(events, parse_win_pos)),
             "win_float_pos" => Some(handle_all!(events, parse_win_float_pos)),
+            "win_hide" => Some(handle_all!(events, parse_win_hide)),
+            "tabline_update" => Some(handle_all!(events, parse_tabline_update)),
             "popupmenu_show" => {
               events[1..]
                 .iter()
@@ -387,10 +388,6 @@ impl Handler for NeovimHandler {
               handled = true;
               None
             }
-
-            /*"win_hide" => {
-              println!("win_hide stuff: {:?}", evt[1]);
-            }*/
             "set_title" => {
               // TODO(smolck)
               println!("set title: {:?}", events);
@@ -591,11 +588,10 @@ fn parse_grid_line(ev: &[NvimValue]) -> JsonValue {
 
 /// `ev` of the form: [grid, win, start_row, start_col, width, height]
 fn parse_win_pos(ev: &[NvimValue]) -> JsonValue {
-  let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
-  println!("grid id: {}", ev[0].as_i64().unwrap());
+  let win_id = read_i64_from_ext(&ev[1]);
   json!([
     ev[0].as_i64().unwrap(),
-    win_id.as_i64().unwrap(),
+    win_id,
     ev[2].as_i64().unwrap(),
     ev[3].as_i64().unwrap(),
     ev[4].as_i64().unwrap(),
@@ -605,15 +601,50 @@ fn parse_win_pos(ev: &[NvimValue]) -> JsonValue {
 
 /// `ev` of the form [grid, win, anchor, anchor_grid, anchor_row, anchor_col, focusable]
 fn parse_win_float_pos(ev: &[NvimValue]) -> JsonValue {
-  let win_id = rmpv::decode::read_value(&mut ev[1].as_ext().unwrap().1.as_slice()).unwrap();
+  let win_id = read_i64_from_ext(&ev[1]);
   json!({
     "gridId": ev[0].as_i64().unwrap(),
-    "winId": win_id.as_i64().unwrap(),
+    "winId": win_id,
     "anchor": ev[2].as_str().unwrap(),
     "anchorGrid": ev[3].as_i64().unwrap(),
     "anchorRow": ev[4].as_f64().unwrap(),
     "anchorCol": ev[5].as_f64().unwrap(),
     "focusable": ev[6].as_bool().unwrap(),
+  })
+}
+
+/// `ev` of the form [grid]
+fn parse_win_hide(ev: &[NvimValue]) -> JsonValue {
+  json!(ev[0].as_i64().unwrap())
+}
+
+/// `ev` of the form [curtab, tabs, curbuf, buffers]
+fn parse_tabline_update(ev: &[NvimValue]) -> JsonValue {
+  let tabs = ev[1]
+    .as_array()
+    .unwrap()
+    .iter()
+    .map(|evt| {
+      // TODO(smolck): Is the first element in the map guaranteed to be the tab?
+      // If so we could skip the `.find` stuff probably.
+      let tab = evt
+        .as_map()
+        .unwrap()
+        .iter()
+        .find(|(k, _)| k.as_str().unwrap() == "tab")
+        .unwrap();
+
+      json!({
+        "data": read_i64_from_ext(&tab.1)
+      })
+    })
+    .collect::<Vec<JsonValue>>();
+
+  json!({
+    "curtab": {
+      "data": read_i64_from_ext(&ev[0]),
+    },
+    "tabs": tabs
   })
 }
 

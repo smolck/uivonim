@@ -1,3 +1,4 @@
+use core::slice::SlicePattern;
 use rmpv::Utf8String;
 use serde_json::json;
 use std::convert::TryFrom;
@@ -51,4 +52,11 @@ pub fn nvim_val_to_json_val(nvim_val: nvim_rs::Value) -> serde_json::Value {
         .collect(),
     ),
   }
+}
+
+pub fn read_i64_from_ext(ext: &nvim_rs::Value) -> i64 {
+  rmpv::decode::read_value(&mut ext.as_ext().unwrap().1.as_slice())
+    .unwrap()
+    .as_i64()
+    .unwrap()
 }

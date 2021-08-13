@@ -218,8 +218,8 @@ const updateWindowNameplates = () =>
 
 export const refresh = throttle(updateWindowNameplates, 5)
 
-export const hide = (gridIds: number[][]) =>
-  gridIds.forEach(([gridId]) => get(gridId).hide())
+export const hide = (gridIds: number[]) =>
+  gridIds.forEach((gridId) => get(gridId).hide())
 
 export const pixelPosition = (row: number, col: number) => {
   const win = windowsByGrid.get(activeGrid)
