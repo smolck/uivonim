@@ -6,7 +6,7 @@ import { simplifyPath } from '../../../common/utils'
 import { badgeStyle } from '../../ui/styles'
 import { render } from 'inferno'
 import Input from '../text-input'
-import { Events, Invokables } from '../../../common/ipc'
+import { invoke, listen, currentNvimState } from '../../helpers'
 
 type Reference = {
   lineNum: number
@@ -73,7 +73,7 @@ const selectResult = (references: Refs[], ix: number, subix: number) => {
   const [path, items] = references[ix]
   const { lineNum, column } = items[subix]
 
-  window.api.invoke(Invokables.nvimJumpTo, {
+  invoke.nvimJumpTo({
     path,
     line: lineNum - 1,
     column: column - 1,
@@ -228,7 +228,7 @@ const References = ($: S) => (
           onComponentDidMount={(e: HTMLElement) => els.set(pos, e)}
         >
           <RowHeader active={pos === $.ix}>
-            <span>{simplifyPath(path, window.api.nvimState().cwd)}</span>
+            <span>{simplifyPath(path, currentNvimState().cwd)}</span>
             <div style={{ ...badgeStyle, 'margin-left': '12px' }}>
               <span>{items.length}</span>
             </div>
@@ -271,7 +271,7 @@ const References = ($: S) => (
   </PluginRight>
 )
 
-window.api.on(Events.referencesAction, (_, items) => {
+listen.lspReferences(([items]) => {
   // TODO(smolck): Efficiency? This works but probably isn't the most
   // performant. Ideally could remove the intermediate map.
   //

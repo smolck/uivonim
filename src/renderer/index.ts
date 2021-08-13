@@ -79,7 +79,7 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
 
       require('./components/extensions/lsp-code-action')
       require('./components/extensions/lsp-hover')
-      // require('./components/extensions/lsp-references')
+      require('./components/extensions/lsp-references')
       require('./components/extensions/lsp-signature-help')
 
       require('./components/memes/nc')

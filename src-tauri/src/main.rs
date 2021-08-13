@@ -57,6 +57,7 @@ async fn main() {
       commands::steal_input,
       commands::restore_input,
       commands::luaeval,
+      commands::nvim_jump_to,
     ])
     .manage(AppState {
       nvim,

@@ -534,6 +534,9 @@ impl Handler for NeovimHandler {
           .emit("lsp_hover", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
         "hover-close" => win.emit("lsp_hover_close", JsonValue::Null).unwrap(),
+        "references" => win
+          .emit("lsp_references", nvim_val_to_json_val(args.remove(1)))
+          .unwrap(),
 
         "signature-help-close" => win.emit("signature_help_close", JsonValue::Null).unwrap(),
 

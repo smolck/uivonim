@@ -516,6 +516,31 @@ pub async fn luaeval(
 }
 
 #[command]
+pub async fn nvim_jump_to(
+  state: S<'_>,
+  line: i64,
+  column: i64,
+  path: Option<&str>,
+) -> Result<(), String> {
+  let nvim = state.nvim.lock().await;
+
+  if let Some(path) = path {
+    nvim
+      .command(&format!("e {}", path))
+      .await
+      .map_err(|err| format!("{}", err))?;
+  }
+
+  nvim
+    .get_current_win()
+    .await
+    .expect("should be able to get current window")
+    .set_cursor((line + 1, column))
+    .await
+    .map_err(|err| format!("{}", err))
+}
+
+#[command]
 pub fn get_font_bytes(font_name: &str) -> Result<Vec<u8>, String> {
   use font_kit::{handle::Handle, source::SystemSource};
 

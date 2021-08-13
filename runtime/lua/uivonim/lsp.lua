@@ -136,22 +136,30 @@ function M.hover(
   )
 end
 
-function M.references(_, method, result)
+function M.references(
+  _,
+  _ --[[method]],
+  result
+)
   if not result then
     return
   end
 
   local list = util.locations_to_items(result)
-  notify_uivonim('references', method, list)
+  notify_uivonim('references', list)
 end
 
-function M.symbols(_, method, result)
+function M.symbols(
+  _,
+  _ --[[method]],
+  result
+)
   if not result then
     return
   end
 
   -- TODO: use non-hierarchical UI element (i.e., strip filename) for documentSymbol
-  notify_uivonim('references', method, util.symbols_to_items(result))
+  notify_uivonim('references', util.symbols_to_items(result))
 end
 
 function M.code_action(_, _, actions)

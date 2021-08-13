@@ -40,6 +40,7 @@ const Invokables = {
   restoreInput: 'restore_input',
 
   luaeval: 'luaeval',
+  nvimJumpTo: 'nvim_jump_to',
 
   getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
@@ -53,7 +54,6 @@ const Invokables = {
   registerOneTimeUseShortcuts: 'register_one_time_use_shortcuts',
   nvimCmd: 'nvim_command',
   getBufferInfo: 'get_buffer_info',
-  nvimJumpTo: 'nvimJumpTo',
   expand: 'expand',
   getDirFiles: 'getDirFiles',
   getDirs: 'getDirs',
@@ -87,11 +87,11 @@ const Events = {
   signatureHelpClose: 'signature_help_close',
   lspHover: 'lsp_hover',
   lspHoverClose: 'lsp_hover_close',
+  lspReferences: 'lsp_references',
 
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
 
-  referencesAction: 'referencesAction',
   updateNameplates: 'window.refresh',
 } as const
 
