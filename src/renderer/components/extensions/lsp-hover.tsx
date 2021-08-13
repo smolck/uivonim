@@ -8,7 +8,7 @@ import { cursor } from '../../cursor'
 import { parse as stringToMarkdown, setOptions } from 'marked'
 import { render } from 'inferno'
 import { cell, size as workspaceSize } from '../../workspace'
-import { Events } from '../../../common/ipc'
+import { listen } from '../../helpers'
 
 setOptions({
   highlight: (code, lang, _) => {
@@ -94,7 +94,7 @@ const updatePosition = () => {
   render(<Hover {...state} />, container)
 }
 
-window.api.on(Events.hoverAction, (_, markdownLines) => {
+listen.lspHover(([markdownLines]) => {
   const doc = markdownLines.join('\n')
 
   const maxWidth =
@@ -108,7 +108,7 @@ window.api.on(Events.hoverAction, (_, markdownLines) => {
   show({ data: [[]], doc, maxWidth, hoverHeight: markdownLines.length })
 })
 
-window.api.on(Events.hoverCloseAction, hide)
+listen.lspHoverClose((_) => hide())
 
 sub('redraw', () => {
   if (state.visible) debounce(updatePosition, 50)

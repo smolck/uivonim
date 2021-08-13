@@ -85,7 +85,11 @@ function M.signature_help_close()
   notify_uivonim('signature-help-close')
 end
 
-function M.signature_help(_, method, result)
+function M.signature_help(
+  _,
+  _ --[[method]],
+  result
+)
   if not (result and result.signatures and result.signatures[1]) then
     print('No signature help available')
     return
@@ -97,7 +101,7 @@ function M.signature_help(_, method, result)
     return
   end
 
-  notify_uivonim('signature-help', method, show_params)
+  notify_uivonim('signature-help', show_params)
 
   -- Close autocmd
   vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim/lsp'.signature_help_close, true)")
@@ -107,7 +111,11 @@ function M.hover_close()
   notify_uivonim('hover-close')
 end
 
-function M.hover(_, method, result)
+function M.hover(
+  _,
+  _ --[[method]],
+  result
+)
   if not (result and result.contents) then
     -- TODO(smolck): Maybe let the user know somehow by telling Uivonim about it?
     return
@@ -120,7 +128,7 @@ function M.hover(_, method, result)
     return
   end
 
-  notify_uivonim('hover', method, markdown_lines)
+  notify_uivonim('hover', markdown_lines)
 
   -- Close autocmd
   vim.api.nvim_command(

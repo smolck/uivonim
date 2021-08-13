@@ -85,13 +85,13 @@ const Events = {
   lspDiagnostics: 'lsp_diagnostics',
   signatureHelp: 'signature_help',
   signatureHelpClose: 'signature_help_close',
+  lspHover: 'lsp_hover',
+  lspHoverClose: 'lsp_hover_close',
 
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
 
   referencesAction: 'referencesAction',
-  hoverAction: 'hoverAction',
-  hoverCloseAction: 'hoverCloseAction',
   updateNameplates: 'window.refresh',
 } as const
 

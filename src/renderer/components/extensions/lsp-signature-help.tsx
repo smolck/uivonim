@@ -204,7 +204,7 @@ const show = ({
 }
 
 // See runtime/lua/uivonim.lua
-listen.signatureHelp(([_method, showParams]) => {
+listen.signatureHelp(([showParams]) => {
   show(showParams)
 })
 
