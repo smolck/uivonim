@@ -530,6 +530,7 @@ impl Handler for NeovimHandler {
         "signature-help" => win
           .emit("signature_help", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
+        "signature-help-close" => win.emit("signature_help_close", JsonValue::Null).unwrap(),
         "hover" => win
           .emit("lsp_hover", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
@@ -537,8 +538,15 @@ impl Handler for NeovimHandler {
         "references" => win
           .emit("lsp_references", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
-
-        "signature-help-close" => win.emit("signature_help_close", JsonValue::Null).unwrap(),
+        "git_branch" => win
+          .emit(
+            "git_branch",
+            args.remove(1).as_array().unwrap()[0].as_str().unwrap(),
+          )
+          .unwrap(),
+        "git_status" => win
+          .emit("git_status", nvim_val_to_json_val(args.remove(1)))
+          .unwrap(),
 
         x => println!("this isn't a valid action: '{}'", x),
       },

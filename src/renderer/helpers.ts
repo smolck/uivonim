@@ -64,8 +64,8 @@ const Events = {
 
   shortcut: 'shortcut',
 
-  gitOnStatus: 'git_on_status',
-  gitOnBranch: 'git_on_branch',
+  gitStatus: 'git_status',
+  gitBranch: 'git_branch',
 
   invokeHandlersReady: 'invokeHandlersReady',
   homeDir: 'homeDir',

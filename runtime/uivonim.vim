@@ -100,6 +100,12 @@ hi! link uvnCursor Cursor
 " Create autocmds
 aug UivonimAU
   au BufAdd,BufEnter,BufDelete,BufUnload,BufWipeout,FileType,ColorScheme,DirChanged * call rpcnotify(0, 'uivonim-state', UivonimState())
+
+  au DirChanged * lua (function() local git = require'uivonim/git'; git.notify_branch(); git.notify_status() end)()
+  " TODO(smolck): Good autocmd for updating this? Or is there a better one? Or
+  " . . .
+  au BufWrite * lua require'uivonim/git'.notify_status()
+
   " au BufEnter * call rpcnotify(0, 'uivonim-autocmd', 'BufEnter', expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates'))
   " au BufWipeout * call rpcnotify(0, 'uivonim-autocmd', 'BufWipeout', expand('<abuf>'))
   " au BufWritePost * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePost', expand('<abuf>'))

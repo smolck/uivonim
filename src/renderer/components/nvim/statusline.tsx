@@ -392,8 +392,8 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer; tabs: Tab[] }) => {
     : assignStateAndRender({ active: -1, tabs: [] })
 })
 
-listen.gitOnBranch((branch) => assignStateAndRender({ branch }))
-listen.gitOnStatus((status) =>
+listen.gitBranch((branch) => assignStateAndRender({ branch }))
+listen.gitStatus(([status]) =>
   assignStateAndRender({
     additions: status.additions,
     deletions: status.deletions,
