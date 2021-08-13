@@ -1,7 +1,7 @@
 local M = {}
 
 function M.notify_uivonim(message, ...)
-  vim.rpcnotify(0, 'uivonim', message, {...})
+  vim.rpcnotify(0, 'uivonim', message, { ... })
 end
 
 function M.disable_default_shortcuts()

@@ -160,7 +160,8 @@ export const listenRedraw: {
     tauriListen(Reflect.get(events, key), fn),
 })
 
-export const luaeval = (thing: string, args: any) => invoke.luaeval({ thing, arg: args })
+export const luaeval = (thing: string, args: any) =>
+  invoke.luaeval({ thing, arg: args })
 
 interface NvimState {
   mode: string // TODO(smolck): Make type for this probably?
@@ -231,7 +232,10 @@ listen.shortcut(({ payload: shortcut }) => {
 // are any open?
 let stolenInputListener = (_keys: string) => {}
 export const stealInput = async (cb: (keys: string) => void) => {
-  await tauriListen('input_stolen_key_pressed', ({ payload: keys }: { payload: string }) => stolenInputListener(keys))
+  await tauriListen(
+    'input_stolen_key_pressed',
+    ({ payload: keys }: { payload: string }) => stolenInputListener(keys)
+  )
   stolenInputListener = cb
 
   await invoke.stealInput({})

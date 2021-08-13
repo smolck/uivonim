@@ -1,6 +1,6 @@
 local M = {}
 local util = vim.lsp.util
-local notify_uivonim = require'uivonim'.notify_uivonim
+local notify_uivonim = require('uivonim').notify_uivonim
 
 local function get_cursor_pos()
   local pos = vim.api.nvim_win_get_cursor(0)
@@ -37,7 +37,9 @@ local function signature_help_to_show_params(signature_help)
   show_params.totalSignatures = #signature_help.signatures
   show_params.selectedSignature = active_signature
   show_params.label = signature.label
-  show_params.documentation = (signature.documentation and signature.documentation.value) or signature.documentation or ''
+  show_params.documentation = (signature.documentation and signature.documentation.value)
+    or signature.documentation
+    or ''
 
   if signature.parameters and #signature.parameters > 0 then
     local active_parameter = signature_help.activeParameter or 0
@@ -127,14 +129,18 @@ function M.hover(_, method, result)
 end
 
 function M.references(_, method, result)
-  if not result then return end
+  if not result then
+    return
+  end
 
   local list = util.locations_to_items(result)
   notify_uivonim('references', method, list)
 end
 
 function M.symbols(_, method, result)
-  if not result then return end
+  if not result then
+    return
+  end
 
   -- TODO: use non-hierarchical UI element (i.e., strip filename) for documentSymbol
   notify_uivonim('references', method, util.symbols_to_items(result))
@@ -142,7 +148,7 @@ end
 
 function M.code_action(_, _, actions)
   if actions == nil or vim.tbl_isempty(actions) then
-    print("No code actions available")
+    print('No code actions available')
     return
   end
 
@@ -150,13 +156,13 @@ function M.code_action(_, _, actions)
 end
 
 function M.handle_chosen_code_action(action_chosen)
-  local buf = require'vim.lsp.buf'
+  local buf = require('vim.lsp.buf')
 
-  if action_chosen.edit or type(action_chosen.command) == "table" then
+  if action_chosen.edit or type(action_chosen.command) == 'table' then
     if action_chosen.edit then
       util.apply_workspace_edit(action_chosen.edit)
     end
-    if type(action_chosen.command) == "table" then
+    if type(action_chosen.command) == 'table' then
       buf.execute_command(action_chosen.command)
     end
   else
@@ -190,13 +196,13 @@ function M.on_publish_diagnostics(thing1, thing2, params, client_id, thing5, con
 end
 
 M.callbacks = {
-  ['textDocument/signatureHelp'] = M.signature_help;
-  ['textDocument/hover'] = M.hover;
-  ['textDocument/references'] = M.references;
-  ['textDocument/codeAction'] = M.code_action;
-  ['textDocument/documentSymbol'] = M.symbols;
-  ['textDocument/publishDiagnostics'] = M.on_publish_diagnostics;
-  ['workspace/symbol'] = M.symbols;
+  ['textDocument/signatureHelp'] = M.signature_help,
+  ['textDocument/hover'] = M.hover,
+  ['textDocument/references'] = M.references,
+  ['textDocument/codeAction'] = M.code_action,
+  ['textDocument/documentSymbol'] = M.symbols,
+  ['textDocument/publishDiagnostics'] = M.on_publish_diagnostics,
+  ['workspace/symbol'] = M.symbols,
 }
 
 return M
