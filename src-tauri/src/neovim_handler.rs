@@ -544,15 +544,11 @@ impl Handler for NeovimHandler {
         "git_status" => win
           .emit("git_status", nvim_val_to_json_val(args.remove(1)))
           .unwrap(),
-
+        "update-window-nameplates" => win
+          .emit("update_window_nameplates", JsonValue::Null)
+          .unwrap(),
         x => println!("this isn't a valid action: '{}'", x),
       },
-      /*"uivonim-autocmd" => {
-          let autocmd = args[0].as_str().unwrap();
-          match autocmd {
-
-          }
-      }*/
       _ => println!("don't handle this notification yet: {:?}, {:?}", name, args),
     }
   }

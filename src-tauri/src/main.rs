@@ -58,6 +58,7 @@ async fn main() {
       commands::restore_input,
       commands::luaeval,
       commands::nvim_jump_to,
+      commands::get_window_metadata,
     ])
     .manage(AppState {
       nvim,

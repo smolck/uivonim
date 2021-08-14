@@ -106,7 +106,7 @@ aug UivonimAU
   " . . .
   au BufWrite * lua require'uivonim/git'.notify_status()
 
-  " au BufEnter * call rpcnotify(0, 'uivonim-autocmd', 'BufEnter', expand('<abuf>'), rpcnotify(0, 'uivonim', 'update-nameplates'))
+  au BufEnter,VimEnter,WinNew,WinEnter * call rpcnotify(0, 'uivonim', 'update-window-nameplates')
   " au BufWipeout * call rpcnotify(0, 'uivonim-autocmd', 'BufWipeout', expand('<abuf>'))
   " au BufWritePost * call rpcnotify(0, 'uivonim-autocmd', 'BufWritePost', expand('<abuf>'))
   " au OptionSet * if (&ro != 1) | call rpcnotify(0, 'uivonim-autocmd', 'OptionSet', expand('<amatch>'), v:option_new, v:option_old) | endif

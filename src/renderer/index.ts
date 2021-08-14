@@ -104,7 +104,7 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
   listen.nvimShowMessage((...args: any[]) =>
     require('./components/nvim/messages').default.show(...args)
   )
-  listen.updateNameplates(windows.refresh)
+  listen.updateWindowNameplates(windows.refresh)
   // TODO(smolck): ??? -> listen.nvimMessageStatus((..._args) => {})
 
   document.onclick = (e) => {

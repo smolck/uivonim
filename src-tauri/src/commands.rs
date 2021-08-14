@@ -1,11 +1,10 @@
-use core::slice::SlicePattern;
+use crate::helpers::read_i64_from_ext;
 use std::path::Path;
 
 use nvim_rs::error::CallError;
 use tauri::command;
 
 use rmpv::Value as rmpvVal;
-use std::collections::HashSet;
 
 use serde::Serialize;
 use serde_json::{json, map::Map};
@@ -148,21 +147,12 @@ pub async fn get_buffer_info(state: S<'_>) -> Result<Vec<BufferInfo>, String> {
     .get_current_buf()
     .await
     .map_err(|err| format!("{}", err))?;
-  let curr_buf_id =
-    rmpv::decode::read_value(&mut curr_buf_id.get_value().as_ext().unwrap().1.as_slice())
-      .unwrap()
-      .as_i64()
-      .unwrap();
+  let curr_buf_id = read_i64_from_ext(&curr_buf_id.get_value());
 
   Ok(
     stream::iter(buffers)
       .filter_map(|b: nvim_rs::Buffer<_>| async move {
-        let is_current =
-          rmpv::decode::read_value(&mut b.get_value().as_ext().unwrap().1.as_slice())
-            .unwrap()
-            .as_i64()
-            .unwrap()
-            == curr_buf_id;
+        let is_current = read_i64_from_ext(&b.get_value()) == curr_buf_id;
         if !b.get_option("buflisted").await.unwrap().as_bool().unwrap() && is_current {
           None
         } else {
@@ -539,6 +529,72 @@ pub async fn nvim_jump_to(
     .set_cursor((line + 1, column))
     .await
     .map_err(|err| format!("{}", err))
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowMetadata {
+  id: i64,
+  filetype: String,
+  name: String,
+  term_format: String,
+  modified: bool,
+  active: bool,
+  terminal: bool,
+  term_attached: bool,
+}
+
+#[command]
+pub async fn get_window_metadata(state: S<'_>) -> Result<Vec<WindowMetadata>, String> {
+  let nvim = state.nvim.lock().await;
+  let active_win = nvim
+    .get_current_win()
+    .await
+    .map_err(|err| format!("{}", err))?;
+  let active_win_id = read_i64_from_ext(active_win.get_value());
+  let wins = nvim.list_wins().await.map_err(|err| format!("{}", err))?;
+
+  Ok(
+    stream::iter(wins)
+      .then(|w: nvim_rs::Window<_>| async move {
+        let buf = w.get_buf().await.unwrap();
+        let win_id = read_i64_from_ext(w.get_value());
+
+        let name = if let Some(fname) = Path::new(&buf.get_name().await.unwrap()).file_name() {
+          fname.to_str().unwrap().to_string()
+        } else {
+          "".to_string()
+        };
+
+        WindowMetadata {
+          name,
+          id: win_id,
+          active: active_win_id == win_id,
+          filetype: buf.get_option("filetype").await.unwrap().to_string(),
+          /*name: (simplifyPath(await buffer.name, nvim.state.cwd) || '').replace(
+            /^term:\/\/\.\/\/\w+:/,
+            ''
+          )*/
+          // TODO(smolck): ^^^^ from TS
+          modified: buf.get_option("modified").await.unwrap().as_bool().unwrap(),
+          terminal: buf.get_option("buftype").await.unwrap().as_str().unwrap() == "terminal",
+
+          // TODO(smolck): Do these even work anymore?
+          term_attached: if let Ok(var) = buf.get_var("veonim_term_attached").await {
+            var.as_bool().unwrap()
+          } else {
+            false
+          },
+          term_format: if let Ok(var) = buf.get_var("veonim_term_format").await {
+            var.as_str().unwrap().to_string()
+          } else {
+            "".to_string()
+          },
+        }
+      })
+      .collect::<Vec<_>>()
+      .await,
+  )
 }
 
 #[command]

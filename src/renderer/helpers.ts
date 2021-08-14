@@ -42,7 +42,7 @@ const Invokables = {
   luaeval: 'luaeval',
   nvimJumpTo: 'nvim_jump_to',
 
-  getWindowMetadata: 'nvim.instanceApi.getWindowMetadata',
+  getWindowMetadata: 'get_window_metadata',
   winGetAndSetSize: 'nvim.winGetAndSetSize',
   nvimResize: 'nvim_resize',
   nvimResizeGrid: 'nvim_resize_grid',
@@ -89,10 +89,9 @@ const Events = {
   lspHoverClose: 'lsp_hover_close',
   lspReferences: 'lsp_references',
 
+  updateWindowNameplates: 'update_window_nameplates',
   // TODO(smolck): (See TODO at end of components/extensions/color-picker.tsx)
   // modifyColorschemeLive: 'modify_colorscheme_live',
-
-  updateNameplates: 'window.refresh',
 } as const
 
 const RedrawEvents = {

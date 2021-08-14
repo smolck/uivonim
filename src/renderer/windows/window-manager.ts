@@ -5,8 +5,8 @@ import { onElementResize } from '../ui/vanilla'
 import * as workspace from '../workspace'
 import { throttle } from '../../common/utils'
 import windowSizer from '../windows/sizer'
-import { Events } from '../../common/ipc'
-import { listen } from '@tauri-apps/api/event'
+import { WindowMetadata } from '../../common/types'
+import { listen, invoke } from '../helpers'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -212,8 +212,8 @@ export const layout = () => {
 
 const updateWindowNameplates = () =>
   requestAnimationFrame(async () => {
-    const windowsWithMetadata = await window.api.getWindowMetadata()
-    windowsWithMetadata.forEach((w) => getWindowById(w.id).updateNameplate(w))
+    const windowsWithMetadata = await invoke.getWindowMetadata({})
+    windowsWithMetadata.forEach((w: WindowMetadata) => getWindowById(w.id).updateNameplate(w))
   })
 
 export const refresh = throttle(updateWindowNameplates, 5)
@@ -262,7 +262,7 @@ onElementResize(webglContainer, (w, h) => {
   }
 })
 
-listen(Events.colorschemeStateUpdated, () =>
+listen.colorschemeStateUpdated(() =>
   requestAnimationFrame(() => {
     webgl.clearAll()
     for (const [_, win] of windowsByGrid) {
