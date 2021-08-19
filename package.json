@@ -37,7 +37,7 @@
     "inferno": "^7.4.8",
     "marked": "^3.0.0",
     "neovim": "^4.10.0",
-    "ts-node": "^10.2.0",
+    "ts-node": "^10.2.1",
     "twgl.js": "^4.19.2"
   },
   "devDependencies": {
