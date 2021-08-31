@@ -157,6 +157,34 @@
           transform: rotate(360deg);
         }
       }
+
+      #workspace {
+        display: flex;
+        flex: 1;
+        position: relative;
+        background: var(--background-30);
+      }
+
+      #webgl {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        z-index: 2;
+        background: var(--background);
+      }
+
+      #windows {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        z-index: 5;
+        display: grid;
+        justify-items: stretch;
+        align-items: stretch;
+        background: none;
+      }
     </style>
   </head>
   <body>

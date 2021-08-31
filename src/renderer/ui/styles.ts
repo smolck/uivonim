@@ -15,7 +15,7 @@ import {
 import { sub } from '../dispatch'
 import { css } from '../ui/uikit'
 import { setCursorColor } from '../cursor'
-import { invoke } from '../helpers'
+// import { invoke } from '../helpers'
 
 // this will return a var like '244, 120, 042'
 // then we can use this var in rgba color styles

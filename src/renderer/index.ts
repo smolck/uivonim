@@ -1,28 +1,30 @@
+import Workspace from './workspace'
+import WindowManager from './windows/window-manager'
+import FontAtlas from './render/font-texture-atlas'
+import RedrawHandler from './render/redraw'
 import * as dispatch from './dispatch'
 import { CanvasKit } from 'canvaskit-wasm'
 import { /*debounce,*/ merge } from '../common/utils'
-import { invoke, listen, setCanvasKit } from './helpers'
+import { invoke, listen } from './helpers'
 
-const CanvasKitInit = require('canvaskit-wasm/bin/canvaskit.js')
-CanvasKitInit().then((CanvasKit: CanvasKit) => {
-  setCanvasKit(CanvasKit)
+const CanvasKitInit = require('canvaskit-wasm/bin/full/canvaskit.js')
+CanvasKitInit().then(async (CanvasKit: CanvasKit) => {
+  const workspace = new Workspace(CanvasKit)
+  workspace.setFontToDefault()
 
-  // TODO(smolck): Yes this is done on purpose, and yes I should probably
-  // clean this up: basically, these need to be loaded after canvaskit,
-  // so that's why they're (untyped :( ) requires.
-  const workspace = require('./workspace')
-  const { forceRegenerateFontAtlas } = require('./render/font-texture-atlas')
-  const windows = require('./windows/window-manager')
+  const fontAtlas = new FontAtlas(workspace, CanvasKit)
+  const windowManager = new WindowManager(workspace, fontAtlas)
+  const redrawHandler = new RedrawHandler(windowManager, fontAtlas, workspace)
 
   window
     .matchMedia('screen and (min-resolution: 2dppx)')
     .addEventListener('change', () => {
-      const atlas = forceRegenerateFontAtlas()
-      windows.webgl.updateFontAtlas(atlas)
-      windows.webgl.updateCellSize()
+      const atlas = fontAtlas.forceRegenerateFontAtlas()
+      windowManager.renderer.updateFontAtlas(atlas)
+      windowManager.renderer.updateCellSize()
       workspace.resize()
-      windows.resetAtlasBounds()
-      windows.refreshWebGLGrid()
+      windowManager.resetAtlasBounds()
+      windowManager.refreshWebGLGrid()
 
       // TODO(smolck): Is this still relevant? See handler code in src/main/main.ts
       // TODO: idk why i have to do this but this works
@@ -53,12 +55,10 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
 
   // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
   // individually once we get ext_windows working
-  workspace.onResize(({ rows, cols }) => invoke.nvimResize({ cols, rows }))
+  // workspace.onResize(({ rows, cols }) => invoke.nvimResize({ cols, rows }))
   workspace.resize()
 
-  requestAnimationFrame(() => {
-    require('./render/redraw')
-
+  /*requestAnimationFrame(() => {
     // high priority components
     requestAnimationFrame(() => {
       // Focus textarea at start of application to receive input right away.
@@ -84,7 +84,7 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
 
       require('./components/memes/nc')
     }, 600)
-  })
+  })*/
 
   const pluginsContainer = document.getElementById('plugins') as HTMLElement
   merge(pluginsContainer.style, {
@@ -104,7 +104,7 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
   listen.nvimShowMessage((...args: any[]) =>
     require('./components/nvim/messages').default.show(...args)
   )
-  listen.updateWindowNameplates(windows.refresh)
+  listen.updateWindowNameplates(windowManager.updateWindowNameplates)
   // TODO(smolck): ??? -> listen.nvimMessageStatus((..._args) => {})
 
   document.onclick = (e) => {
@@ -132,4 +132,9 @@ CanvasKitInit().then((CanvasKit: CanvasKit) => {
       invoke.documentOnInput({ data: e.data }).catch((_e) => invoke.quit({}))
     }
   }
+
+  redrawHandler.setupHandlers()
+  setTimeout(() => {
+    invoke.attachUi({ height: workspace.size.rows, width: workspace.size.cols })
+  }, 1)
 })

@@ -1,19 +1,13 @@
-import { merge, throttle } from '../common/utils'
+import { throttle } from '../common/utils'
 import robotoSizes from '../common/roboto-sizes'
 import { EventEmitter } from 'events'
 import { setVar } from './ui/css'
-import { invoke, canvasKit } from './helpers'
-import { Font as CkFont } from 'canvaskit-wasm'
+import { invoke } from './helpers'
+import { Font as CkFont, CanvasKit } from 'canvaskit-wasm'
 
-const ck = canvasKit()
-let ckFont: CkFont
-export const getCkFont = () => {
-  if (!ckFont) {
-    throw new Error("yo we need this ckFont")
-  }
-
-  return ckFont
-}
+const DEFAULT_FONT = 'JetBrains Mono'
+const DEFAULT_FONT_SIZE = 14
+const DEFAULT_LINESPACE = 14 / 2
 
 interface UpdateEditorFontParams {
   face?: string
@@ -38,156 +32,156 @@ export interface Pad {
   y: number
 }
 
-const ee = new EventEmitter()
-const container = document.getElementById('workspace') as HTMLElement
-const sandboxCanvas = document.createElement('canvas')
-const canvas = sandboxCanvas.getContext('2d', {
-  alpha: false,
-}) as CanvasRenderingContext2D
-const DEFAULT_FONT = 'JetBrains Mono'
-const DEFAULT_FONT_SIZE = 14
-const DEFAULT_LINESPACE = 14 / 2
-
-merge(container.style, {
-  display: 'flex',
-  flex: '1',
-  position: 'relative',
-  background: 'var(--background-30)',
-})
-
-export const font: Font = {
-  face: DEFAULT_FONT,
-  size: DEFAULT_FONT_SIZE,
-  lineSpace: DEFAULT_LINESPACE,
+interface Size {
+  rows: number
+  cols: number
+  width: number
+  height: number
 }
 
-export const pad: Pad = {
-  x: 4,
-  y: 8,
-}
+export default class Workspace {
+  readonly font: CkFont
+  readonly fontDesc: Font
+  readonly ee: EventEmitter
+  readonly size: Size
+  readonly cell: Cell
+  readonly container: HTMLElement
+  readonly canvasKitRef: CanvasKit
+  readonly pad: Pad
 
-export const cell: Cell = {
-  width: 0,
-  height: 0,
-  padding: 0,
-}
+  constructor(CanvasKit: CanvasKit) {
+    this.pad = {
+      x: 4,
+      y: 8,
+    }
+    this.canvasKitRef = CanvasKit
+    this.fontDesc = {
+      face: DEFAULT_FONT,
+      size: DEFAULT_FONT_SIZE,
+      lineSpace: DEFAULT_LINESPACE,
+    }
+    this.ee = new EventEmitter()
+    this.font = new CanvasKit.Font()
+    this.cell = {
+      width: 0,
+      height: 0,
+      padding: 0,
+    }
+    this.size = {
+      rows: 0,
+      cols: 0,
+      height: 0,
+      width: 0,
+    }
 
-export const size = {
-  rows: 0,
-  cols: 0,
-  height: 0,
-  width: 0,
-  get nameplateHeight() {
-    return cell.height + 4
-  },
-}
-
-const getCharWidth = (font: string, size: number): number => {
-  let width = canvas.measureText('m').width
-  if (ckFont) {
-    const id = ckFont.getGlyphIDs('m')[0]
-    width = ckFont.getGlyphWidths([id])[0]
+    this.container = document.getElementById('workspace')!
   }
 
-  const possibleSize = Math.floor(width)
-  // roboto mono is built-in. because font-loading is a bit slow,
-  // we have precomputed most common font sizes in advance
-  if (font !== DEFAULT_FONT && (size > 3 || size < 54)) return possibleSize
+  setFontToDefault() {
+    this.setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, this.fontDesc.lineSpace)
+    setTimeout(() => this.resize(), 1)
+  }
 
-  const floatWidth = Reflect.get(robotoSizes, size + '')
-  return floatWidth || possibleSize
-}
+  get nameplateHeight() {
+    return this.cell.height + 4
+  }
 
-const setFont = (face: string, size: number, lineSpace: number) => {
-  invoke.getFontBytes({ fontName: face }).then((bytes) => {
-    const bytesArr = new Uint8Array(bytes)
-    ckFont = new ck.Font(
-      ck.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer))
+  resize() {
+    const { width, height } = this.container.getBoundingClientRect()
+    this.size.height = height
+    this.size.width = width
+    this.size.rows = Math.floor(height / this.cell.height) - 1
+    this.size.cols = Math.floor(width / this.cell.width) - 2
 
-    ckFont.setSize(size)
-    ckFont.setSubpixel(true)
-    /* const canvas = document.createElement('canvas')
-    const ckSurface = ck.MakeCanvasSurface(canvas)!
-    const paint = new ck.Paint()
-    ckFont.setSize(25)
-    paint.setColor(ck.WHITE)
-    paint.setAntiAlias(true)
-    ckSurface.getCanvas().drawText('wassup yo??', 50, 50, paint, ckFont)
-    ckSurface.flush()
-    document.body.appendChild(canvas)*/
-    // ckSurface.getCanvas().drawText('hello y\'all', 50, 50, paint, ckFont)
-    // ckSurface.flush()
+    this.ee.emit('resize', this.size)
+  }
 
-    Object.assign(cell, {
-      width: getCharWidth(face, size),
+  setupResizeHandler() {
+    window.addEventListener(
+      'resize',
+      throttle(() => this.resize(), 150)
+    )
+  }
+
+  getCharWidth(font: string, size: number) {
+    const id = this.font.getGlyphIDs('m')[0]
+    const width = this.font.getGlyphWidths([id])[0]
+
+    const possibleSize = Math.floor(width)
+    // roboto mono is built-in. because font-loading is a bit slow,
+    // we have precomputed most common font sizes in advance
+    if (font !== DEFAULT_FONT && (size > 3 || size < 54)) return possibleSize
+
+    const floatWidth = Reflect.get(robotoSizes, size + '')
+    return floatWidth || possibleSize
+  }
+
+  private async setFont(face: string, size: number, lineSpace: number) {
+    try {
+      const bytes = await invoke.getFontBytes({ fontName: face })
+      const bytesArr = new Uint8Array(bytes)
+      this.font.setTypeface(this.canvasKitRef.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer))
+    } catch (e) {
+      console.error(`couldn't set font to ${face}, '${e}'`)
+    }
+
+    this.font.setSize(size)
+    // TODO(smolck): this.font.setSubpixel(true)
+      /* const canvas = document.createElement('canvas')
+      const ckSurface = ck.MakeCanvasSurface(canvas)!
+      const paint = new ck.Paint()
+      ckFont.setSize(25)
+      paint.setColor(ck.WHITE)
+      paint.setAntiAlias(true)
+      ckSurface.getCanvas().drawText('wassup yo??', 50, 50, paint, ckFont)
+      ckSurface.flush()
+      document.body.appendChild(canvas)*/
+      // ckSurface.getCanvas().drawText('hello y\'all', 50, 50, paint, ckFont)
+      // ckSurface.flush()
+
+    Object.assign(this.cell, {
+      width: this.getCharWidth(face, size),
       height: Math.floor(size + lineSpace),
     })
-  }).catch((err) => console.error('setFont error: ', err))
 
-  setVar('font', face)
-  setVar('font-size', size)
-  setVar('line-height', lineSpace / size)
+    setVar('font', face)
+    setVar('font-size', size)
+    setVar('line-height', lineSpace / size)
 
-  canvas.font = `${size}px ${face}`
+    Object.assign(this.fontDesc, { face, size, lineSpace })
+    Object.assign(this.cell, {
+      width: this.getCharWidth(face, size),
+      height: Math.floor(size + lineSpace),
+    })
 
-  Object.assign(font, { face, size, lineSpace })
+    this.pad.x = Math.round(this.cell.width / 2)
+    this.pad.y = this.pad.x + 4
 
-  Object.assign(cell, {
-    width: getCharWidth(face, size),
-    height: Math.floor(size + lineSpace),
-  })
+    this.cell.padding = Math.floor((this.cell.height - this.fontDesc.size) / 2)
+  }
 
-  pad.x = Math.round(cell.width / 2)
-  pad.y = pad.x + 4
+  async updateEditorFont({
+    size,
+    lineSpace,
+    face,
+  }: UpdateEditorFontParams) {
+    const fontFace = face || DEFAULT_FONT
+    const fontSize =
+      !size || isNaN(size) ? (face ? this.fontDesc.size : DEFAULT_FONT_SIZE) : size
+    const fontLineSpace =
+      !lineSpace || isNaN(lineSpace) ? DEFAULT_LINESPACE : lineSpace
 
-  cell.padding = Math.floor((cell.height - font.size) / 2)
+    const same =
+      this.fontDesc.face === fontFace &&
+      this.fontDesc.size === fontSize &&
+      this.fontDesc.lineSpace === fontLineSpace
+
+    if (same) return false
+    await this.setFont(fontFace, fontSize, fontLineSpace)
+    return true
+  }
+
+  onResize(fn: (size: { rows: number; cols: number }) => void) {
+    this.ee.on('resize', fn)
+  }
 }
-
-export const updateEditorFont = ({
-  size,
-  lineSpace,
-  face,
-}: UpdateEditorFontParams) => {
-  const fontFace = face || DEFAULT_FONT
-  const fontSize =
-    !size || isNaN(size) ? (face ? font.size : DEFAULT_FONT_SIZE) : size
-  const fontLineSpace =
-    !lineSpace || isNaN(lineSpace) ? DEFAULT_LINESPACE : lineSpace
-
-  const same =
-    font.face === fontFace &&
-    font.size === fontSize &&
-    font.lineSpace === fontLineSpace
-
-  if (same) return false
-  setFont(fontFace, fontSize, fontLineSpace)
-  return true
-}
-
-export const resize = () => {
-  const { width, height } = container.getBoundingClientRect()
-  merge(size, {
-    height,
-    width,
-    rows: Math.floor(height / cell.height) - 1,
-    cols: Math.floor(width / cell.width) - 2,
-  })
-
-  ee.emit('resize', size)
-}
-
-export const redoResize = (rows: number, cols: number) => {
-  merge(size, { rows, cols })
-  ee.emit('resize', size)
-}
-
-export const onResize = (fn: (size: { rows: number; cols: number }) => void) =>
-  ee.on('resize', fn)
-
-setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, font.lineSpace)
-setTimeout(() => resize(), 1)
-
-window.addEventListener(
-  'resize',
-  throttle(() => resize(), 150)
-)

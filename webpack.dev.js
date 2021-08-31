@@ -69,7 +69,7 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
-        { from: path.resolve(__dirname, 'node_modules/canvaskit-wasm/bin/canvaskit.wasm') }
+        { from: path.resolve(__dirname, 'node_modules/canvaskit-wasm/bin/full/canvaskit.wasm') }
       ]
     })
   ],

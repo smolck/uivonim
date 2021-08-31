@@ -1,9 +1,8 @@
 import CreateWebGLBuffer from './grid-buffer'
-import { cursor as cursorState } from '../../cursor'
-import { getActiveGridId } from '../../windows/window-manager'
+import Workspace from '../../workspace'
+import FontAtlas from '../font-texture-atlas'
+import Cursor from '../../cursor'
 import { getColorAtlas } from '../highlight-attributes'
-import generateFontAtlas from '../font-texture-atlas'
-import { cell } from '../../workspace'
 import { CursorShape } from '../../../common/types'
 import * as twgl from 'twgl.js'
 // @ts-ignore
@@ -40,7 +39,9 @@ export interface WebGLView {
   resetAtlasBounds: () => void
 }
 
-const createRenderer = () => {
+const createRenderer = (fontAtlas: FontAtlas, workspace: Workspace) => {
+  let cursorSize = 20
+
   const canvas = document.createElement('canvas') as HTMLCanvasElement
   const gl = canvas.getContext('webgl', {
     alpha: true,
@@ -91,8 +92,8 @@ const createRenderer = () => {
     colorAtlasResolution: [colorAtlas.width, colorAtlas.height],
     fontAtlasTextureId: 0,
     colorAtlasTextureId: colorAtlasTex,
-    cellSize: [cell.width, cell.height],
-    cellPadding: [0, cell.padding],
+    cellSize: [workspace.cell.width, workspace.cell.height],
+    cellPadding: [0, workspace.cell.padding],
 
     hlidType: 0,
 
@@ -105,14 +106,14 @@ const createRenderer = () => {
 
   // wait for roboto-mono to be loaded before we generate the initial font atlas
   ;(document as any).fonts.ready.then(() => {
-    const fontAtlas = generateFontAtlas()
-    const fontAtlasWidth = Math.floor(fontAtlas.width / window.devicePixelRatio)
+    const atlas = fontAtlas.getFontAtlasAndMaybeUpdate() // TODO(smolck): forceRegenerate... ?
+    const fontAtlasWidth = Math.floor(atlas.width / window.devicePixelRatio)
     const fontAtlasHeight = Math.floor(
-      fontAtlas.height / window.devicePixelRatio
+      atlas.height / window.devicePixelRatio
     )
 
     Object.assign(uniforms, {
-      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, { src: fontAtlas }),
+      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, { src: atlas }),
       fontAtlasResolution: [fontAtlasWidth, fontAtlasHeight],
     })
   })
@@ -185,23 +186,24 @@ const createRenderer = () => {
     new Float32Array([
       0,
       0,
-      cell.width,
-      cell.height,
+      workspace.cell.width,
+      workspace.cell.height,
       0,
-      cell.height,
-      cell.width,
+      workspace.cell.height,
+      workspace.cell.width,
       0,
-      cell.width,
-      cell.height,
+      workspace.cell.width,
+      workspace.cell.height,
       0,
       0,
     ]),
     gl.STATIC_DRAW
   )
 
-  const updateCellSize = (initial = false, cursorSize = 20) => {
-    const w = cell.width
-    const h = cell.height
+  const updateCellSize = (initial = false, sizeOfCursor = 20) => {
+    cursorSize = sizeOfCursor
+    const w = workspace.cell.width
+    const h = workspace.cell.height
     const smallerW = w * (cursorSize / 100.0)
     const percentH = h * (cursorSize / 100.0)
 
@@ -285,7 +287,7 @@ const createRenderer = () => {
       ]),
     }
 
-    uniforms.cellSize = [cell.width, cell.height]
+    uniforms.cellSize = [workspace.cell.width, workspace.cell.height]
     if (!initial) Object.assign(quads, next)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
@@ -294,14 +296,14 @@ const createRenderer = () => {
       new Float32Array([
         0,
         0,
-        cell.width,
-        cell.height,
+        workspace.cell.width,
+        workspace.cell.height,
         0,
-        cell.height,
-        cell.width,
+        workspace.cell.height,
+        workspace.cell.width,
         0,
-        cell.width,
-        cell.height,
+        workspace.cell.width,
+        workspace.cell.height,
         0,
         0,
       ]),
@@ -309,8 +311,8 @@ const createRenderer = () => {
     )
 
     Object.assign(uniforms, {
-      cellSize: [cell.width, cell.height],
-      cellPadding: [0, cell.padding],
+      cellSize: [workspace.cell.width, workspace.cell.height],
+      cellPadding: [0, workspace.cell.padding],
     })
     return next
   }
@@ -440,13 +442,13 @@ const createRenderer = () => {
     renderFg()
   }
 
-  const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
-    const width = Math.floor(fontAtlas.width / window.devicePixelRatio)
-    const height = Math.floor(fontAtlas.height / window.devicePixelRatio)
+  const updateFontAtlas = (atlas: HTMLCanvasElement) => {
+    const width = Math.floor(atlas.width / window.devicePixelRatio)
+    const height = Math.floor(atlas.height / window.devicePixelRatio)
     Object.assign(uniforms, {
       fontAtlasResolution: [width, height],
       fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, {
-        src: fontAtlas,
+        src: atlas,
       }),
     })
   }
@@ -503,10 +505,14 @@ const createRenderer = () => {
   }
 }
 
-const nutella = () => {
+const nutella = (fontAtlas: FontAtlas, workspace: Workspace, getActiveGridId: () => number) => {
+  let cursor: Cursor
   let fontAtlasCache: HTMLCanvasElement
 
-  let renderer = createRenderer()
+  let renderer = createRenderer(fontAtlas, workspace)
+
+  // TODO(smolck)
+  const setCursor = (c: Cursor) => cursor = c
 
   const resizeCanvas = (width: number, height: number) => {
     renderer.resize(width, height)
@@ -519,7 +525,7 @@ const nutella = () => {
   const updateCursorShape = (shape: CursorShape) => {
     renderer.updateCursorShape(shape)
     // TODO(smolck): If cursor size changes need to update cells . . .
-    renderer.updateCellSize(false, cursorState.size)
+    renderer.updateCellSize(false, cursor.size)
   }
 
   const updateCursorColor = (r: number, g: number, b: number) => {
@@ -530,9 +536,9 @@ const nutella = () => {
     renderer.updateCursorPosition(row, col)
   }
 
-  const updateFontAtlas = (fontAtlas: HTMLCanvasElement) => {
-    renderer.updateFontAtlas(fontAtlas)
-    fontAtlasCache = fontAtlas
+  const updateFontAtlas = (atlas: HTMLCanvasElement) => {
+    renderer.updateFontAtlas(atlas)
+    fontAtlasCache = atlas
   }
 
   const updateCellSize = () => {
@@ -551,14 +557,14 @@ const nutella = () => {
     let gridId = initialGridId
     const viewport = { x: 0, y: 0, width: 0, height: 0 }
     const gridSize = { rows: 0, cols: 0 }
-    const gridBuffer = CreateWebGLBuffer()
+    const gridBuffer = CreateWebGLBuffer(workspace, fontAtlas)
     let dataBuffer = new Float32Array()
 
     const updateGridId = (newGridId: number) => (gridId = newGridId)
 
     const resize = (rows: number, cols: number) => {
-      const width = cols * cell.width
-      const height = rows * cell.height
+      const width = cols * workspace.cell.width
+      const height = rows * workspace.cell.height
 
       const sameGridSize = gridSize.rows === rows && gridSize.cols === cols
       const sameViewportSize =
@@ -586,7 +592,7 @@ const nutella = () => {
       const buffer = dataBuffer.subarray(0, elements)
       const { x, y, width, height } = viewport
 
-      const doHacks = gridId !== getActiveGridId() && cursorState.visible
+      const doHacks = gridId !== getActiveGridId() && cursor.visible
       if (doHacks) showCursor(false)
       renderer.render(buffer, x, y, width, height)
       if (doHacks) showCursor(true)
@@ -596,7 +602,7 @@ const nutella = () => {
       const { x, y, width, height } = viewport
       const buffer = gridBuffer.getBuffer()
 
-      const doHacks = gridId !== getActiveGridId() && cursorState.visible
+      const doHacks = gridId !== getActiveGridId() && cursor.visible
       if (doHacks) showCursor(false)
       renderer.render(buffer, x, y, width, height)
       if (doHacks) showCursor(true)
@@ -654,17 +660,18 @@ const nutella = () => {
     updateCursorPosition,
     updateCursorColor,
     showCursor,
+    setCursor,
     canvasElement: renderer.canvasElement,
     reInit: () => {
-      renderer = createRenderer()
+      renderer = createRenderer(fontAtlas, workspace)
       updateFontAtlas(fontAtlasCache)
-      showCursor(cursorState.visible)
-      updateCursorPosition(cursorState.row, cursorState.col)
-      updateCursorShape(cursorState.shape)
+      showCursor(cursor.visible)
+      updateCursorPosition(cursor.row, cursor.col)
+      updateCursorShape(cursor.shape)
       updateCursorColor(
-        cursorState.color[0],
-        cursorState.color[1],
-        cursorState.color[2]
+        cursor.color[0],
+        cursor.color[1],
+        cursor.color[2]
       )
     },
   }

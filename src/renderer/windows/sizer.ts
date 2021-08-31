@@ -1,6 +1,5 @@
 import { WindowInfo } from '../windows/window'
 import { within } from '../../common/utils'
-import { size } from '../workspace'
 
 const getSplits = (wins: WindowInfo[]) => {
   const vertical = new Set<number>()
@@ -24,7 +23,7 @@ const equalizeTo100 = (percentages: number[]) => {
   return items
 }
 
-export default (wins: WindowInfo[]) => {
+export default (size: { rows: number; cols: number }, wins: WindowInfo[]) => {
   // TODO: should we use teh size (rows/cols) from grid 1?
   const totalRows = size.rows - 1
   const totalColumns = size.cols

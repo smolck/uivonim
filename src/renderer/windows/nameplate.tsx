@@ -1,4 +1,3 @@
-import { size } from '../workspace'
 import { uuid } from '../../common/utils'
 import { makel } from '../ui/vanilla'
 import { cvar } from '../ui/css'
@@ -17,12 +16,12 @@ export interface NameplateState {
 
 type S = NameplateState
 
-export default () => {
+export default (nameplateHeight: number) => {
   const element = makel({
     display: 'flex',
     overflow: 'hidden',
-    height: `${size.nameplateHeight}px`,
-    minHeight: `${size.nameplateHeight}px`,
+    height: `${nameplateHeight}px`,
+    minHeight: `${nameplateHeight}px`,
   })
 
   let state: NameplateState = {

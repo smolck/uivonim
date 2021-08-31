@@ -1,7 +1,7 @@
-import { getCharFromIndex } from '../font-texture-atlas'
-import { cell } from '../../workspace'
+import FontAtlas from '../font-texture-atlas'
+import Workspace from '../../workspace'
 
-const finetti = () => {
+const finetti = (workspaceRef: Workspace, fontAtlasRef: FontAtlas) => {
   let buffer = new Float32Array()
   let width = 0
 
@@ -209,7 +209,7 @@ const finetti = () => {
     getBuffer: () => buffer,
     resetAtlasBounds: () => {
       for (let ix = 0; ix < buffer.length; ix += 7) {
-        const char = getCharFromIndex(buffer[ix + 3])
+        const char = fontAtlasRef.getCharFromIndex(buffer[ix + 3])
         if (!char)
           console.warn(
             `Hmm resetting atlas bounds and couldn't find char ${
@@ -218,7 +218,7 @@ const finetti = () => {
           )
 
         if (buffer[ix + 4] == 1) {
-          buffer[ix + 5] = char!.bounds.left + cell.width
+          buffer[ix + 5] = char!.bounds.left + workspaceRef.cell.width
           buffer[ix + 6] = char!.bounds.bottom
         } else {
           buffer[ix + 5] = char!.bounds.left

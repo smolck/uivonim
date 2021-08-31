@@ -1,12 +1,8 @@
-import {
-  createWebGLView,
-  size as windowsGridSize,
-} from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
-import { getCharFromIndex } from '../render/font-texture-atlas'
+import FontAtlas from '../render/font-texture-atlas'
+import Workspace from '../workspace'
 import { WebGLView } from '../render/webgl/renderer'
-import { cell } from '../workspace'
 import { makel } from '../ui/vanilla'
 
 export interface WindowInfo {
@@ -91,7 +87,10 @@ export interface Window {
   resizeWindow(width: number, height: number): void
 }
 
-const edgeDetection = (el: HTMLElement) => {
+const edgeDetection = (
+  el: HTMLElement,
+  windowsGridSize: { width: number; height: number }
+) => {
   const size = el.getBoundingClientRect()
   const bottom = Math.round(size.bottom)
   const left = Math.round(size.left)
@@ -99,8 +98,7 @@ const edgeDetection = (el: HTMLElement) => {
   const edges = Object.create(null)
 
   if (left === 0) edges.borderLeft = 'none'
-  if (bottom === windowsGridSize.height)
-    edges.borderBottom = 'none'
+  if (bottom === windowsGridSize.height) edges.borderBottom = 'none'
   if (right === windowsGridSize.width) edges.borderRight = 'none'
   return edges
 }
@@ -108,7 +106,12 @@ const edgeDetection = (el: HTMLElement) => {
 export const paddingX = 5
 export const paddingY = 4
 
-export default () => {
+export default (
+  webgl: WebGLView,
+  workspaceRef: Workspace,
+  fontAtlasRef: FontAtlas,
+  windowsGridSize: { width: number; height: number }
+) => {
   const wininfo: WindowInfo = {
     id: 0,
     gridId: 0,
@@ -121,7 +124,6 @@ export default () => {
     anchor: '',
   }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
-  const webgl = createWebGLView(0)
 
   const container = makel({
     flexFlow: 'column',
@@ -143,7 +145,7 @@ export default () => {
     height: '100%',
   })
 
-  const nameplate = CreateWindowNameplate()
+  const nameplate = CreateWindowNameplate(workspaceRef.nameplateHeight)
 
   overlay.setAttribute('wat', 'overlay')
   content.setAttribute('wat', 'content')
@@ -233,8 +235,8 @@ export default () => {
 
   api.positionToWorkspacePixels = (row, col, maybeOpts) => {
     const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
-    const winX = Math.floor(col * cell.width)
-    const winY = Math.floor(row * cell.height)
+    const winX = Math.floor(col * workspaceRef.cell.width)
+    const winY = Math.floor(row * workspaceRef.cell.height)
 
     const x = winX + (padding ? paddingX : 0) + (within ? 0 : layout.x)
 
@@ -295,7 +297,7 @@ export default () => {
         {
           border: '1px solid var(--background-30)',
         },
-        edgeDetection(container)
+        edgeDetection(container, windowsGridSize)
       )
     }
   }
@@ -318,14 +320,14 @@ export default () => {
   api.editor = {
     getChar: (row, col) => {
       const buf = webgl.getGridCell(row, col)
-      return getCharFromIndex(buf[3])?.char || '' // TODO(smolck)
+      return fontAtlasRef.getCharFromIndex(buf[3])?.char || '' // TODO(smolck)
     },
     getLine: (row) => {
       const buf = webgl.getGridLine(row)
       let line = ''
       for (let ix = 0; ix < buf.length; ix += 4) {
         const charIndex = buf[ix + 3]
-        line += getCharFromIndex(charIndex)?.char || '' // TODO(smolck)
+        line += fontAtlasRef.getCharFromIndex(charIndex)?.char || '' // TODO(smolck)
       }
       return line
     },
@@ -349,7 +351,7 @@ export default () => {
             results.push({
               col: buf[0],
               row: buf[1],
-              char: getCharFromIndex(buf[3])!.char,
+              char: fontAtlasRef.getCharFromIndex(buf[3])!.char,
             })
         }
       }
@@ -359,8 +361,8 @@ export default () => {
     positionToEditorPixels: (line, col, maybeOpts) => {
       const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
       const row = line - window.api.nvimState().editorTopLine
-      const winX = Math.floor(col * cell.width)
-      const winY = Math.floor(row * cell.height)
+      const winX = Math.floor(col * workspaceRef.cell.width)
+      const winY = Math.floor(row * workspaceRef.cell.height)
 
       const x = winX + (padding ? paddingX : 0) + (within ? 0 : layout.x)
 
