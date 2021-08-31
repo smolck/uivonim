@@ -4,8 +4,8 @@ const { $, go, run, fromRoot } = require('./runner')
 const fs = require('fs-extra')
 
 const paths = {
-  index: 'src/main/index.html',
-  processExplorer: 'src/main/process-explorer.html',
+  index: 'src/assets/index.html',
+  // processExplorer: 'src/main/process-explorer.html',
 }
 
 const copy = {
@@ -13,13 +13,13 @@ const copy = {
     $`copying index html`
     return fs.copy(fromRoot(paths.index), fromRoot('build/index.html'))
   },
-  processExplorer: () => {
+  /*processExplorer: () => {
     $`copying process-explorer html`
     return fs.copy(
       fromRoot(paths.processExplorer),
       fromRoot('build/main/process-explorer.html')
     )
-  },
+  },*/
   assets: () => {
     $`copying assets`
     return fs.copy(fromRoot('src/assets'), fromRoot('build/assets'))
@@ -33,7 +33,7 @@ const copy = {
 const copyAll = () =>
   Promise.all([
     copy.index(),
-    copy.processExplorer(),
+    // copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
   ])
@@ -43,14 +43,6 @@ require.main === module &&
     $`cleaning build folder`
     await fs.emptyDir(fromRoot('build'))
     await copyAll()
-
-    $`Compiling src/main`
-    await run('babel --extensions .ts,.tsx src/main -d build/main')
-    $``
-
-    $`Compiling src/common`
-    await run('babel --extensions .ts,.tsx src/common -d build/common')
-    $``
 
     $`Running webpack`
     await run('npx webpack --config ./webpack.dev.js')

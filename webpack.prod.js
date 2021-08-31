@@ -6,7 +6,7 @@ module.exports = {
   mode: 'production',
   devtool: 'nosources-source-map',
   target: 'web',
-  entry: './src/renderer/index.ts',
+  entry: './src/index.ts',
   module: {
     rules: [
       {
@@ -59,7 +59,7 @@ module.exports = {
     },
   },
   output: {
-    path: path.resolve(__dirname, 'build/renderer'),
+    path: path.resolve(__dirname, 'build/'),
     filename: 'bundle.js', // The name of the webpack bundle that's generated
   },
 }

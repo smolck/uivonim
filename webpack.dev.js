@@ -10,7 +10,7 @@ module.exports = {
     errorDetails: true,
   },
   target: 'web',
-  entry: './src/renderer/index.ts',
+  entry: './src/index.ts',
   module: {
     rules: [
       {

@@ -3,10 +3,8 @@
     "node_modules",
     "test",
     "xdg_config",
-    "renderer/components/extensions/legacy",
-    "renderer/components/extensions/future",
-    "main/workers/todo",
-    "main/neovim/todo",
+    "components/extensions/legacy",
+    "components/extensions/future",
     "dev"
   ],
   "compilerOptions": {
