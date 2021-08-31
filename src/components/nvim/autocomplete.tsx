@@ -1,12 +1,9 @@
 import { RowNormal } from '../row-container'
 import { resetMarkdownHTMLStyle } from '../../ui/styles'
-import * as windows from '../../windows/window-manager'
-import * as dispatch from '../../dispatch'
+import WindowManager from '../../windows/window-manager'
 import Workspace from '../../workspace'
-import { PopupMenu } from '../../types'
 import { paddingVH, cvar } from '../../ui/css'
 import Overlay from '../overlay'
-import { cursor } from '../../cursor'
 import { parse as stringToMarkdown } from 'marked'
 import { render } from 'inferno'
 import Icon from '../icon'
@@ -114,7 +111,9 @@ let state = {
   visibleOptions: 10,
 }
 
-type S = typeof state
+type S = typeof state & {
+  workspace: Workspace
+}
 
 // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L34-L36
 const pos: { container: ClientRect } = {
@@ -163,7 +162,7 @@ const parseDocs = (docs?: string): string | undefined => {
   return stringToMarkdown(docs)
 }
 
-const docs = (data: string) => (
+const docs = (fontSize: number, data: string) => (
   // @ts-ignore TS wants children but there are none so ignore
   <RowNormal
     dangerouslySetInnerHTML={{
@@ -180,17 +179,17 @@ const docs = (data: string) => (
       background: cvar('background-30'),
       'padding-top': '6px',
       'white-space': 'normal',
-      'font-size': `${workspace.font.size * 0.9}px`,
+      'font-size': `${fontSize * 0.9}px`,
     }}
   />
 )
 
-const tdStyle = (): CSSProperties => ({
+const tdStyle = (fontSize: number): CSSProperties => ({
   'align-self': 'center',
   'white-space': 'nowrap',
   'padding-right': '16px',
   'font-family': 'var(--font)',
-  'font-size': `${workspace.font.size * 0.9}px`,
+  'font-size': `${fontSize * 0.9}px`,
 })
 
 const Autocomplete = ({
@@ -201,6 +200,7 @@ const Autocomplete = ({
   visibleOptions,
   ix,
   options,
+  workspace,
 }: S) => (
   <Overlay
     id={'autocomplete'}
@@ -262,13 +262,15 @@ const Autocomplete = ({
               >
                 {getCompletionIcon(kind)}
               </td>
-              <td style={tdStyle()}>{text}</td>
-              <td style={tdStyle()}>{menu}</td>
+              <td style={tdStyle(workspace.fontDesc.size)}>{text}</td>
+              <td style={tdStyle(workspace.fontDesc.size)}>{menu}</td>
             </tr>
           ))}
         </table>
       </div>
-      {documentation && <div>{docs(documentation)}</div>}
+      {documentation && (
+        <div>{docs(workspace.fontDesc.size, documentation)}</div>
+      )}
     </div>
   </Overlay>
 )
@@ -278,21 +280,21 @@ const container = document.createElement('div')
 container.id = 'autocomplete-container'
 plugins?.appendChild(container)
 
-export const hide = () => {
+export const hide = (workspace: Workspace) => {
   state.visible = false
   state.ix = 0
 
-  render(<Autocomplete {...state} />, container)
+  render(<Autocomplete {...state} workspace={workspace}/>, container)
 }
 
-export const select = (index: number) => {
+export const select = (workspace: Workspace, index: number) => {
   const completionItem = (state.options[index] || {}).raw
   state.ix = index
 
   // raw could be missing if not semantic completions
   if (!completionItem) {
     state.documentation = undefined
-    render(<Autocomplete {...state} />, container)
+    render(<Autocomplete {...state} workspace={workspace} />, container)
     return
   }
 
@@ -304,22 +306,26 @@ export const select = (index: number) => {
   // I think. Long story kinda.
   if (documentation && documentation !== 32) {
     state.documentation = parseDocs(documentation.toString())
-    render(<Autocomplete {...state} />, container)
+    render(<Autocomplete {...state} workspace={workspace} />, container)
   } else {
     state.documentation = parseDocs(detail)
-    render(<Autocomplete {...state} />, container)
+    render(<Autocomplete {...state} workspace={workspace} />, container)
   }
 }
 
-export const show = (workspace: Workspace, { row, col, options }: CompletionShow) => {
+export const show = (
+  workspace: Workspace,
+  windowManager: WindowManager,
+  { row, col, options }: CompletionShow
+) => {
   const visibleOptions = Math.min(
     // Minus 2 because workspace.size.rows appears to be 2 rows greater than the actual rows
     // TODO(smolck): Is that ^^^ right?
-    workspace.size.rows - cursor.row - 2,
+    workspace.size.rows - windowManager.cursor.row - 2,
     options.length
   )
 
-  const pos = windows.pixelPosition(row + 1, col)
+  const pos = windowManager.pixelPosition(row + 1, col)
   // TODO(smolck): This feels too hard-coded.
   pos.x -= 20
   Object.assign(state, {
@@ -331,28 +337,8 @@ export const show = (workspace: Workspace, { row, col, options }: CompletionShow
     ...pos,
   })
 
-  render(<Autocomplete {...state} />, container)
+  render(<Autocomplete {...state} workspace={workspace} />, container)
 }
-
-dispatch.sub('pmenu.select', (ix) => select(ix))
-dispatch.sub('pmenu.hide', hide)
-dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
-  const options = items.map(
-    (m) =>
-      ({
-        text: m.word,
-        menu: m.menu,
-        insertText: m.word,
-        kind: stringToKind(m.kind),
-        raw: {
-          documentation: m.info,
-        },
-      } as CompletionOption)
-  )
-
-  show({ row, col, options })
-  select(index)
-})
 
 // TODO(smolck): Support more kinds.
 // Names and things taken from:
@@ -380,6 +366,6 @@ const completionKindMappings = new Map([
   ['Interface', CompletionItemKind.Interface],
 ])
 
-const stringToKind = (kind: string): CompletionItemKind => {
+export const stringToKind = (kind: string): CompletionItemKind => {
   return completionKindMappings.get(kind) || CompletionItemKind.Text
 }

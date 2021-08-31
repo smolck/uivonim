@@ -1,14 +1,7 @@
-import {
-  enableCursor,
-  disableCursor,
-  hideCursor,
-  showCursor,
-} from '../../cursor'
 import { CommandType, CommandUpdate } from '../../types'
 import { Plugin } from '../plugin-container'
 import { RowNormal } from '../row-container'
 import Input from '../text-input'
-import { sub } from '../../dispatch'
 import { is } from '../../utils'
 import { render } from 'inferno'
 
@@ -94,43 +87,36 @@ plugins?.appendChild(container)
 
 // TODO: use export cns. this component is a high priority so it should be loaded early
 // because someone might open cmdline early
-sub('wildmenu.show', (items: any[]) => {
+export const wildmenuShow = (items: any[]) => {
   state.options = [...new Set(items.map((item) => item.word))]
-
   render(<CommandLine {...state} />, container)
-})
-sub('wildmenu.select', (ix) => {
+}
+
+export const wildmenuSelect = (ix: number) => {
   state.ix = ix
-
   render(<CommandLine {...state} />, container)
-})
+}
 
-sub('wildmenu.hide', () => {
-  ;(state.options = [...new Set([])]),
-    render(<CommandLine {...state} />, container)
-})
+export const wildmenuHide = () => {
+  state.options = [...new Set([])]
+  render(<CommandLine {...state} />, container)
+}
 
-sub('cmd.hide', () => {
-  enableCursor()
-  showCursor()
-
+export const cmdlineHide = () => {
   // TODO(smolck)
   document.getElementById('keycomp-textarea')?.focus()
 
   state.visible = false
 
   render(<CommandLine {...state} />, container)
-})
+}
 
-sub('cmd.update', ({
+export const cmdlineUpdate = ({
   cmd,
   kind,
   position,
   prompt,
 }: CommandUpdate) => {
-  hideCursor()
-  disableCursor()
-
   if (kind) state.kind = kind
   if (prompt) state.prompt = prompt
   state.position = position
@@ -139,4 +125,4 @@ sub('cmd.update', ({
   state.value = is.string(cmd) && state.value !== cmd ? cmd : state.value
 
   render(<CommandLine {...state} />, container)
-})
+}

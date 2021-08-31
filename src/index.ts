@@ -2,6 +2,7 @@ import Workspace from './workspace'
 import WindowManager from './windows/window-manager'
 import FontAtlas from './render/font-texture-atlas'
 import RedrawHandler from './render/redraw'
+import setupGUIComponents from './ext-ui'
 import * as dispatch from './dispatch'
 import { CanvasKit } from 'canvaskit-wasm'
 import { /*debounce,*/ merge } from './utils'
@@ -57,6 +58,7 @@ CanvasKitInit().then(async (CanvasKit: CanvasKit) => {
   // individually once we get ext_windows working
   // workspace.onResize(({ rows, cols }) => invoke.nvimResize({ cols, rows }))
   workspace.resize()
+  setupGUIComponents(workspace, windowManager)
 
   /*requestAnimationFrame(() => {
     // high priority components
@@ -101,9 +103,6 @@ CanvasKitInit().then(async (CanvasKit: CanvasKit) => {
     pluginsContainer.style.height = `calc(100vh - 24px)`
   })
 
-  listen.nvimShowMessage((...args: any[]) =>
-    require('./components/nvim/messages').default.show(...args)
-  )
   listen.updateWindowNameplates(windowManager.updateWindowNameplates)
   // TODO(smolck): ??? -> listen.nvimMessageStatus((..._args) => {})
 

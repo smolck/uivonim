@@ -1,4 +1,4 @@
-import { showCursor, hideCursor } from '../cursor'
+import Cursor from '../cursor'
 import { invoke } from '../helpers'
 import { uuid } from '../utils'
 
@@ -12,12 +12,12 @@ export const css = (builder: (classname: string) => string[]): string => {
   return id
 }
 
-export const vimFocus = () => {
+export const vimFocus = (cursor: Cursor) => {
   setTimeout(async () => invoke.inputFocus({}), 1)
   document.getElementById('keycomp-textarea')?.focus()
-  showCursor()
+  cursor.show()
 }
 
-export const vimBlur = () => {
-  invoke.inputBlur({}).then(() => hideCursor())
+export const vimBlur = (cursor: Cursor) => {
+  invoke.inputBlur({}).then(() => cursor.hide())
 }

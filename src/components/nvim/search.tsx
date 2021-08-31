@@ -1,14 +1,6 @@
-import {
-  hideCursor,
-  showCursor,
-  disableCursor,
-  enableCursor,
-} from '../../cursor'
 import { CommandType, CommandUpdate } from '../../types'
-import * as windows from '../../windows/window-manager'
-import { WindowOverlay } from '../../windows/window'
+import { Window, WindowOverlay } from '../../windows/window'
 import Input from '../text-input'
-import { sub } from '../../dispatch'
 import { rgba, paddingV } from '../../ui/css'
 import { is } from '../../utils'
 import { makel } from '../../ui/vanilla'
@@ -19,7 +11,12 @@ let state = {
   value: '',
   position: 0,
   kind: CommandType.Ex,
-  inputCallbacks: {},
+  hideCb: () => {}
+}
+
+export const setSearchHideCallback = (cb: () => void) => {
+  state.hideCb = cb
+  console.warn("search.tsx: TODO(smolck): this is kinda hacky, maybe do something about that")
 }
 
 type S = typeof state
@@ -32,7 +29,7 @@ const printCommandType = (kind: CommandType) => {
   else return 'search'
 }
 
-const VimSearch = ({ visible, kind, value, position }: S) => (
+const VimSearch = ({ visible, kind, value, position, hideCb }: S) => (
   <div style={{ display: visible ? 'flex' : 'none', flex: 1 }}>
     <div
       style={{
@@ -50,6 +47,8 @@ const VimSearch = ({ visible, kind, value, position }: S) => (
       id={'vim-search-input'}
       small={true}
       focus={visible}
+      hide={hideCb}
+      select={hideCb}
       desc={'search query'}
       value={value}
       icon={'search'}
@@ -73,21 +72,17 @@ const assignStateAndRender = (newState: any) => (
   Object.assign(state, newState), render(<VimSearch {...state} />, container)
 )
 
-const hide = () => {
-  enableCursor()
-  showCursor()
+export const hideSearch = () => {
   if (winOverlay) winOverlay.remove()
   assignStateAndRender({ value: '', visible: false })
 }
 
-const updateQuery = ({ cmd, kind, position }: CommandUpdate) => {
+export const updateSearch = (activeWindow: Window, { cmd, kind, position }: CommandUpdate) => {
   const cmdKind = kind || state.kind
-  hideCursor()
-  disableCursor()
 
   !state.visible &&
     setTimeout(() => {
-      winOverlay = windows.getActive().addOverlayElement(container)
+      winOverlay = activeWindow.addOverlayElement(container)
     }, 1)
 
   assignStateAndRender({
@@ -97,8 +92,3 @@ const updateQuery = ({ cmd, kind, position }: CommandUpdate) => {
     value: is.string(cmd) && state.value !== cmd ? cmd : state.value,
   })
 }
-
-state.inputCallbacks = { hide, select: hide }
-
-sub('search.hide', hide)
-sub('search.update', updateQuery)

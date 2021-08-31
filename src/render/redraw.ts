@@ -11,14 +11,15 @@ import { getColorById } from '../render/highlight-attributes'
 import { WinFloatPosWinInfo, Mode, PopupMenu } from '../types'
 import { parseGuifont } from '../utils'
 import messages from '../components/nvim/messages'
-import { showMessageHistory } from '../components/nvim/message-history'
-import { invoke, listenRedraw } from '../helpers'
+import messageHistoryCreateThingy from '../components/nvim/message-history'
+import { invoke, listenRedraw, listen } from '../helpers'
 
 const dummyData = new Float32Array()
 
 export default class RedrawHandler {
   private windowManagerRef: WindowManager
   private workspaceRef: Workspace
+  private messageHistory: ReturnType<typeof messageHistoryCreateThingy>
   private fontAtlasRef: FontAtlas
 
   constructor(
@@ -29,9 +30,14 @@ export default class RedrawHandler {
     this.windowManagerRef = windowManager
     this.workspaceRef = workspace
     this.fontAtlasRef = fontAtlas
+    this.messageHistory = messageHistoryCreateThingy(
+      this.windowManagerRef.cursor
+    )
   }
 
   setupHandlers() {
+    listen.nvimShowMessage((msg) => messages.show(msg)) // TODO(smolck)
+
     const h = this.handlers
     listenRedraw.gridLine(h.grid_line)
     // invoke('attach_ui')
@@ -91,7 +97,7 @@ export default class RedrawHandler {
     )
     listenRedraw.msgAppend(({ payload: message }) => messages.append(message))
     listenRedraw.msgHistoryShow(({ payload: messages }) =>
-      showMessageHistory(messages)
+      this.messageHistory(messages)
     )
     listenRedraw.msgControl(({ payload: text }) =>
       dispatch.pub('message.control', text)
