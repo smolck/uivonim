@@ -1,10 +1,9 @@
 import { docStyle, resetMarkdownHTMLStyle } from '../../ui/styles'
-import * as windows from '../../windows/window-manager'
+import WindowManager from '../../windows/window-manager'
 import Overlay from '../overlay'
 import { cvar } from '../../ui/css'
 import { render } from 'inferno'
 import { parse as stringToMarkdown } from 'marked'
-import { listen } from '../../helpers'
 
 interface ShowParams {
   row: number
@@ -98,6 +97,7 @@ let state = {
 type S = typeof state
 
 const SignatureHelp = ({
+  windowManager,
   documentation,
   paramDoc,
   anchorBottom,
@@ -109,10 +109,10 @@ const SignatureHelp = ({
   activeParam,
   totalSignatures,
   selectedSignature,
-}: S) => (
+}: S & { windowManager: WindowManager }) => (
   <Overlay
     id={'signature-help'}
-    {...windows.pixelPosition(row > 2 ? row : row + 1, col - 1)}
+    {...windowManager.pixelPosition(row > 2 ? row : row + 1, col - 1)}
     zIndex={200}
     maxWidth={600}
     visible={visible}
@@ -168,21 +168,24 @@ const container = document.createElement('div')
 container.id = 'signature-help-container'
 plugins?.appendChild(container)
 
-const hide = () => (
+export const hide = (windowManager: WindowManager) => (
   (state = Object.assign(state, { visible: false, label: '', row: 0 })),
-  render(<SignatureHelp {...state} />, container)
+  render(<SignatureHelp {...state} windowManager={windowManager}/>, container)
 )
 
-const show = ({
-  row,
-  col,
-  label,
-  activeParam: x,
-  documentation,
-  paramDoc,
-  selectedSignature,
-  totalSignatures,
-}: ShowParams) => {
+export const show = (
+  windowManager: WindowManager,
+  {
+    row,
+    col,
+    label,
+    activeParam: x,
+    documentation,
+    paramDoc,
+    selectedSignature,
+    totalSignatures,
+  }: ShowParams
+) => {
   const { labelStart, labelEnd, activeParam } = sliceAndDiceLabel(label, x)
   const same = state.label === label && state.row === row
   const stuff = same
@@ -200,12 +203,5 @@ const show = ({
     visible: true,
   })
 
-  render(<SignatureHelp {...state} />, container)
+  render(<SignatureHelp {...state} windowManager={windowManager} />, container)
 }
-
-// See runtime/lua/uivonim.lua
-listen.signatureHelp(([showParams]) => {
-  show(showParams)
-})
-
-listen.signatureHelpClose((_) => hide())
