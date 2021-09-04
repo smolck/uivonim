@@ -13,7 +13,7 @@ Uivonim is to use Veonim as a base for building a feature-rich cross-platform GU
 that leverages the latest Neovim features (floating windows, builtin LSP, Lua)
 without reliance on VSCode extensions.
 
-![](./screenshots/main.png)
+<img width="1552" alt="main" src="https://user-images.githubusercontent.com/46855713/132102617-8a85965c-8ad7-4cc6-bd34-c63db2197179.png">
 
 ## Goals
 
@@ -62,25 +62,25 @@ the signature help, float, etc. features.
 
 ### Signature Help
 
-![](screenshots/signature_help.png)
+![signature_help](https://user-images.githubusercontent.com/46855713/132102632-ac64491b-3710-4a8b-9e56-0944d7f293ff.png)
 
 ### Hover
 
-![](screenshots/hover.png)
+![hover](https://user-images.githubusercontent.com/46855713/132102651-78b5b3b9-4253-4fb4-af85-887d131fe860.png)
 
 ### Code Actions
 
-![](screenshots/code_action.png)
+![code_action](https://user-images.githubusercontent.com/46855713/132102653-dec21adc-3b77-48a6-a0b4-aadfbde0f309.png)
 
 ### References
 
-![](screenshots/references.png)
+![references](https://user-images.githubusercontent.com/46855713/132102660-9a4a4287-31a9-444c-b5f4-b24f8e4cf9a4.png)
 
 ### Nyancat
 
 `:Uivonim nc`
 
-![](screenshots/nyancat.png)
+![nyancat](https://user-images.githubusercontent.com/46855713/132102661-82b88bdb-13e9-49fb-bce3-5ee22285092d.png)
 
 ## Other Cool Projects
 
