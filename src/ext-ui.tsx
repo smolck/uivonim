@@ -32,6 +32,8 @@ import {
 } from './components/nvim/search'
 import { vimBlur } from './ui/uikit'
 import { render } from 'inferno'
+import LspHover from './components/extensions/lsp-hover'
+import { debounce } from './utils'
 
 export default (workspace: Workspace, windowManager: WindowManager) => {
   // Focus textarea at start of application to receive input right away.
@@ -91,7 +93,11 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
     windowManager.cursor.hide()
     windowManager.cursor.disable()
 
-    updateSearch(windowManager.getActiveWindow(), workspace.fontDesc.size, cmdUpdate)
+    updateSearch(
+      windowManager.getActiveWindow(),
+      workspace.fontDesc.size,
+      cmdUpdate
+    )
   })
 
   // TODO(smolck): Move `sub`s etc. here . . . maybe
@@ -104,11 +110,7 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
   })
   listen.signatureHelpClose((_) => signatureHelpHide(windowManager))
 
-  const plugins = document.getElementById('plugins')
-  const lspRefsContainer = document.createElement('div')
-  lspRefsContainer.id = 'references-container'
-  plugins!.appendChild(lspRefsContainer)
-
+  const lspRefsContainer = document.getElementById('references-container')
   listen.lspReferences(([items]) => {
     // TODO(smolck): Efficiency? This works but probably isn't the most
     // performant. Ideally could remove the intermediate map.
@@ -146,4 +148,70 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
       lspRefsContainer
     )
   })
+
+  const lspHoverContainer = document.getElementById('hover-container')
+  listen.lspHover(([markdownLines]) => {
+    const doc = markdownLines.join('\n')
+
+    const maxWidth =
+      workspace.cell.width *
+      (markdownLines.reduce(
+        (acc: number, item: string[]) =>
+          item.length > acc ? item.length : acc,
+        markdownLines[0].length
+      ) +
+        2) // Add 2 to prevent wrapping unless necessary.
+
+    const { x, y } = windowManager.pixelPositionRelativeToCursor(1, 0)
+
+    render(
+      <LspHover
+        x={x}
+        y={y}
+        windowManager={windowManager}
+        maxWidth={maxWidth}
+        doc={doc}
+        visible={true}
+        workspaceWidth={workspace.size.width}
+      />,
+      lspHoverContainer
+    )
+  })
+
+  listen.lspHoverClose((_) => {
+    const { x, y } = windowManager.pixelPositionRelativeToCursor(1, 0)
+
+    render(
+      <LspHover
+        x={x}
+        y={y}
+        windowManager={windowManager}
+        maxWidth={0}
+        doc={''}
+        visible={false}
+        workspaceWidth={workspace.size.width}
+      />,
+      lspHoverContainer
+    )
+  })
+
+  sub(
+    'redraw',
+    debounce(() => {
+      const { x, y } = windowManager.pixelPositionRelativeToCursor(1, 0)
+
+      render(
+        <LspHover
+          x={x}
+          y={y}
+          windowManager={windowManager}
+          maxWidth={0}
+          doc={''}
+          visible={false}
+          workspaceWidth={workspace.size.width}
+        />,
+        lspHoverContainer
+      )
+    }, 50)
+  )
 }

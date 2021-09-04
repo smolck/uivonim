@@ -35,7 +35,11 @@ export default class WindowManager {
     this.fontAtlasRef = fontAtlasRef
     this.workspaceRef = workspace
     this.size = { width: 0, height: 0 }
-    this.renderer = CreateWebGLRenderer(fontAtlasRef, workspace, () => this.activeGridId)
+    this.renderer = CreateWebGLRenderer(
+      fontAtlasRef,
+      workspace,
+      () => this.activeGridId
+    )
     this.cursor = new Cursor(this.renderer)
     this.renderer.setCursor(this.cursor) // TODO(smolck): This is . . . yeah meh
     this.windowsByGrid = new Map()
@@ -292,6 +296,13 @@ export default class WindowManager {
     if (win) return win.positionToWorkspacePixels(row, col)
     console.warn('no active window grid... hmmm *twisty effect*')
     return { x: 0, y: 0 }
+  }
+
+  pixelPositionRelativeToCursor(rowOffset: number = 0, colOffset: number = 0) {
+    return this.pixelPosition(
+      this.cursor.row + rowOffset,
+      this.cursor.col + colOffset
+    )
   }
 
   resetAtlasBounds() {
