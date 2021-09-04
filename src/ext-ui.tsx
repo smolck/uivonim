@@ -32,8 +32,9 @@ import {
 } from './components/nvim/search'
 import { vimBlur } from './ui/uikit'
 import { render } from 'inferno'
-import LspHover from './components/extensions/lsp-hover'
 import { debounce } from './utils'
+import LspHover from './components/extensions/lsp-hover'
+import LspCodeAction from './components/extensions/lsp-code-action'
 
 export default (workspace: Workspace, windowManager: WindowManager) => {
   // Focus textarea at start of application to receive input right away.
@@ -214,4 +215,33 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
       )
     }, 50)
   )
+
+  const codeActionContainer = document.getElementById('code-action-container')
+  listen.codeAction((actions) => {
+    // TODO(smolck): I think this is necessary due to what is
+    // emitted in the code-action handler in `src-tauri/src/neovim_handler.rs` . .
+    // . why though
+    actions = actions[0]
+
+    const { x, y } = windowManager.pixelPositionRelativeToCursor(1, 0)
+
+    vimBlur(windowManager.cursor)
+    render(
+      <LspCodeAction
+        x={x}
+        y={y}
+        visible={true}
+        cursor={windowManager.cursor}
+        loadingFontSize={workspace.fontDesc.size}
+        actions={actions.map((x: any) => ({
+          title: x.title,
+          kind: x.kind,
+          edit: x.edit,
+          command: x.command,
+          arguments: x.arguments,
+        }))}
+      />,
+      codeActionContainer
+    )
+  })
 }

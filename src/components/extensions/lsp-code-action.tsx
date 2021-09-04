@@ -1,12 +1,11 @@
 import { RowNormal } from '../row-container'
-import { vimBlur, vimFocus } from '../../ui/uikit'
-import * as windows from '../../windows/window-manager'
+import { vimFocus } from '../../ui/uikit'
 import Input from '../text-input'
 import Overlay from '../overlay'
 import { filter } from 'fuzzaldrin-plus'
-import { render } from 'inferno'
-import { cursor } from '../../cursor'
-import { listen, luaeval } from '../../helpers'
+import { Component } from 'inferno'
+import { luaeval } from '../../helpers'
+import Cursor from '../../cursor'
 
 type CodeAction = {
   title: string
@@ -17,120 +16,128 @@ type CodeAction = {
   arguments: any
 }
 
-let state = {
-  x: 0,
-  y: 0,
-  value: '',
-  visible: false,
-  actions: [] as CodeAction[],
-  cache: [] as CodeAction[],
-  index: 0,
+type Props = {
+  x: number
+  y: number
+  visible: boolean
+  loadingFontSize: number
+  actions: CodeAction[]
+  cursor: Cursor
 }
 
-type S = typeof state
+export default class LspCodeAction extends Component<
+  Props,
+  {
+    visible: boolean
+    inputValue: string
+    index: number
+    actions: CodeAction[]
+  }
+> {
+  constructor(props: Props) {
+    super(props)
 
-const resetState = { value: '', visible: false }
+    this.state = {
+      index: 0,
+      visible: this.props.visible,
+      inputValue: '',
+      actions: this.props.actions,
+    }
+  }
 
-const plugins = document.getElementById('plugins')
-const container = document.createElement('div')
-container.id = 'code-action-container'
-plugins?.appendChild(container)
+  private change(value: string) {
+    this.setState({
+      inputValue: value,
+      index: 0,
+      actions: this.state!.inputValue
+        ? filter(this.props.actions, value, { key: 'title' })
+        : this.state!.actions,
+    })
+  }
 
-const CodeAction = ({ x, y, visible, value, actions, index }: S) => (
-  <Overlay
-    x={x}
-    y={y}
-    zIndex={100}
-    maxWidth={600}
-    visible={visible}
-    anchorAbove={false}
-  >
-    <div style={{ background: 'var(--background-40)' }}>
-      <Input
-        id={'code-action-input'}
-        hide={hide}
-        next={next}
-        prev={prev}
-        change={change}
-        select={select}
-        value={value}
-        focus={true}
-        small={true}
-        icon={'code'}
-        desc={'run code action'}
-      />
-      {actions.map((s, ix) => (
-        <RowNormal key={s.title} active={ix === index}>
-          <span>{s.title}</span>
-        </RowNormal>
-      ))}
-    </div>
-  </Overlay>
-)
+  private selectCurrent() {
+    vimFocus(this.props.cursor)
+    if (!this.state!.actions.length) {
+      this.setState({
+        inputValue: '',
+        visible: false,
+      })
+      return
+    }
+    const action = this.state!.actions[this.state!.index]
+    if (action) {
+      // @ts-ignore <- without this get an error about luaeval not being a
+      // property
 
-const assignStateAndRender = (newState: any) => (
-  Object.assign(state, newState), render(<CodeAction {...state} />, container)
-)
+      // roundtrip through vimscript since TS dict looks like a vimscript dict
+      // TODO: see if action can be converted to a Lua table to allow direct call to lua
+      luaeval("require'uivonim/lsp'.handle_chosen_code_action(_A)", action)
+    }
 
-const show = ({ x, y, actions }: any) => {
-  vimBlur()
-  assignStateAndRender({ x, y, actions, cache: actions, visible: true })
+    this.setState({
+      inputValue: '',
+      visible: false,
+    })
+  }
+
+  private next() {
+    this.setState({
+      index:
+        this.state!.index + 1 > this.state!.actions.length - 1
+          ? 0
+          : this.state!.index + 1,
+    })
+  }
+
+  private prev() {
+    this.setState({
+      index:
+        this.state!.index - 1 < 0
+          ? this.state!.actions.length - 1
+          : this.state!.index - 1,
+    })
+  }
+
+  private hide() {
+    vimFocus(this.props.cursor)
+    this.setState({
+      inputValue: '',
+      visible: false,
+    })
+  }
+
+  render() {
+    return (
+      <Overlay
+        x={this.props.x}
+        y={this.props.y}
+        zIndex={100}
+        maxWidth={600}
+        visible={this.state!.visible}
+        anchorAbove={false}
+      >
+        <div style={{ background: 'var(--background-40)' }}>
+          <Input
+            loadingSize={this.props.loadingFontSize}
+            id={'code-action-input'}
+            hide={() => this.hide()}
+            next={() => this.next()}
+            prev={() => this.prev()}
+            change={(val) => this.change(val)}
+            select={() => this.selectCurrent()}
+            value={this.state!.inputValue}
+            focus={true}
+            small={true}
+            icon={'code'}
+            desc={'run code action'}
+          />
+          {this.state!.actions.map((s, ix) => (
+            <RowNormal key={s.title} active={ix === this.state!.index}>
+              <span>{s.title}</span>
+            </RowNormal>
+          ))}
+        </div>
+      </Overlay>
+    )
+  }
 }
-
-const hide = () => {
-  vimFocus()
-  assignStateAndRender(resetState)
-}
-
-const change = (value: string) =>
-  assignStateAndRender({
-    value,
-    index: 0,
-    actions: value
-      ? filter(state.actions, value, { key: 'title' })
-      : state.cache,
-  })
-
-const select = () => {
-  vimFocus()
-  if (!state.actions.length) return resetState
-  const action = state.actions[state.index]
-  if (action)
-    // @ts-ignore <- without this get an error about luaeval not being a
-    // property
-
-    // roundtrip through vimscript since TS dict looks like a vimscript dict
-    // TODO: see if action can be converted to a Lua table to allow direct call to lua
-    luaeval("require'uivonim/lsp'.handle_chosen_code_action(_A)", action)
-  assignStateAndRender(resetState)
-}
-
-const next = () =>
-  assignStateAndRender({
-    index: state.index + 1 > state.actions.length - 1 ? 0 : state.index + 1,
-  })
-
-const prev = () =>
-  assignStateAndRender({
-    index: state.index - 1 < 0 ? state.actions.length - 1 : state.index - 1,
-  })
-
-listen.codeAction((actions) => {
-  // TODO(smolck): I think this is necessary due to what is
-  // emitted in the code-action handler in `src-tauri/src/neovim_handler.rs` . .
-  // . why though
-  actions = actions[0]
-
-  const { x, y } = windows.pixelPosition(cursor.row + 1, cursor.col)
-  show({
-    x,
-    y,
-    actions: actions.map((x: any) => ({
-      title: x.title,
-      kind: x.kind,
-      edit: x.edit,
-      command: x.command,
-      arguments: x.arguments,
-    })),
-  })
-})
