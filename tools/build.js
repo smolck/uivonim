@@ -5,20 +5,12 @@ const fs = require('fs-extra')
 
 const paths = {
   index: 'src/main/index.html',
-  processExplorer: 'src/main/process-explorer.html',
 }
 
 const copy = {
   index: () => {
     $`copying index html`
     return fs.copy(fromRoot(paths.index), fromRoot('build/main/index.html'))
-  },
-  processExplorer: () => {
-    $`copying process-explorer html`
-    return fs.copy(
-      fromRoot(paths.processExplorer),
-      fromRoot('build/main/process-explorer.html')
-    )
   },
   assets: () => {
     $`copying assets`
@@ -33,7 +25,6 @@ const copy = {
 const copyAll = () =>
   Promise.all([
     copy.index(),
-    copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
   ])
