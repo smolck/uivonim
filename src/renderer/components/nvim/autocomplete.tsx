@@ -117,7 +117,7 @@ let state = {
 type S = typeof state
 
 // https://github.com/veonim/veonim/blob/f780b7fc8079755ecac65b475eee3c6358857696/src/components/autocomplete.ts#L34-L36
-const pos: { container: ClientRect } = {
+const pos = {
   container: { left: 0, right: 0, bottom: 0, top: 0, height: 0, width: 0 },
 }
 
