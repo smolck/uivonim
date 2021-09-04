@@ -11,12 +11,14 @@ let state = {
   value: '',
   position: 0,
   kind: CommandType.Ex,
-  hideCb: () => {}
+  hideCb: () => {},
 }
 
 export const setSearchHideCallback = (cb: () => void) => {
   state.hideCb = cb
-  console.warn("search.tsx: TODO(smolck): this is kinda hacky, maybe do something about that")
+  console.warn(
+    'search.tsx: TODO(smolck): this is kinda hacky, maybe do something about that'
+  )
 }
 
 type S = typeof state
@@ -29,7 +31,7 @@ const printCommandType = (kind: CommandType) => {
   else return 'search'
 }
 
-const VimSearch = ({ visible, kind, value, position, hideCb }: S) => (
+const VimSearch = ({ loadingSize, visible, kind, value, position, hideCb }: S & { loadingSize: number }) => (
   <div style={{ display: visible ? 'flex' : 'none', flex: 1 }}>
     <div
       style={{
@@ -44,6 +46,7 @@ const VimSearch = ({ visible, kind, value, position, hideCb }: S) => (
     </div>
 
     <Input
+      loadingSize={loadingSize}
       id={'vim-search-input'}
       small={true}
       focus={visible}
@@ -68,16 +71,20 @@ container.id = 'vim-search-container'
 // TODO(smolck): Shouldn't be necessary, right?
 // document.getElementById('plugins')!.appendChild(container)
 
-const assignStateAndRender = (newState: any) => (
-  Object.assign(state, newState), render(<VimSearch {...state} />, container)
+const assignStateAndRender = (loadingSize: number, newState: any) => (
+  Object.assign(state, newState), render(<VimSearch {...state} loadingSize={loadingSize}/>, container)
 )
 
-export const hideSearch = () => {
+export const hideSearch = (loadingSize: number) => {
   if (winOverlay) winOverlay.remove()
-  assignStateAndRender({ value: '', visible: false })
+  assignStateAndRender(loadingSize, { value: '', visible: false })
 }
 
-export const updateSearch = (activeWindow: Window, { cmd, kind, position }: CommandUpdate) => {
+export const updateSearch = (
+  activeWindow: Window,
+  loadingSize: number,
+  { cmd, kind, position }: CommandUpdate
+) => {
   const cmdKind = kind || state.kind
 
   !state.visible &&
@@ -85,7 +92,7 @@ export const updateSearch = (activeWindow: Window, { cmd, kind, position }: Comm
       winOverlay = activeWindow.addOverlayElement(container)
     }, 1)
 
-  assignStateAndRender({
+  assignStateAndRender(loadingSize, {
     position,
     kind: cmdKind,
     visible: true,

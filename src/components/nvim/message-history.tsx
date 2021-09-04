@@ -8,7 +8,7 @@ import Icon from '../icon'
 import { colors } from '../../ui/styles'
 import { render } from 'inferno'
 
-export default (cursor: Cursor) => {
+export default (loadingSize: number, cursor: Cursor) => {
   let state = {
     query: '',
     messages: [] as Message[],
@@ -58,6 +58,7 @@ export default (cursor: Cursor) => {
       }}
     >
       <Input
+        loadingSize={loadingSize}
         id={'message-history-input'}
         hide={hide}
         next={next}

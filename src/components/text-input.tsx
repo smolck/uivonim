@@ -32,12 +32,12 @@ interface Props {
   ctrlC: () => void
   yank: () => void
   loading: boolean
-  loadingSize: number
   loadingColor: string
   pathMode: boolean
 }
 
 interface TextInputProps extends Partial<Props> {
+  loadingSize: number
   id: string
   value: string
   icon: string

@@ -23,6 +23,7 @@ let state = {
 type S = typeof state
 
 const CommandLine = ({
+  loadingSize,
   options,
   position,
   value,
@@ -30,7 +31,7 @@ const CommandLine = ({
   visible,
   kind,
   ix: stateIx,
-}: S) => {
+}: S & { loadingSize: number }) => {
   const maybePrompt = prompt && (
     <div
       style={{
@@ -56,6 +57,7 @@ const CommandLine = ({
     >
       {maybePrompt}
       <Input
+        loadingSize={loadingSize}
         id={'command-line-input'}
         focus={true}
         value={value}
@@ -87,36 +89,34 @@ plugins?.appendChild(container)
 
 // TODO: use export cns. this component is a high priority so it should be loaded early
 // because someone might open cmdline early
-export const wildmenuShow = (items: any[]) => {
+export const wildmenuShow = (loadingSize: number, items: any[]) => {
   state.options = [...new Set(items.map((item) => item.word))]
-  render(<CommandLine {...state} />, container)
+  render(<CommandLine {...state} loadingSize={loadingSize} />, container)
 }
 
-export const wildmenuSelect = (ix: number) => {
+export const wildmenuSelect = (loadingSize: number, ix: number) => {
   state.ix = ix
-  render(<CommandLine {...state} />, container)
+  render(<CommandLine {...state} loadingSize={loadingSize} />, container)
 }
 
-export const wildmenuHide = () => {
+export const wildmenuHide = (loadingSize: number) => {
   state.options = [...new Set([])]
-  render(<CommandLine {...state} />, container)
+  render(<CommandLine {...state} loadingSize={loadingSize} />, container)
 }
 
-export const cmdlineHide = () => {
+export const cmdlineHide = (loadingSize: number) => {
   // TODO(smolck)
   document.getElementById('keycomp-textarea')?.focus()
 
   state.visible = false
 
-  render(<CommandLine {...state} />, container)
+  render(<CommandLine {...state} loadingSize={loadingSize} />, container)
 }
 
-export const cmdlineUpdate = ({
-  cmd,
-  kind,
-  position,
-  prompt,
-}: CommandUpdate) => {
+export const cmdlineUpdate = (
+  loadingSize: number,
+  { cmd, kind, position, prompt }: CommandUpdate
+) => {
   if (kind) state.kind = kind
   if (prompt) state.prompt = prompt
   state.position = position
@@ -124,5 +124,5 @@ export const cmdlineUpdate = ({
   state.options = cmd ? state.options : []
   state.value = is.string(cmd) && state.value !== cmd ? cmd : state.value
 
-  render(<CommandLine {...state} />, container)
+  render(<CommandLine {...state} loadingSize={loadingSize} />, container)
 }

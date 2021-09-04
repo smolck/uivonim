@@ -4,6 +4,7 @@ import FontAtlas from '../render/font-texture-atlas'
 import Workspace from '../workspace'
 import { WebGLView } from '../render/webgl/renderer'
 import { makel } from '../ui/vanilla'
+import { currentNvimState } from '../helpers'
 
 export interface WindowInfo {
   id: number
@@ -360,7 +361,7 @@ export default (
     },
     positionToEditorPixels: (line, col, maybeOpts) => {
       const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
-      const row = line - window.api.nvimState().editorTopLine
+      const row = line - currentNvimState().editor_top_line
       const winX = Math.floor(col * workspaceRef.cell.width)
       const winY = Math.floor(row * workspaceRef.cell.height)
 

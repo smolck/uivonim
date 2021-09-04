@@ -47,13 +47,13 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
       windowManager.cursor.enable()
       windowManager.cursor.show()
 
-      cmdlineHide()
+      cmdlineHide(workspace.fontDesc.size)
     })
     sub('cmd.update', (update: CommandUpdate) => {
       windowManager.cursor.hide()
       windowManager.cursor.disable()
 
-      cmdlineUpdate(update)
+      cmdlineUpdate(workspace.fontDesc.size, update)
     })
 
     // Popup menu
@@ -81,7 +81,7 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
   const hideSearchNess = () => {
     windowManager.cursor.enable()
     windowManager.cursor.show()
-    hideSearch()
+    hideSearch(workspace.fontDesc.size)
 
     document.getElementById('keycomp-textarea')?.focus()
   }
@@ -91,7 +91,7 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
     windowManager.cursor.hide()
     windowManager.cursor.disable()
 
-    updateSearch(windowManager.getActiveWindow(), cmdUpdate)
+    updateSearch(windowManager.getActiveWindow(), workspace.fontDesc.size, cmdUpdate)
   })
 
   // TODO(smolck): Move `sub`s etc. here . . . maybe
@@ -138,6 +138,7 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
     vimBlur(windowManager.cursor)
     render(
       <LspReferences
+        fontSize={workspace.fontDesc.size + 2}
         cursor={windowManager.cursor}
         visible={true}
         references={stuffToShow}

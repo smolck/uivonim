@@ -1,12 +1,12 @@
 import { RowNormal, RowHeader } from '../row-container'
 import { PluginRight } from '../plugin-container'
-import { vimBlur, vimFocus } from '../../ui/uikit'
+import { vimFocus } from '../../ui/uikit'
 import { simplifyPath } from '../../utils'
 // TODO(smolck): import { showCursorline } from '../../core/cursor'
 import { badgeStyle } from '../../ui/styles'
 import { Component } from 'inferno'
 import Input from '../text-input'
-import { invoke, listen, currentNvimState } from '../../helpers'
+import { invoke, currentNvimState } from '../../helpers'
 import Cursor from '../../cursor'
 
 export type Reference = {
@@ -47,6 +47,7 @@ const highlightPattern = (
 const WhyDiv = (props: any) => <div {...props}>{props.children}</div>
 
 type Props = {
+  fontSize: number
   cursor: Cursor
   visible: boolean
   references: Refs[]
@@ -219,6 +220,7 @@ export default class LspReferences extends Component<
     return (
       <PluginRight id={'references'} visible={this.state!.visible}>
         <Input
+          loadingSize={this.props.fontSize}
           id={'lsp-references-input'}
           up={() => this.up()}
           hide={() => this.hide()}

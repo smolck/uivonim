@@ -8,7 +8,7 @@ import {
 } from '../render/highlight-attributes'
 import * as dispatch from '../dispatch'
 import { getColorById } from '../render/highlight-attributes'
-import { WinFloatPosWinInfo, Mode, PopupMenu } from '../types'
+import { WinFloatPosWinInfo, PopupMenu } from '../types'
 import { parseGuifont } from '../utils'
 import messages from '../components/nvim/messages'
 import messageHistoryCreateThingy from '../components/nvim/message-history'
@@ -31,6 +31,7 @@ export default class RedrawHandler {
     this.workspaceRef = workspace
     this.fontAtlasRef = fontAtlas
     this.messageHistory = messageHistoryCreateThingy(
+      this.workspaceRef.fontDesc.size,
       this.windowManagerRef.cursor
     )
   }

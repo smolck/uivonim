@@ -1,13 +1,12 @@
-import * as workspace from '../workspace'
 import Icon from './icon'
 
 interface LoaderParams {
-  size?: number
+  size: number
   color?: string
 }
 
 export default (
-  { color, size = workspace.font.size + 2 } = {} as LoaderParams
+  { color, size } = {} as LoaderParams
 ) => (
   <div
     style={{
