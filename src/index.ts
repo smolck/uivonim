@@ -60,34 +60,6 @@ CanvasKitInit().then(async (CanvasKit: CanvasKit) => {
   workspace.resize()
   setupGUIComponents(workspace, windowManager)
 
-  /*requestAnimationFrame(() => {
-    // high priority components
-    requestAnimationFrame(() => {
-      // Focus textarea at start of application to receive input right away.
-      document.getElementById('keycomp-textarea')?.focus()
-
-      require('./components/nvim/command-line')
-      require('./components/nvim/autocomplete')
-      require('./components/nvim/messages')
-      require('./components/nvim/message-history')
-      require('./components/nvim/search')
-      require('./components/nvim/statusline')
-    })
-
-    setTimeout(() => {
-      require('./components/extensions/buffers')
-      require('./components/extensions/color-picker')
-      require('./components/extensions/explorer')
-
-      require('./components/extensions/lsp-code-action')
-      require('./components/extensions/lsp-hover')
-      require('./components/extensions/lsp-references')
-      require('./components/extensions/lsp-signature-help')
-
-      require('./components/memes/nc')
-    }, 600)
-  })*/
-
   const pluginsContainer = document.getElementById('plugins') as HTMLElement
   merge(pluginsContainer.style, {
     position: 'absolute',
