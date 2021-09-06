@@ -5,7 +5,7 @@ import { setVar } from './ui/css'
 import { invoke } from './helpers'
 import { Font as CkFont, CanvasKit } from 'canvaskit-wasm'
 
-const DEFAULT_FONT = 'JetBrains Mono'
+const DEFAULT_FONT = 'Roboto Mono Veonim'
 const DEFAULT_FONT_SIZE = 14
 const DEFAULT_LINESPACE = 14 / 2
 
@@ -117,17 +117,27 @@ export default class Workspace {
   }
 
   private async setFont(face: string, size: number, lineSpace: number) {
-    try {
-      const bytes = await invoke.getFontBytes({ fontName: face })
+    if (face === DEFAULT_FONT) {
+      const resp = await fetch('assets/roboto-mono.ttf')
+      const bytes = await resp.arrayBuffer()
       const bytesArr = new Uint8Array(bytes)
-      this.font.setTypeface(this.canvasKitRef.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer))
-    } catch (e) {
-      console.error(`couldn't set font to ${face}, '${e}'`)
+      this.font.setTypeface(
+        this.canvasKitRef.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer)
+      )
+    } else {
+      try {
+        const bytes = await invoke.getFontBytes({ fontName: face })
+        const bytesArr = new Uint8Array(bytes)
+        this.font.setTypeface(
+          this.canvasKitRef.Typeface.MakeFreeTypeFaceFromData(bytesArr.buffer)
+        )
+      } catch (e) {
+        console.error(`couldn't set font to ${face}, '${e}'`)
+      }
     }
-
     this.font.setSize(size)
     // TODO(smolck): this.font.setSubpixel(true)
-      /* const canvas = document.createElement('canvas')
+    /* const canvas = document.createElement('canvas')
       const ckSurface = ck.MakeCanvasSurface(canvas)!
       const paint = new ck.Paint()
       ckFont.setSize(25)
@@ -136,8 +146,8 @@ export default class Workspace {
       ckSurface.getCanvas().drawText('wassup yo??', 50, 50, paint, ckFont)
       ckSurface.flush()
       document.body.appendChild(canvas)*/
-      // ckSurface.getCanvas().drawText('hello y\'all', 50, 50, paint, ckFont)
-      // ckSurface.flush()
+    // ckSurface.getCanvas().drawText('hello y\'all', 50, 50, paint, ckFont)
+    // ckSurface.flush()
 
     Object.assign(this.cell, {
       width: this.getCharWidth(face, size),
@@ -160,14 +170,14 @@ export default class Workspace {
     this.cell.padding = Math.floor((this.cell.height - this.fontDesc.size) / 2)
   }
 
-  async updateEditorFont({
-    size,
-    lineSpace,
-    face,
-  }: UpdateEditorFontParams) {
+  async updateEditorFont({ size, lineSpace, face }: UpdateEditorFontParams) {
     const fontFace = face || DEFAULT_FONT
     const fontSize =
-      !size || isNaN(size) ? (face ? this.fontDesc.size : DEFAULT_FONT_SIZE) : size
+      !size || isNaN(size)
+        ? face
+          ? this.fontDesc.size
+          : DEFAULT_FONT_SIZE
+        : size
     const fontLineSpace =
       !lineSpace || isNaN(lineSpace) ? DEFAULT_LINESPACE : lineSpace
 
