@@ -21,7 +21,7 @@ import LspReferences, {
   Reference,
   Refs,
 } from './components/extensions/lsp-references'
-import { listen } from './helpers'
+import { listen, invoke } from './helpers'
 import { CommandUpdate, PopupMenu } from './types'
 import Workspace from './workspace'
 import WindowManager from './windows/window-manager'
@@ -35,6 +35,7 @@ import { render } from 'inferno'
 import { debounce } from './utils'
 import LspHover from './components/extensions/lsp-hover'
 import LspCodeAction from './components/extensions/lsp-code-action'
+import ColorPickerComponent from './components/extensions/color-picker'
 
 export default (workspace: Workspace, windowManager: WindowManager) => {
   // Focus textarea at start of application to receive input right away.
@@ -242,6 +243,29 @@ export default (workspace: Workspace, windowManager: WindowManager) => {
         }))}
       />,
       codeActionContainer
+    )
+  })
+
+  const colorPickerContainer = document.getElementById('color-picker-container')
+
+  listen.pickColor(async () => {
+    const cword = await invoke.expand({ thing: '<cword>' })
+
+    const { row, col } = windowManager.cursor
+    const { x, y, anchorBottom } = {
+      ...windowManager.pixelPosition(row > 12 ? row : row + 1, col - 1),
+      anchorBottom: row > 12,
+    }
+
+    render(
+      <ColorPickerComponent
+        visible={true}
+        x={x}
+        y={y}
+        anchorBottom={anchorBottom}
+        cword={cword}
+      />,
+      colorPickerContainer
     )
   })
 }
