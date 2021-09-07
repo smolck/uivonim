@@ -33,7 +33,7 @@
   "homepage": "https://github.com/smolck/uivonim",
   "dependencies": {
     "@tauri-apps/api": "^1.0.0-beta.5",
-    "canvaskit-wasm": "^0.29.1",
+    "canvaskit-wasm": "^0.29.0",
     "feather-icons": "^4.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "highlight.js": "^10.7.2",
