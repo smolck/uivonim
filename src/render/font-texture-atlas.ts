@@ -51,7 +51,7 @@ export default class FontTextureAtlas {
     this.width = atlasWidth
 
     this.workspaceRef = workspace
-    this.surface = canvasKit.MakeWebGLCanvasSurface(this.canvasElement)!
+    this.surface = canvasKit.MakeSWCanvasSurface(this.canvasElement)!
 
     this.canvas = this.surface.getCanvas()
     this.canvas.scale(window.devicePixelRatio, window.devicePixelRatio)
