@@ -1,4 +1,4 @@
-import { Surface, Canvas, CanvasKit, Paint } from 'canvaskit-wasm'
+import { Surface, Canvas, CanvasKit, Paint, Color } from 'canvaskit-wasm'
 import Workspace from '../workspace'
 
 export interface AtlasCharBounds {
@@ -40,13 +40,17 @@ export default class FontTextureAtlas {
 
   private width: number
 
+  private bgColorStoredBecauseReasons: Color
+
   constructor(
     workspace: Workspace,
     canvasKit: CanvasKit,
     atlasWidth = 1000,
     atlasHeight = 500
   ) {
+    this.bgColorStoredBecauseReasons = canvasKit.TRANSPARENT
     this.canvasElement = document.createElement('canvas')!
+
     this.setCanvasWidth(atlasWidth, atlasHeight)
     this.width = atlasWidth
 
@@ -175,7 +179,10 @@ export default class FontTextureAtlas {
     }
 
     this.charsQueue.forEach(draw)
-    if (redrawWithAllCharsInAtlas) this.charsInAtlas.forEach(draw)
+    if (redrawWithAllCharsInAtlas) {
+      this.canvas.clear(this.bgColorStoredBecauseReasons)
+      this.charsInAtlas.forEach(draw)
+    }
 
     this.surface.flush()
 
