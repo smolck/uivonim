@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { asColor, merge, getPipeName } from '../../common/utils'
 import Worker, { Worker as WorkerType } from '../workers/messaging/worker'
 import { Color, Highlight } from '../neovim/types'
@@ -39,7 +40,10 @@ const spawnNvimInstance = (
   useWsl: boolean,
   nvimBinary?: string
 ) => {
-  const runtimeDir = resolve(__dirname, '..', '..', '..', 'runtime')
+  // TODO(smolck): See https://github.com/smolck/uivonim/issues/411#issue-1011598155, runtime
+  // files are in a different place when app is packaged so that's why this exists. Feels kinda
+  // hacky though.
+  const runtimeDir = app.isPackaged ? resolve(__dirname, '..', '..', 'runtime') : resolve(__dirname, '..', '..', '..', 'runtime')
   const args = [
     '--cmd',
     `let $PATH .= ':${runtimeDir}/${process.platform}' | let &runtimepath .= ',${runtimeDir}'`,
