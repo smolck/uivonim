@@ -83,7 +83,7 @@ function M.signature_help_close()
   notify_uivonim('signature-help-close')
 end
 
-function M.signature_help(_, method, result)
+function M.signature_help(_, result)
   if not (result and result.signatures and result.signatures[1]) then
     print('No signature help available')
     return
@@ -105,7 +105,7 @@ function M.hover_close()
   notify_uivonim('hover-close')
 end
 
-function M.hover(_, method, result)
+function M.hover(_, result)
   if not (result and result.contents) then
     -- TODO(smolck): Maybe let the user know somehow by telling Uivonim about it?
     return
@@ -126,21 +126,21 @@ function M.hover(_, method, result)
   )
 end
 
-function M.references(_, method, result)
+function M.references(_, result)
   if not result then return end
 
   local list = util.locations_to_items(result)
   notify_uivonim('references', method, list)
 end
 
-function M.symbols(_, method, result)
+function M.symbols(_, result)
   if not result then return end
 
   -- TODO: use non-hierarchical UI element (i.e., strip filename) for documentSymbol
   notify_uivonim('references', method, util.symbols_to_items(result))
 end
 
-function M.code_action(_, _, actions)
+function M.code_action(_, --[[result]]actions)
   if actions == nil or vim.tbl_isempty(actions) then
     print("No code actions available")
     return
@@ -164,29 +164,20 @@ function M.handle_chosen_code_action(action_chosen)
   end
 end
 
-function M.on_publish_diagnostics(thing1, thing2, params, client_id, thing5, config)
-  -- Let nvim do it's stuff
-  vim.lsp.diagnostic.on_publish_diagnostics(thing1, thing2, params, client_id, thing5, config)
+-- TODO(smolck): Is there a way to just add some extra functionality to the default?
+-- Something like `vim.lsp.with` but you pass a function and I guess `result` etc.
+function M.on_publish_diagnostics(err, result, ctx, config)
+  -- See https://github.com/neovim/neovim/blob/e8fb0728e220bb378a8689415c3915fe5912e987/runtime/lua/vim/lsp/diagnostic.lua#L193-L220
+  vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
 
-  -- See https://github.com/neovim/neovim/blob/f8173df4d7ecec239629921736340d3f4d1dcfd4/runtime/lua/vim/lsp/diagnostic.lua#L1000-L1031
-  local uri = params.uri
+  local uri = result.uri
   local bufnr = vim.uri_to_bufnr(uri)
 
   if not bufnr then
     return
   end
 
-  -- Unloaded buffers should not handle diagnostics.
-  --    When the buffer is loaded, we'll call on_attach, which sends textDocument/didOpen.
-  --    This should trigger another publish of the diagnostics.
-  --
-  -- In particular, this stops a ton of spam when first starting a server for current
-  -- unloaded buffers.
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
-    return
-  end
-
-  notify_uivonim('diagnostics', params.diagnostics)
+  notify_uivonim('diagnostics', result.diagnostics)
 end
 
 M.callbacks = {
