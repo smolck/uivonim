@@ -48,7 +48,13 @@ on.nvimFeedkeys((keys: string, mode: string) =>
   nvim.feedKeys(keys, mode, false)
 )
 on.nvimCall(async (name: string, args: any[]) => nvim.call(name, args))
-on.nvimCommand(async (command: string) => nvim.command(command))
+on.nvimCommand(async (command: string) => {
+  try {
+    await nvim.command(command)
+  } catch (e) {
+    console.error(`Error running nvimCommand instance.ts: '${e}'`)
+  }
+})
 on.nvimGetVar(async (key: string) => Reflect.get(nvim.g, key))
 on.nvimGetKeymap(async () => nvim.getAndParseKeymap('n'))
 on.nvimGetColorByName(async (name: string) => nvim.getColorByName(name))
