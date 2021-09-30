@@ -140,7 +140,10 @@ const genAtlas = (redrawWithAllCharsInAtlas: boolean) => {
   }
 
   charsQueue.forEach(draw)
-  if (redrawWithAllCharsInAtlas) charsInAtlas.forEach(draw)
+  if (redrawWithAllCharsInAtlas) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    charsInAtlas.forEach(draw)
+  }
 
   charsQueue.clear()
 }
