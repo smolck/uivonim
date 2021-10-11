@@ -55,9 +55,10 @@ const spawnNvimInstance = (
     '--listen',
     pipeName,
   ]
+
   return useWsl
     ? spawn('wsl', [nvimBinary ?? 'nvim', ...args])
-    : spawn(nvimBinary ?? 'nvim', args)
+    : spawn(nvimBinary ?? 'nvim', [...args, ...process.argv.slice(1)])
 }
 
 const attachNvim = (nvimInstance: NvimInstance) => {
