@@ -56,7 +56,7 @@
     "babel-plugin-inferno": "^6.3.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
     "electron": "^15.1.2",
-    "electron-builder": "^22.11.7",
+    "electron-builder": "^22.13.1",
     "electron-devtools-installer": "^3.2.0",
     "fs-extra": "^10.0.0",
     "mocha": "^9.1.2",
