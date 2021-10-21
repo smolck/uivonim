@@ -49,7 +49,7 @@
     "@babel/preset-typescript": "^7.15.0",
     "@medv/finder": "^2.1.0",
     "@types/fuzzaldrin-plus": "^0.6.2",
-    "@types/marked": "^3.0.1",
+    "@types/marked": "^3.0.2",
     "@types/node": "^16.11.1",
     "@types/webgl2": "0.0.6",
     "babel-loader": "^8.2.2",
