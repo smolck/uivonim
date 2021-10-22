@@ -52,7 +52,7 @@
     "@types/marked": "^3.0.2",
     "@types/node": "^16.11.3",
     "@types/webgl2": "0.0.6",
-    "babel-loader": "^8.2.2",
+    "babel-loader": "^8.2.3",
     "babel-plugin-inferno": "^6.3.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
     "electron": "^15.3.0",
