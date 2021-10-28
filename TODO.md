@@ -120,7 +120,7 @@
 
 - upgrade ripgrep
 
-- canvas: clip rect mask on wide chars (unicode) to cell boundries
+- canvas: clip rect mask on wide chars (unicode) to cell boundaries
 
   - or maybe track which chars are too wide and clear/redraw nearby cells (hard)
   - might fix rendering artifacts
@@ -338,7 +338,7 @@
 
 - separate out internal object data from langserv params data?
 
-  - right now in adapter we send both vim state object and params in the same parameter, same object. i think it might be cleaner to send them separately, so that we do not send internal data to the lang serv. this may have a neglible benefit on network (de)serializing (and xmit time?)
+  - right now in adapter we send both vim state object and params in the same parameter, same object. i think it might be cleaner to send them separately, so that we do not send internal data to the lang serv. this may have a negligible benefit on network (de)serializing (and xmit time?)
   - i almost feel that there is not much of a good reason to pass in the entire neovim state to every single langserv request ever. why can't adapter simply access the neovim state and pick out the nvim state fields it needs to know?
 
-- simliar to the key timeouts, maybe we can make key triggers after a certain amount of key-down holding. e.g. press/release m immediatly and it takes you to a mark. press and hold m and a mark menu shows up
+- similar to the key timeouts, maybe we can make key triggers after a certain amount of key-down holding. e.g. press/release m immediately and it takes you to a mark. press and hold m and a mark menu shows up

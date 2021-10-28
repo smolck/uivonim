@@ -25,7 +25,7 @@ const equalizeTo100 = (percentages: number[]) => {
 }
 
 export default (wins: WindowInfo[]) => {
-  // TODO: should we use teh size (rows/cols) from grid 1?
+  // TODO: should we use the size (rows/cols) from grid 1?
   const totalRows = size.rows - 1
   const totalColumns = size.cols
   const { vertical, horizontal } = getSplits(wins)

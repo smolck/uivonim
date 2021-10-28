@@ -70,7 +70,7 @@ const isNotChar = (e: KeyboardEvent): boolean => {
     return false
 
   // If on Linux/Windows, and the key sequence is typed with alt-shift or alt
-  // (and no other modifers), send to Neovim (for alt-shift and alt mappings).
+  // (and no other modifiers), send to Neovim (for alt-shift and alt mappings).
   if (
     process.platform !== 'darwin' &&
     ((e.shiftKey && e.altKey) || e.altKey) &&
