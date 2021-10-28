@@ -19,9 +19,7 @@ const webglContainer = document.getElementById('webgl') as HTMLElement
 const getWindowById = (windowId: number) => {
   const win = windowsById.get(windowId)
   if (!win)
-    throw new Error(
-      `trying to get window that does not exist ${windowId}`
-    )
+    throw new Error(`trying to get window that does not exist ${windowId}`)
   return win
 }
 
@@ -81,15 +79,12 @@ export const createWebGLView = (gridId: number) => webgl.createView(gridId)
 
 export const getActiveGridId = () => activeGrid
 
-export const setActiveGrid = (id: number) =>
-  activeGrid = id
+export const setActiveGrid = (id: number) => (activeGrid = id)
 
 export const getActive = () => {
   const win = windowsByGrid.get(activeGrid)
   if (!win)
-    throw new Error(
-      `trying to get window that does not exist ${activeGrid}`
-    )
+    throw new Error(`trying to get window that does not exist ${activeGrid}`)
   return win
 }
 
@@ -171,9 +166,7 @@ export const remove = (gridId: number) => {
 export const get = (gridId: number) => {
   const win = windowsByGrid.get(gridId)
   if (!win)
-    throw new Error(
-      `trying to get window that does not exist ${gridId}`
-    )
+    throw new Error(`trying to get window that does not exist ${gridId}`)
   return win
 }
 
@@ -194,7 +187,9 @@ export const layout = () => {
   })
 
   // wait for flex grid styles to be applied to all windows and trigger dom layout
-  windowGridInfo.forEach(({ gridId }) => windowsByGrid.get(gridId)!.refreshLayout())
+  windowGridInfo.forEach(({ gridId }) =>
+    windowsByGrid.get(gridId)!.refreshLayout()
+  )
   refreshWebGLGrid()
 
   // cursorline width does not always get resized correctly after window

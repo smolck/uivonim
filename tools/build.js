@@ -22,12 +22,7 @@ const copy = {
   },
 }
 
-const copyAll = () =>
-  Promise.all([
-    copy.index(),
-    copy.assets(),
-    copy.runtime(),
-  ])
+const copyAll = () => Promise.all([copy.index(), copy.assets(), copy.runtime()])
 
 require.main === module &&
   go(async () => {

@@ -389,7 +389,7 @@ export const handleRedraw = (
         line: ev[1][4],
         column: ev[1][5],
         editorTopLine: ev[1][2],
-        editorBottomLine: ev[1][3]
+        editorBottomLine: ev[1][3],
       })
     }
   }

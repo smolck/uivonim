@@ -76,7 +76,9 @@ const createRenderer = () => {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
   const colorAtlas = getColorAtlas()
-  const colorAtlasTex = twgl.createTexture(gl2Asgl1becausewhyts, { src: colorAtlas })
+  const colorAtlasTex = twgl.createTexture(gl2Asgl1becausewhyts, {
+    src: colorAtlas,
+  })
 
   const uniforms = {
     canvasResolution: [0, 0],
@@ -105,7 +107,9 @@ const createRenderer = () => {
     )
 
     Object.assign(uniforms, {
-      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, { src: fontAtlas }),
+      fontAtlasTextureId: twgl.createTexture(gl2Asgl1becausewhyts, {
+        src: fontAtlas,
+      }),
       fontAtlasResolution: [fontAtlasWidth, fontAtlasHeight],
     })
   })

@@ -332,7 +332,8 @@ type RegisterAutocmd = {
 }
 
 const autocmd: RegisterAutocmd = new Proxy(Object.create(null), {
-  get: (_, event: keyof typeof autocmds) => (fn: any) => watchers.autocmds.on(event, fn),
+  get: (_, event: keyof typeof autocmds) => (fn: any) =>
+    watchers.autocmds.on(event, fn),
 })
 
 autocmd.BufEnter((bufId) => watchers.events.emit('bufLoad', bufId))
