@@ -32,7 +32,7 @@ const actions = {
     return { value: '', visible: false, index: 0 }
   },
 
-  // TODO: not harcoded to 14
+  // TODO: not hardcoded to 14
   change: (value: string) => (s: S) => ({
     value,
     index: 0,

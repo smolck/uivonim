@@ -262,7 +262,7 @@ export default () => {
   }
 
   // maybeHide + maybeShow used for hiding/showing windows when
-  // switching between vim instances. nvim controls the true visiblity
+  // switching between vim instances. nvim controls the true visibility
   // state of the windows. the maybe funcs show or hide in a way that
   // respects the true nvim visibility state of the windows
   api.maybeHide = () => {

@@ -185,7 +185,7 @@ const grid_line = (e: any) => {
         buffer[gridRenderIndexes[gridId] + 6] = char.bounds.bottom
         gridRenderIndexes[gridId] += 7
 
-        // TODO: could maybe deffer this to next frame?
+        // TODO: could maybe defer this to next frame?
         gridBufferSetCell({
           row,
           col,

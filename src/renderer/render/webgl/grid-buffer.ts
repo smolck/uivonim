@@ -82,7 +82,7 @@ const finetti = () => {
     const size = buffer.length
 
     // this approach of incrementing the col/row seems to be
-    // about 2x faster than doing interger & mod quick maffs
+    // about 2x faster than doing integer & mod quick maffs
     // just for ref:
     // col = (ix / 4) % width
     // row = ~~((ix / 4) / width)
