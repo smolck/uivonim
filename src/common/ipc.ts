@@ -91,6 +91,7 @@ export const RedrawEvents = {
   defaultColorsSet: 'defaultColorsSet',
   optionSet: 'option_set',
   searchUpdate: 'search.update',
+  searchHide: 'search.hide',
   setTitle: 'set_title',
   wildmenuShow: 'wildmenu_show',
   wildmenuHide: 'wildmenu_hide',

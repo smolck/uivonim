@@ -387,6 +387,7 @@ handle.disposeInvalidWinsThenLayout(
 handle.cmdUpdate((update) => dispatch.pub('cmd.update', update))
 handle.cmdHide(() => dispatch.pub('cmd.hide'))
 handle.searchUpdate((update) => dispatch.pub('search.update', update))
+handle.searchHide(() => dispatch.pub('search.hide'))
 
 handle.hlAttrDefine(hl_attr_define)
 handle.defaultColorsSet(default_colors_set)

@@ -104,6 +104,7 @@ const cmdline_show = (
 const cmdline_hide = (send: SendFunc) => {
   Object.assign(cmdcache, { active: false, position: -999, cmd: undefined })
   send(RedrawEvents.cmdHide)
+  send(RedrawEvents.searchHide)
 }
 
 const cmdline_pos = ([, [position]]: [any, [number]], send: SendFunc) => {
