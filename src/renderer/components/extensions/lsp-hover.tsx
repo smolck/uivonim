@@ -94,7 +94,7 @@ const updatePosition = () => {
   render(<Hover {...state} />, container)
 }
 
-window.api.on(Events.hoverAction, (_, markdownLines) => {
+window.api.on(Events.hoverAction, (markdownLines) => {
   const doc = markdownLines.join('\n')
 
   const maxWidth =

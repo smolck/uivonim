@@ -118,7 +118,7 @@ function M.hover(_, result)
     return
   end
 
-  notify_uivonim('hover', method, markdown_lines)
+  notify_uivonim('hover', markdown_lines)
 
   -- Close autocmd
   vim.api.nvim_command(
