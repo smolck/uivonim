@@ -13,7 +13,12 @@ import { Events } from '../../../common/ipc'
 setOptions({
   highlight: (code, lang, _) => {
     const hljs = require('highlight.js/lib/core')
-    hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}`))
+
+    // TODO(smolck): Workaround for a bug in webpack and/or highlight.js,
+    // see https://github.com/highlightjs/highlight.js/issues/3223#issuecomment-953337602
+    // This may not actually work, should verify that?
+    const moduleName = `highlight.js/lib/languages/${lang}.js`
+    hljs.registerLanguage(lang, require(moduleName))
 
     const highlightedCode = hljs.highlight(code, { language: lang }).value
     return highlightedCode
