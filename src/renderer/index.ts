@@ -116,6 +116,7 @@ document.onkeydown = (e: KeyboardEvent) => {
     shiftKey: e.shiftKey,
   })
 }
+
 // @ts-ignore
 document.oninput = (e: InputEvent) => {
   window.api.invoke(Invokables.documentOnInput, {
