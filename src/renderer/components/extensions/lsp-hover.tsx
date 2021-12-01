@@ -13,7 +13,10 @@ import { Events } from '../../../common/ipc'
 setOptions({
   highlight: (code, lang, _) => {
     const hljs = require('highlight.js/lib/core')
-    hljs.registerLanguage(lang, require(`highlight.js/lib/languages/${lang}.js`))
+    hljs.registerLanguage(
+      lang,
+      require(`highlight.js/lib/languages/${lang}.js`)
+    )
 
     const highlightedCode = hljs.highlight(code, { language: lang }).value
     return highlightedCode
