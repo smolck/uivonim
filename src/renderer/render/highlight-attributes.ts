@@ -5,7 +5,7 @@ import { Invokables } from '../../common/ipc'
 
 const ee = new EventEmitter()
 
-export interface Attrs {
+interface Attrs {
   foreground?: number
   background?: number
   special?: number
@@ -186,7 +186,6 @@ export const highlightLookup = (name: string): HighlightInfo[] => {
     return console.error('highlight info does not exist for:', name), []
   return [...info]
 }
-export const getHighlight = (id: number) => highlights.get(id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1

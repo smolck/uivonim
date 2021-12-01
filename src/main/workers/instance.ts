@@ -16,8 +16,6 @@ const state = {
   instanceIsActive: true,
 }
 
-export const isInstanceActive = () => state.instanceIsActive
-
 nvim.onStateChange((nextState) => call.nvimStateUpdate(nextState))
 git.onStatus((status: GitStatus) => call.gitStatus(status))
 git.onBranch((onBranch: string) => call.gitBranch(onBranch))

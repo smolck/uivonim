@@ -4,7 +4,7 @@ import { exec } from 'child_process'
 import { homedir, tmpdir } from 'os'
 export { watchFile } from './fs-watch'
 
-export interface Task<T> {
+interface Task<T> {
   done: (value: T) => void
   promise: Promise<T>
 }
@@ -41,23 +41,14 @@ export const $HOME = homedir
   ? homedir()
   : 'Why are you using this from the frontend? Stop it.'
 
-export const type = (m: any) =>
+const type = (m: any) =>
   (Object.prototype.toString.call(m).match(/^\[object (\w+)\]/) ||
     [])[1].toLowerCase()
 export const within =
   (target: number, tolerance: number) => (candidate: number) =>
     Math.abs(target - candidate) <= tolerance
-export const fromJSON = (m: string) => ({
-  or: (defaultVal: any) => {
-    try {
-      return JSON.parse(m)
-    } catch (_) {
-      return defaultVal
-    }
-  },
-})
+
 export const merge = Object.assign
-export const ID = (val = 0) => ({ next: () => (val++, val) })
 export const $ =
   <T>(...fns: Function[]) =>
   (...a: any[]) =>
@@ -65,8 +56,6 @@ export const $ =
 export const is = new Proxy<Types>({} as Types, {
   get: (_, key) => (val: any) => type(val) === key,
 })
-export const onProp = <T>(cb: (name: PropertyKey) => void): T =>
-  new Proxy({}, { get: (_, name) => cb(name) }) as T
 export const onFnCall = <T>(cb: (name: string, args: any[]) => void): T =>
   new Proxy(
     {},
@@ -77,7 +66,6 @@ export const onFnCall = <T>(cb: (name: string, args: any[]) => void): T =>
           cb(name as string, args),
     }
   ) as T
-export const pascalCase = (m: string) => m[0].toUpperCase() + m.slice(1)
 export const proxyFn = (cb: (name: string, data?: any) => void) =>
   new Proxy(
     {},
@@ -258,7 +246,7 @@ export const throttle = (fn: (...args: any[]) => void, delay: number) => {
   }
 }*/
 
-export class MapSetter<A, B> extends Map<A, Set<B>> {
+class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))

@@ -1,4 +1,4 @@
-import { cvar, paddingVH, paddingH } from '../ui/css'
+import { cvar, /* paddingVH, */ paddingH } from '../ui/css'
 import { colors } from '../ui/styles'
 
 // TODO(smolck): Consolidate all of these Row* components into one?
@@ -64,6 +64,7 @@ export const RowDesc = (props: RowProps) => (
   </div>
 )
 
+/*
 export const RowComplete = (props: RowProps) => (
   <div
     {...removePropsIntendedForThisComponent(props)}
@@ -80,6 +81,7 @@ export const RowComplete = (props: RowProps) => (
     {props.children}
   </div>
 )
+*/
 
 export const RowHeader = (props: RowProps) => (
   <div

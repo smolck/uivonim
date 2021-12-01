@@ -16,8 +16,8 @@ const base = {
 }
 
 const normal = { ...base, 'align-items': 'flex-start' }
-const top = { ...base, 'align-items': 'flex-start' }
-const bottom = { ...base, 'align-items': 'flex-end' }
+// const top = { ...base, 'align-items': 'flex-start' }
+// const bottom = { ...base, 'align-items': 'flex-end' }
 const right = {
   ...base,
   'align-items': 'stretch',
@@ -54,6 +54,7 @@ export const Plugin = ({ id, visible, extraStyle, children }: PluginProps) => (
   </div>
 )
 
+/*
 export const PluginTop = ({
   visible,
   id,
@@ -73,7 +74,9 @@ export const PluginTop = ({
     </div>
   </div>
 )
+*/
 
+/*
 export const PluginBottom = ({
   visible,
   id,
@@ -95,6 +98,7 @@ export const PluginBottom = ({
     </div>
   </div>
 )
+*/
 
 export const PluginRight = ({
   visible,

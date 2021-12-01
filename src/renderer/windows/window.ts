@@ -53,7 +53,7 @@ interface HighlightCell {
   char: string
 }
 
-export interface Editor {
+interface Editor {
   getChar(row: number, col: number): string
   getLine(row: number): string
   getAllLines(): string[]
@@ -109,7 +109,7 @@ const edgeDetection = (el: HTMLElement) => {
 }
 
 export const paddingX = 5
-export const paddingY = 4
+const paddingY = 4
 
 export default () => {
   const wininfo: WindowInfo = {
