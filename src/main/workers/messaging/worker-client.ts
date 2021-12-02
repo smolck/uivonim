@@ -5,13 +5,13 @@ import { parentPort } from 'worker_threads'
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
 
-const send = (data: any) => parentPort!!.postMessage(data)
+const send = (data: any) => parentPort!.postMessage(data)
 const internalEvents = new EventEmitter()
 internalEvents.setMaxListeners(200)
 const ee = new EventEmitter()
 const pendingRequests = new Map()
 
-parentPort!!.on('message', async ([e, data, id]) => {
+parentPort!.on('message', async ([e, data, id]) => {
   if (e === '@@sab') {
     return
   }

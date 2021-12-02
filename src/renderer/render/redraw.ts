@@ -34,7 +34,7 @@ import { showMessageHistory } from '../components/nvim/message-history'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { cell } from '../workspace'
 
-let dummyData = new Float32Array()
+const dummyData = new Float32Array()
 
 const default_colors_set = (e: any) => {
   const count = e.length

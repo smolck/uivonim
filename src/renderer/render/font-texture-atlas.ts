@@ -68,7 +68,7 @@ const updateNextBounds = (isDoubleWidth: boolean) => {
       }
 }
 
-export const getChar = (char: string, isDoubleWidth: boolean = false) => {
+export const getChar = (char: string, isDoubleWidth = false) => {
   const maybeChar = charsInAtlas.get(char) || charsQueue.get(char)
   if (maybeChar) return maybeChar
 

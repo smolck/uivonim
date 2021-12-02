@@ -10,7 +10,7 @@ import { NeovimState } from '../main/neovim/state'
 
 let nvimState: NeovimState | undefined = undefined
 let homeDir = ''
-let onReady = new Promise((resolve, _) =>
+const onReady = new Promise((resolve, _) =>
   ipcRenderer.on(Events.invokeHandlersReady, () => resolve(null))
 )
 

@@ -37,7 +37,7 @@ export const rgbToHSL = (red: number, green: number, blue: number) => {
 
   let h: number = (max + min) / 2
   let s: number = (max + min) / 2
-  let l: number = (max + min) / 2
+  const l: number = (max + min) / 2
 
   if (max == min) {
     h = s = 0 // achromatic
@@ -104,8 +104,8 @@ export const rgbToHSV = (red: number, green: number, blue: number) => {
 
   let h = max
   let s = max
-  let v = max
-  let d = max - min
+  const v = max
+  const d = max - min
   s = max === 0 ? 0 : d / max
 
   if (max == min) h = 0

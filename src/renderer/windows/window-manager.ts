@@ -49,8 +49,8 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
 
   const [rowStart, colStart] = anchorWin.element.style.gridArea.split('/')
 
-  let nTop = parseInt(rowStart, 10)
-  let nLeft = parseInt(colStart, 10)
+  const nTop = parseInt(rowStart, 10)
+  const nLeft = parseInt(colStart, 10)
 
   if (nTop > 1) {
     // Move the float down so it doesn't intersect with the nameplate.
@@ -95,7 +95,7 @@ export const set = (
   col: number,
   width: number,
   height: number,
-  is_float: boolean = false,
+  is_float = false,
   anchor = ''
 ) => {
   const win = windowsByGrid.get(gridId) || CreateWindow()
