@@ -143,7 +143,7 @@ async function afterReadyThings() {
 
   // TODO(smolck): Perhaps not the best way to do command-line arg parsing
   const args = process.argv.slice(2)
-  let useWsl = args.find((val) => val === '--wsl') ? true : false
+  const useWsl = args.find((val) => val === '--wsl') ? true : false
 
   const nvimIndex = args.findIndex((val) => val == '--nvim')
   let nvimBinaryPath: string | undefined = undefined

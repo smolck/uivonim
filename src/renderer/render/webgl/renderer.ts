@@ -376,7 +376,7 @@ const createRenderer = () => {
 
     const renderFg = () => {
       gl.useProgram(fgProgramInfo.program)
-      gl.bindVertexArray(fgVertexArrayInfo.vertexArrayObject!!)
+      gl.bindVertexArray(fgVertexArrayInfo.vertexArrayObject!)
       twgl.setUniforms(fgProgramInfo, uniforms)
       twgl.drawBufferInfo(
         gl2Asgl1becausewhyts,
@@ -390,7 +390,7 @@ const createRenderer = () => {
 
     const renderBg = () => {
       gl.useProgram(bgProgramInfo.program)
-      gl.bindVertexArray(bgVertexArrayInfo.vertexArrayObject!!)
+      gl.bindVertexArray(bgVertexArrayInfo.vertexArrayObject!)
       // uniforms.cursorColor = uniforms.cursorColor.slice(0, 2).reverse()
 
       // background

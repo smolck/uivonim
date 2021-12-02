@@ -134,7 +134,7 @@ const nvim: Neovim = {
       // column: 0-index based
     ;(await nvimInstance.window).cursor = [line + 1, column || 0]
   },
-  getAndParseKeymap: async (mode: string = 'n') =>
+  getAndParseKeymap: async (mode = 'n') =>
     (await nvimInstance.getKeymap(mode)).reduce((res: Keymap, m: any) => {
       const { lhs, rhs, sid, buffer, mode } = m
 
