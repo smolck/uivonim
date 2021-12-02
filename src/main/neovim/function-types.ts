@@ -9,7 +9,7 @@ interface VimBuffer {
   mod: boolean
 }
 
-export interface QuickFixList {
+interface QuickFixList {
   text: string
   lnum: number
   col: number

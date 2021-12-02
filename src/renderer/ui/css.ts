@@ -15,8 +15,6 @@ export const paddingV = (amount: number) => ({
   'padding-right': `${amount}px`,
 })
 
-export const translate = (x: number | string, y: number | string) =>
-  `translate(${x}px, ${y}px)`
 export const cvar = (name: string) => `var(--${name})`
 export const rgba = (red: number, green: number, blue: number, alpha: number) =>
   `rgba(${red}, ${green}, ${blue}, ${alpha})`
@@ -24,26 +22,9 @@ export const rgba = (red: number, green: number, blue: number, alpha: number) =>
 export const setVar = (name: string, val: number | string) =>
   document.documentElement.style.setProperty(`--${name}`, val + '')
 
-const gradient = (
-  deg: number,
-  color1: string,
-  fade1: number,
-  color2: string,
-  fade2: number
-) => `linear-gradient(${deg}deg, ${color1} ${fade1}%, ${color2} ${fade2}%)`
-
-export const partialFill = (direction: string, color: string, size: number) =>
-  gradient(direction === 'horizontal' ? 0 : 90, color, size, 'rgba(0,0,0,0)', 0)
-
 export const hexToRGB = (color: string) => {
   const hex = parseInt(color.replace(/#/, ''), 16)
   return [hex >> 16, (hex >> 8) & 0xff, hex & 0xff]
-}
-
-export const hexToRGBA = (color: string, alpha: number) => {
-  if (!color) return ''
-  const [r, g, b] = hexToRGB(color)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
 export const rgbToHSL = (red: number, green: number, blue: number) => {
@@ -216,18 +197,3 @@ export const brighten = (color: string, amount: number) =>
   shadeColor(color, amount / 100)
 export const darken = (color: string, amount: number) =>
   shadeColor(color, -(amount / 100))
-
-// chrome does not support .finished property on animate()
-export const animate = (
-  element: HTMLElement,
-  keyframes: Keyframe[],
-  options = {} as any
-): Promise<void> => {
-  if (options.duration) {
-    element.animate(keyframes, options)
-    return new Promise((fin) => setTimeout(fin, options.duration - 25))
-  }
-
-  element.animate(keyframes, options)
-  return Promise.resolve()
-}

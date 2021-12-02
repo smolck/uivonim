@@ -1,11 +1,4 @@
-import {
-  onFnCall,
-  proxyFn,
-  uuid,
-  CreateTask,
-  fromJSON,
-  ID,
-} from '../../../common/utils'
+import { onFnCall, proxyFn, uuid, CreateTask } from '../../../common/utils'
 import { EventEmitter } from 'events'
 import { parentPort } from 'worker_threads'
 
@@ -17,28 +10,9 @@ const internalEvents = new EventEmitter()
 internalEvents.setMaxListeners(200)
 const ee = new EventEmitter()
 const pendingRequests = new Map()
-const requestId = ID()
-let sharedArray = new Int32Array()
-
-const readSharedArray = (id: number) => {
-  const responseId = sharedArray[0]
-  if (responseId !== id)
-    console.warn(
-      `this response does not belong to the correct request. request was: ${id}, but response is: ${responseId}`
-    )
-  const payloadLength = sharedArray[1]
-  const dataStartIndex = 2
-  const payload = sharedArray.subarray(
-    dataStartIndex,
-    payloadLength + dataStartIndex
-  )
-  const jsonString = Buffer.from(payload as any).toString()
-  return fromJSON(jsonString).or({})
-}
 
 parentPort!!.on('message', async ([e, data, id]) => {
   if (e === '@@sab') {
-    sharedArray = new Int32Array(data[0])
     return
   }
 
@@ -54,20 +28,6 @@ parentPort!!.on('message', async ([e, data, id]) => {
   if (!listener) return
   const result = await listener(...data)
   send([e, result, id])
-})
-
-export const requestSyncWithContext = (func: string, args: any[]) => {
-  const id = requestId.next()
-  send(['@@request-sync-context', args, id, true, func])
-  Atomics.wait(sharedArray, 0, sharedArray[0])
-  return readSharedArray(id)
-}
-
-export const requestSync = onFnCall((event: string, args: any[]) => {
-  const id = requestId.next()
-  send([event, args, id, true])
-  Atomics.wait(sharedArray, 0, sharedArray[0])
-  return readSharedArray(id)
 })
 
 export const call: EventFn = onFnCall((event: string, args: any[]) =>

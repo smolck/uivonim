@@ -230,4 +230,3 @@ const finetti = () => {
 }
 
 export default finetti
-export type WebGLBuffer = ReturnType<typeof finetti>

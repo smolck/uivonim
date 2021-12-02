@@ -1,6 +1,6 @@
 import { cell, font } from '../workspace'
 
-export interface AtlasCharBounds {
+interface AtlasCharBounds {
   left: number
   right: number
   top: number

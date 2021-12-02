@@ -7,7 +7,7 @@ let titleBarVisible = false
 const titleBar = window.api.isMacos && document.createElement('div')
 const title = window.api.isMacos && document.createElement('div')
 
-export const setTitleVisibility = (visible: boolean) => {
+const setTitleVisibility = (visible: boolean) => {
   if (!titleBar) return
   titleBarVisible = visible
   titleBar.style.display = visible ? 'flex' : 'none'

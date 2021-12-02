@@ -11,13 +11,13 @@ import { parse as stringToMarkdown } from 'marked'
 import { render } from 'inferno'
 import Icon from '../icon'
 
-export interface CompletionShow {
+interface CompletionShow {
   row: number
   col: number
   options: CompletionOption[]
 }
 
-export interface CompletionOption {
+interface CompletionOption {
   /** Display text for the UI */
   text: string
   menu: string
@@ -30,7 +30,7 @@ export interface CompletionOption {
 }
 
 // TODO(smolck): Should this be here or somewhere else?
-export class CompletionItem {
+class CompletionItem {
   label: string
   kind: CompletionItemKind | undefined
   // @ts-ignore
@@ -76,7 +76,7 @@ export class CompletionItem {
   }
 }
 
-export enum CompletionItemKind {
+enum CompletionItemKind {
   Text = 0,
   Method = 1,
   Function = 2,
@@ -278,14 +278,14 @@ const container = document.createElement('div')
 container.id = 'autocomplete-container'
 plugins?.appendChild(container)
 
-export const hide = () => {
+const hide = () => {
   state.visible = false
   state.ix = 0
 
   render(<Autocomplete {...state} />, container)
 }
 
-export const select = (index: number) => {
+const select = (index: number) => {
   const completionItem = (state.options[index] || {}).raw
   state.ix = index
 
@@ -310,7 +310,7 @@ export const select = (index: number) => {
     render(<Autocomplete {...state} />, container)
   }
 }
-export const show = ({ row, col, options }: CompletionShow) => {
+const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(
     // Minus 2 because workspace.size.rows appears to be 2 rows greater than the actual rows
     // TODO(smolck): Is that ^^^ right?
