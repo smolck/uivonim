@@ -50,7 +50,7 @@
     "@medv/finder": "^2.1.0",
     "@types/fuzzaldrin-plus": "^0.6.2",
     "@types/marked": "^3.0.2",
-    "@types/node": "^16.11.10",
+    "@types/node": "^16.11.12",
     "@types/webgl2": "0.0.6",
     "babel-loader": "^8.2.3",
     "babel-plugin-inferno": "^6.3.0",
