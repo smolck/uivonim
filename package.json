@@ -46,7 +46,7 @@
     "@babel/plugin-proposal-class-properties": "^7.16.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.16.0",
     "@babel/plugin-transform-modules-commonjs": "^7.16.0",
-    "@babel/preset-typescript": "^7.16.0",
+    "@babel/preset-typescript": "^7.16.7",
     "@medv/finder": "^2.1.0",
     "@types/fuzzaldrin-plus": "^0.6.2",
     "@types/marked": "^3.0.2",
