@@ -1,4 +1,4 @@
-// TODO: needs to be revisted once we get the new DEBUG
+// TODO: needs to be revisited once we get the new DEBUG
 // stuff going and now that we have instance threads
 // import { DebuggerInfo, changeStack, changeScope } from '../ai/debug'
 // import { PluginRight } from '../components/plugin-container'
