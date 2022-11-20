@@ -1,7 +1,7 @@
 ## notes
 
 - rust ext errors on vscode LanguageClient
-- why did we create our own LangaugeClient?
+- why did we create our own LanguageClient?
 - can we just use the real thing?
 - rust ext: how to get access to actual language server to hook up to rpc?
 

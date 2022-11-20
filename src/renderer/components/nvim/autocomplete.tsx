@@ -370,7 +370,7 @@ const completionKindMappings = new Map([
   ['Method', CompletionItemKind.Property],
   ['f', CompletionItemKind.Property],
 
-  ['type paramter', CompletionItemKind.TypeParameter],
+  ['type parameter', CompletionItemKind.TypeParameter],
   ['Type Parameter', CompletionItemKind.TypeParameter],
   ['T', CompletionItemKind.TypeParameter],
 

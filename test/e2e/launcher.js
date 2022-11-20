@@ -48,7 +48,7 @@ module.exports = async () => {
   app.screencap = async (name) => {
     await delay(200)
     const imageBuf = await app.browserWindow.capturePage().catch(console.error)
-    if (!imageBuf) return console.error(`faild to screencap "${name}"`)
+    if (!imageBuf) return console.error(`failed to screencap "${name}"`)
     const location = path.join(resultsPath, `${name}.png`)
     fs.writeFile(location, imageBuf)
     await delay(100)
