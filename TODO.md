@@ -3,7 +3,7 @@
 - rust ext errors on vscode LanguageClient
 - why did we create our own LangaugeClient?
 - can we just use the real thing?
-- rust ext: how to get access to actual language server to hookup to rpc?
+- rust ext: how to get access to actual language server to hook up to rpc?
 
 ## in progress
 
@@ -288,7 +288,7 @@
   - config path folder location
   - activationEvents for a particular extension (so as a user i can understand that css-lang-server only activates when i have css files open)
   - show 'active' status
-  - for language servers it would be good to know what language features are supported. an user can then understand why certain features work or not
+  - for language servers it would be good to know what language features are supported. A user can then understand why certain features work or not
 
 ## crazy experimental ideas
 
@@ -298,7 +298,7 @@
 
 - interactive `:norm` or `:g//norm` (:inccommand but for normal commands)
 
-  - make a selection (like inside an object) then run a series of normal commands on that selection. interactive because actions happen on all applicable lines. same idea as multiple cursor, but without the suck. macros can do this, but are clunky, non-interactive, and error prone. personally i feel macros are more useful for a large amount of complex changes. regex is slow and it sucks
+  - make a selection (like inside an object) then run a series of normal commands on that selection. interactive because actions happen on all applicable lines. same idea as multiple cursor, but without the suck. macros can do this, but are clunky, non-interactive, and error-prone. personally i feel macros are more useful for a large amount of complex changes. regex is slow and it sucks
   - show cursors at matching lines
   - use extended marks to propagate changes?
   - kinda like multiple cursors, but not really
