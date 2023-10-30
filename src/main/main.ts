@@ -92,6 +92,12 @@ app.on('ready', async () => {
     backgroundColor: '#222',
     autoHideMenuBar: true,
     webPreferences: {
+      // TODO(smolck): Honestly I don't think this is a big deal for uivonim,
+      // a desktop app that doesn't really render untrusted content,
+      // but famous last words so look into it more?
+      //
+      // Also not really sure how to make it run with the sandbox soooooooooo
+      sandbox: false,
       // See https://github.com/reZach/secure-electron-template/blob/21eeb45cbafc7542b417e2dc58734ae158c7b3f1/app/electron/main.js#L63-L67
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
