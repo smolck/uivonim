@@ -83,9 +83,6 @@ export const uuid = (): string =>
 export const shell = (cmd: string, opts?: object): Promise<string> =>
   new Promise((fin) => exec(cmd, opts, (_, out) => fin(out + '')))
 
-export const getPipeName = (name: string) =>
-  join(tmpdir(), `${name}${uuid()}.sock`)
-
 export const arrReplace = <T>(
   arr: T[],
   matcher: (val: T) => any,

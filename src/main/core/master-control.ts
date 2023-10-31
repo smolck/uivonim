@@ -1,12 +1,14 @@
 import { app } from 'electron'
-import { asColor, merge, getPipeName } from '../../common/utils'
+import { asColor, merge } from '../../common/utils'
 import Worker, { Worker as WorkerType } from '../workers/messaging/worker'
 import { Color, Highlight } from '../neovim/types'
 import { ChildProcess, spawn } from 'child_process'
 import InstanceApi from '../core/instance-api'
 import * as neovim from 'neovim'
 import { BrowserWindow } from 'electron'
-import { resolve } from 'path'
+import { join, resolve } from 'path'
+import { tmpdir } from 'os'
+import { pid } from 'process'
 
 type RedrawFn = (m: any[]) => void
 type ExitFn = (code: number) => void
@@ -83,7 +85,7 @@ const attachNvim = (nvimInstance: NvimInstance) => {
 }
 
 const createAndSetupNvimInstance = (useWsl: boolean, nvimBinary?: string) => {
-  const pipeName = getPipeName('veonim-instance')
+  const pipeName = join(tmpdir(), `uivonim-${pid}.sock`)
   const proc = spawnNvimInstance(pipeName, useWsl, nvimBinary)
 
   const nvimInstance = { proc, pipeName, attached: false }
