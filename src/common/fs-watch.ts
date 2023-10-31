@@ -20,7 +20,9 @@ const getRealPath = async (path: string) => {
 
 const watchDir = (path: string) =>
   fs.watch(path, (_, file) => {
-    const fullpath = join(path, file)
+    // TODO(smolck): Any chance this file! is gonna fail?
+    // Didn't use to be type string | null so idk
+    const fullpath = join(path, file!)
     watchers.emit(fullpath)
   })
 
