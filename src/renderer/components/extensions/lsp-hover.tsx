@@ -5,23 +5,10 @@ import { debounce } from '../../../common/utils'
 import Overlay from '../overlay'
 import { docStyle } from '../../ui/styles'
 import { cursor } from '../../cursor'
-import { parse as stringToMarkdown, setOptions } from 'marked'
 import { render } from 'inferno'
 import { cell, size as workspaceSize } from '../../workspace'
 import { Events } from '../../../common/ipc'
-
-setOptions({
-  highlight: (code, lang, _) => {
-    const hljs = require('highlight.js/lib/core')
-    hljs.registerLanguage(
-      lang,
-      require(`highlight.js/lib/languages/${lang}.js`)
-    )
-
-    const highlightedCode = hljs.highlight(code, { language: lang }).value
-    return highlightedCode
-  },
-})
+import { stringToMarkdown } from './highlight'
 
 interface ShowParams {
   hoverHeight: number
