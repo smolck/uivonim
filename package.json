@@ -39,7 +39,7 @@
     "marked-highlight": "^2.0.6",
     "neovim": "^4.10.0",
     "ts-node": "^10.4.0",
-    "twgl.js": "^4.21.2"
+    "twgl.js": "^5.5.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
